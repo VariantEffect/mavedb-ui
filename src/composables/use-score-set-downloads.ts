@@ -1,6 +1,6 @@
 import {computed, ref, type Ref} from 'vue'
 
-import {downloadScoreSetFile, downloadScoreSetVariantData, downloadMappedVariants} from '@/api/mavedb'
+import {downloadScoreSetFile, downloadScoreSetVariantData} from '@/api/mavedb'
 import config from '@/config'
 import {triggerDownload} from '@/lib/downloads'
 import type {components} from '@/schema/openapi'
@@ -12,24 +12,48 @@ export const TEXT_COLUMNS = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
 interface UseScoreSetDownloadsOptions {
   scoreSet: Ref<ScoreSet | null>
   hasCounts?: Ref<boolean>
+  // The ClinVar control version the page has resolved via the histogram.
+  clinvarVersion?: Ref<string | null>
 }
 
-export function useScoreSetDownloads({scoreSet, hasCounts}: UseScoreSetDownloadsOptions) {
+// Convert and pad the ClinVar version, or return null if the version isn't in the expected shape.
+function clinvarNamespace(version: string | null | undefined): string | null {
+  if (!version) return null
+  const match = /^(\d{1,2})_(\d{4})$/.exec(version)
+  if (!match) return null
+  return `clinvar.${match[2]}_${match[1].padStart(2, '0')}`
+}
+
+export function useScoreSetDownloads({scoreSet, hasCounts, clinvarVersion}: UseScoreSetDownloadsOptions) {
   const customDialogVisible = ref(false)
   const selectedDataOptions = ref<string[]>([])
-  const annotatedDownloadInProgress = ref(false)
-  const annotatedDownloadProgress = ref(0)
+  // Shared progress state for the NDJSON streaming downloads (variant details + annotated variants).
+  // Only one stream runs at a time — starting a new one aborts any in-flight stream. `streamTarget`
+  // identifies which button's stream is running, so only that element renders the progress bar.
+  const streamDownloadInProgress = ref(false)
+  const streamDownloadProgress = ref(0)
+  const streamTarget = ref<'variantDetails' | 'annotatedVariants' | null>(null)
   const streamController = ref<AbortController | null>(null)
 
   const dataTypeOptions = computed(() => {
     const options = [
       {label: 'Scores', value: 'scores'},
       {label: 'Reference-frame HGVS', value: 'mappedHgvs'},
+      // Annotation namespaces served by the reworked CSV export. gnomAD / VEP / ClinGen are unversioned;
+      // ClinVar is versioned and only offered when the page has resolved a control version to target.
+      {label: 'gnomAD allele frequency', value: 'gnomad'},
+      {label: 'VEP consequence', value: 'vep'},
+      {label: 'ClinGen allele ID', value: 'clingen'},
       {label: 'Custom columns', value: 'includeCustomColumns'},
       {label: 'Without NA columns', value: 'dropNaColumns'}
     ]
     if (hasCounts?.value) {
       options.splice(1, 0, {label: 'Counts', value: 'counts'})
+    }
+    if (clinvarNamespace(clinvarVersion?.value)) {
+      // Place ClinVar right after ClinGen alongside other annotation namespaces.
+      const clingenIndex = options.findIndex((opt) => opt.value === 'clingen')
+      options.splice(clingenIndex + 1, 0, {label: 'ClinVar significance', value: 'clinvar'})
     }
     return options
   })
@@ -44,22 +68,23 @@ export function useScoreSetDownloads({scoreSet, hasCounts}: UseScoreSetDownloads
     if (!scoreSet.value) return
     const params = new URLSearchParams()
     for (const opt of selectedDataOptions.value) {
-      if (opt === 'scores') params.append('data_type', 'scores')
-      else if (opt === 'counts') params.append('data_type', 'counts')
-      else if (opt === 'mappedHgvs') params.append('include_post_mapped_hgvs', 'true')
+      if (opt === 'scores') params.append('namespaces', 'scores')
+      else if (opt === 'counts') params.append('namespaces', 'counts')
+      else if (opt === 'gnomad') params.append('namespaces', 'gnomad')
+      else if (opt === 'vep') params.append('namespaces', 'vep')
+      else if (opt === 'clingen') params.append('namespaces', 'clingen')
+      else if (opt === 'clinvar') {
+        const namespace = clinvarNamespace(clinvarVersion?.value)
+        if (namespace) params.append('namespaces', namespace)
+      } else if (opt === 'mappedHgvs') params.append('include_post_mapped_hgvs', 'true')
       else if (opt === 'includeCustomColumns') params.append('include_custom_columns', 'true')
       else if (opt === 'dropNaColumns') params.append('drop_na_columns', 'true')
     }
-    if (!params.has('data_type')) params.append('data_type', 'scores')
+    // Guarantee at least the core HGVS + score columns when only flags (no namespace) were selected.
+    if (!params.has('namespaces')) params.append('namespaces', 'scores')
     const data = await downloadScoreSetVariantData(scoreSet.value.urn, params)
     triggerDownload(data, `${scoreSet.value.urn}_custom.csv`)
     customDialogVisible.value = false
-  }
-
-  async function downloadMappedVariantsFile() {
-    if (!scoreSet.value) return
-    const data = await downloadMappedVariants(scoreSet.value.urn)
-    triggerDownload(JSON.stringify(data), `${scoreSet.value.urn}_mapped_variants.json`, 'text/json')
   }
 
   function downloadMetadata() {
@@ -71,22 +96,26 @@ export function useScoreSetDownloads({scoreSet, hasCounts}: UseScoreSetDownloads
   function abortStream() {
     if (streamController.value) {
       streamController.value.abort()
-      annotatedDownloadInProgress.value = false
-      annotatedDownloadProgress.value = 0
+      streamDownloadInProgress.value = false
+      streamDownloadProgress.value = 0
+      streamTarget.value = null
     }
   }
 
-  async function streamVariantAnnotations(annotationType: string) {
+  // Stream an NDJSON export (variant details, annotated variants) from a score-set sub-path to a file,
+  // driving the shared progress bar off the server's X-Total-Count. Aborts any in-flight stream first.
+  async function streamNdjson(subPath: string, filename: string, target: 'variantDetails' | 'annotatedVariants') {
     if (!scoreSet.value) return
     abortStream()
     streamController.value = new AbortController()
 
     try {
-      annotatedDownloadInProgress.value = true
-      const response = await fetch(
-        `${config.apiBaseUrl}/score-sets/${scoreSet.value.urn}/annotated-variants/${annotationType}`,
-        {signal: streamController.value.signal, headers: {Accept: 'application/x-ndjson'}}
-      )
+      streamDownloadInProgress.value = true
+      streamTarget.value = target
+      const response = await fetch(`${config.apiBaseUrl}/score-sets/${scoreSet.value.urn}/${subPath}`, {
+        signal: streamController.value.signal,
+        headers: {Accept: 'application/x-ndjson'}
+      })
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -107,15 +136,16 @@ export function useScoreSetDownloads({scoreSet, hasCounts}: UseScoreSetDownloads
           const url = URL.createObjectURL(blob)
           const anchor = document.createElement('a')
           anchor.href = url
-          anchor.download = `${scoreSet.value!.urn}_annotated_variants_${annotationType}.ndjson`
+          anchor.download = filename
           anchor.click()
           URL.revokeObjectURL(url)
           break
         }
         const chunk = decoder.decode(value)
         chunks.push(chunk)
-        processedCount += chunk.split('\n').length
-        annotatedDownloadProgress.value = Math.round((processedCount / totalCount) * 100)
+        // Count newline characters, and clamp to 100% for progress tracking.
+        processedCount += chunk.split('\n').length - 1
+        streamDownloadProgress.value = totalCount ? Math.min(100, Math.round((processedCount / totalCount) * 100)) : 0
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error'
@@ -124,17 +154,33 @@ export function useScoreSetDownloads({scoreSet, hasCounts}: UseScoreSetDownloads
       }
     } finally {
       streamController.value = null
-      annotatedDownloadInProgress.value = false
-      annotatedDownloadProgress.value = 0
+      streamDownloadInProgress.value = false
+      streamDownloadProgress.value = 0
+      streamTarget.value = null
     }
+  }
+
+  function streamVariantDetails() {
+    if (!scoreSet.value) return
+    return streamNdjson('variant-details', `${scoreSet.value.urn}_variant_details.ndjson`, 'variantDetails')
+  }
+
+  function streamVariantAnnotations(annotationType: string) {
+    if (!scoreSet.value) return
+    return streamNdjson(
+      `annotated-variants/${annotationType}`,
+      `${scoreSet.value.urn}_annotated_variants_${annotationType}.ndjson`,
+      'annotatedVariants'
+    )
   }
 
   return {
     // State
     customDialogVisible,
     selectedDataOptions,
-    annotatedDownloadInProgress,
-    annotatedDownloadProgress,
+    streamDownloadInProgress,
+    streamDownloadProgress,
+    streamTarget,
 
     // Computed
     dataTypeOptions,
@@ -142,8 +188,8 @@ export function useScoreSetDownloads({scoreSet, hasCounts}: UseScoreSetDownloads
     // Methods
     downloadFile,
     downloadMultipleData,
-    downloadMappedVariantsFile,
     downloadMetadata,
+    streamVariantDetails,
     streamVariantAnnotations,
     abortStream
   }

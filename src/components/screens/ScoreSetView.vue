@@ -336,6 +336,7 @@
         <!-- Downloads -->
         <div class="mb-6">
           <ScoreSetDownloads
+            :clinvar-version="clinvarControls.controlVersion"
             :has-counts="hasCounts"
             :has-functional-impact-calibrations="hasFunctionalImpactCalibrations"
             :has-pathogenicity-calibrations="hasPathogenicityCalibrations"

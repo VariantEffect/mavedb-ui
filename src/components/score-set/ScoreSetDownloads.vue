@@ -19,18 +19,24 @@
         size="small"
         @click="downloadMetadata"
       />
-      <PButton
-        icon="pi pi-download"
-        label="Mapped Variants"
-        severity="secondary"
-        size="small"
-        @click="downloadMappedVariantsFile"
-      />
+      <div class="relative inline-block">
+        <PButton
+          :disabled="streamDownloadInProgress"
+          icon="pi pi-download"
+          label="Variant Details"
+          severity="secondary"
+          size="small"
+          @click="streamVariantDetails"
+        />
+        <div v-if="streamTarget === 'variantDetails'" class="absolute inset-x-0 top-full mt-1">
+          <ProgressBar show-value style="height: 1.5em" :value="streamDownloadProgress" />
+        </div>
+      </div>
 
       <div class="relative inline-block">
         <SplitButton
           :button-props="{class: 'p-button-sm p-button-secondary'}"
-          :disabled="annotatedDownloadInProgress"
+          :disabled="streamDownloadInProgress"
           label="Annotated Variants"
           :menu-button-props="{class: 'p-button-sm p-button-secondary'}"
           :model="annotatedVariantDownloadOptions"
@@ -41,8 +47,8 @@
             })
           "
         />
-        <div v-if="annotatedDownloadInProgress" class="absolute inset-x-0 top-full mt-1">
-          <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
+        <div v-if="streamTarget === 'annotatedVariants'" class="absolute inset-x-0 top-full mt-1">
+          <ProgressBar show-value style="height: 1.5em" :value="streamDownloadProgress" />
         </div>
       </div>
 
@@ -61,7 +67,7 @@
       <div class="mt-1.5 flex flex-wrap gap-2">
         <PButton label="Scores" severity="secondary" size="small" @click="sendToGalaxy('scores')" />
         <PButton v-if="hasCounts" label="Counts" severity="secondary" size="small" @click="sendToGalaxy('counts')" />
-        <PButton label="Mapped Variants" severity="secondary" size="small" @click="sendToGalaxy('mappedVariants')" />
+        <PButton label="Variant Details" severity="secondary" size="small" @click="sendToGalaxy('variantDetails')" />
       </div>
     </div>
 
@@ -113,13 +119,21 @@ export default defineComponent({
     hasPathogenicityCalibrations: {type: Boolean, default: false},
     hasFunctionalImpactCalibrations: {type: Boolean, default: false},
     isMetaDataEmpty: {type: Boolean, default: true},
-    scoreSet: {type: Object as PropType<ScoreSet>, required: true}
+    scoreSet: {type: Object as PropType<ScoreSet>, required: true},
+    // The ClinVar control version the page resolved (histogram controlVersion), MM_YYYY form; enables
+    // the ClinVar column in the custom CSV download.
+    clinvarVersion: {type: String as PropType<string | null>, default: null}
   },
 
   setup(props) {
     const scoreSetRef = toRef(props, 'scoreSet')
     const hasCountsRef = toRef(props, 'hasCounts')
-    const downloads = useScoreSetDownloads({scoreSet: scoreSetRef, hasCounts: hasCountsRef})
+    const clinvarVersionRef = toRef(props, 'clinvarVersion')
+    const downloads = useScoreSetDownloads({
+      scoreSet: scoreSetRef,
+      hasCounts: hasCountsRef,
+      clinvarVersion: clinvarVersionRef
+    })
 
     const routeProps = store.state.routeProps as {galaxyUrl: string; toolId: string; requestFromGalaxy: string}
 
@@ -184,8 +198,10 @@ export default defineComponent({
             endpoint = 'scores'
             outputType = 'table'
             break
-          case 'mappedVariants':
-            endpoint = 'mapped-variants'
+          case 'variantDetails':
+            // /mapped-variants was retired in #743; /variant-details is the replacement (VRS pair + Cat-VRS + annotations),
+            // streamed as NDJSON.
+            endpoint = 'variant-details'
             outputType = 'json'
             break
           default:

@@ -156,11 +156,6 @@ export async function getScoreSetCountsPreview(urn: string, limit?: number): Pro
   return response.data
 }
 
-export async function downloadMappedVariants(urn: string) {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/mapped-variants`)
-  return response.data
-}
-
 export async function getRecentlyPublishedScoreSets(
   signal?: AbortSignal
 ): Promise<components['schemas']['ScoreSet'][]> {

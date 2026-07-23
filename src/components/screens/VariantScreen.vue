@@ -317,6 +317,8 @@
               :alleles="lookup.selectedVariantDetail.value.alleles"
               :annotations="lookup.selectedVariantDetail.value.annotations"
               :assay-gnomad="assayGnomad"
+              :assay-level="lookup.selectedVariantDetail.value.assayLevel ?? null"
+              :assay-level-digest="primarySubjectDigests"
               plain
             >
               <template #label>
@@ -330,7 +332,8 @@
             <VariantClinvarStat
               :alleles="lookup.selectedVariantDetail.value.alleles"
               :annotations="lookup.selectedVariantDetail.value.annotations"
-              :assay-level-digest="lookup.selectedVariantDetail.value.assayLevelDigest"
+              :assay-level="lookup.selectedVariantDetail.value.assayLevel ?? null"
+              :assay-level-digest="primarySubjectDigests"
               :clinvar-version="clinvarControls.controlVersion"
               plain
             >
@@ -387,6 +390,19 @@
                 @calibration-changed="lookup.selectedCalibration.value = $event"
                 @selection-changed="() => {}"
               />
+              <!-- On a convergent-cousin/candidate page the highlighted point is a *measured* allele sharing
+                   this variant's protein consequence, not this allele — which was not itself assayed. Say so.
+                   TODO(histogram): the highlight is not deterministic when two distinct nucleotide variants
+                   that encode the same protein consequence were both measured — only one is highlighted here.
+                   Resolving that needs histogram multi-selection (highlight every measured sibling), a larger
+                   change deferred for now. -->
+              <p
+                v-if="primaryGroup && !primaryGroup.measured"
+                class="mt-2 text-xs italic leading-tight text-text-muted"
+              >
+                This allele was not directly measured — the highlighted point is a measured allele that shares
+                its protein consequence.
+              </p>
             </div>
             <div v-else class="flex min-h-[200px] items-center justify-center">
               <MvLoader text="Loading variant information..." />
@@ -538,17 +554,25 @@ export default defineComponent({
     primaryAnnotations(): AlleleAnnotations | null {
       return this.primaryGroup?.coalescedAnnotations ?? null
     },
+    // The subject the External Evidence cells anchor on: the page's own allele, as its digest(s). One physical
+    // allele is stored as a c↔g pair (two digests) and ClinVar/gnomAD attach to only one, so both count as the
+    // subject's own. This is the *page* allele, not the measured allele — on a convergent cousin's page they
+    // differ, and the cell should reflect the cousin (empty → context), not the allele that was assayed. The
+    // *level* that gates projection is the assay level (detail.assayLevel), passed separately — the assay's
+    // resolution, not the allele's molecular level, is what determines whether we may project.
+    primarySubjectDigests(): string[] {
+      return this.primaryGroup?.members.map((m) => m.digest) ?? []
+    },
     // VEP molecular consequence for the primary allele.
     primaryMolecularConsequence(): string | null {
       const consequence = this.primaryAnnotations?.vep?.consequence
       return consequence ? formatConsequence(consequence) : null
     },
-    // The measured allele's own gnomAD annotation — the headline the gnomAD cell shows straight up (siblings
-    // are enumerated by the cell itself when the measured allele has none, e.g. a protein-level assay).
+    // The page allele's own gnomAD annotation — the headline the gnomAD cell shows straight up (siblings are
+    // enumerated by the cell itself when the page allele has none). Coalesced across the allele's c↔g pair so
+    // a frequency on either representation counts; anchored on the page allele, not the measured allele.
     assayGnomad(): GnomadAnnotation | null {
-      const detail = this.lookup.selectedVariantDetail.value
-      const digest = detail?.assayLevelDigest
-      return (digest ? detail?.annotations?.[digest]?.gnomad : null) ?? null
+      return this.primaryAnnotations?.gnomad ?? null
     },
     // Whether any allele on the record carries a gnomAD or ClinVar annotation — gates the evidence card.
     hasExternalEvidence(): boolean {

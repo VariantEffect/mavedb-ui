@@ -44,21 +44,36 @@ export interface UnderlyingGnomad {
 }
 
 /**
- * Collect the distinct gnomAD measurements across a variant record's alleles.
+ * Collect the distinct gnomAD measurements across a variant record's alleles — the *related* frequencies
+ * shown as context.
  *
  * A protein change is encoded by several genomic variants, each with its own gnomAD frequency. Enumerate
  * this set of distinct frequencies, deduplicating by gnomAD variant id and preferring a coding HGVS for
  * the label. Sort by descending allele frequency.
+ *
+ * `subjectDigests` names the subject allele (the measured/page allele, including its c↔g twin); its own
+ * frequency is the headline, so it — and any other frame carrying the same gnomAD record — is excluded here,
+ * mirroring the ClinVar underlying-record enumeration.
  */
 export function collectGnomadFrequencies(
   annotations: Record<string, {gnomad?: GnomadAnnotation | null}> | null | undefined,
-  alleles: Record<string, {hgvs?: string | null}> | null | undefined
+  alleles: Record<string, {hgvs?: string | null}> | null | undefined,
+  subjectDigests?: Iterable<string>
 ): UnderlyingGnomad[] {
   if (!annotations) return []
+  const subjectSet = new Set(subjectDigests ?? [])
+  // The subject's own gnomAD id(s): exclude these so the subject's frequency (or its cross-frame twin) never
+  // reappears as a "related" one.
+  const subjectIds = new Set<string>()
+  for (const digest of subjectSet) {
+    const id = annotations[digest]?.gnomad?.dbIdentifier
+    if (id) subjectIds.add(id)
+  }
   const byVariant = new Map<string, UnderlyingGnomad>()
   for (const [digest, ann] of Object.entries(annotations)) {
     const gnomad = ann.gnomad
     if (!gnomad) continue
+    if (subjectSet.has(digest) || subjectIds.has(gnomad.dbIdentifier)) continue
 
     const hgvs = alleles?.[digest]?.hgvs ?? null
     const existing = byVariant.get(gnomad.dbIdentifier)

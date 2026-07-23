@@ -312,9 +312,69 @@ function rec(significance: string, digest: string, reviewStatus: string = ONE_ST
   }
 }
 
+describe('reduceControlPlacement — assay-level gating of projection', () => {
+  test('protein level projects a sibling call when the measured allele has none', () => {
+    const p = reduceControlPlacement([link(P, SIB)], ASSAY, 'protein')
+    expect(p?.projected).toBe(true)
+    expect(usable(p!).clinicalSignificance).toBe(P)
+  })
+
+  test('nucleotide level does not project — no direct record → null', () => {
+    expect(reduceControlPlacement([link(P, SIB)], ASSAY, 'cdna')).toBeNull()
+    expect(reduceControlPlacement([link(P, SIB)], ASSAY, 'genomic')).toBeNull()
+  })
+
+  test('nucleotide level still honors the measured allele`s own direct call', () => {
+    const p = reduceControlPlacement([link(P, ASSAY), link(VUS, SIB)], ASSAY, 'cdna')
+    expect(usable(p!).clinicalSignificance).toBe(P)
+    expect(usable(p!).projected).toBe(false)
+  })
+
+  test('unknown level preserves the prior behavior — projects', () => {
+    expect(reduceControlPlacement([link(P, SIB)], ASSAY)?.projected).toBe(true)
+  })
+
+  test('a subject digest *set* (c↔g twin) counts a record on either representation as direct', () => {
+    // The physical allele is stored as ASSAY (coding) + SIB (its genomic twin); ClinVar linked the record to
+    // the twin. Anchoring on both digests keeps it a direct call, not a projection off a "sibling".
+    const p = reduceControlPlacement([link(P, SIB)], [ASSAY, SIB], 'cdna')
+    expect(usable(p!).clinicalSignificance).toBe(P)
+    expect(usable(p!).projected).toBe(false)
+  })
+})
+
 describe('resolveClinvarHeadline — the display decision', () => {
   test('no records → none', () => {
     expect(resolveClinvarHeadline([], ASSAY)).toEqual({kind: 'none'})
+  })
+
+  test('nucleotide level, no direct record but classified siblings → kind "absent"', () => {
+    expect(resolveClinvarHeadline([rec(P, SIB)], ASSAY, 'cdna')).toEqual({kind: 'absent'})
+    expect(resolveClinvarHeadline([rec(P, SIB), rec(VUS, SIB2)], ASSAY, 'genomic')).toEqual({kind: 'absent'})
+  })
+
+  test('protein level, no direct record → projects to kind "call"', () => {
+    expect(resolveClinvarHeadline([rec(P, SIB)], ASSAY, 'protein').kind).toBe('call')
+  })
+
+  test('measured allele has no record, only germline-less related records → absent (not a sibling presence)', () => {
+    // The measured variant has no record of its own; a sibling`s `-` must not be shown as this variant`s state.
+    expect(resolveClinvarHeadline([rec('-', SIB)], ASSAY, 'cdna')).toEqual({kind: 'absent'})
+    expect(resolveClinvarHeadline([rec('-', SIB)], ASSAY, 'protein')).toEqual({kind: 'absent'})
+  })
+
+  test('nucleotide level, measured allele carries a `-` record → presence, not absent', () => {
+    const headline = resolveClinvarHeadline([rec('-', ASSAY), rec(P, SIB)], ASSAY, 'cdna')
+    expect(headline.kind).toBe('presence')
+    if (headline.kind !== 'presence') throw new Error('expected presence')
+    expect(headline.record.onAssayed).toBe(true)
+  })
+
+  test('nucleotide level, measured allele has its own call → kind "call" (direct, not projected)', () => {
+    const headline = resolveClinvarHeadline([rec(P, ASSAY), rec(VUS, SIB)], ASSAY, 'cdna')
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    expect(headline.placement.projected).toBe(false)
   })
 
   test('a usable call → kind "call", carrying the representative record and placement', () => {

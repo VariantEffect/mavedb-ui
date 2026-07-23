@@ -64,10 +64,17 @@
           </template>
         </div>
 
-        <VariantGnomadStat :alleles="detail.alleles" :annotations="detail.annotations" :assay-gnomad="gnomad" />
+        <VariantGnomadStat
+          :alleles="detail.alleles"
+          :annotations="detail.annotations"
+          :assay-gnomad="gnomad"
+          :assay-level="detail.assayLevel"
+          :assay-level-digest="detail.assayLevelDigest"
+        />
         <VariantClinvarStat
           :alleles="detail.alleles"
           :annotations="detail.annotations"
+          :assay-level="detail.assayLevel"
           :assay-level-digest="detail.assayLevelDigest"
           :clinvar-version="clinvarVersion"
         />
@@ -212,7 +219,7 @@ export default defineComponent({
         this.detail?.assayLevelDigest ?? null,
         this.clinvarVersion
       )
-      const headline = resolveClinvarHeadline(records, this.detail?.assayLevelDigest ?? null)
+      const headline = resolveClinvarHeadline(records, this.detail?.assayLevelDigest ?? null, this.detail?.assayLevel ?? null)
       return headline.kind !== 'none' || enumerateUnderlyingClinvar(records).length > 0
     },
     // The facts grid only earns its place when a cell resolves; otherwise it's four dashes (clutter), and the

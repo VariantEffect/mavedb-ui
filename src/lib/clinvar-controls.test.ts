@@ -113,12 +113,31 @@ describe('enumerateUnderlyingClinvar — the popover projection', () => {
     expect(ids(enumerate(annotations, {}))).toEqual(['b', 'a'])
   })
 
-  test('excludes the measured allele`s own record — the primary is not "underlying"', () => {
+  test('keeps a distinct related sibling as context beside the measured allele`s own call', () => {
     const annotations = {
       assayed: {clinvar: [clinvar({clinvarAlleleId: 'assayed', clinicalSignificance: 'Pathogenic'})]},
       sib: {clinvar: [clinvar({clinvarAlleleId: 'sib', clinicalSignificance: 'Uncertain significance'})]}
     }
-    // Only the sibling is underlying; a lone assayed record would leave this empty (→ no popover).
+    // The measured allele's own call is the headline; the genuinely distinct sibling is offered as context.
+    expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'assayed')))).toEqual(['sib'])
+  })
+
+  test('the same record under a non-assayed reference frame is not "underlying" the assayed call', () => {
+    const annotations = {
+      // One ClinVar record (variation V1), annotated on the measured protein allele `p` and again on its
+      // genomic frame `g`. `g` is not a distinct sibling — it's the same record you're already looking at.
+      p: {clinvar: [clinvar({clinvarAlleleId: 'x', clinvarVariationId: 'V1'})]},
+      g: {clinvar: [clinvar({clinvarAlleleId: 'x', clinvarVariationId: 'V1'})]}
+    }
+    expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'p')))).toEqual([])
+  })
+
+  test('an unclassified (`-`) assayed record does not win — siblings still surface', () => {
+    const annotations = {
+      assayed: {clinvar: [clinvar({clinvarAlleleId: 'assayed', clinicalSignificance: '-'})]},
+      sib: {clinvar: [clinvar({clinvarAlleleId: 'sib', clinicalSignificance: 'Uncertain significance'})]}
+    }
+    // A `-` on the measured allele carries no call, so the fold projects from the sibling — which is underlying.
     expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'assayed')))).toEqual(['sib'])
   })
 

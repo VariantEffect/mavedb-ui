@@ -148,7 +148,7 @@ export function useClinvarControls(
     let usableAny = false
     for (const variant of list) {
       const links = linksByUrn.get(variant.variantUrn)
-      const placement = links ? reduceControlPlacement(links, variant.assayLevelDigest) : null
+      const placement = links ? reduceControlPlacement(links, variant.assayLevelDigest, variant.assayLevel) : null
       variant.control = placement
       // "Has clinical significance" gates the clinical view — a hard-discordant variant carries ClinVar
       // data but is not a usable control, so it doesn't count toward showing the view.

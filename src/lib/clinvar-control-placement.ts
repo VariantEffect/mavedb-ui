@@ -11,7 +11,6 @@
 
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-  clinvarVariantUrl,
   CLINVAR_REVIEW_STATUS_STARS,
   CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   DEFAULT_CLNREVSTAT_FIELD,
@@ -20,9 +19,11 @@ import {
   type MeasurementClinvarRecord,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
 } from '@/lib/clinvar-controls'
+import {type SubjectDigest, toSubjectDigestSet} from '@/lib/annotation-subject'
 import type {components} from '@/schema/openapi'
 
 type ClinvarAnnotation = components['schemas']['ClinvarAnnotation']
+type SequenceLevel = components['schemas']['SequenceLevel']
 
 /**
  * How the ClinVar calls reaching a measurement disagree, ordered by placement difficulty.
@@ -100,10 +101,16 @@ const starsOf = (reviewStatus: string) => CLINVAR_REVIEW_STATUS_STARS[reviewStat
 /**
  * Reduce the ClinVar controls reaching one variant to a single {@link ClinvarControlPlacement}.
  *
- * **Precedence:** if any control annotates the variant's own assayed-level allele
- * (`alleleDigest === assayLevelDigest`), those controls are the winning set and the projection siblings
- * are ignored — a direct call on the assayed entity is not diluted by the fan-out. Otherwise the
- * siblings are the winning set. Over the winning set:
+ * **Precedence:** if any control annotates the variant's own subject allele (`alleleDigest` ∈ the subject
+ * digest set — the measured/page allele, including its c↔g twin), those controls are the winning set and the
+ * projection siblings are ignored — a direct call on the assayed entity is not diluted by the fan-out.
+ *
+ * **Projection is level-gated.** Falling through to sibling controls is only legitimate at the *protein*
+ * assay level, where ClinVar (a nucleotide resource) cannot annotate the measured allele itself, so the
+ * encoding siblings are the only available signal. At nucleotide level (`cdna`/`genomic`) the measured
+ * variant *can* carry its own record, so its absence is real information: we do **not** borrow a sibling's
+ * call (which would both overreach and double-count — that sibling is its own scored row). With no direct
+ * record at nucleotide level, this returns `null`. Otherwise the siblings are the winning set. Over it:
  *   - **hard** (both a P/LP and a B/LB call) → `discordance: 'hard'`, not a usable control;
  *   - **soft** (a directional lean + an uncertain record — a VUS or a ClinVar-*Conflicting* call) →
  *     `discordance: 'soft'`, usable — the lean is the representative, but the surface can flag the soft conflict;
@@ -116,7 +123,8 @@ const starsOf = (reviewStatus: string) => CLINVAR_REVIEW_STATUS_STARS[reviewStat
  */
 export function reduceControlPlacement(
   links: ControlLink[],
-  assayLevelDigest: string | null | undefined
+  subject: SubjectDigest,
+  assayLevel?: SequenceLevel | null
 ): ClinvarControlPlacement | null {
   // Drop ClinVar "no classification" placeholders (a literal `-`/empty) up front, so they neither become a
   // call nor — as a `-` on the assayed allele — block fall-through to a real projection sibling.
@@ -125,11 +133,19 @@ export function reduceControlPlacement(
     return null
   }
 
-  const assayedLevel = assayLevelDigest ? classified.filter((link) => link.alleleDigest === assayLevelDigest) : []
-  const winning = assayedLevel.length > 0 ? assayedLevel : classified
-  // Fell through to siblings — but only *claim* projection when the assayed digest is known; an absent
+  const subjectSet = toSubjectDigestSet(subject)
+  const assayedLevel =
+    subjectSet.size > 0 ? classified.filter((link) => link.alleleDigest && subjectSet.has(link.alleleDigest)) : []
+  // Only project at protein level (or when the level is unknown, to avoid silently dropping controls);
+  // at nucleotide level a missing direct record is final.
+  const canProject = assayLevel !== 'cdna' && assayLevel !== 'genomic'
+  const winning = assayedLevel.length > 0 ? assayedLevel : canProject ? classified : []
+  if (winning.length === 0) {
+    return null
+  }
+  // Fell through to siblings — but only *claim* projection when the subject digest is known; an absent
   // digest means unknown provenance, which we don't surface as "related variant" (avoids mislabeling).
-  const projected = Boolean(assayLevelDigest) && assayedLevel.length === 0
+  const projected = subjectSet.size > 0 && assayedLevel.length === 0
 
   // Distinct calls, preserving first-seen order.
   const seen = new Set<string>()
@@ -201,13 +217,18 @@ export type ClinvarCallNote = 'none' | 'concordant' | 'soft-vus' | 'soft-conflic
  * - `conflicting` — hard-discordant winning set; no single call to show.
  * - `call` — the representative usable call (assayed-level or a projection sibling), with a {@link ClinvarCallNote}
  *   qualifying it (concordant aside, or a soft-conflict flag). The lib owns that decision so the template renders it.
- * - `presence` — no usable call, but a ClinVar record exists (a `-` germline-less submission); link out.
+ * - `presence` — no usable call, but a ClinVar record exists on the measurement (a `-` germline-less
+ *   submission); name the state and link out.
+ * - `absent` — a nucleotide-level measurement whose own allele has no ClinVar record, while related alleles
+ *   do: we decline to project (see reduceControlPlacement), so the surface says the record is absent and
+ *   offers the related records as context rather than promoting one to a call.
  * - `none` — nothing reaches the measurement.
  */
 export type ClinvarHeadline =
   | {kind: 'conflicting'; placement: HardDiscordantPlacement}
   | {kind: 'call'; clinvar: ClinvarAnnotation; placement: UsableControlPlacement; note: ClinvarCallNote}
   | {kind: 'presence'; record: MeasurementClinvarRecord}
+  | {kind: 'absent'}
   | {kind: 'none'}
 
 /** Derive the {@link ClinvarCallNote} for a usable placement — the lib's single display decision for a call. */
@@ -219,21 +240,21 @@ function resolveCallNote(placement: UsableControlPlacement): ClinvarCallNote {
   return 'none'
 }
 
-/** Pick the germline-less record to represent a measurement when the fold yields no call: the measured
- *  allele's own record wins, then any linkable one, else first-seen. */
-function selectPresence(records: MeasurementClinvarRecord[]): MeasurementClinvarRecord | null {
-  if (records.length === 0) return null
-  return records.find((r) => r.onAssayed) ?? records.find((r) => Boolean(clinvarVariantUrl(r.clinvar))) ?? records[0]
-}
-
 /**
- * Resolve what a one-headline ClinVar surface shows, over a resolved walk. Runs the fold and, when it yields
- * no usable call, falls back to a `-` presence record — the single precedence decision every such surface
- * reads, so the stat cell and variant screen agree.
+ * Resolve what a one-headline ClinVar surface shows, over a resolved walk. Runs the level-gated fold, then
+ * falls back through a fixed precedence so every such surface (stat cell, variant screen) agrees:
+ *   1. a usable/hard placement → `call`/`conflicting`;
+ *   2. the measured allele's *own* record (a `-`, since a classification would have folded above) → `presence`,
+ *      naming the germline-less state and linking out;
+ *   3. no record on the measured allele, but records reach related alleles (a nucleotide measurement we
+ *      declined to project) → `absent` — the measured variant has no ClinVar record; the related records are
+ *      offered as context, never promoted to a call or a germline-less state on this variant;
+ *   4. nothing reaches the measurement → `none`.
  */
 export function resolveClinvarHeadline(
   records: MeasurementClinvarRecord[],
-  assayLevelDigest: string | null | undefined
+  subject: SubjectDigest,
+  assayLevel?: SequenceLevel | null
 ): ClinvarHeadline {
   const placement = reduceControlPlacement(
     records.map((r) => ({
@@ -241,7 +262,8 @@ export function resolveClinvarHeadline(
       reviewStatus: r.clinvar.clinicalReviewStatus,
       alleleDigest: r.digest
     })),
-    assayLevelDigest
+    subject,
+    assayLevel
   )
   if (placement?.discordance === 'hard') return {kind: 'conflicting', placement}
   if (placement) {
@@ -250,7 +272,11 @@ export function resolveClinvarHeadline(
       return {kind: 'call', clinvar: representative.clinvar, placement, note: resolveCallNote(placement)}
     }
   }
-  // No usable call — a real classification would have folded above, so any surviving record is a `-`.
-  const presence = selectPresence(records)
-  return presence ? {kind: 'presence', record: presence} : {kind: 'none'}
+  // The subject allele's own record (if any) is germline-less — a classification would have folded above.
+  // `onAssayed` was tagged against this same subject, so it covers the c↔g twin too.
+  const assayedRecord = records.find((r) => r.onAssayed)
+  if (assayedRecord) return {kind: 'presence', record: assayedRecord}
+  // No record on the measured allele. Any records that reach it are on *related* alleles — we won't promote
+  // one to a call or a germline-less state on this variant; say the record is absent and offer them as context.
+  return records.length > 0 ? {kind: 'absent'} : {kind: 'none'}
 }

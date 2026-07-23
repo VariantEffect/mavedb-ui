@@ -1,4 +1,5 @@
 import type {KeySection} from '@/composables/use-key-drawer'
+import {type SubjectDigest, toSubjectDigestSet} from '@/lib/annotation-subject'
 import {hgvsLabelRank} from '@/lib/formats'
 import type {components} from '@/schema/openapi'
 
@@ -239,22 +240,24 @@ export function clinvarRecordId(clinvar: {clinvarVariationId?: string | null; cl
  * Resolve the ClinVar records reaching one measurement at `version` — the single walk over the annotations
  * map that the fold, the underlying-record popover, and the `-` headline fallback all project from, so no
  * surface re-walks it. One record per annotated allele digest (unclassified `-` records included, tagged);
- * downstream projections filter/fold as they need.
+ * downstream projections filter/fold as they need. `subject` is the measured/page allele's digest(s);
+ * a record on any of them is the subject's own (`onAssayed`).
  */
 export function resolveClinvarRecords(
   annotations: Record<string, {clinvar?: ClinvarAnnotation[] | null}> | null | undefined,
   alleles: Record<string, {hgvs?: string | null}> | null | undefined,
-  assayLevelDigest: string | null | undefined,
+  subject: SubjectDigest,
   version?: string | null
 ): MeasurementClinvarRecord[] {
   if (!annotations) return []
+  const subjectSet = toSubjectDigestSet(subject)
   const records: MeasurementClinvarRecord[] = []
   for (const [digest, ann] of Object.entries(annotations)) {
     const clinvar = selectClinvar(ann.clinvar, version)
     if (!clinvar) continue
     records.push({
       digest,
-      onAssayed: digest === assayLevelDigest,
+      onAssayed: subjectSet.has(digest),
       hgvs: alleles?.[digest]?.hgvs ?? null,
       classified: isClassifiedSignificance(clinvar.clinicalSignificance),
       clinvar
@@ -269,15 +272,24 @@ export function resolveClinvarRecords(
  * primary, already shown as the headline, not "underlying" — so a lone assayed record yields no popover, and
  * a protein-level allele's projected headline still lists the nucleotide sibling it was drawn from.
  *
+ * These are the *related-allele* records offered as context — beside a direct call (transparency: records
+ * that did not drive it), beneath a projected call (the siblings it folded over), or under an `absent`
+ * nucleotide headline. Excludes the measured allele's own record (`onAssayed`) **and its cross-frame
+ * duplicates**: the same ClinVar record seen under another reference-frame digest is the very record already
+ * shown, not a distinct sibling, so it must not reappear here.
+ *
  * Germline-less `-` submissions are kept (a record that exists is worth linking to; only the control fold
  * drops `-`). Dedupes by ClinVar record id across the DNA/protein frames that share one record (preferring a
  * coding HGVS for the label), and sorts directional calls (P/LP, B/LB) ahead of VUS and `-`, then by stars.
  */
 export function enumerateUnderlyingClinvar(records: MeasurementClinvarRecord[]): MeasurementClinvarRecord[] {
+  // The measured allele's own record id(s): exclude these and any other frame carrying the same record.
+  const assayedIds = new Set(records.filter((r) => r.onAssayed).map((r) => clinvarRecordId(r.clinvar)))
   const byRecord = new Map<string, MeasurementClinvarRecord>()
   for (const rec of records) {
     if (rec.onAssayed) continue
     const key = clinvarRecordId(rec.clinvar)
+    if (assayedIds.has(key)) continue
     const existing = byRecord.get(key)
     if (!existing) byRecord.set(key, {...rec})
     else if (hgvsLabelRank(rec.hgvs) > hgvsLabelRank(existing.hgvs)) existing.hgvs = rec.hgvs

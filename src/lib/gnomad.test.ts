@@ -93,6 +93,35 @@ describe('collectGnomadFrequencies — enumeration of encoding-variant frequenci
       expect(collectGnomadFrequencies(annotations, {'g-digest': {hgvs: 'g.100A>G'}})[0]?.hgvs).toBe('g.100A>G')
     })
   })
+
+  describe('subject exclusion — the subject`s own frequency is the headline, not a "related" one', () => {
+    test('excludes the subject digest', () => {
+      const annotations = {
+        subject: {gnomad: gnomad({dbIdentifier: 'S'})},
+        sib: {gnomad: gnomad({dbIdentifier: 'B'})}
+      }
+      expect(ids(collectGnomadFrequencies(annotations, {}, ['subject']))).toEqual(['B'])
+    })
+
+    test('excludes the subject`s cross-frame twin (same gnomAD id on a non-subject digest)', () => {
+      // The subject (coding) has no gnomAD of its own; its genomic twin carries the record. Anchoring on both
+      // subject digests drops the twin so the subject`s own frequency is never listed as related.
+      const annotations = {
+        'subject-c': {gnomad: null},
+        'subject-g': {gnomad: gnomad({dbIdentifier: 'S'})},
+        sib: {gnomad: gnomad({dbIdentifier: 'B'})}
+      }
+      expect(ids(collectGnomadFrequencies(annotations, {}, ['subject-c', 'subject-g']))).toEqual(['B'])
+    })
+
+    test('no subject given → collects everything (backward compatible)', () => {
+      const annotations = {
+        subject: {gnomad: gnomad({dbIdentifier: 'S'})},
+        sib: {gnomad: gnomad({dbIdentifier: 'B', alleleFrequency: 0.002})}
+      }
+      expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['B', 'S'])
+    })
+  })
 })
 
 describe('formatFrequency', () => {

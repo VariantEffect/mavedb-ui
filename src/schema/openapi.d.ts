@@ -758,6 +758,25 @@ export interface paths {
      */
     get: operations["get_score_set_lean_variants_api_v1_score_sets__urn__variants_get"];
   };
+  "/api/v1/score-sets/{urn}/variant-details": {
+    /**
+     * Download a score set's variant details (VRS + Cat-VRS + annotations)
+     * @description Download the score set's variant details — the whole-set streaming pair of the single-variant
+     * ``GET /variants/{urn}`` detail endpoint, and the substrate-faithful replacement for the retired
+     * ``/mapped-variants`` export.
+     *
+     * One record per *mapped* variant (unmapped variants carry no VRS and are omitted): the same
+     * VariantDetail envelope the single-variant route serves — the flat ``preMapped``/``postMapped`` VRS
+     * pair for VRS consumers, plus the spec-pure GA4GH CategoricalVariant and the digest-keyed
+     * VEP/gnomAD/ClinVar annotation map for the full molecular picture.
+     *
+     * Streamed as NDJSON (like the annotated-variant exports) so a large score set downloads without
+     * materializing every envelope server-side and a client can process it line by line. ``as_of``
+     * time-travels the molecular layer only (scores/classifications are immutable); the resolved value is
+     * echoed in ``X-As-Of`` and the variant count in ``X-Total-Count``.
+     */
+    get: operations["get_score_set_variant_details_api_v1_score_sets__urn__variant_details_get"];
+  };
   "/api/v1/score-sets/{urn}/variants/data": {
     /**
      * Get score set variant data in CSV format
@@ -822,13 +841,6 @@ export interface paths {
      * /score-sets/{urn}/counts?start=100
      */
     get: operations["get_score_set_counts_csv_api_v1_score_sets__urn__counts_get"];
-  };
-  "/api/v1/score-sets/{urn}/mapped-variants": {
-    /**
-     * Get mapped variants from score set by URN
-     * @description Return mapped variants from a score set, identified by URN.
-     */
-    get: operations["get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-statement": {
     /**
@@ -1002,7 +1014,8 @@ export interface paths {
   "/api/v1/score-sets/{urn}/gnomad-variants": {
     /**
      * Get gnomad variants for a score set
-     * @description Fetch relevant gnomad variants for a given score set.
+     * @description Fetch relevant gnomad variants for a given score set, each paired with the score-set variants (and
+     * annotated allele digests) it links to over the allele substrate.
      */
     get: operations["get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get"];
   };
@@ -3460,10 +3473,10 @@ export interface components {
       totalScoredVariants: number;
     };
     /**
-     * GnomADVariantWithMappedVariants
-     * @description GnomAD variant view model with mapped variants for non-admin clients.
+     * GnomADVariantWithVariantLinks
+     * @description GnomAD variant + its score-set variant links, for non-admin clients.
      */
-    GnomADVariantWithMappedVariants: {
+    GnomADVariantWithVariantLinks: {
       /** Dbname */
       dbName: string;
       /** Dbidentifier */
@@ -3494,8 +3507,8 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
+      /** Variantlinks */
+      variantLinks: components["schemas"]["GnomadVariantLink"][];
     };
     /**
      * GnomadAnnotation
@@ -3514,6 +3527,19 @@ export interface components {
       dbVersion: string;
       /** Dbidentifier */
       dbIdentifier: string;
+    };
+    /**
+     * GnomadVariantLink
+     * @description One score-set variant a gnomAD frequency record reaches, tagged with the annotated allele's digest.
+     *
+     * Mirrors :class:`clinical_control.ClinvarVariantLink`: a gnomAD variant fans out to every allele that
+     * resolved to it, and each allele belongs to a score-set variant.
+     */
+    GnomadVariantLink: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Alleledigest */
+      alleleDigest?: string | null;
     };
     /**
      * GroupBy
@@ -3859,44 +3885,6 @@ export interface components {
       genomic?: components["schemas"]["HgvsField"] | null;
       cdna?: components["schemas"]["HgvsField"] | null;
       protein?: components["schemas"]["HgvsField"] | null;
-    };
-    /** MappedVariant */
-    MappedVariant: {
-      /** Premapped */
-      preMapped?: unknown;
-      /** Postmapped */
-      postMapped?: unknown;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Errormessage */
-      errorMessage?: string | null;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /**
-       * Mappeddate
-       * Format: date
-       */
-      mappedDate: string;
-      /** Mappingapiversion */
-      mappingApiVersion: string;
-      /** Current */
-      current: boolean;
-      alignmentLevel?: components["schemas"]["SequenceLevel"] | null;
-      /** Atmismatchedlocus */
-      atMismatchedLocus?: boolean | null;
-      /** Neargap */
-      nearGap?: boolean | null;
-      /** Varianturn */
-      variantUrn: string;
-      /** Id */
-      id: number;
-      /** Clingenalleleid */
-      clingenAlleleId?: string | null;
-      /** Recordtype */
-      recordType?: string;
     };
     /**
      * MappingState
@@ -5820,15 +5808,22 @@ export interface components {
      * @description The assayed variant-detail envelope (``GET /variants/{urn}``).
      *
      * Two tiers: flat, UI-ergonomic assay fields (the ``targetHgvs``/``referenceHgvs`` coordinate pair
-     * is a client-side toggle, no refetch) plus the spec-pure GA4GH ``molecularRepresentation``
-     * (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer rides alongside, keyed by VRS
-     * digest: the ``alleles`` identity sidecar (per-allele ``level`` / ``hgvs`` / ``clingenAlleleId`` /
-     * ``relation`` — one entry per linked allele, sharing keys with ``annotations``) and the
-     * ``annotations`` map. ``isCurrent``/``supersededByScoreSet`` let a superseded variant self-describe:
-     * ``supersededByScoreSet`` is the superseding *score set*'s URN, not a variant URN. Supersession is
-     * versioned at the score-set level, and a newer version may add, drop, or renumber variants — so there
-     * is no stable superseding-*variant* pointer to hand back; a consumer resolves the current measurement
-     * by looking this variant up within that score set. Absent fields are omitted.
+     * is a client-side toggle, no refetch; the ``preMapped``/``postMapped`` raw VRS pair lets a
+     * VRS/bulk consumer read the assayed-level and measured VRS directly) plus the spec-pure GA4GH
+     * ``molecularRepresentation`` (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer
+     * rides alongside, keyed by VRS digest: the ``alleles`` identity sidecar (per-allele ``level`` /
+     * ``hgvs`` / ``clingenAlleleId`` / ``relation`` — one entry per linked allele, sharing keys with
+     * ``annotations``) and the ``annotations`` map. ``isCurrent``/``supersededByScoreSet`` let a
+     * superseded variant self-describe: ``supersededByScoreSet`` is the superseding *score set*'s URN,
+     * not a variant URN. Supersession is versioned at the score-set level, and a newer version may add,
+     * drop, or renumber variants — so there is no stable superseding-*variant* pointer to hand back; a
+     * consumer resolves the current measurement by looking this variant up within that score set.
+     *
+     * Unlike most MaveDB response models, this one serializes with ``exclude_none=False`` on both routes
+     * that emit it (``GET /variants/{urn}`` and the bulk ``GET /score-sets/{urn}/variant-details`` NDJSON
+     * stream): the shape is a stable, self-describing envelope, so every record carries the same key set
+     * and an unmapped variant reads ``preMapped``/``postMapped``/``molecularRepresentation`` as ``null``
+     * rather than dropping them. The two routes are kept in lockstep — the same object, one shape.
      */
     VariantDetail: {
       /** Urn */
@@ -5851,6 +5846,10 @@ export interface components {
       assayLevelDigest?: string | null;
       /** Clingenalleleid */
       clingenAlleleId?: string | null;
+      /** Premapped */
+      preMapped?: Record<string, never> | null;
+      /** Postmapped */
+      postMapped?: Record<string, never> | null;
       /** Molecularrepresentation */
       molecularRepresentation?: Record<string, never> | null;
       /** Mode */
@@ -10233,6 +10232,67 @@ export interface operations {
     };
   };
   /**
+   * Download a score set's variant details (VRS + Cat-VRS + annotations)
+   * @description Download the score set's variant details — the whole-set streaming pair of the single-variant
+   * ``GET /variants/{urn}`` detail endpoint, and the substrate-faithful replacement for the retired
+   * ``/mapped-variants`` export.
+   *
+   * One record per *mapped* variant (unmapped variants carry no VRS and are omitted): the same
+   * VariantDetail envelope the single-variant route serves — the flat ``preMapped``/``postMapped`` VRS
+   * pair for VRS consumers, plus the spec-pure GA4GH CategoricalVariant and the digest-keyed
+   * VEP/gnomAD/ClinVar annotation map for the full molecular picture.
+   *
+   * Streamed as NDJSON (like the annotated-variant exports) so a large score set downloads without
+   * materializing every envelope server-side and a client can process it line by line. ``as_of``
+   * time-travels the molecular layer only (scores/classifications are immutable); the resolved value is
+   * echoed in ``X-As-Of`` and the variant count in ``X-Total-Count``.
+   */
+  get_score_set_variant_details_api_v1_score_sets__urn__variant_details_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (VRS, Cat-VRS membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the score set's fixed scores. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Newline-delimited JSON: one VariantDetail per mapped variant — the same envelope the single-variant GET /variants/{urn} route serves, carrying the flat preMapped/postMapped VRS pair, the spec-pure GA4GH CategoricalVariant, and the digest-keyed VEP/gnomAD/ClinVar annotation map. */
+      200: {
+        content: {
+          "application/json": unknown;
+          "application/x-ndjson": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Get score set variant data in CSV format
    * @description Return tabular variant data from a score set, identified by URN, in CSV format.
    *
@@ -10276,6 +10336,8 @@ export interface operations {
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;
+        /** @description Reconstruct the annotation layer (post-mapped HGVS, VEP, gnomAD, ClinVar) as it stood at this instant, over the variant's immutable submitted HGVS/scores/counts. ISO 8601, ideally timezone-aware. No effect on the scores/counts namespaces. Defaults to current. */
+        as_of?: string | null;
       };
       header?: {
         "x-active-roles"?: string | null;
@@ -10472,50 +10534,6 @@ export interface operations {
       /** @description Bad request. Check parameters and payload. */
       400: {
         content: never;
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Get mapped variants from score set by URN
-   * @description Return mapped variants from a score set, identified by URN.
-   */
-  get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["MappedVariant"][];
-        };
       };
       /** @description Authentication required. */
       401: {
@@ -11016,11 +11034,14 @@ export interface operations {
   };
   /**
    * Get gnomad variants for a score set
-   * @description Fetch relevant gnomad variants for a given score set.
+   * @description Fetch relevant gnomad variants for a given score set, each paired with the score-set variants (and
+   * annotated allele digests) it links to over the allele substrate.
    */
   get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get: {
     parameters: {
       query?: {
+        /** @description Reconstruct the allele → gnomAD link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
         version?: string | null;
       };
       header?: {
@@ -11034,7 +11055,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["GnomADVariantWithMappedVariants"][];
+          "application/json": components["schemas"]["GnomADVariantWithVariantLinks"][];
         };
       };
       /** @description Authentication required. */

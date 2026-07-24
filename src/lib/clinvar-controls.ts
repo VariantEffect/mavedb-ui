@@ -20,15 +20,15 @@ export const CLINICAL_SIGNIFICANCE_KEY_SECTION: KeySection = {
   ]
 }
 
-/** Key-drawer glossary for sibling-allele ClinVar controls (calls carried over from a sibling allele). */
-export const SIBLING_CONTROL_KEY_SECTION: KeySection = {
-  id: 'passthrough',
-  title: 'Sibling-allele controls',
+/** Key-drawer glossary for inferred ClinVar controls (calls carried over from a related allele). */
+export const INFERRED_CONTROL_KEY_SECTION: KeySection = {
+  id: 'inferred',
+  title: 'Inferred controls',
   terms: [
     {
-      label: 'From a sibling allele',
+      label: 'Inferred call',
       definition:
-        'A ClinVar call carried over from a sibling allele that shares the protein consequence, shown when the assayed variant itself has no ClinVar record. Marked with *.'
+        'A ClinVar call inferred from a related allele with the same protein consequence — shown only when the assayed variant has no ClinVar record of its own.'
     }
   ]
 }

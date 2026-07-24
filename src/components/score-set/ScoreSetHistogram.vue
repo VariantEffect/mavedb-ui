@@ -169,10 +169,6 @@
     control variants used to derive the displayed calibration. For details on which variants were used, refer to the
     sources associated with each calibration.
   </span>
-  <span v-if="hasProjectedControlPlotted" class="mt-1 block text-center text-xs italic leading-tight">
-    Note: Some ClinVar controls shown (marked *) are carried over from a sibling allele that shares the protein
-    consequence — the assayed variant itself has no ClinVar record.
-  </span>
   <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
     *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
     class, select the
@@ -402,14 +398,6 @@ export default defineComponent({
         this.activeCalibration.value.functionalClassifications?.every((fc) => fc.class != null)
       )
     },
-    // True when a clinical-control view is active and at least one plotted control is a projection from a
-    // sibling allele. Gates the passthrough note.
-    hasProjectedControlPlotted: function (): boolean {
-      if (!this.vizOptions[this.activeViz]?.clinvarControlLegendNoteEnabled || !this.clinical.refreshed) {
-        return false
-      }
-      return (this.variants as DisplayVariant[]).some((v) => v.control?.projected)
-    },
     selectedCalibrationClassMap: function () {
       if (!this.selectedCalibrationIsClassBased) {
         return null
@@ -489,19 +477,21 @@ export default defineComponent({
             selectedSignificances: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
             minStars: Number.NEGATIVE_INFINITY
           }
+          const isPathogenic = (d: HistogramDatum) => this.controlSeries(d, opts) === 'pathogenic'
+          const isBenign = (d: HistogramDatum) => this.controlSeries(d, opts) === 'benign'
           return [
             {
-              classifier: (d: HistogramDatum) => this.controlSeries(d, opts) === 'pathogenic',
+              classifier: isPathogenic,
               options: {
                 color: '#e41a1c',
-                title: 'Pathogenic/Likely Pathogenic'
+                title: this.seriesTitle('Pathogenic/Likely Pathogenic', isPathogenic)
               }
             },
             {
-              classifier: (d: HistogramDatum) => this.controlSeries(d, opts) === 'benign',
+              classifier: isBenign,
               options: {
                 color: '#377eb8',
-                title: 'Benign/Likely Benign'
+                title: this.seriesTitle('Benign/Likely Benign', isBenign)
               }
             }
           ]
@@ -522,21 +512,23 @@ export default defineComponent({
             selectedSignificances: this.customSelectedClinicalSignificanceClassifications,
             minStars: this.customMinStarRating
           }
+          const isPathogenic = (d: HistogramDatum) =>
+            this.controlSeries(d, opts) === 'pathogenic' && this.filterControlVariantByEffect(d)
+          const isBenign = (d: HistogramDatum) =>
+            this.controlSeries(d, opts) === 'benign' && this.filterControlVariantByEffect(d)
           const series = [
             {
-              classifier: (d: HistogramDatum) =>
-                this.controlSeries(d, opts) === 'pathogenic' && this.filterControlVariantByEffect(d),
+              classifier: isPathogenic,
               options: {
                 color: '#e41a1c',
-                title: 'Pathogenic/Likely Pathogenic'
+                title: this.seriesTitle('Pathogenic/Likely Pathogenic', isPathogenic)
               }
             },
             {
-              classifier: (d: HistogramDatum) =>
-                this.controlSeries(d, opts) === 'benign' && this.filterControlVariantByEffect(d),
+              classifier: isBenign,
               options: {
                 color: '#377eb8',
-                title: 'Benign/Likely Benign'
+                title: this.seriesTitle('Benign/Likely Benign', isBenign)
               }
             }
           ]
@@ -550,12 +542,13 @@ export default defineComponent({
                 UNCERTAIN_SIGNIFICANCE_CLASSIFICATIONS.includes(c)
               )
             ) {
+              const isUncertain = (d: HistogramDatum) =>
+                this.controlSeries(d, opts) === 'uncertain' && this.filterControlVariantByEffect(d)
               series.push({
-                classifier: (d: HistogramDatum) =>
-                  this.controlSeries(d, opts) === 'uncertain' && this.filterControlVariantByEffect(d),
+                classifier: isUncertain,
                 options: {
                   color: '#999999',
-                  title: 'Uncertain significance'
+                  title: this.seriesTitle('Uncertain significance', isUncertain)
                 }
               })
             }
@@ -566,12 +559,16 @@ export default defineComponent({
                 CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(c)
               )
             ) {
+              const isConflicting = (d: HistogramDatum) =>
+                this.controlSeries(d, opts) === 'conflicting' && this.filterControlVariantByEffect(d)
               series.push({
-                classifier: (d: HistogramDatum) =>
-                  this.controlSeries(d, opts) === 'conflicting' && this.filterControlVariantByEffect(d),
+                classifier: isConflicting,
                 options: {
                   color: '#984ea3',
-                  title: conflictingClinicalSignificanceSeriesLabelForVersion(this.clinical.controlVersion)
+                  title: this.seriesTitle(
+                    conflictingClinicalSignificanceSeriesLabelForVersion(this.clinical.controlVersion),
+                    isConflicting
+                  )
                 }
               })
             }
@@ -987,16 +984,17 @@ export default defineComponent({
       // A projected placement: the measured allele has no ClinVar record, so this call
       // is about a related variant at a different level. Say so — otherwise the histogram appears to
       // contradict the assay-facts card, which shows this variant's own (empty) measured-level ClinVar.
-      const projectedAsterisk = control.projected ? '*' : ''
+      // "Inferred" is the app-wide word for this (matches VariantClinvarStat's "inferred from N related
+      // variants"), rather than a bare asterisk that needs its own legend to decode.
       const projectedNote = control.projected
         ? tooltipFootnote(
-            'For a related variant with the same protein consequence — the measured variant has no ClinVar record.'
+            'This classification is inferred from a related variant with the same protein consequence. The measured variant has no ClinVar record of its own.'
           )
         : null
 
       return tooltipSection([
         tooltipSectionLabel('ClinVar'),
-        tooltipText(`${description}${stars}${projectedAsterisk}`),
+        tooltipText(`${description}${stars}`),
         hasReviewStatus
           ? tooltipLink(
               `http://www.ncbi.nlm.nih.gov/clinvar/?term=${control.dbIdentifier}[alleleid]`,
@@ -1059,10 +1057,13 @@ export default defineComponent({
 
       bin.seriesBins.forEach((serieBin, i) => {
         const series = allSeries[i]
+        // The legend can wrap a series title across lines to stay narrow; this row has its own wrapping
+        // (it's inside a tooltip, not fixed-width SVG text), so it always reads as one flat line.
+        const title = Array.isArray(series?.title) ? series.title.join(' ') : series?.title
         rows.push(
           tooltipCountRow({
             color: series?.color || DEFAULT_SERIES_COLOR,
-            label: series?.title || (allSeries.length > 1 ? `Series ${i + 1}` : ''),
+            label: title || (allSeries.length > 1 ? `Series ${i + 1}` : ''),
             count: serieBin.length,
             active: seriesContainingVariant.includes(series)
           })
@@ -1124,6 +1125,14 @@ export default defineComponent({
      */
     controlSeries(variant: DisplayVariant, opts: ControlSeriesOptions): ClinvarControlSeriesKey | null {
       return resolveControlSeries(variant.control, opts)
+    },
+    // A series's calls can be a mix of direct ClinVar records and ones inferred from a related allele at
+    // the same protein consequence — flag it right on the series that actually has them, rather than a
+    // single blanket note for the whole chart. Returned as two lines (the legend wraps a `string[]` title)
+    // rather than one long line, which would widen the legend enough to cover plotted data.
+    seriesTitle(baseTitle: string, classifier: (d: HistogramDatum) => boolean): string | string[] {
+      const hasInferred = (this.variants as DisplayVariant[]).some((v) => classifier(v) && v.control?.projected)
+      return hasInferred ? [baseTitle, '(includes inferred calls)'] : baseTitle
     },
     /** Whether a significance string is an uncertain call — used to gate the mutually-exclusive filters. */
     isUncertainSignificance,

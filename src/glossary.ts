@@ -3,7 +3,7 @@ import type {KeySection} from '@/composables/use-key-drawer'
 import {COORDINATE_FRAME_KEY_SECTION} from '@/composables/use-variant-coordinates'
 import {ACMG_KEY_SECTION} from '@/lib/acmg'
 import {CONFIDENCE_KEY_SECTION} from '@/lib/allele-grouping'
-import {CLINICAL_SIGNIFICANCE_KEY_SECTION, SIBLING_CONTROL_KEY_SECTION} from '@/lib/clinvar-controls'
+import {CLINICAL_SIGNIFICANCE_KEY_SECTION, INFERRED_CONTROL_KEY_SECTION} from '@/lib/clinvar-controls'
 import {FUNCTIONAL_IMPACT_KEY_SECTION} from '@/lib/functional-impact'
 import {AS_OF_KEY_SECTION, CONSEQUENCE_KEY_SECTION, THIS_VARIANT_KEY_SECTION, SUPERSEDED_KEY_SECTION} from '@/lib/glossary-prose'
 import {POPULATION_KEY_SECTION} from '@/lib/gnomad'
@@ -22,7 +22,7 @@ export const GLOSSARY_SECTIONS: KeySection[] = [
   ACMG_KEY_SECTION,
   POPULATION_KEY_SECTION,
   CLINICAL_SIGNIFICANCE_KEY_SECTION,
-  SIBLING_CONTROL_KEY_SECTION,
+  INFERRED_CONTROL_KEY_SECTION,
   AS_OF_KEY_SECTION,
   SUPERSEDED_KEY_SECTION
 ]

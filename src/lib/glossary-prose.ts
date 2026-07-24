@@ -1,12 +1,18 @@
 import type {KeySection} from '@/composables/use-key-drawer'
 
+// Single source for the "This variant" concept — the page's own subject allele — wherever it's badged:
+// the allele ledger's page-role entry (MvAlleleLedger) and a measurement's direct-relationship badge
+// (MvMeasurementCard) are the same fact from two objects, so they share this one definition rather than
+// each carrying their own. Leads GLOSSARY_SECTIONS (glossary.ts): establishing the subject first lets
+// "Relationship to this variant" read naturally right after it — how other results relate to the thing
+// this section just defined.
 export const THIS_VARIANT_KEY_SECTION: KeySection = {
   id: 'this-variant',
   title: 'This variant',
   terms: [
     {
       label: 'This variant',
-      definition: 'The allele this page is anchored on — the ClinGen allele you navigated to.',
+      definition: 'The ClinGen allele this page is anchored on.',
       class: 'bg-subject/15 text-subject'
     }
   ]

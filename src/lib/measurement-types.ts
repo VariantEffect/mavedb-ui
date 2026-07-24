@@ -18,11 +18,12 @@ export function assayLevelBucket(level: string | null | undefined): LevelBucket 
  * card label, an optional chip class, and the Key-drawer gloss. Phrased relative to the page's own variant
  * so the labels self-explain under the "relative to this variant" anchor. Insertion order is display order.
  */
-export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class?: string; definition: string}> = {
+export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class?: string; definition?: string}> = {
+  // No `definition`: a direct result is the page's own subject allele — the same concept as the Key
+  // drawer's "This variant" section (glossary-prose.ts), defined once there rather than twice.
   direct: {
     label: 'This variant',
-    class: 'bg-subject/15 text-subject',
-    definition: 'The result assayed exactly the allele you searched.'
+    class: 'bg-subject/15 text-subject'
   },
   protein_consequence: {
     label: 'Its protein consequence',
@@ -38,7 +39,9 @@ export const RELATIONSHIP_KEY_SECTION: KeySection = {
   id: 'relationship',
   title: 'Relationship to this variant',
   gloss: 'How each result relates to the allele you searched.',
-  terms: Object.values(RELATIONSHIPS).map((r) => ({label: r.label, definition: r.definition, class: r.class}))
+  terms: Object.values(RELATIONSHIPS)
+    .filter((r) => r.definition)
+    .map((r) => ({label: r.label, definition: r.definition!, class: r.class}))
 }
 
 /**

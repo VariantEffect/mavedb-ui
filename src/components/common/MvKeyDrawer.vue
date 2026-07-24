@@ -100,6 +100,12 @@ export default defineComponent({
       } else {
         window.removeEventListener('keydown', this.onKeydown)
       }
+    },
+    // A badge click while the drawer is already open only changes `activeTerm` and the `isOpen`
+    // watcher above never re-fires. Watch active term as well so we can scroll to it even when
+    // the drawer is already open.
+    'drawer.activeTerm.value'() {
+      if (this.drawer.isOpen.value) void this.scrollToActiveTerm()
     }
   },
 

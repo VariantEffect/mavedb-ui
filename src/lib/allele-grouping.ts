@@ -61,14 +61,18 @@ export interface ConfidenceBadge {
   definition: string
 }
 
-// Single source for the confidence axis (badges + the Key drawer's "confidence" section). Keyed by
-// outcome, not raw `Derivation`: the focus/measured allele reads "Measured" (it has no derivation); the
-// derived states map straight from `derivation`. Insertion order is the drawer's display order.
+// Single source for the confidence axis (badges + the Key drawer's "confidence" section), keyed by outcome
+// rather than raw `Derivation`. `convergent` and `candidate` share a color (identity ambiguity);
+// `projection` gets its own (certain but derived). Insertion order is the drawer's display order.
 export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
-  measured: {label: 'Measured', class: 'bg-sage/15 text-sage', definition: 'Directly assayed in this score set.'},
+  measured: {
+    label: 'This measurement',
+    class: 'bg-sage/15 text-sage',
+    definition: 'An allele that was directly measured in this assay.'
+  },
   projection: {
     label: 'Resolved',
-    class: 'bg-nucleotide-light text-nucleotide',
+    class: 'bg-resolved-light text-resolved',
     definition: 'Derived from the measured allele — the same change expressed at another coordinate level.'
   },
   convergent: {
@@ -79,7 +83,7 @@ export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   },
   candidate: {
     label: 'Candidate',
-    class: 'bg-amber-100 text-amber-700',
+    class: 'bg-synonymous-nucleotide-light text-synonymous-nucleotide',
     definition:
       'A possible nucleotide change behind a protein-level measurement — one of several synonymous codons; which was actually assayed is unknown.'
   }

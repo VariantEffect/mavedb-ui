@@ -22,7 +22,7 @@
       <span
         v-key-term="'relationship'"
         class="inline-block rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3px]"
-        :class="relationship === 'direct' ? 'bg-sage/15 text-sage' : 'bg-border-light text-text-muted'"
+        :class="relationshipClass"
       >
         {{ relationshipLabel }}
       </span>
@@ -74,11 +74,7 @@ import {defineComponent, type PropType} from 'vue'
 
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
-import {
-  assayLevelDisplay,
-  RELATIONSHIPS,
-  type MeasurementRelationship
-} from '@/lib/measurement-types'
+import {assayLevelDisplay, RELATIONSHIPS, type MeasurementRelationship} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
 type SavedFunctionalClassification = components['schemas']['SavedFunctionalClassification']
@@ -124,6 +120,9 @@ export default defineComponent({
     },
     relationshipLabel(): string {
       return RELATIONSHIPS[this.relationship]?.label ?? this.relationship
+    },
+    relationshipClass(): string {
+      return RELATIONSHIPS[this.relationship]?.class ?? 'bg-border-light text-text-muted'
     },
     classification(): string | null {
       return this.preferredClassification?.functionalClassification ?? null

@@ -1,13 +1,13 @@
 import type {KeySection} from '@/composables/use-key-drawer'
 
-export const SELECTED_ALLELE_KEY_SECTION: KeySection = {
-  id: 'selected-allele',
-  title: 'Selected allele',
+export const THIS_VARIANT_KEY_SECTION: KeySection = {
+  id: 'this-variant',
+  title: 'This variant',
   terms: [
     {
-      label: 'Selected allele',
+      label: 'This variant',
       definition: 'The allele this page is anchored on — the ClinGen allele you navigated to.',
-      class: 'bg-link/10 text-link'
+      class: 'bg-subject/15 text-subject'
     }
   ]
 }

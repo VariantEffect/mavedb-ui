@@ -130,7 +130,7 @@ describe('groupAlleles — projection pairing + confidence', () => {
   })
 
   it('badges measured over derivation, maps projection→Resolved / convergent→Convergent / candidate→Candidate, else null', () => {
-    // `measured` wins even if a derivation is also present (a stray measured sibling still reads "Measured").
+    // `measured` wins even if a derivation is also present (a stray measured sibling still reads "This measurement").
     expect(confidenceBadge({measured: true, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.measured)
     expect(confidenceBadge({measured: false, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.projection)
     // A synonymous cousin under a nucleotide assay: a distinct change sharing the consequence, not ambiguous.

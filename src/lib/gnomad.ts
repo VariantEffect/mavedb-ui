@@ -22,12 +22,12 @@ export const POPULATION_KEY_SECTION: KeySection = {
     {
       label: 'Allele frequency (AF)',
       definition:
-        'The fraction of sampled reference-population chromosomes carrying this allele in gnomAD (allele count ÷ allele number).'
+        "The fraction of gnomAD's sampled reference-population chromosomes that carry this allele (allele count ÷ allele number)."
     },
     {
       label: 'AC / AN',
       definition:
-        'Allele count and allele number: the observed carriers and the total chromosomes sampled that the frequency is computed from.'
+        'Allele count and allele number: the observed carriers and the total chromosomes sampled. The two inputs behind the frequency above.'
     },
     {
       label: 'FAF95',

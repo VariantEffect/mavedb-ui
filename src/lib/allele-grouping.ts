@@ -68,24 +68,24 @@ export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   measured: {
     label: 'This measurement',
     class: 'bg-sage/15 text-sage',
-    definition: 'An allele that was directly measured in this assay.'
+    definition: 'Directly measured in this assay.'
   },
   projection: {
     label: 'Resolved',
     class: 'bg-resolved-light text-resolved',
-    definition: 'Derived from the measured allele — the same change expressed at another coordinate level.'
+    definition: 'Derived from the measured allele. The same change expressed at an un-measured coordinate level.'
   },
   convergent: {
     label: 'Convergent',
     class: 'bg-synonymous-nucleotide-light text-synonymous-nucleotide',
     definition:
-      'A distinct nucleotide change that produces the same protein change as the measured variant — a separate variant that converges on the same consequence, not the one assayed here.'
+      'A different nucleotide change than what was measured, which happens to produce the same protein change as the measured variant.'
   },
   candidate: {
     label: 'Candidate',
     class: 'bg-synonymous-nucleotide-light text-synonymous-nucleotide',
     definition:
-      'A possible nucleotide change behind a protein-level measurement — one of several synonymous codons; which was actually assayed is unknown.'
+      'A possible nucleotide change encoding a protein-level measurement. This variant is one of several synonymous codons. The assay did not report which one was measured.'
   }
 }
 

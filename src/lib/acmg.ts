@@ -50,7 +50,10 @@ export const ACMG_KEY_SECTION: KeySection = {
   gloss: 'How the functional result maps onto clinical-classification evidence.',
   terms: [
     ...Object.values(ACMG_CRITERIA),
-    {label: 'Evidence strength', definition: 'How much weight the evidence carries: supporting → moderate → strong → very strong.'},
+    {
+      label: 'Evidence strength',
+      definition: 'How much weight the evidence carries: supporting → moderate → moderate+ → strong → very strong.'
+    },
     {label: 'OddsPath', definition: 'The odds of pathogenicity implied by the score; sets the evidence strength.'}
   ]
 }

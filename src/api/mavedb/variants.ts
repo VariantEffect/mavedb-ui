@@ -10,16 +10,15 @@ type VariantVrsMatch = components['schemas']['VariantVrsMatch']
 
 // The ClinGen-allele-centric variant page's entrypoint: every measurement whose cross-layer
 // equivalence class touches this CAID/PAID, in the API's default order (direct-first). `includeSuperseded`
-// opts in to superseded score-set versions; `includeNucleotideSiblings` (CA only) widens a nucleotide
-// query through its protein consequence to the sibling nt changes — the search discovery path.
+// opts in to superseded score-set versions. A CA query always includes its protein consequence and the
+// sibling nt changes; a PA query, its nt encodings — the same on every surface.
 export const getAlleleMeasurements = memoizeRead(
   async (
     clingenAlleleId: string,
-    options?: {includeSuperseded?: boolean; includeNucleotideSiblings?: boolean; asOf?: string}
+    options?: {includeSuperseded?: boolean; asOf?: string}
   ): Promise<AlleleMeasurement[]> => {
     const params: Record<string, string | boolean> = {}
     if (options?.includeSuperseded) params.include_superseded = true
-    if (options?.includeNucleotideSiblings) params.include_nucleotide_siblings = true
     if (options?.asOf) params.as_of = options.asOf
     const response = await axios.get(
       `${config.apiBaseUrl}/clingen-alleles/${encodeURIComponent(clingenAlleleId)}/measurements`,
@@ -28,7 +27,7 @@ export const getAlleleMeasurements = memoizeRead(
     return response.data
   },
   (clingenAlleleId, options) =>
-    `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.includeNucleotideSiblings ?? false}|${options?.asOf ?? ''}`
+    `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.asOf ?? ''}`
 )
 
 export async function lookupVariantsByVrsDigest(identifier: string): Promise<VariantVrsMatch[]> {

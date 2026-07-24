@@ -1159,9 +1159,9 @@ export default defineComponent({
         if (!caId) continue
         allele.variantsStatus = 'Loading'
         try {
-          // A nucleotide query widens to its protein consequence's sibling nt changes (search discovery);
-          // a protein query already returns every encoding, so the flag is a no-op there.
-          const measurements = await getAlleleMeasurements(caId, {includeNucleotideSiblings: !caId.startsWith('PA')})
+          // The full equivalence class: a CA query returns its protein consequence and sibling nt changes,
+          // a PA query its nt encodings — the same set the variant page shows.
+          const measurements = await getAlleleMeasurements(caId)
 
           // Bucket each measurement by the API's relationship directly — the display labels (below) interpret
           // each bucket for the searched level. Variant-level: every measurement is its own row (no score-set

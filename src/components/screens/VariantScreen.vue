@@ -21,22 +21,30 @@
         <template v-if="lookup.variants.value.length > 0" #subtitle>
           <p class="mt-2 text-sm text-text-muted">
             <template v-if="lookup.geneName.value">{{ lookup.geneName.value }} &middot; </template>
-            <template v-if="lookup.clingenAllele.genomicLocationText.value"
-              >{{ lookup.clingenAllele.genomicLocationText.value }} &middot;
+            <template v-if="lookup.clingenAllele.allGenomicLocationsText.value"
+              >{{ lookup.clingenAllele.allGenomicLocationsText.value }} &middot;
             </template>
             {{ lookup.variants.value.length }}
             {{ lookup.variants.value.length === 1 ? 'measurement' : 'measurements' }}
             <template v-if="lookup.uniqueAssayCount.value > 1">
               across {{ lookup.uniqueAssayCount.value }} score sets</template
             >
+            <template v-if="clingenAlleleId">
+              &middot;
+              <a
+                class="inline-flex items-center gap-0.5 text-link hover:underline"
+                :href="clingenRegistryUrl"
+                target="_blank"
+                >View in ClinGen Allele Registry&nbsp;<i class="pi pi-external-link !text-[11px]"
+              /></a>
+            </template>
           </p>
         </template>
       </MvPageHeader>
     </template>
 
     <div class="mx-auto w-full px-4 tablet:px-6 py-6 tablet:py-8" style="max-width: 1000px">
-      <!-- ── CONTROL ROW (query axes: content valid-time + superseded scope) — always rendered so the
-           as_of / superseded controls stay reachable even when the query returns no measurements ── -->
+      <!-- ── CONTROL ROW (query axes) ── -->
       <div
         class="mave-gradient-bar relative overflow-hidden mb-4 flex flex-col gap-3 rounded-lg border border-border bg-surface px-4 py-3 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-5 tablet:gap-y-2 tablet:px-5 tablet:py-2.5"
       >
@@ -91,13 +99,9 @@
         </button>
       </div>
 
-      <!-- Error state -->
+      <!-- Error / loading / empty -->
       <MvErrorState v-if="lookup.variantsStatus.value === 'Error'" @retry="lookup.fetchVariants" />
-
-      <!-- Loading state -->
       <MvPageLoading v-else-if="lookup.variantsStatus.value === 'Loading'" text="Loading variant measurements..." />
-
-      <!-- Empty state -->
       <MvEmptyState
         v-else-if="lookup.variants.value.length === 0"
         :description="emptyStateDescription"
@@ -105,7 +109,8 @@
       />
 
       <template v-else>
-        <!-- ── MEASUREMENTS SECTION ───────────────────────────── -->
+        <!-- ═══ MEASUREMENTS — the body; strongly about the measured variant (Y) ═══ -->
+        <!-- Switcher -->
         <div class="rounded-lg border border-border bg-surface">
           <div class="flex flex-wrap items-center gap-2.5 border-b border-border-light px-4 tablet:px-5 py-3.5">
             <span class="text-sm font-bold text-text-primary"
@@ -134,20 +139,19 @@
             </div>
           </div>
           <!-- Anchor heading: names the frame of reference so the per-card relationship badges
-               ("Your variant" / "Its protein consequence" / "Encodes the protein consequence") read as
+               ("This variant" / "Its protein consequence" / "Encodes the protein consequence") read as
                self-explaining rather than needing a per-badge tooltip. -->
           <div class="px-4 tablet:px-5 pt-3.5 text-xs-minus text-text-muted">
-            What each result assayed, relative to your variant:
+            What each result assayed, relative to this variant:
           </div>
-          <!-- Desktop: horizontal scroll strip -->
           <div class="measurement-switcher hidden tablet:flex gap-3 overflow-x-auto px-5 py-4">
             <MvMeasurementCard
               v-for="m in lookup.filteredVariants.value"
               :key="'desktop-' + m.variantUrn"
               :active="lookup.selectedVariantUrn.value === m.variantUrn"
-              :loading="lookup.selectedVariantUrn.value === m.variantUrn && lookup.selectedLoading.value"
               :assay-level="m.assayLevel"
               :assay-type="lookup.getKeyword(m.scoreSetUrn, 'Phenotypic Assay Method')"
+              :loading="lookup.selectedVariantUrn.value === m.variantUrn && lookup.selectedLoading.value"
               :mechanism="lookup.getKeyword(m.scoreSetUrn, 'Molecular Mechanism Assessed')"
               :model-system="lookup.getKeyword(m.scoreSetUrn, 'Phenotypic Assay Model System')"
               :preferred-classification="m.preferredClassification ?? null"
@@ -174,12 +178,22 @@
               class="pi pi-spin pi-spinner text-sage"
             />
           </div>
+
+          <!-- ── RELATIONSHIP LINE ── a plain sentence relating the selected measurement (Y) to the page
+               subject (X). -->
+          <div
+            v-if="lookup.selectedVariantDetail.value"
+            class="border-t border-border-light bg-sage/[0.06] px-4 tablet:px-5 py-3 text-sm text-text-secondary"
+          >
+            {{ relationshipPrefix }} <span class="font-semibold text-text-primary">this variant</span
+            >{{ isDirectMeasurement ? ' directly' : '' }}.
+          </div>
         </div>
 
-        <!-- ── SUPERSESSION BANNER ───────────────────────────── -->
+        <!-- Supersession banner (about the selected measurement (Y) ) -->
         <div
           v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
-          class="mt-6 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
         >
           <i class="pi pi-exclamation-triangle mt-0.5 text-xs" />
           <div>
@@ -196,12 +210,10 @@
           </div>
         </div>
 
-        <!-- ── FUNCTIONAL EVIDENCE (MaveDB) ───────────────────── First-class: the functional measurement is
-             MaveDB's own contribution, so it leads the page. Descriptive annotations (VEP) sit in the identity 
-             section below; external reference evidence sits in its own card below. -->
+        <!-- ── FUNCTIONAL EVIDENCE ── MaveDB's own contribution, centered as the lead of the body. -->
         <div
           v-if="lookup.selectedVariantDetail.value"
-          class="relative mt-6 rounded-lg border bg-surface px-[18px] py-3.5"
+          class="relative mt-4 rounded-lg border bg-surface px-[18px] py-3.5"
         >
           <div class="mb-2.5 flex flex-wrap items-center gap-2">
             <h3 class="mave-section-title !mb-0">Functional evidence</h3>
@@ -247,118 +259,40 @@
           <p v-else class="text-xs-plus italic text-text-muted">No score available</p>
         </div>
 
-        <!-- ── VARIANT & ASSAY DETAILS ──────────────────────── -->
-        <template v-if="lookup.selectedVariantDetail.value">
-          <!-- Desktop: single card with two columns -->
-          <div class="relative mt-6 hidden tablet:block rounded-lg border border-border bg-surface px-[18px] py-3.5">
-            <div class="grid grid-cols-2">
-              <div class="border-r border-border-light pr-[18px]">
-                <VariantInfoSection
-                  :allele-name="lookup.clingenAllele.alleleName.value"
-                  :clingen-allele-id="lookup.selectedClingenAlleleId.value"
-                  :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
-                  :genomic-locations="lookup.clingenAllele.genomicLocations.value"
-                  :molecular-consequence="primaryMolecularConsequence"
-                />
-              </div>
-              <div class="pl-[18px]">
-                <MvAssayFactsCard
-                  :assay-level="lookup.selectedVariantDetail.value?.assayLevel ?? null"
-                  :columns="1"
-                  :score-set="lookup.selectedScoreSet.value ?? undefined"
-                  show-urn
-                  :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Mobile: separate cards -->
-          <div class="mt-6 tablet:hidden relative rounded-lg border border-border bg-surface px-4 py-3.5">
-            <VariantInfoSection
-              :allele-name="lookup.clingenAllele.alleleName.value"
-              :clingen-allele-id="lookup.selectedClingenAlleleId.value"
-              :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
-              :genomic-locations="lookup.clingenAllele.genomicLocations.value"
-              :molecular-consequence="primaryMolecularConsequence"
-            />
-          </div>
-          <div class="mt-4 tablet:hidden relative rounded-lg border border-border bg-surface px-4 py-3.5">
-            <MvAssayFactsCard
-              :assay-level="lookup.selectedVariantDetail.value?.assayLevel ?? null"
-              :columns="1"
-              :score-set="lookup.selectedScoreSet.value ?? undefined"
-              show-urn
-              :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
-            />
-          </div>
-        </template>
-
-        <!-- ── EXTERNAL EVIDENCE ──────────────────────────────── Reference data pulled from other databases,
-             for comparison against the functional evidence above. Rendered only when there is at least one 
-             external annotation. -->
+        <!-- Assay facts (about the selected measurement) -->
         <div
-          v-if="lookup.selectedVariantDetail.value && hasExternalEvidence"
+          v-if="lookup.selectedVariantDetail.value"
           class="relative mt-4 rounded-lg border border-border bg-surface px-[18px] py-3.5"
         >
-          <div class="mb-2.5 flex flex-wrap items-center gap-2">
-            <h3 class="mave-section-title !mb-0">External evidence</h3>
-            <span class="text-xs-minus text-text-muted">from reference databases</span>
-            <span
-              v-if="primaryGroup && !primaryGroup.annotationsMatch"
-              class="ml-auto text-[10px] font-semibold uppercase tracking-[0.3px] text-amber-600"
-              >differ by level</span
-            >
-          </div>
-          <!-- Same fold + underlying-annotations popovers as the score-set variant panel, so both surfaces
-               apply identical placement rules and expose the precise underlying gnomAD/ClinVar records. -->
-          <div class="grid grid-cols-1 gap-x-8 gap-y-4 tablet:grid-cols-2">
-            <VariantGnomadStat
-              :alleles="lookup.selectedVariantDetail.value.alleles"
-              :annotations="lookup.selectedVariantDetail.value.annotations"
-              :assay-gnomad="assayGnomad"
-              :assay-level="lookup.selectedVariantDetail.value.assayLevel ?? null"
-              :assay-level-digest="primarySubjectDigests"
-              plain
-            >
-              <template #label>
-                <span
-                  v-key-term="'population'"
-                  class="w-fit text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                  >Population frequency</span
-                >
-              </template>
-            </VariantGnomadStat>
-            <VariantClinvarStat
-              :alleles="lookup.selectedVariantDetail.value.alleles"
-              :annotations="lookup.selectedVariantDetail.value.annotations"
-              :assay-level="lookup.selectedVariantDetail.value.assayLevel ?? null"
-              :assay-level-digest="primarySubjectDigests"
-              :clinvar-version="clinvarControls.controlVersion"
-              plain
-            >
-              <template #label>
-                <span
-                  v-key-term="'clinical'"
-                  class="w-fit text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                  >Clinical significance</span
-                >
-              </template>
-            </VariantClinvarStat>
-          </div>
+          <MvAssayFactsCard
+            :assay-level="lookup.selectedVariantDetail.value?.assayLevel ?? null"
+            :columns="2"
+            :score-set="lookup.selectedScoreSet.value ?? undefined"
+            show-urn
+            :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
+          />
         </div>
 
-        <!-- ── RELATED ALLELES ───────────────────────────────── Sibling alleles used as context;
-             subordinate to the evidence panel above (lighter, collapsed by default). -->
+        <!-- ═══ CLINICAL, POPULATION & RELATED VARIATION ═══ 
+             This variant (X) is pinned with its own clinical/population data (a property of this exact allele, so it never follows the selection). 
+             The measured allele (Y) is pinned when the selection assayed a different allele. 
+             All other alleles and the rest of the equivalence class collapses underneath, each carrying its own per-level reference so the same 
+             information is available at every level. ═══ -->
         <div
-          v-if="lookup.selectedVariantDetail.value && siblingGroups.length > 0"
-          class="relative mt-4 rounded-lg border border-border-light bg-surface px-[18px] py-3.5"
+          v-if="lookup.selectedVariantDetail.value && alleleGroups.length > 0"
+          class="relative mt-4 rounded-lg border border-border bg-surface px-[18px] py-3.5"
         >
-          <MvRelatedAlleles :groups="siblingGroups" :variant-urn="lookup.selectedVariantDetail.value.urn" />
+          <MvAlleleLedger
+            :alleles="lookup.selectedVariantDetail.value.alleles"
+            :annotations="lookup.selectedVariantDetail.value.annotations"
+            :clinvar-version="clinvarControls.controlVersion"
+            :groups="alleleGroups"
+            :variant-urn="lookup.selectedVariantDetail.value.urn"
+          />
         </div>
 
-        <!-- ── SCORE DISTRIBUTION CHART ──────────────────────── -->
-        <div v-if="lookup.selectedScoreSet.value" class="mt-6 rounded-lg border border-border bg-surface">
+        <!-- ── SCORE DISTRIBUTION ── -->
+        <div v-if="lookup.selectedScoreSet.value" class="mt-4 rounded-lg border border-border bg-surface">
           <div
             class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 tablet:px-5 py-3.5"
           >
@@ -390,18 +324,12 @@
                 @calibration-changed="lookup.selectedCalibration.value = $event"
                 @selection-changed="() => {}"
               />
-              <!-- On a convergent-cousin/candidate page the highlighted point is a *measured* allele sharing
-                   this variant's protein consequence, not this allele — which was not itself assayed. Say so.
-                   TODO(histogram): the highlight is not deterministic when two distinct nucleotide variants
-                   that encode the same protein consequence were both measured — only one is highlighted here.
-                   Resolving that needs histogram multi-selection (highlight every measured sibling), a larger
-                   change deferred for now. -->
               <p
                 v-if="primaryGroup && !primaryGroup.measured"
                 class="mt-2 text-xs italic leading-tight text-text-muted"
               >
-                This allele was not directly measured — the highlighted point is a measured allele that shares
-                its protein consequence.
+                This allele was not directly measured — the highlighted point is a measured allele that shares its
+                protein consequence.
               </p>
             </div>
             <div v-else class="flex min-h-[200px] items-center justify-center">
@@ -417,7 +345,6 @@
         </div>
       </template>
     </div>
-
   </MvLayout>
 </template>
 
@@ -443,33 +370,34 @@ import MvBadgeToggle from '@/components/common/MvBadgeToggle.vue'
 import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
 import {useClinvarControls} from '@/composables/use-clinvar-controls'
 import {useKeyDrawer} from '@/composables/use-key-drawer'
-import MvRelatedAlleles from '@/components/variant/MvRelatedAlleles.vue'
+import MvAlleleLedger from '@/components/variant/MvAlleleLedger.vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
-import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
-import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
 import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
-import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {assayLevelDisplay} from '@/lib/measurement-types'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 import {confidenceBadge, groupAlleles, type AlleleGroup, type ConfidenceBadge} from '@/lib/allele-grouping'
-import {formatConsequence} from '@/lib/formats'
 import type {components} from '@/schema/openapi'
+import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
 
-type AlleleAnnotations = components['schemas']['AlleleAnnotations']
-type GnomadAnnotation = components['schemas']['GnomadAnnotation']
+type SequenceLevel = components['schemas']['SequenceLevel']
 
+/**
+ * The variant detail page. It is critical that this page makes clear the seam between the PAGE VARIANT (X)
+ * and the SELECTED MEASURED VARIANT (Y). The page header for the PAGE variant (X) with its identity and
+ * registry link; the measurement body (which follows the selection, i.e. the measured variant Y) and how
+ * it relates to X; a combined clinical/population + related-alleles ledger anchored back on X; and the
+ * score distribution last. Each section names its subject so the per-section re-anchoring reads as intentional.
+ */
 export default defineComponent({
   name: 'VariantScreen',
 
   components: {
     CalibrationTable,
     DatePicker,
-    MvRelatedAlleles,
+    MvAlleleLedger,
     MvClassificationTag,
-    VariantGnomadStat,
-    VariantClinvarStat,
     MvAssayFactsCard,
     MvBadgeToggle,
     MvEmptyState,
@@ -483,8 +411,7 @@ export default defineComponent({
     MvPageLoading,
     PSelect: Select,
     ScoreSetHistogram,
-    SplitButton,
-    VariantInfoSection
+    SplitButton
   },
 
   props: {
@@ -504,7 +431,6 @@ export default defineComponent({
 
     const lookup = useVariantLookup(toRef(props, 'clingenAlleleId'), {
       highlightUrn: toRef(props, 'highlightVariantUrn'),
-      // Seed the query-axis controls from the URL so shared links load in a single fetch.
       initialIncludeSuperseded: (route.query.include_superseded as string)?.toLowerCase() === 'true',
       initialAsOf: typeof route.query.as_of === 'string' ? route.query.as_of : null,
       toast: useToast()
@@ -513,7 +439,7 @@ export default defineComponent({
     const clinvarControls = useClinvarControls(lookup.selectedScoreSetUrn, lookup.scores)
 
     return {
-      head: useHead({title: 'Variant search results'}),
+      head: useHead({title: 'Variant'}),
       lookup,
       clinvarControls,
       keyDrawer: useKeyDrawer()
@@ -528,8 +454,9 @@ export default defineComponent({
         selectedVariantUrn: this.lookup.selectedVariantUrn.value
       }
     },
+    // Anchor to the page allele (X); never shift to the measured allele on selection.
     pageTitle(): string {
-      return this.lookup.clingenAllele.alleleName.value || this.lookup.selectedVariantName.value || 'Variant'
+      return this.lookup.clingenAllele.alleleName.value || this.clingenAlleleId || 'Variant'
     },
     // Allele groups for the selected measurement (c↔g projection pairs collapsed, annotations coalesced).
     alleleGroups(): AlleleGroup[] {
@@ -541,54 +468,48 @@ export default defineComponent({
         pageClingenAlleleId: this.clingenAlleleId
       })
     },
-    // The subject of the page: the searched (page-root) allele, falling back to the measured allele. Its
-    // annotations are promoted into the evidence panel; everything else is a "related allele" control.
+    // The page's own allele group (page-root preferred, falling back to the measured allele).
     primaryGroup(): AlleleGroup | null {
       const groups = this.alleleGroups
       return groups.find((g) => g.pageRoot) ?? groups.find((g) => g.measured) ?? groups[0] ?? null
     },
-    siblingGroups(): AlleleGroup[] {
-      const primary = this.primaryGroup
-      return this.alleleGroups.filter((g) => g !== primary)
+    // The page allele's (X) own sequence level, read off its pageRoot member — null if the selected
+    // measurement's envelope doesn't happen to carry X's own identity.
+    pageLevel(): SequenceLevel | null {
+      const group = this.alleleGroups.find((g) => g.pageRoot)
+      const root = group?.members.find((m) => m.pageRoot)
+      return (root?.level ?? null) as SequenceLevel | null
     },
-    primaryAnnotations(): AlleleAnnotations | null {
-      return this.primaryGroup?.coalescedAnnotations ?? null
+    // True when the page itself is anchored on the protein-level entity (a PA id) — X *is* the protein
+    // change, not a nucleotide variant that separately produces one.
+    pageIsProteinRooted(): boolean {
+      return this.pageLevel === 'protein'
     },
-    // The subject the External Evidence cells anchor on: the page's own allele, as its digest(s). One physical
-    // allele is stored as a c↔g pair (two digests) and ClinVar/gnomAD attach to only one, so both count as the
-    // subject's own. This is the *page* allele, not the measured allele — on a convergent cousin's page they
-    // differ, and the cell should reflect the cousin (empty → context), not the allele that was assayed. The
-    // *level* that gates projection is the assay level (detail.assayLevel), passed separately — the assay's
-    // resolution, not the allele's molecular level, is what determines whether we may project.
-    primarySubjectDigests(): string[] {
-      return this.primaryGroup?.members.map((m) => m.digest) ?? []
+    // ClinGen Allele Registry deep link for the page allele (X).
+    clingenRegistryUrl(): string {
+      return clingenAlleleUrlFromCanonicalId(this.clingenAlleleId)
     },
-    // VEP molecular consequence for the primary allele.
-    primaryMolecularConsequence(): string | null {
-      const consequence = this.primaryAnnotations?.vep?.consequence
-      return consequence ? formatConsequence(consequence) : null
+    // True when the selected measurement assayed the page allele itself (X == Y).
+    isDirectMeasurement(): boolean {
+      return this.lookup.selectedVariant.value?.relationship === 'direct'
     },
-    // The page allele's own gnomAD annotation — the headline the gnomAD cell shows straight up (siblings are
-    // enumerated by the cell itself when the page allele has none). Coalesced across the allele's c↔g pair so
-    // a frequency on either representation counts; anchored on the page allele, not the measured allele.
-    assayGnomad(): GnomadAnnotation | null {
-      return this.primaryAnnotations?.gnomad ?? null
+    // Leading half of the relationship line — everything up to the bold "this variant".
+    relationshipPrefix(): string {
+      const rel = this.lookup.selectedVariant.value?.relationship
+      if (rel === 'protein_consequence') return 'The selected measurement measured the protein consequence of'
+      if (rel === 'nucleotide_encoding') {
+        return this.pageIsProteinRooted
+          ? 'The selected measurement measured a variant that encodes'
+          : 'The selected measurement measured a variant that encodes the same protein consequence as'
+      }
+      return 'The selected measurement measured'
     },
-    // Whether any allele on the record carries a gnomAD or ClinVar annotation — gates the evidence card.
-    hasExternalEvidence(): boolean {
-      const annotations = this.lookup.selectedVariantDetail.value?.annotations
-      if (!annotations) return false
-      return Object.values(annotations).some((a) => a.gnomad || (a.clinvar?.length ?? 0) > 0)
-    },
-    // Confidence/provenance badge for the primary allele (Measured / Resolved / Candidate).
     primaryConfidenceBadge(): ConfidenceBadge | null {
       return this.primaryGroup ? confidenceBadge(this.primaryGroup) : null
     },
     today(): Date {
       return new Date()
     },
-    // Points the empty state back at the active query controls, since an as_of / superseded filter is a
-    // common reason a valid allele returns nothing.
     emptyStateDescription(): string {
       if (this.lookup.asOf.value) {
         return this.lookup.includeSuperseded.value
@@ -600,9 +521,6 @@ export default defineComponent({
       }
       return 'No measurements were found for this allele.'
     },
-    // Maps the DatePicker's Date|null ⇄ the composable's `as_of` date string (null = current). A date-only
-    // string is valid ISO 8601; the API reconstructs the molecular/annotation layer at that instant.
-    // Built from local Y/M/D to avoid a UTC off-by-one.
     asOfDate: {
       get(): Date | null {
         return this.lookup.asOf.value ? new Date(`${this.lookup.asOf.value}T00:00:00`) : null
@@ -628,7 +546,6 @@ export default defineComponent({
       const activeVariant = this.lookup.selectedVariantDetail.value
       if (!activeVariant) return options
 
-      // Mapping is present iff the envelope built a molecular representation (Cat-VRS) for the variant.
       const hasMappingData = !!activeVariant.molecularRepresentation
       const scoreSet = this.lookup.selectedScoreSet.value
       const hasScore = this.lookup.selectedVariantScore.value !== null
@@ -657,10 +574,15 @@ export default defineComponent({
   },
 
   watch: {
-    // Reflect the query-axis controls + selected measurement in the URL (shareable/citation). Guarded
-    // against redundant nav. Writing `variant` keeps the selection ↔ `?variant=` highlight in sync, so the
-    // URL always points at the card the user is on.
-    queryAxisState({includeSuperseded, asOf, selectedVariantUrn}: {includeSuperseded: boolean; asOf: string | null; selectedVariantUrn: string | null}) {
+    queryAxisState({
+      includeSuperseded,
+      asOf,
+      selectedVariantUrn
+    }: {
+      includeSuperseded: boolean
+      asOf: string | null
+      selectedVariantUrn: string | null
+    }) {
       const query = {...this.$route.query}
       if (includeSuperseded) query.include_superseded = 'true'
       else delete query.include_superseded
@@ -670,11 +592,11 @@ export default defineComponent({
       else delete query.variant
       if (JSON.stringify(query) !== JSON.stringify(this.$route.query)) this.$router.replace({query})
     },
-    // Pull external URL changes (back/forward, edited link) back into the controls.
     '$route.query'(query: Record<string, string | string[] | null | undefined>) {
       const includeSuperseded = (query.include_superseded as string)?.toLowerCase() === 'true'
       const asOf = typeof query.as_of === 'string' ? query.as_of : null
-      if (this.lookup.includeSuperseded.value !== includeSuperseded) this.lookup.includeSuperseded.value = includeSuperseded
+      if (this.lookup.includeSuperseded.value !== includeSuperseded)
+        this.lookup.includeSuperseded.value = includeSuperseded
       if ((this.lookup.asOf.value ?? null) !== asOf) this.lookup.asOf.value = asOf
     },
     'lookup.clingenAllele.alleleName.value'(name: string | undefined) {

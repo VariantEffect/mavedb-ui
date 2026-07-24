@@ -37,16 +37,7 @@
         v-if="anyAnnotationsAvailable"
         class="grid grid-cols-2 gap-px border-t border-border-light bg-border-light tablet:grid-cols-4"
       >
-        <div class="stat">
-          <span v-key-term="'consequence'" class="stat-label">Molecular consequence</span>
-          <template v-if="consequence?.consequence">
-            <span class="stat-value font-semibold">{{ formatToken(consequence.consequence) }}</span>
-            <span class="mt-auto text-[10px] text-text-muted">
-              As of VEP version {{ consequence?.sourceVersion ?? '—' }}</span
-            >
-          </template>
-          <span v-else class="stat-value font-semibold">—</span>
-        </div>
+        <VariantConsequenceStat :vep="consequence" />
         <div class="stat">
           <span v-key-term="'functional-impact'" class="stat-label">Classification</span>
           <span v-if="selectedClassification" class="flex flex-wrap items-center gap-1.5">
@@ -115,6 +106,7 @@ import {defineComponent, type PropType} from 'vue'
 
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
+import VariantConsequenceStat from '@/components/variant/VariantConsequenceStat.vue'
 import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
 import {getVariantDetail} from '@/api/mavedb/variants'
@@ -130,7 +122,7 @@ type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 /**
  * Compact selected-variant summary for the score-set page, consuming `GET /variants/{urn}`.
  *
- * Deliberately lean: assay-level facts (identity, consequence, the selected calibration's classification)
+ * Deliberately lean: assay-level facts (identity, consequence {@link VariantConsequenceStat}, the selected calibration's classification)
  * plus two annotation cells that reach past the assayed allele — {@link VariantGnomadStat} and
  * {@link VariantClinvarStat}. These each own their own presentation and their fold/enumeration wiring to sibling
  * alleles.
@@ -141,7 +133,7 @@ type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 export default defineComponent({
   name: 'VariantDetailPanel',
 
-  components: {MvEvidenceTag, MvLoader, VariantGnomadStat, VariantClinvarStat},
+  components: {MvEvidenceTag, MvLoader, VariantConsequenceStat, VariantGnomadStat, VariantClinvarStat},
 
   props: {
     urn: {type: String, required: true},
@@ -219,7 +211,11 @@ export default defineComponent({
         this.detail?.assayLevelDigest ?? null,
         this.clinvarVersion
       )
-      const headline = resolveClinvarHeadline(records, this.detail?.assayLevelDigest ?? null, this.detail?.assayLevel ?? null)
+      const headline = resolveClinvarHeadline(
+        records,
+        this.detail?.assayLevelDigest ?? null,
+        this.detail?.assayLevel ?? null
+      )
       return headline.kind !== 'none' || enumerateUnderlyingClinvar(records).length > 0
     },
     // The facts grid only earns its place when a cell resolves; otherwise it's four dashes (clutter), and the

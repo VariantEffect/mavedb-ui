@@ -16,12 +16,33 @@
     </span>
     <span v-else class="stat-value">—</span>
 
-    <!-- Related-allele frequencies as context: the encoding variants behind an enumerated headline, or
-         other same-consequence variants' frequencies beside a direct/absent headline. -->
-    <template v-if="underlyingGnomad.length">
-      <button class="mt-auto text-left text-xs text-link hover:underline" type="button" @click="toggleGnomadPopover">
-        {{ underlyingGnomad.length }}
-        {{ underlyingLabel }}
+    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projections provenance.
+         It states the headline is inferred, not a direct assertion on this variant, and opens the records it was pooled from. 
+         For a non-projected headline it's pure context (records that did not drive the call), and a caller can suppress it 
+         for a *direct* headline where those alleles are already laid out elsewhere (e.g. MvAlleleLedger). -->
+    <template v-if="underlyingGnomad.length && (showUnderlyingPopover || headlineState === 'enumerated')">
+      <button
+        class="text-xs text-link"
+        :class="
+          headlineState === 'enumerated'
+            ? 'mt-auto flex items-center gap-1 italic underline-offset-2'
+            : 'mt-auto text-left hover:underline'
+        "
+        type="button"
+        @click="toggleGnomadPopover"
+      >
+        <template v-if="headlineState === 'enumerated'">
+          <i class="pi pi-info-circle shrink-0 !text-xs not-italic" />
+          <span class="underline decoration-dotted"
+            >pooled from {{ underlyingGnomad.length }} related
+            {{ underlyingGnomad.length === 1 ? 'variant' : 'variants' }}</span
+          >
+        </template>
+        <template v-else
+          ><span class="underline decoration-dotted"
+            >{{ underlyingGnomad.length }} {{ underlyingLabel }}</span
+          ></template
+        >
       </button>
       <Popover ref="gnomadPopoverRef">
         <div class="flex max-w-xs flex-col gap-2">
@@ -83,7 +104,11 @@ export default defineComponent({
     assayLevelDigest: {type: [String, Array] as PropType<SubjectDigest>, default: null},
     // The subject allele's sequence level. Gates the enumeration: at nucleotide level a missing frequency
     // stays explicit ('absent') rather than borrowing related variants'. `null` → enumerate (unknown).
-    assayLevel: {type: String as PropType<SequenceLevel | null>, default: null}
+    assayLevel: {type: String as PropType<SequenceLevel | null>, default: null},
+    // Hide the "N related frequencies" popover for a direct/absent headline — for callers (e.g. MvAlleleLedger)
+    // that already lay those alleles out as their own cards. An enumerated (pooled) headline always
+    // shows its popover regardless as it is essential provenance for the pooled number.
+    showUnderlyingPopover: {type: Boolean, default: true}
   },
 
   computed: {
@@ -107,9 +132,9 @@ export default defineComponent({
     underlyingGnomadMaxAf(): number | null {
       return this.underlyingGnomad[0]?.gnomad.alleleFrequency ?? null
     },
+    // Only the non-enumerated (context) trigger uses this — the enumerated trigger writes its own caveat copy.
     underlyingLabel(): string {
-      const kind = this.headlineState === 'enumerated' ? 'underlying' : 'related'
-      return `${kind} ${this.underlyingGnomad.length === 1 ? 'frequency' : 'frequencies'}`
+      return `related ${this.underlyingGnomad.length === 1 ? 'frequency' : 'frequencies'}`
     },
     underlyingGnomadNote(): string {
       if (this.headlineState === 'enumerated') {

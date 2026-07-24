@@ -1,6 +1,6 @@
 <template>
   <div :class="plain ? 'flex h-full flex-col gap-0.5' : 'stat'">
-    <!-- Label defaults to the score-set stat label; callers (e.g. the variant screen) inject their own. -->
+    <!-- Label defaults to the score-set stat label; callers (e.g. the variant screen) may inject their own. -->
     <slot name="label"><span v-key-term="'clinical'" class="stat-label">ClinVar</span></slot>
     <!-- Hard discordance: related variants carry both pathogenic and benign calls — no single call to show. -->
     <span v-if="headline.kind === 'conflicting'" class="stat-value text-sm font-semibold">
@@ -36,12 +36,33 @@
     </span>
     <span v-else class="stat-value">—</span>
 
-    <!-- Related-allele records offered as context: beside a direct call (records that did not drive it),
-         beneath a projected call (the siblings it folded over), or under an `absent` headline. -->
-    <template v-if="underlyingClinvar.length">
-      <button class="mt-auto text-left text-xs text-link hover:underline" type="button" @click="toggleClinvarPopover">
-        {{ underlyingClinvar.length }}
-        {{ underlyingLabel }}
+    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projections provenance.
+         It states the headline is inferred, not a direct assertion on this variant, and opens the records it was pooled from. 
+         For a non-projected headline it's pure context (records that did not drive the call), and a caller can suppress it 
+         for a *direct* headline where those alleles are already laid out elsewhere (e.g. MvAlleleLedger). -->
+    <template v-if="underlyingClinvar.length && (showUnderlyingPopover || isProjectedHeadline)">
+      <button
+        class="text-xs text-link"
+        :class="
+          isProjectedHeadline
+            ? 'mt-auto flex items-center gap-1 italic underline-offset-2'
+            : 'mt-auto text-left hover:underline'
+        "
+        type="button"
+        @click="toggleClinvarPopover"
+      >
+        <template v-if="isProjectedHeadline">
+          <i class="pi pi-info-circle shrink-0 !text-xs not-italic" />
+          <span class="underline decoration-dotted"
+            >inferred from {{ underlyingClinvar.length }} related
+            {{ underlyingClinvar.length === 1 ? 'variant' : 'variants' }}</span
+          >
+        </template>
+        <template v-else
+          ><span class="underline decoration-dotted"
+            >{{ underlyingClinvar.length }} {{ underlyingLabel }}</span
+          ></template
+        >
       </button>
       <Popover ref="clinvarPopoverRef">
         <div class="flex max-w-xs flex-col gap-2">
@@ -116,7 +137,12 @@ export default defineComponent({
     assayLevel: {type: String as PropType<SequenceLevel | null>, default: null},
     // The ClinVar release to reduce over (raw `MM_YYYY`), so this cell agrees with all parents.
     // `null` (store not ready / no controls) → fall back to the latest release per allele.
-    clinvarVersion: {type: String as PropType<string | null>, default: null}
+    clinvarVersion: {type: String as PropType<string | null>, default: null},
+    // Hide the "N related record(s)" popover for a *direct* (non-projected) headline — for callers (e.g. the
+    // MvAlleleLedger) that already lay those alleles out as their own cards, where the popover would just
+    // restate what's one click away. Note that this prop has no effect on projected/pooled headlines. This
+    // popover is essential provenance for projected headlines.
+    showUnderlyingPopover: {type: Boolean, default: true}
   },
 
   computed: {
@@ -133,11 +159,14 @@ export default defineComponent({
     underlyingClinvar(): MeasurementClinvarRecord[] {
       return enumerateUnderlyingClinvar(this.records)
     },
-    // True when the headline is a projected call — the representative is a related allele, and the context
-    // records below are the siblings it folded over (protein level). Otherwise the context records are just
-    // that: related records that did not drive a direct call (or an `absent` headline).
+    // True when the headline (a usable call, or a hard-discordant "Conflicting") was pooled from related
+    // alleles rather than read off the subject's own record — the context records below are exactly the
+    // siblings that were pooled. Otherwise the context records are just that: related records that did
+    // not drive a direct call (or an `absent` headline).
     isProjectedHeadline(): boolean {
-      return this.headline.kind === 'call' && this.headline.placement.projected
+      if (this.headline.kind === 'call') return this.headline.placement.projected
+      if (this.headline.kind === 'conflicting') return this.headline.placement.projected
+      return false
     },
     // The headline record links inline only when it *is* the measured allele's own record — a direct call or
     // the measured allele's `-` presence. A projected call's links live in the context popover.
@@ -147,14 +176,14 @@ export default defineComponent({
       if (h.kind === 'presence') return h.record.onAssayed
       return false
     },
+    // Only the non-projected (context) trigger uses this — the projected trigger writes its own caveat copy.
     underlyingLabel(): string {
-      const noun = this.isProjectedHeadline ? 'underlying record' : 'related record'
-      return this.underlyingClinvar.length === 1 ? noun : `${noun}s`
+      return this.underlyingClinvar.length === 1 ? 'related record' : 'related records'
     },
     underlyingClinvarNote(): string {
       return this.isProjectedHeadline
-        ? "ClinVar records for variants with this allele's protein consequence. Open each in ClinVar to view its full classification."
-        : 'Other variants with the same protein consequence that also carry ClinVar records. Open each in ClinVar for its full classification.'
+        ? 'This variant has no ClinVar record. The classification above is pooled from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this variant.'
+        : 'Other variants with the same protein consequence that also carry ClinVar records.'
     }
   },
 

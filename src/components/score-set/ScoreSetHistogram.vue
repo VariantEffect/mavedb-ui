@@ -257,6 +257,7 @@ import {
   tooltipVariantDetailsLink
 } from '@/lib/tooltips'
 import {DisplayVariant} from '@/lib/variants'
+import {formatScore} from '@/lib/scores'
 import {
   consequenceBucket,
   EFFECT_BUCKETS,
@@ -915,7 +916,7 @@ export default defineComponent({
       }
 
       if (variant.score != null) {
-        identity.push(tooltipText(`Score ${variant.score.toPrecision(4)}`))
+        identity.push(tooltipText(`Score ${formatScore(variant.score)}`))
         const classification = this.matchVariantClassification(variant)
         if (classification) {
           identity.push(tooltipBadgeBlock(getClassificationColor(classification), classification.label))

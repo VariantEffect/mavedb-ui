@@ -224,7 +224,7 @@
             <div class="flex flex-col gap-0.5">
               <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Functional score</span>
               <span class="text-sm font-semibold text-text-primary">{{
-                lookup.selectedVariantScore.value?.toPrecision(4)
+                formatScore(lookup.selectedVariantScore.value)
               }}</span>
             </div>
             <div class="flex flex-col gap-0.5">
@@ -381,6 +381,7 @@ import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {assayLevelDisplay} from '@/lib/measurement-types'
+import {formatScore} from '@/lib/scores'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 import {confidenceBadge, groupAlleles, type AlleleGroup, type ConfidenceBadge} from '@/lib/allele-grouping'
 import type {components} from '@/schema/openapi'
@@ -610,6 +611,8 @@ export default defineComponent({
   },
 
   methods: {
+    formatScore,
+
     toIsoDate(date: Date): string {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')

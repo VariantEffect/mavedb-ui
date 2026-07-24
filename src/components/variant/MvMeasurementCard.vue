@@ -50,7 +50,7 @@
     <div class="mt-auto border-t border-border-light pt-3">
       <div v-if="score != null" class="mb-2 flex items-center gap-2.5 text-xs-minus text-text-muted">
         <span class="text-[10px] font-bold uppercase tracking-[0.3px] text-[#aaa]">Functional score</span>
-        <strong class="font-mono font-bold text-text-secondary">{{ score.toPrecision(4) }}</strong>
+        <strong class="font-mono font-bold text-text-secondary">{{ formatScore(score) }}</strong>
       </div>
       <div v-if="classification || evidenceCode" class="mt-1.5">
         <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.3px] text-[#aaa]">Classified as</span>
@@ -75,6 +75,7 @@ import {defineComponent, type PropType} from 'vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import {assayLevelDisplay, RELATIONSHIPS, type MeasurementRelationship} from '@/lib/measurement-types'
+import {formatScore} from '@/lib/scores'
 import type {components} from '@/schema/openapi'
 
 type SavedFunctionalClassification = components['schemas']['SavedFunctionalClassification']
@@ -135,7 +136,8 @@ export default defineComponent({
     oddspathsRatio(): number | null {
       return this.preferredClassification?.oddspathsRatio ?? null
     }
-  }
+  },
+  methods: {formatScore}
 })
 </script>
 

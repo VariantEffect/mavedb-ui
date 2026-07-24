@@ -8,7 +8,7 @@
     >
     <span class="font-mono text-xs-plus font-semibold text-gray-700">{{ hgvs }}</span>
     <span v-if="measurement.score != null" class="text-xs-minus text-gray-500"
-      >score <strong class="font-mono text-gray-700">{{ measurement.score.toPrecision(4) }}</strong></span
+      >score <strong class="font-mono text-gray-700">{{ formatScore(measurement.score) }}</strong></span
     >
     <MvClassificationTag v-if="classification" :classification="classification" />
     <router-link
@@ -26,6 +26,7 @@ import {defineComponent, type PropType} from 'vue'
 
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import {assayLevelDisplay} from '@/lib/measurement-types'
+import {formatScore} from '@/lib/scores'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
@@ -53,6 +54,7 @@ export default defineComponent({
     classification(): string | null {
       return this.measurement.preferredClassification?.functionalClassification ?? null
     }
-  }
+  },
+  methods: {formatScore}
 })
 </script>

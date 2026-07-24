@@ -434,7 +434,7 @@
               :to="{
                 name: 'scoreSet',
                 params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)},
-                query: {variantUrn: allele.variantUrn}
+                query: {variant: allele.variantUrn}
               }"
             >
               View score set &rarr;

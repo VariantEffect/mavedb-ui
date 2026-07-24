@@ -16,12 +16,11 @@
     </div>
 
     <template v-else-if="detail">
-      <!-- Identity: shown with the facts grid, and in the empty state only when an alternate spelling
-           (a distinct underlying nucleotide coordinate) disambiguates the selection. -->
-      <div
-        v-if="anyAnnotationsAvailable || hasAlternateSpelling"
-        class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
-      >
+      <!-- Identity + score headline: the coordinate, its alternate nucleotide spelling when one
+           disambiguates, and the functional score (or "Not scored") pushed to the right. Always shown —
+           the score is the headline fact, and reporting it here is what keeps an unscored selection from
+           reading as a dead end when the histogram has no bar to jump to. -->
+      <div class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5">
         <span class="font-mono text-base font-bold leading-none text-text-primary">{{ coordinate || detail.urn }}</span>
         <span
           v-if="hasAlternateSpelling"
@@ -29,6 +28,13 @@
           class="font-mono text-xs text-text-muted"
         >
           {{ underlyingCoordinate }}
+        </span>
+        <span class="ml-auto flex items-baseline gap-1.5 leading-none">
+          <span class="text-[10px] font-bold uppercase tracking-wide text-text-muted">Score</span>
+          <span v-if="score != null" class="font-mono text-base font-bold text-text-primary">{{
+            formatScore(score)
+          }}</span>
+          <span v-else class="text-xs font-semibold italic text-text-muted">Not scored</span>
         </span>
       </div>
 
@@ -41,7 +47,11 @@
         <div class="stat">
           <span v-key-term="'functional-impact'" class="stat-label">Classification</span>
           <span v-if="selectedClassification" class="flex flex-wrap items-center gap-1.5">
-            <span class="rounded px-1.5 py-0.5 text-xs-plus" :class="classificationClass">
+            <span
+              v-key-term="'functional-impact'"
+              class="rounded px-1.5 py-0.5 text-xs-plus"
+              :class="classificationClass"
+            >
               {{ formatToken(selectedClassification.classification.functionalClassification) }}
             </span>
             <MvEvidenceTag v-if="acmgCode" :code="acmgCode" />
@@ -111,6 +121,7 @@ import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
 import {getVariantDetail} from '@/api/mavedb/variants'
 import {collectGnomadFrequencies} from '@/lib/gnomad'
+import {formatScore} from '@/lib/scores'
 import {enumerateUnderlyingClinvar, resolveClinvarRecords} from '@/lib/clinvar-controls'
 import {resolveClinvarHeadline} from '@/lib/clinvar-control-placement'
 import type {components} from '@/schema/openapi'
@@ -143,6 +154,9 @@ export default defineComponent({
     // primary label to disambiguate distinct coding variants that collapse to the same protein change.
     // Empty when there is no underlying nucleotide coordinate.
     underlyingCoordinate: {type: String as PropType<string | null>, default: null},
+    // The variant's functional score, or null for an NA/absent score. Rendered in the headline so a
+    // selection still reports its measurement even when the histogram has no bar to jump to.
+    score: {type: Number as PropType<number | null>, default: null},
     // The calibration selected on the page (its numeric id); its classification is the one shown.
     selectedCalibrationId: {type: Number as PropType<number | null>, default: null},
     // The ClinVar release the page's clinical-controls store has selected (raw `MM_YYYY`), passed through to
@@ -228,6 +242,8 @@ export default defineComponent({
   },
 
   methods: {
+    formatScore,
+
     async fetchDetail(urn: string) {
       if (!urn) return
       this.status = 'loading'

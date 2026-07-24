@@ -28,7 +28,7 @@
               v-if="!variantSearchQuery && variantSearchSuggestions.length"
               class="border-b border-border-light px-3 py-1.5 text-xs text-text-muted"
             >
-              Showing sample variants — type to search all {{ scoredVariants.length.toLocaleString() }}.
+              Showing sample variants — type to search all {{ variants.length.toLocaleString() }}.
             </div>
           </template>
           <template #optiongroup="{option}">
@@ -42,14 +42,13 @@
           <template #option="{option}">
             <div class="flex w-full items-center justify-between gap-2">
               <div class="flex min-w-0 items-center gap-2">
-                <!-- Leading dot. On the empty box it's the notable caption's (consequence palette or red/
-                     blue clinical call). While searching it flags the "interesting" hits — ClinVar controls,
-                     colored by classification — and is transparent (but reserves its width, so labels stay
-                     aligned) for everything else. -->
+                <!-- Leading dot — one meaning everywhere: a ClinVar control, colored by its classification
+                     (red pathogenic, blue benign, grey otherwise). Transparent (but width-reserved, so
+                     labels stay aligned) for every non-control row, in both the empty and typing states. -->
                 <span
                   class="size-2 shrink-0 rounded-full"
                   :style="{backgroundColor: optionDotColor(option) || 'transparent'}"
-                  :title="variantSearchQuery ? (clinicalTag(option) ?? undefined) : undefined"
+                  :title="clinicalTag(option) ?? undefined"
                 />
                 <div class="flex min-w-0 flex-col justify-center leading-tight">
                   <span class="truncate">{{ variantOptionLabel(option) }}</span>
@@ -73,7 +72,7 @@
                 </div>
               </div>
               <span v-if="typeof option.score === 'number'" class="shrink-0 text-xs text-text-muted">
-                {{ option.score.toFixed(2) }}
+                {{ formatScore(option.score) }}
               </span>
             </div>
           </template>
@@ -112,7 +111,8 @@ import {
   DEFAULT_MIN_STAR_RATING,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
 } from '@/lib/clinvar-controls'
-import {consequenceBucket, EFFECT_BUCKETS} from '@/lib/consequences'
+import {consequenceBucket} from '@/lib/consequences'
+import {formatScore} from '@/lib/scores'
 import {
   clinicalExtremesPerClass,
   consequenceExemplars,
@@ -131,10 +131,9 @@ interface VariantGroup {
 }
 
 // The secondary line rendered under a notable row, framed for its group (a consequence name, a ClinVar
-// call, or a deviations-from-median readout). `color` drives the leading dot when present.
+// call, or a deviations-from-median readout).
 interface NotableCaption {
   label: string
-  color?: string
 }
 
 // How many most-extreme-score rows to sample on the empty state.
@@ -201,16 +200,20 @@ export default defineComponent({
     hasSelection(): boolean {
       return typeof this.localSelection === 'object' && this.localSelection !== null
     },
-    // Only scored variants are selectable — the visualizations plot a score, so a variant without one has
-    // nothing to jump to.
+    // The scored subset — the pool the empty-state notables (clinical extremes, consequence exemplars,
+    // score extremes) sample from, since a notable is a jump-to-position suggestion and needs a score to
+    // land on. Search itself spans the whole set (see `variantSearchIndex`), scored or not.
     scoredVariants(): DisplayVariant[] {
       return this.variants.filter((v) => typeof v.score === 'number')
     },
-    // Search index built once per loaded set: each scored variant paired with a lowercased haystack of all
-    // its coordinate strings (both frames) plus its URN. Filtering a keystroke is then one `includes` per
-    // variant instead of re-resolving ~7 coordinates and re-lowercasing them on every keypress.
+    // Search index built once per loaded set: every variant — scored or not — paired with a lowercased
+    // haystack of all its coordinate strings (both frames) plus its URN. Unscored variants stay findable:
+    // they're real members of the set (a coordinate the depositor submitted that carries an NA score), so a
+    // coordinate query must still reach them even though the histogram has no bar to jump to — the detail
+    // panel reports the missing score instead. Filtering a keystroke is then one `includes` per variant
+    // instead of re-resolving ~7 coordinates and re-lowercasing them on every keypress.
     variantSearchIndex(): {variant: DisplayVariant; haystack: string}[] {
-      return this.scoredVariants.map((v) => ({
+      return this.variants.map((v) => ({
         variant: v,
         haystack: [
           v.hgvsNt?.hgvs,
@@ -253,8 +256,7 @@ export default defineComponent({
       const consequence = consequenceExemplars(scored).filter((v) => !seen.has(v.variantUrn))
       for (const v of consequence) {
         seen.add(v.variantUrn)
-        const bucket = consequenceBucket(v.consequence)
-        captions.set(v.variantUrn, {label: bucket, color: EFFECT_BUCKETS.find((b) => b.name === bucket)?.color})
+        captions.set(v.variantUrn, {label: consequenceBucket(v.consequence)})
       }
       if (consequence.length) groups.push({label: 'By consequence', items: consequence})
 
@@ -323,16 +325,18 @@ export default defineComponent({
   },
 
   methods: {
+    formatScore,
+
     // The precomputed caption for a notable row (empty-box state), keyed by URN; null for search-result
     // rows, which show the variant's annotation instead.
     notableCaption(variant: DisplayVariant): NotableCaption | null {
       return this.notableData.captions.get(variant.variantUrn) ?? null
     },
 
-    // The leading dot color. On the empty box it's the notable caption's; while searching it's the
-    // ClinVar classification color for control hits (the "interesting" flag) and undefined otherwise.
+    // The leading dot color: the ClinVar classification color when the variant is a control, undefined
+    // otherwise — the same rule in both the empty (notables) and typing states.
     optionDotColor(variant: DisplayVariant): string | undefined {
-      return this.variantSearchQuery ? this.clinicalColor(variant) : this.notableCaption(variant)?.color
+      return this.clinicalColor(variant)
     },
 
     // Classification color for a ClinVar control (red pathogenic, blue benign, grey otherwise), echoing
@@ -359,9 +363,9 @@ export default defineComponent({
       return stars ? `${significance} · ${stars}★` : significance
     },
 
-    // Caption for a clinical-control notable row: the ClinVar call and star rating, dotted by class.
+    // Caption for a clinical-control notable row: the ClinVar call and star rating.
     clinicalCaption(variant: DisplayVariant): NotableCaption {
-      return {label: this.clinicalTag(variant) ?? '', color: this.clinicalColor(variant)}
+      return {label: this.clinicalTag(variant) ?? ''}
     },
 
     // Caption for a most-extreme-scores row: distance from the median in robust (MAD) units. Falls back to
@@ -391,7 +395,7 @@ export default defineComponent({
       this.variantSearchSuggestions = matches.length
         ? [
             {
-              label: `${matches.length.toLocaleString()} of ${this.scoredVariants.length.toLocaleString()} variants match`,
+              label: `${matches.length.toLocaleString()} of ${this.variants.length.toLocaleString()} variants match`,
               items: matches
             }
           ]

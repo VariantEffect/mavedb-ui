@@ -2,7 +2,7 @@
   <div>
     <div class="mb-3 flex flex-wrap items-baseline gap-x-2">
       <h3 class="mave-section-title !mb-0">Clinical &amp; population data</h3>
-      <span class="text-xs-minus text-text-muted">a property of the exact allele, shown at every level</span>
+      <span class="text-xs-minus text-text-muted">reference data for all alleles related to this variant</span>
     </div>
 
     <!-- One uniform card per allele group. This variant (X) leads; the measured allele (Y) follows when the

@@ -124,7 +124,6 @@
             :clinvar-version="clinvarControls.controlVersion"
             :coordinate="variantOptionLabel(variantToVisualize)"
             :flush="true"
-            :identify="false"
             :selected-calibration-id="selectedCalibrationObjects[0]?.id ?? null"
             :underlying-coordinate="variantUnderlyingLabel(variantToVisualize) ?? ''"
             :urn="variantToVisualize.variantUrn"

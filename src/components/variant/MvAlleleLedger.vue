@@ -58,6 +58,7 @@
           <VariantGnomadStat
             :alleles="alleles"
             :annotations="annotations"
+            :assay-gnomad="entry.group.coalescedAnnotations?.gnomad ?? null"
             :assay-level="groupLevel(entry.group)"
             :assay-level-digest="digestsOf(entry.group)"
             plain

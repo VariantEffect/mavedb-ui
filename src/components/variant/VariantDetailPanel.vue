@@ -83,11 +83,11 @@
       >
         <span
           v-if="!detail.isCurrent"
-          v-tooltip.top="supersededTooltip"
-          class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800"
+          v-key-term="'superseded'"
+          class="inline-flex items-center gap-1 rounded-full bg-superseded-light px-2 py-0.5 text-xs font-semibold text-superseded"
         >
           <i class="pi pi-exclamation-triangle text-[10px]" />
-          <span v-key-term="'superseded'">Superseded</span>
+          <span>Superseded</span>
         </span>
         <router-link
           v-if="detail.clingenAlleleId"
@@ -192,13 +192,6 @@ export default defineComponent({
       const acmg = this.selectedClassification?.classification.acmgClassification
       if (!acmg?.evidenceStrength) return null
       return `${acmg.criterion}_${acmg.evidenceStrength.toUpperCase()}`
-    },
-    supersededTooltip(): string {
-      // Supersession is anchored on the score set, not the variant: the newer version may not contain a
-      // corresponding variant, so we never imply a navigable superseding measurement.
-      return this.detail?.supersededByScoreSet
-        ? `Superseded by score set ${this.detail.supersededByScoreSet}. That version may not contain a corresponding variant.`
-        : 'This measurement is from a superseded version of its score set. The newer version may not contain a corresponding variant.'
     },
     hasGnomad(): boolean {
       if (this.gnomad) return true

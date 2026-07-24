@@ -190,26 +190,6 @@
           </div>
         </div>
 
-        <!-- Supersession banner (about the selected measurement (Y) ) -->
-        <div
-          v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
-          class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
-        >
-          <i class="pi pi-exclamation-triangle mt-0.5 text-xs" />
-          <div>
-            This measurement is from a superseded version of its score set and may not reflect the current data.
-            <template v-if="lookup.selectedVariantDetail.value.supersededByScoreSet">
-              A newer version of this score set is available at
-              <router-link
-                class="font-semibold underline"
-                :to="{name: 'scoreSet', params: {urn: lookup.selectedVariantDetail.value.supersededByScoreSet}}"
-              >
-                {{ lookup.selectedVariantDetail.value.supersededByScoreSet }} </router-link
-              >. It is not guaranteed that it will contain a corresponding variant.
-            </template>
-          </div>
-        </div>
-
         <!-- ── FUNCTIONAL EVIDENCE ── MaveDB's own contribution, centered as the lead of the body. -->
         <div
           v-if="lookup.selectedVariantDetail.value"
@@ -224,6 +204,12 @@
               class="ml-auto rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px]"
               :class="primaryConfidenceBadge.class"
               >{{ primaryConfidenceBadge.label }}</span
+            >
+            <span
+              v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
+              v-key-term="'superseded'"
+              class="rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px] bg-superseded-light text-superseded"
+              >Superseded</span
             >
           </div>
           <div v-if="lookup.selectedVariantScore.value != null" class="flex flex-wrap gap-x-10 gap-y-3">
@@ -271,6 +257,25 @@
             show-urn
             :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
           />
+          <!-- Supersession banner (about the score set of the selected measurement (Y) ) -->
+          <div
+            v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
+            class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-superseded"
+          >
+            <i class="pi pi-exclamation-triangle mt-0.5 text-xs" />
+            <div>
+              This score set has been superseded and may not reflect current data.
+              <template v-if="lookup.selectedVariantDetail.value.supersededByScoreSet">
+                A newer version of this score set is available at
+                <router-link
+                  class="font-semibold underline"
+                  :to="{name: 'scoreSet', params: {urn: lookup.selectedVariantDetail.value.supersededByScoreSet}}"
+                >
+                  {{ lookup.selectedVariantDetail.value.supersededByScoreSet }} </router-link
+                >.
+              </template>
+            </div>
+          </div>
         </div>
 
         <!-- ═══ CLINICAL, POPULATION & RELATED VARIATION ═══ 

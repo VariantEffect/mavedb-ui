@@ -48,7 +48,8 @@ export const SUPERSEDED_KEY_SECTION: KeySection = {
     {
       label: 'Superseded',
       definition:
-        'The measurement comes from an older version of its score set. A newer version exists but may not contain a corresponding variant.'
+        'This measurement is from an older version of its score set and might have outdated scores or classifications. Note that the score set which supersedes the older version may not include this variant.',
+      class: 'bg-superseded-light text-superseded'
     }
   ]
 }

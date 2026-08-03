@@ -12,7 +12,7 @@ contributors:
   - bencap
   - afrubin
   - MaveDB team
-last_updated: 2026-07-15
+last_updated: 2026-08-03
 ---
 
 # Giving every MAVE variant a precise, computable identity with VRS
@@ -43,9 +43,10 @@ VRS is also easily able to represent both nucleotide and amino acid level varian
 Because VRS uses composable JSON documents, we can also easily combine multiple variants together into a single object.
 For datasets based on human sequences, the `dcd-mapping` pipeline takes each variant's HGVS description, aligns the assay's target to a standard reference sequence using `cool-seq-tool` and `cdot`, and produces a normalized VRS allele with respect to the reference.
 This **post-mapped** allele can be easily stored alongside the **pre-mapped** allele as part of the same expanded JSON document.
-By storing both alleles alongside, we preserve the provenance of the original assays's target sequence, while also providing the reference-based object that is more useful for downstream data integration and matching tasks.
+By presenting both alleles together, we preserve the provenance of the original assays's target sequence, while also sharing the reference-based object that is more useful for downstream data integration and variant matching tasks.
 
-VRS representations are fundamental for the implementation of MaveDB's modern backend. This is how variants are stored precisely, how they are searched, and what every downstream annotation relies on.
+VRS representations are a fundamental component of MaveDB's modern backend.
+It allows us to store variants precisely, effienciently search over the entire dataset, and connect downstream annotations.
 
 ## Example data
 

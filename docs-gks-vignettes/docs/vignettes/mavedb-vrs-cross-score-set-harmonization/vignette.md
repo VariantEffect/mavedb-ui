@@ -12,13 +12,13 @@ contributors:
   - bencap
   - afrubin
   - MaveDB team
-last_updated: 2026-07-15
+last_updated: 2026-08-03
 ---
 
 # Linking the same variant across multiple assays
 
 Some of the most interesting variants in MaveDB are the ones that were measured more than once.
-Different labs, using different experiments, often test the same genetic change, but due to technical differences in assay design it was challenging to identify these cases.
+Different labs may test the same genetic change with different assays, but due to technical differences in assay design it can be challenging to identify these cases.
 MaveDB now recognizes when independent experiments describe the same change and ties their results together automatically, so the variant can be identified and annotated as a single entity instead of as multiple disconnected records.
 The same mechanism gives MaveDB a foundation for connecting its variants to the broader genomics ecosystem.
 

@@ -258,7 +258,7 @@ import {deleteCollection, removeCollectionEntity, updateCollection} from '@/api/
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {components} from '@/schema/openapi'
-import {getErrorResponse} from '@/api/mavedb'
+import {getErrorResponse} from '@/lib/errors'
 
 type Collection = components['schemas']['Collection']
 type User = components['schemas']['User']

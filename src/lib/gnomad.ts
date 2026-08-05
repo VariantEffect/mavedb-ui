@@ -13,6 +13,17 @@ export const GNOMAD_ASSEMBLY_SEARCH_ORDER = ['grch38', 'grch37'] as const
 
 export type GenomeAssembly = (typeof GNOMAD_ASSEMBLY_SEARCH_ORDER)[number]
 
+/** Display names for the assemblies, for use in user-facing text. */
+export const GENOME_ASSEMBLY_NAMES: Record<GenomeAssembly, string> = {
+  grch38: 'GRCh38',
+  grch37: 'GRCh37'
+}
+
+/** The assembly to offer as an alternative interpretation of the same gnomAD ID. */
+export function otherAssembly(assembly: GenomeAssembly): GenomeAssembly {
+  return assembly === 'grch38' ? 'grch37' : 'grch38'
+}
+
 /**
  * RefSeq chromosome accessions per assembly, keyed by gnomAD chromosome name.
  *
@@ -128,11 +139,17 @@ function describeGenomicChange(position: number, referenceAllele: string, altern
   return reference.length === 1 ? `g.${start}delins${alternate}` : `g.${start}_${end}delins${alternate}`
 }
 
+/** An HGVS reading of a gnomAD ID, valid only if the ID's coordinates belong to `assembly`. */
+export interface GnomadHgvsCandidate {
+  assembly: GenomeAssembly
+  hgvs: string
+}
+
 /**
  * Translate a gnomAD variant ID into genomic HGVS strings, one per supported assembly, in the order they should be
  * tried. Returns an empty array if the ID cannot be translated.
  */
-export function gnomadIdToHgvsCandidates(gnomadId: string): string[] {
+export function gnomadIdToHgvsCandidates(gnomadId: string): GnomadHgvsCandidate[] {
   const variant = parseGnomadId(gnomadId)
   if (!variant) {
     return []
@@ -141,7 +158,13 @@ export function gnomadIdToHgvsCandidates(gnomadId: string): string[] {
   if (!description) {
     return []
   }
-  return GNOMAD_ASSEMBLY_SEARCH_ORDER.map(
-    (assembly) => `${CHROMOSOME_REFSEQ_IDS[variant.chromosome][assembly]}:${description}`
-  )
+  return GNOMAD_ASSEMBLY_SEARCH_ORDER.map((assembly) => ({
+    assembly,
+    hgvs: `${CHROMOSOME_REFSEQ_IDS[variant.chromosome][assembly]}:${description}`
+  }))
+}
+
+/** The HGVS reading of a gnomAD ID under one assembly, or null if the ID cannot be translated. */
+export function gnomadIdToHgvs(gnomadId: string, assembly: GenomeAssembly): string | null {
+  return gnomadIdToHgvsCandidates(gnomadId).find((candidate) => candidate.assembly === assembly)?.hgvs ?? null
 }

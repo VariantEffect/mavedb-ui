@@ -1,10 +1,10 @@
 import {describe, expect, it} from 'vitest'
 
-import {CHROMOSOME_REFSEQ_IDS, gnomadIdToHgvsCandidates, parseGnomadId} from './gnomad'
+import {CHROMOSOME_REFSEQ_IDS, gnomadIdToHgvs, gnomadIdToHgvsCandidates, otherAssembly, parseGnomadId} from './gnomad'
 
 /** The GRCh38 translation of a gnomAD ID, which is the one tried first. */
 function grch38Hgvs(gnomadId: string): string | undefined {
-  return gnomadIdToHgvsCandidates(gnomadId)[0]
+  return gnomadIdToHgvsCandidates(gnomadId)[0]?.hgvs
 }
 
 describe('parseGnomadId', () => {
@@ -80,15 +80,18 @@ describe('gnomadIdToHgvsCandidates', () => {
     expect(grch38Hgvs('1-55516888-AT-T')).toBe('NC_000001.11:g.55516888del')
   })
 
-  it('returns GRCh38 first, then GRCh37', () => {
+  it('returns GRCh38 first, then GRCh37, each labelled with its assembly', () => {
     expect(gnomadIdToHgvsCandidates('17-7676154-G-C')).toEqual([
-      'NC_000017.11:g.7676154G>C',
-      'NC_000017.10:g.7676154G>C'
+      {assembly: 'grch38', hgvs: 'NC_000017.11:g.7676154G>C'},
+      {assembly: 'grch37', hgvs: 'NC_000017.10:g.7676154G>C'}
     ])
   })
 
   it('uses the shared rCRS accession for the mitochondrion in both assemblies', () => {
-    expect(gnomadIdToHgvsCandidates('M-8993-T-G')).toEqual(['NC_012920.1:g.8993T>G', 'NC_012920.1:g.8993T>G'])
+    expect(gnomadIdToHgvsCandidates('M-8993-T-G')).toEqual([
+      {assembly: 'grch38', hgvs: 'NC_012920.1:g.8993T>G'},
+      {assembly: 'grch37', hgvs: 'NC_012920.1:g.8993T>G'}
+    ])
   })
 
   it('returns no candidates for an unparseable ID', () => {
@@ -98,6 +101,24 @@ describe('gnomadIdToHgvsCandidates', () => {
   it('returns no candidates when the alleles describe no change', () => {
     expect(gnomadIdToHgvsCandidates('1-55516888-A-A')).toEqual([])
     expect(gnomadIdToHgvsCandidates('1-55516888-AT-AT')).toEqual([])
+  })
+})
+
+describe('gnomadIdToHgvs', () => {
+  it('reads an ID under the requested assembly', () => {
+    expect(gnomadIdToHgvs('17-7676154-G-C', 'grch38')).toBe('NC_000017.11:g.7676154G>C')
+    expect(gnomadIdToHgvs('17-7676154-G-C', 'grch37')).toBe('NC_000017.10:g.7676154G>C')
+  })
+
+  it('returns null for an ID it cannot translate', () => {
+    expect(gnomadIdToHgvs('not-an-id', 'grch38')).toBeNull()
+  })
+})
+
+describe('otherAssembly', () => {
+  it('pairs the two assemblies', () => {
+    expect(otherAssembly('grch38')).toBe('grch37')
+    expect(otherAssembly('grch37')).toBe('grch38')
   })
 })
 

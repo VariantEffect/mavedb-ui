@@ -119,6 +119,8 @@
   --color-clinvar-light: #c8ece5;
   --color-ga4gh: #0f6ca4;
   --color-ga4gh-light: #e3f0f9;
+  --color-gnomad: #5b4ba8;
+  --color-gnomad-light: #ece9f7;
 
   /* ── Measurement Types (variant screen) ────────────────────── */
   --color-nucleotide: #2e7d32;

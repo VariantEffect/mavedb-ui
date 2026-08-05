@@ -9,7 +9,8 @@ export const SEARCH_TYPE_OPTIONS = [
   {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
   {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
   {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']},
-  {code: 'vrsDigest', name: 'VRS Digest', examples: ['ga4gh:VA.-US8Ap1kUYvW3DzeFEYrNXgk3Xk9toKy']}
+  {code: 'vrsDigest', name: 'VRS Digest', examples: ['ga4gh:VA.-US8Ap1kUYvW3DzeFEYrNXgk3Xk9toKy']},
+  {code: 'gnomadId', name: 'gnomAD ID', examples: ['17-7676154-G-C', '17-7579472-G-C']}
 ]
 
 /** Variant type options for guided search. */

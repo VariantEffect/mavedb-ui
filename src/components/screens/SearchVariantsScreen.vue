@@ -676,6 +676,7 @@ import {
   type AlleleResult,
   clinGenAlleleIdRegex,
   clinVarVariationIdRegex,
+  gnomadIdRegex,
   rsIdRegex,
   vrsDigestRegex,
   scoreSetUrnFromVariantUrn,
@@ -695,7 +696,14 @@ import {
   VARIANT_TYPE_OPTIONS,
   ALLELE_OPTIONS
 } from '@/data/mavemd'
-import {getAlleleByCaId, getAlleleByHgvs, getAlleleByDbSnp, getAlleleByClinVar, getGeneBySymbol} from '@/api/clingen'
+import {
+  getAlleleByCaId,
+  getAlleleByHgvs,
+  getAlleleByDbSnp,
+  getAlleleByClinVar,
+  getAlleleByGnomad,
+  getGeneBySymbol
+} from '@/api/clingen'
 import {getCollection, getErrorResponse, lookupVariantsByClingenId} from '@/api/mavedb'
 import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
 import {useEntityCache} from '@/composables/entity-cache'
@@ -1087,6 +1095,17 @@ export default defineComponent({
             return
           }
           responseData = await getAlleleByClinVar(searchStr)
+        } else if (searchType === 'gnomadId') {
+          if (!gnomadIdRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: `Please provide a valid gnomAD variant ID (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
+              life: 10000
+            })
+            return
+          }
+          responseData = await getAlleleByGnomad(searchStr)
         } else if (searchType === 'vrsDigest') {
           if (!vrsDigestRegex.test(searchStr)) {
             this.toast.add({

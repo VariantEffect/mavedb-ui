@@ -737,6 +737,7 @@ import {
   clinGenAlleleIdRegex,
   clinVarVariationIdRegex,
   detectSearchType,
+  geneSymbolRegex,
   gnomadIdRegex,
   rsIdRegex,
   vrsDigestRegex,
@@ -749,7 +750,7 @@ import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {type GenomeAssembly, GENOME_ASSEMBLY_NAMES, gnomadIdToHgvs, otherAssembly} from '@/lib/gnomad'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
-import {SEARCH_COLORS} from '@/data/search'
+import {SEARCH_COLORS, SEARCH_PLACEHOLDERS} from '@/data/search'
 import {AVE_CLINICAL_APPLICATION} from '@/lib/links'
 import {
   HOW_IT_WORKS_STEPS,
@@ -877,6 +878,11 @@ export default defineComponent({
       return SEARCH_COLORS[this.searchType || 'any'] || SEARCH_COLORS.any
     },
     currentPlaceholder(): string {
+      // A specific search type prompts with one of its own examples, but "Any" accepts too many shapes for one
+      // example to describe, so it shares the homepage's wording instead.
+      if (this.searchType === 'any') {
+        return SEARCH_PLACEHOLDERS.any.full
+      }
       const option = this.searchTypeOptions.find((o) => o.code === this.searchType)
       return option?.examples?.[0] || 'Enter a value'
     },
@@ -1217,6 +1223,21 @@ export default defineComponent({
             return
           }
           responseData = await getAlleleByClinVar(searchStr)
+        } else if (searchType === 'geneSymbol') {
+          const geneSymbol = searchStr.toUpperCase()
+          if (!geneSymbolRegex.test(geneSymbol)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: `Please provide a valid gene symbol (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
+              life: 10000
+            })
+            return
+          }
+          // Replace rather than push: this screen re-runs its search from the query params on mount, so a pushed
+          // entry would send the back button straight here and forward again to the gene page.
+          this.router.replace({name: 'gene', params: {symbol: geneSymbol}})
+          return
         } else if (searchType === 'gnomadId') {
           if (!gnomadIdRegex.test(searchStr)) {
             this.toast.add({

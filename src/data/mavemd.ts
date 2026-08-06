@@ -11,7 +11,8 @@ export const SEARCH_TYPE_OPTIONS = [
   {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
   {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']},
   {code: 'vrsDigest', name: 'VRS Digest', examples: ['ga4gh:VA.-US8Ap1kUYvW3DzeFEYrNXgk3Xk9toKy']},
-  {code: 'gnomadId', name: 'gnomAD ID', examples: ['17-7676154-G-C', '17-7579472-G-C']}
+  {code: 'gnomadId', name: 'gnomAD ID', examples: ['17-7676154-G-C', '17-7579472-G-C']},
+  {code: 'geneSymbol', name: 'Gene symbol', examples: ['BRCA1', 'TP53']}
 ]
 
 /** Variant type options for guided search. */

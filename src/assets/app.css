@@ -123,6 +123,8 @@
   --color-ga4gh-light: #e3f0f9;
   --color-gnomad: #5b4ba8;
   --color-gnomad-light: #ece9f7;
+  --color-gene: #b5446e;
+  --color-gene-light: #fbeaf1;
 
   /* ── Measurement Types (variant screen) ────────────────────── */
   --color-nucleotide: #2e7d32;

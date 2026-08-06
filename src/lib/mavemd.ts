@@ -43,11 +43,21 @@ export const rsIdRegex = /^rs[0-9]+$/im
 export const gnomadIdRegex = /^(1[0-9]|2[0-2]|[1-9]|X|Y|MT?)-([0-9]+)-([ACGT]+)-([ACGT]+)$/i
 
 /**
+ * Regular expression for HGNC gene symbols.
+ *
+ * A symbol begins with a letter and may carry digits, hyphenated parts (HLA-A, MT-CO1) and a trailing @ for cluster
+ * symbols (IGH@). This is by far the most permissive of the identifier patterns — any bare word satisfies it — so it
+ * is only ever applied once every more specific form has been ruled out.
+ */
+export const geneSymbolRegex = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*@?$/i
+
+/**
  * Identifier patterns in the order they are tried when detecting what a search string is.
  *
  * Order matters wherever the patterns overlap. A VRS digest also satisfies the deliberately loose HGVS pattern, since
  * that only asks for an identifier, a colon and a description, so it has to be recognized first. A bare number is a
- * ClinVar Variation ID only once the more specific forms have been ruled out.
+ * ClinVar Variation ID only once the more specific forms have been ruled out, and a gene symbol — which any bare word
+ * resembles — only once everything else has been.
  */
 const SEARCH_TYPE_PATTERNS: [string, RegExp][] = [
   ['vrsDigest', vrsDigestRegex],
@@ -55,7 +65,8 @@ const SEARCH_TYPE_PATTERNS: [string, RegExp][] = [
   ['dbSnpRsId', rsIdRegex],
   ['gnomadId', gnomadIdRegex],
   ['hgvs', hgvsSearchStringRegex],
-  ['clinVarVariationId', clinVarVariationIdRegex]
+  ['clinVarVariationId', clinVarVariationIdRegex],
+  ['geneSymbol', geneSymbolRegex]
 ]
 
 /**

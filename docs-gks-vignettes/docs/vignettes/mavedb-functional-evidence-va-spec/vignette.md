@@ -47,7 +47,7 @@ The associated information about these functional classifications, such as score
 The `ExperimentalVariantFunctionalImpactStudyResult` is included as an `EvidenceLine`, because this is the evidence used to support or refute the proposition.
 
 Once the functional scores are calibrated, they are assigned *evidence strength* that may be applied in a variant classification framework (e.g. PS3_Strong or BS3_Supporting for ACMG v3).
-These evidence strengths are representing using another `Statement` object with an associated `VariantPathogenicityProposition`.
+These evidence strengths are represented using another `Statement` object with an associated `VariantPathogenicityProposition`.
 Similar to above, the functional classification `Statement` are included as `EvidenceLine` members as needed (note that some calibration methods assign evidence to variants directly based on their scores and do not require functional classes).
 MaveDB generates one variant pathogenicity `Statement` for each variant in a given score set containing all possible calibration informations.
 Downstream users can choose which calibration to apply based on the metadata provided and their own expert judgement.

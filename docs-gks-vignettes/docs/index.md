@@ -1,6 +1,6 @@
 # MaveDB × GA4GH GKS Vignettes
 
-These pages contain eal-world walk-throughs of how **MaveDB** uses the GA4GH **Genomic Knowledge Standards** to solve fundamental problems in sharing multiplexed assay of variant effect (MAVE) and other functional assay data.
+These pages contain real-world walk-throughs of how **MaveDB** uses the GA4GH **Genomic Knowledge Standards** to solve fundamental problems in sharing multiplexed assay of variant effect (MAVE) and other functional assay data.
 
 These are drafted for contribution to the [GA4GH GKS Starter Kit](https://github.com/ga4gh/gks-starter-kit); this site is an internal preview. Each vignette describes a real implementation, including the scope of the problem, the underlying data, the tools, and the GKS standards, written to be accessible to a teammate or to leadership.
 

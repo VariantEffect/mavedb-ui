@@ -738,6 +738,7 @@ import {
   clinVarVariationIdRegex,
   detectSearchType,
   geneSymbolRegex,
+  geneSymbolSearchTarget,
   gnomadIdRegex,
   rsIdRegex,
   vrsDigestRegex,
@@ -1083,12 +1084,15 @@ export default defineComponent({
         this.maveMdScoreSetsError = true
       }
     },
-    searchForText: function (example: string, searchType: string) {
+    searchForText: async function (example: string, searchType: string) {
       this.searchType = searchType
       this.showSearch('default')
       this.searchText = example
-      this.defaultSearch()
-      this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
+      await this.defaultSearch()
+      // A gene symbol example navigates to its gene page, so only record the search when we are still on this screen.
+      if (this.route.name === 'mavemd') {
+        this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
+      }
     },
     clearSearch() {
       this.searchText = null
@@ -1126,6 +1130,28 @@ export default defineComponent({
     },
     defaultSearch: async function (forcedAssembly?: GenomeAssembly) {
       if (this.searchText) this.searchText = this.searchText.trim()
+
+      // A gene symbol navigates away instead of producing results here, so it is handled before this screen records
+      // the search in its query params. The search is also stripped from the entry being left behind: were it to
+      // remain, returning here would re-run it on mount and bounce the user straight back to the gene page.
+      const geneSymbol = geneSymbolSearchTarget(this.searchText ?? '', this.searchType)
+      if (geneSymbol) {
+        if (!geneSymbolRegex.test(geneSymbol)) {
+          this.toast.add({
+            severity: 'error',
+            summary: 'Invalid search',
+            detail: `Please provide a valid gene symbol (e.g. ${this.searchTypeOptions.find((o) => o.code === 'geneSymbol')?.examples?.join(', ')})`,
+            life: 10000
+          })
+          return
+        }
+        const query = {...this.route.query}
+        delete query.search
+        await this.router.replace({query})
+        this.router.push({name: 'gene', params: {symbol: geneSymbol}})
+        return
+      }
+
       this.searchResultsVisible = true
       // Show the assembly being attempted, so a forced reading that fails to resolve still reports what was tried
       // rather than leaving the previous, now-discarded result on screen.
@@ -1223,21 +1249,6 @@ export default defineComponent({
             return
           }
           responseData = await getAlleleByClinVar(searchStr)
-        } else if (searchType === 'geneSymbol') {
-          const geneSymbol = searchStr.toUpperCase()
-          if (!geneSymbolRegex.test(geneSymbol)) {
-            this.toast.add({
-              severity: 'error',
-              summary: 'Invalid search',
-              detail: `Please provide a valid gene symbol (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
-              life: 10000
-            })
-            return
-          }
-          // Replace rather than push: this screen re-runs its search from the query params on mount, so a pushed
-          // entry would send the back button straight here and forward again to the gene page.
-          this.router.replace({name: 'gene', params: {symbol: geneSymbol}})
-          return
         } else if (searchType === 'gnomadId') {
           if (!gnomadIdRegex.test(searchStr)) {
             this.toast.add({

@@ -79,6 +79,22 @@ export function detectSearchType(searchString: string): string | null {
   return SEARCH_TYPE_PATTERNS.find(([, pattern]) => pattern.test(trimmedSearchString))?.[0] ?? null
 }
 
+/**
+ * The gene symbol a search is for, standardized to uppercase, or null when the search isn't for a gene symbol.
+ *
+ * Uppercase is how gene pages are addressed everywhere else. A symbol arrived at through the "Any" type has already
+ * satisfied {@link geneSymbolRegex}; one from an explicitly chosen gene symbol search has not, so callers that care
+ * about malformed input should still validate what they get back.
+ */
+export function geneSymbolSearchTarget(searchText: string, searchType: string | null): string | null {
+  const trimmedSearchText = searchText.trim()
+  if (!trimmedSearchText) {
+    return null
+  }
+  const resolvedSearchType = searchType === 'any' ? detectSearchType(trimmedSearchText) : searchType
+  return resolvedSearchType === 'geneSymbol' ? trimmedSearchText.toUpperCase() : null
+}
+
 /** A single MANE coordinate extracted from a ClinGen transcript allele. */
 export interface ManeCoordinate {
   sequenceType: string

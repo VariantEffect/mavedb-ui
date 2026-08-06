@@ -1,5 +1,6 @@
 import type {ClinGenAllele, ClinGenGenomicAllele, ClinGenTranscriptAllele} from '@/api/clingen'
 import type {components} from '@/schema/openapi'
+import {hgvsSearchStringRegex} from './mave-hgvs'
 
 type VariantMeasurement = components['schemas']['VariantEffectMeasurementWithShortScoreSet']
 
@@ -40,6 +41,32 @@ export const rsIdRegex = /^rs[0-9]+$/im
  * four parts, in that order, which parseGnomadId relies on to translate an ID into HGVS.
  */
 export const gnomadIdRegex = /^(1[0-9]|2[0-2]|[1-9]|X|Y|MT?)-([0-9]+)-([ACGT]+)-([ACGT]+)$/i
+
+/**
+ * Identifier patterns in the order they are tried when detecting what a search string is.
+ *
+ * Order matters wherever the patterns overlap. A VRS digest also satisfies the deliberately loose HGVS pattern, since
+ * that only asks for an identifier, a colon and a description, so it has to be recognized first. A bare number is a
+ * ClinVar Variation ID only once the more specific forms have been ruled out.
+ */
+const SEARCH_TYPE_PATTERNS: [string, RegExp][] = [
+  ['vrsDigest', vrsDigestRegex],
+  ['clinGenAlleleId', clinGenAlleleIdRegex],
+  ['dbSnpRsId', rsIdRegex],
+  ['gnomadId', gnomadIdRegex],
+  ['hgvs', hgvsSearchStringRegex],
+  ['clinVarVariationId', clinVarVariationIdRegex]
+]
+
+/**
+ * Work out which kind of identifier a search string is, for the "Any" search type.
+ *
+ * @returns The matching search type code, or null if the string resembles no supported identifier.
+ */
+export function detectSearchType(searchString: string): string | null {
+  const trimmedSearchString = searchString.trim()
+  return SEARCH_TYPE_PATTERNS.find(([, pattern]) => pattern.test(trimmedSearchString))?.[0] ?? null
+}
 
 /** A single MANE coordinate extracted from a ClinGen transcript allele. */
 export interface ManeCoordinate {

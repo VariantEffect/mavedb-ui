@@ -44,7 +44,7 @@
               v-for="option in searchTypeOptions"
               :key="option.code"
               :aria-selected="searchType === option.code"
-              class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-all md:px-4 md:py-1.5 md:text-sm"
+              class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-all md:px-4 md:py-1.5 md:text-xs"
               role="tab"
               :style="searchColorStyle(option.code, searchType === option.code ? 'active' : 'inactive')"
               :tabindex="searchType === option.code ? 0 : -1"
@@ -266,6 +266,16 @@
         <div aria-live="polite" role="status">
           <div class="text-lg font-bold text-dark">
             {{ alleles.length }} allele{{ alleles.length !== 1 ? 's' : '' }} found
+          </div>
+          <!-- An "Any" search leaves the selected type as "Any", so report what the string was taken to be. -->
+          <div v-if="detectedSearchTypeOption" class="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <span>Searched as</span>
+            <span
+              class="rounded-full border-[1.5px] px-2.5 py-0.5 text-xs font-semibold"
+              :style="searchColorStyle(detectedSearchTypeOption.code)"
+            >
+              {{ detectedSearchTypeOption.name }}
+            </span>
           </div>
         </div>
         <button
@@ -726,6 +736,7 @@ import {
   type AlleleResult,
   clinGenAlleleIdRegex,
   clinVarVariationIdRegex,
+  detectSearchType,
   gnomadIdRegex,
   rsIdRegex,
   vrsDigestRegex,
@@ -809,6 +820,8 @@ export default defineComponent({
       alleles: [] as AlleleResult[],
       /** Which assembly the current gnomAD ID was read under; null when the search wasn't a gnomAD ID search. */
       gnomadAssembly: null as GenomeAssembly | null,
+      /** What an "Any" search resolved the string to; null when the search type was chosen explicitly. */
+      detectedSearchType: null as string | null,
       nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       proteinScoreSetListIsExpanded: [] as Array<boolean>,
       associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
@@ -861,11 +874,18 @@ export default defineComponent({
       )
     },
     currentSearchColor(): {accent: string; bg: string; activeText?: string} {
-      return SEARCH_COLORS[this.searchType || 'hgvs'] || SEARCH_COLORS.hgvs
+      return SEARCH_COLORS[this.searchType || 'any'] || SEARCH_COLORS.any
     },
     currentPlaceholder(): string {
       const option = this.searchTypeOptions.find((o) => o.code === this.searchType)
       return option?.examples?.[0] || 'Enter a value'
+    },
+    /** The search type an "Any" search resolved to, for display alongside the results. */
+    detectedSearchTypeOption(): {code: string; name: string} | null {
+      if (!this.detectedSearchType) {
+        return null
+      }
+      return this.searchTypeOptions.find((option) => option.code === this.detectedSearchType) ?? null
     },
     /** How the current gnomAD ID was read, and how it would read under the other assembly. */
     gnomadInterpretation(): {name: string; hgvs: string | null; otherName: string} | null {
@@ -918,7 +938,7 @@ export default defineComponent({
         if (typeof newVal === 'string') {
           this.searchType = newVal
         } else if (!newVal && this.defaultSearchVisible) {
-          this.searchType = 'hgvs'
+          this.searchType = 'any'
         }
       }
     },
@@ -1074,6 +1094,7 @@ export default defineComponent({
       this.searchResultsVisible = false
       this.alleles = []
       this.gnomadAssembly = null
+      this.detectedSearchType = null
       this.router.replace({query: {}})
     },
     showSearch(searchMethod: 'guided' | 'default' = 'default') {
@@ -1085,7 +1106,7 @@ export default defineComponent({
         delete query.search
         delete query.searchType
         query.mode = 'guided'
-        this.searchType = 'hgvs'
+        this.searchType = 'any'
       } else {
         delete query.gene
         delete query.variantType
@@ -1103,6 +1124,7 @@ export default defineComponent({
       // Show the assembly being attempted, so a forced reading that fails to resolve still reports what was tried
       // rather than leaving the previous, now-discarded result on screen.
       this.gnomadAssembly = forcedAssembly ?? null
+      this.detectedSearchType = null
       const query = {...this.route.query}
       delete query.mode
       delete query.gene
@@ -1140,8 +1162,25 @@ export default defineComponent({
       forcedSearchType?: string,
       forcedAssembly?: GenomeAssembly | null
     ) {
-      const searchType = forcedSearchType ?? this.searchType
+      let searchType = forcedSearchType ?? this.searchType
       let searchStr = searchString.trim()
+
+      // The "Any" type is a stand-in: work out what the string actually is, then take the usual path for that type.
+      if (searchType === 'any') {
+        const detectedSearchType = detectSearchType(searchStr)
+        if (!detectedSearchType) {
+          this.toast.add({
+            severity: 'error',
+            summary: 'Unrecognized identifier',
+            detail: `${searchStr} does not look like any supported variant identifier. Choose a search type to see examples of what is accepted.`,
+            life: 10000
+          })
+          return
+        }
+        searchType = detectedSearchType
+        // Record it for display: the selected type stays "Any", but the user should see what it was taken to be.
+        this.detectedSearchType = detectedSearchType
+      }
 
       try {
         let responseData
@@ -1407,6 +1446,7 @@ export default defineComponent({
       this.searchResultsVisible = true
       this.syncGuidedQueryParams()
       this.alleles = []
+      this.detectedSearchType = null
       this.loading = true
       await this.fetchGuidedSearchResults()
       this.loading = false
@@ -1478,7 +1518,7 @@ export default defineComponent({
     },
 
     searchColorStyle(code: string, variant: 'active' | 'inactive' | 'chip' = 'chip'): Record<string, string> {
-      const colors = SEARCH_COLORS[code] || SEARCH_COLORS.hgvs
+      const colors = SEARCH_COLORS[code] || SEARCH_COLORS.any
       switch (variant) {
         case 'active':
           return {

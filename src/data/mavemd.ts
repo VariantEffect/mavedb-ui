@@ -5,6 +5,7 @@ export const MAVEMD_COLLECTION_URN = 'urn:mavedb:collection-603dafbf-4a3f-4d70-a
 
 /** Available search types on the MaveMD search page, with example queries. */
 export const SEARCH_TYPE_OPTIONS = [
+  {code: 'any', name: 'Any', examples: ['NP_000242.1:p.Asn566Thr', 'CA10590195', 'rs900082291', '17-7676154-G-C']},
   {code: 'hgvs', name: 'HGVS', examples: ['ENST00000473961.6:c.-19-2A>T', 'NP_000242.1:p.Asn566Thr']},
   {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
   {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},

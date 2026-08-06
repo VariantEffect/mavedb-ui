@@ -259,7 +259,7 @@ export default defineComponent({
 
   data() {
     return {
-      searchType: 'hgvs',
+      searchType: 'any',
       searchText: '',
       isDesktop: false,
       mdQuery: null as MediaQueryList | null,
@@ -271,10 +271,10 @@ export default defineComponent({
 
   computed: {
     activeSearchColor(): {accent: string; bg: string; activeText?: string} {
-      return SEARCH_COLORS[this.searchType] || SEARCH_COLORS.hgvs
+      return SEARCH_COLORS[this.searchType] || SEARCH_COLORS.any
     },
     activeSearchPlaceholder(): string {
-      const p = SEARCH_PLACEHOLDERS[this.searchType] || SEARCH_PLACEHOLDERS.hgvs
+      const p = SEARCH_PLACEHOLDERS[this.searchType] || SEARCH_PLACEHOLDERS.any
       return this.isDesktop ? p.full : p.short
     }
   },

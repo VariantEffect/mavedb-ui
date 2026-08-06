@@ -29,7 +29,7 @@ Therefore a downstream data consumer can apply variant data at the level they ne
 
 ## Motivation
 
-Consider deep mutational scan that reports a score for the protein change UBE2I p.Leu6Gly.
+Consider a deep mutational scan that reports a score for the protein change UBE2I `p.Leu6Gly`.
 The score was measured at the protein level, which is typical for a cDNA-based assay, but due to the redundancy in the genetic code, this amino acid change can result from multiple unique nucleotide changes.
 The assay measured and reported only the amino acid variant and did not distinguish between nucleotide variants.
 Assigning the score for the amino acid substitution to the underlying DNA alleles would imply that the DNA variants were measured directly, but storing it as only a protein allele disconnects the variant measurement from the DNA coordinates required by downstream tools.

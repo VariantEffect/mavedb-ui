@@ -1,7 +1,7 @@
-import axios from 'axios'
 import {computed, ref, shallowRef, watch, type ComputedRef, type Ref} from 'vue'
 
 import {
+  downloadVariantCsv,
   getVariantAnnotation,
   getVariantDetail,
   getHistogramVariantData,
@@ -17,6 +17,7 @@ import {
   getPrimaryCalibration
 } from '@/lib/calibrations'
 import {triggerDownload} from '@/lib/downloads'
+import {describeRequestError} from '@/lib/errors'
 import {getExperimentKeyword} from '@/lib/experiments'
 import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
 import type {MeasurementType} from '@/lib/measurement-types'
@@ -84,6 +85,9 @@ export interface UseVariantLookupReturn {
 
   // Downloads
   fetchVariantAnnotations: (annotationType: string) => Promise<void>
+  downloadVariantCsvFile: (namespaces?: string[]) => Promise<void>
+  /** What download is in flight, or null when idle. Indeterminate; see use-score-set-downloads. */
+  downloadInProgressLabel: Ref<string | null>
 }
 
 /**
@@ -115,6 +119,7 @@ export function useVariantLookup(
   const variants = ref<VariantEntry[]>([])
   const variantsStatus = ref<'NotLoaded' | 'Loading' | 'Loaded' | 'Error'>('NotLoaded')
   const selectedVariantUrn = ref<string | null>(null)
+  const downloadInProgressLabel = ref<string | null>(null)
   const showNucleotide = ref(true)
   const showProtein = ref(true)
   const showAssociatedNucleotide = ref(true)
@@ -284,27 +289,45 @@ export function useVariantLookup(
 
   async function fetchVariantAnnotations(annotationType: string) {
     const activeVariant = selectedVariantDetail.value
-    if (!activeVariant?.urn) return
+    if (!activeVariant?.urn || downloadInProgressLabel.value !== null) return
 
+    downloadInProgressLabel.value = 'annotations'
     try {
       const data = await getVariantAnnotation(activeVariant.urn, annotationType)
       triggerDownload(JSON.stringify(data), activeVariant.urn + '_' + annotationType + '.json', 'text/json')
     } catch (error: unknown) {
-      let serverMessage = ''
-      if (axios.isAxiosError(error) && error.response?.data) {
-        const data = error.response.data
-        if (typeof data === 'string') serverMessage = data
-        else if (typeof data === 'object' && data !== null && 'detail' in data) serverMessage = String(data.detail)
-        else serverMessage = JSON.stringify(data)
-      } else {
-        serverMessage = error instanceof Error ? error.message : 'Unknown error.'
-      }
       options?.toast?.add({
         severity: 'error',
         summary: 'Download failed',
-        detail: `Could not fetch variant annotation: ${serverMessage}`,
+        detail: `Could not fetch variant annotation: ${describeRequestError(error)}`,
         life: 4000
       })
+    } finally {
+      downloadInProgressLabel.value = null
+    }
+  }
+
+  /**
+   * Download the selected measurement's clinical CSV — the flat counterpart to
+   * `fetchVariantAnnotations`. Omitting `namespaces` asks the server for its default set.
+   */
+  async function downloadVariantCsvFile(namespaces?: string[]) {
+    const activeVariant = selectedVariantDetail.value
+    if (!activeVariant?.urn || downloadInProgressLabel.value !== null) return
+
+    downloadInProgressLabel.value = 'variant CSV'
+    try {
+      const data = await downloadVariantCsv(activeVariant.urn, namespaces)
+      triggerDownload(data, `${activeVariant.urn}.csv`, 'text/csv')
+    } catch (error: unknown) {
+      options?.toast?.add({
+        severity: 'error',
+        summary: 'Download failed',
+        detail: `Could not download the variant table: ${describeRequestError(error)}`,
+        life: 4000
+      })
+    } finally {
+      downloadInProgressLabel.value = null
     }
   }
 
@@ -414,6 +437,8 @@ export function useVariantLookup(
     getKeyword,
     geneName,
     uniqueAssayCount,
-    fetchVariantAnnotations
+    fetchVariantAnnotations,
+    downloadVariantCsvFile,
+    downloadInProgressLabel
   }
 }

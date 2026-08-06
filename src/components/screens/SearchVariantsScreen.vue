@@ -1085,14 +1085,19 @@ export default defineComponent({
       }
     },
     searchForText: async function (example: string, searchType: string) {
+      // A gene symbol example is really a link to its gene page, so navigate before touching any search state.
+      // Selecting a type and resetting the form queues watchers that clear the search text and rewrite the query
+      // params, and those rewrites would abort the navigation out from under us.
+      const geneSymbol = geneSymbolSearchTarget(example, searchType)
+      if (geneSymbol && geneSymbolRegex.test(geneSymbol)) {
+        this.router.push({name: 'gene', params: {symbol: geneSymbol}})
+        return
+      }
       this.searchType = searchType
       this.showSearch('default')
       this.searchText = example
       await this.defaultSearch()
-      // A gene symbol example navigates to its gene page, so only record the search when we are still on this screen.
-      if (this.route.name === 'mavemd') {
-        this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
-      }
+      this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
     },
     clearSearch() {
       this.searchText = null
@@ -1204,7 +1209,7 @@ export default defineComponent({
           this.toast.add({
             severity: 'error',
             summary: 'Unrecognized identifier',
-            detail: `${searchStr} does not look like any supported variant identifier. Choose a search type to see examples of what is accepted.`,
+            detail: `${searchStr} does not look like any supported variant identifier or gene symbol. Choose a search type to see examples of what is accepted.`,
             life: 10000
           })
           return

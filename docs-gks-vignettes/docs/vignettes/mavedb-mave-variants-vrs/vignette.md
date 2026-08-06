@@ -75,5 +75,3 @@ The `location` points into a standard protein reference (`NP_003336.1`, addresse
 - Related vignette: [Linking the same variant across multiple assays](../mavedb-vrs-cross-score-set-harmonization/vignette.md) — using the VRS identifiers to link variants across assays.
 - Related vignette: [Carrying a measured variant across molecular levels with Cat-VRS](../mavedb-protein-variant-cat-vrs/vignette.md) — implementing Cat-VRS over these alleles.
 - Related vignette: [Sharing MAVE functional evidence as computable statements with VA-Spec](../mavedb-functional-evidence-va-spec/vignette.md) — attaching variant classification evidence to these VRS variants.
-
----

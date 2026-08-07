@@ -44,7 +44,7 @@
               v-for="option in searchTypeOptions"
               :key="option.code"
               :aria-selected="searchType === option.code"
-              class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-all md:px-4 md:py-1.5 md:text-sm"
+              class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-all md:px-4 md:py-1.5 md:text-xs"
               role="tab"
               :style="searchColorStyle(option.code, searchType === option.code ? 'active' : 'inactive')"
               :tabindex="searchType === option.code ? 0 : -1"
@@ -68,7 +68,7 @@
               class="min-w-0 flex-1 !rounded-none !border-none !shadow-none placeholder:font-mono placeholder:text-xs md:placeholder:text-sm"
               :placeholder="currentPlaceholder"
               type="search"
-              @keyup.enter="defaultSearch"
+              @keyup.enter="defaultSearch()"
             />
             <button
               class="cursor-pointer whitespace-nowrap border-none px-4 text-sm font-semibold transition-colors hover:brightness-85 md:px-7"
@@ -76,7 +76,7 @@
                 backgroundColor: currentSearchColor.accent,
                 color: currentSearchColor.activeText || 'var(--color-text-dark)'
               }"
-              @click="defaultSearch"
+              @click="defaultSearch()"
             >
               Search
             </button>
@@ -267,6 +267,16 @@
           <div class="text-lg font-bold text-dark">
             {{ alleles.length }} allele{{ alleles.length !== 1 ? 's' : '' }} found
           </div>
+          <!-- An "Any" search leaves the selected type as "Any", so report what the string was taken to be. -->
+          <div v-if="detectedSearchTypeOption" class="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <span>Searched as</span>
+            <span
+              class="rounded-full border-[1.5px] px-2.5 py-0.5 text-xs font-semibold"
+              :style="searchColorStyle(detectedSearchTypeOption.code)"
+            >
+              {{ detectedSearchTypeOption.name }}
+            </span>
+          </div>
         </div>
         <button
           aria-label="Clear results and start a new search"
@@ -276,15 +286,69 @@
           <span aria-hidden="true">&larr;</span> New search
         </button>
       </div>
+      <!--
+        Which reference genome the gnomAD ID was read under. A reading that hit a mismatch says so in the empty state
+        below instead, which can explain what went wrong rather than implying the coordinates were understood.
+      -->
+      <div
+        v-if="gnomadInterpretation && !gnomadInterpretation.mismatch"
+        class="mb-5 flex flex-col gap-2.5 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="min-w-0">
+          <div class="text-sm text-gray-600">
+            Read as
+            <span class="font-semibold text-dark">{{ gnomadInterpretation.name }}</span>
+            coordinates
+          </div>
+          <code v-if="gnomadInterpretation.hgvs" class="mt-0.5 block truncate font-mono text-xs text-gray-500">
+            {{ gnomadInterpretation.hgvs }}
+          </code>
+        </div>
+        <button
+          class="shrink-0 cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="loading"
+          :style="searchColorStyle('gnomadId')"
+          @click="switchGnomadAssembly"
+        >
+          Read as {{ gnomadInterpretation.otherName }} instead
+        </button>
+      </div>
+
       <div v-if="loading">
         <MvLoader text="Finding matching variants..." />
       </div>
 
       <div v-else-if="alleles.length === 0" class="py-10 text-center">
-        <div class="text-base font-semibold text-gray-600">No variants found</div>
-        <div class="mt-1.5 text-sm text-gray-500">
-          No matching variants were found in MaveDB. Try a different identifier or search type.
-        </div>
+        <!--
+          A resolved reading always yields an allele, registered or not, so an empty result alongside an attempted
+          reading means the coordinates don't exist in that assembly rather than that MaveDB lacks the data.
+        -->
+        <template v-if="gnomadInterpretation?.mismatch">
+          <div class="text-base font-semibold text-gray-600">Not {{ gnomadInterpretation.name }} coordinates</div>
+          <div v-if="gnomadInterpretation.mismatch === 'reference'" class="mt-1.5 text-sm text-gray-500">
+            {{ gnomadInterpretation.id }} does not match the {{ gnomadInterpretation.name }} reference sequence at that
+            position.
+          </div>
+          <div v-else class="mt-1.5 text-sm text-gray-500">
+            {{ gnomadInterpretation.id }} lies past the end of that chromosome in {{ gnomadInterpretation.name }}.
+          </div>
+          <code v-if="gnomadInterpretation.hgvs" class="mt-1 block font-mono text-xs text-gray-400">
+            {{ gnomadInterpretation.hgvs }}
+          </code>
+          <button
+            class="mt-3 cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold"
+            :style="searchColorStyle('gnomadId')"
+            @click="switchGnomadAssembly"
+          >
+            Read as {{ gnomadInterpretation.otherName }} instead
+          </button>
+        </template>
+        <template v-else>
+          <div class="text-base font-semibold text-gray-600">No variants found</div>
+          <div class="mt-1.5 text-sm text-gray-500">
+            No matching variants were found in MaveDB. Try a different identifier or search type.
+          </div>
+        </template>
       </div>
 
       <article
@@ -295,14 +359,23 @@
       >
         <!-- Card header -->
         <div class="border-b border-gray-100 px-5 pt-4 pb-3.5">
-          <router-link
-            v-if="allele.clingenAlleleId"
-            :aria-label="'View variant detail for ' + allele.canonicalAlleleName"
+          <!--
+            Alleles the registry resolved but has not registered have no ClinGen ID to link to, so the heading renders
+            as plain text for those. Everything else about the header is shared.
+          -->
+          <component
+            :is="allele.clingenAlleleId ? 'router-link' : 'div'"
+            :aria-label="allele.clingenAlleleId ? 'View variant detail for ' + allele.canonicalAlleleName : undefined"
             class="group flex flex-col gap-2 no-underline sm:flex-row sm:items-start sm:justify-between sm:gap-4"
-            :to="{name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}}"
+            :to="
+              allele.clingenAlleleId ? {name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}} : undefined
+            "
           >
             <div class="min-w-0">
-              <span class="text-base font-bold leading-snug text-link group-hover:underline sm:text-lg">
+              <span
+                class="text-base font-bold leading-snug sm:text-lg"
+                :class="allele.clingenAlleleId ? 'text-link group-hover:underline' : 'text-dark'"
+              >
                 {{ allele.canonicalAlleleName }}
               </span>
               <div v-if="allele.grch38Hgvs || allele.grch37Hgvs" class="mt-1.5 flex flex-wrap items-center gap-2">
@@ -322,17 +395,14 @@
                 </span>
               </div>
             </div>
-            <span class="shrink-0 text-sm font-semibold text-link group-hover:underline sm:text-md">
+            <span
+              v-if="allele.clingenAlleleId"
+              class="shrink-0 text-sm font-semibold text-link group-hover:underline sm:text-md"
+            >
               View variant &rarr;
             </span>
-          </router-link>
-          <div v-else class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-            <div class="min-w-0">
-              <span class="font-mono text-base font-bold leading-snug text-dark sm:text-lg">
-                {{ allele.canonicalAlleleName }}
-              </span>
-            </div>
-          </div>
+            <span v-else class="shrink-0 text-xs italic text-gray-400"> Not in the ClinGen registry </span>
+          </component>
 
           <!-- MANE coordinates (collapsible) -->
           <MvCollapsible v-if="allele.maneCoordinates.length > 0" class="mt-3" :open="false" title="MANE transcripts">
@@ -676,6 +746,10 @@ import {
   type AlleleResult,
   clinGenAlleleIdRegex,
   clinVarVariationIdRegex,
+  detectSearchType,
+  geneSymbolRegex,
+  geneSymbolSearchTarget,
+  gnomadIdRegex,
   rsIdRegex,
   vrsDigestRegex,
   scoreSetUrnFromVariantUrn,
@@ -685,8 +759,9 @@ import {
 import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
+import {type GenomeAssembly, GENOME_ASSEMBLY_NAMES, gnomadIdToHgvs, otherAssembly} from '@/lib/gnomad'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
-import {SEARCH_COLORS} from '@/data/search'
+import {SEARCH_COLORS, SEARCH_PLACEHOLDERS} from '@/data/search'
 import {AVE_CLINICAL_APPLICATION} from '@/lib/links'
 import {
   HOW_IT_WORKS_STEPS,
@@ -695,7 +770,14 @@ import {
   VARIANT_TYPE_OPTIONS,
   ALLELE_OPTIONS
 } from '@/data/mavemd'
-import {getAlleleByCaId, getAlleleByHgvs, getAlleleByDbSnp, getAlleleByClinVar, getGeneBySymbol} from '@/api/clingen'
+import {
+  getAlleleByCaId,
+  getAlleleByHgvs,
+  getAlleleByDbSnp,
+  getAlleleByClinVar,
+  getAlleleByGnomad,
+  getGeneBySymbol
+} from '@/api/clingen'
 import {getCollection, getErrorResponse, lookupVariantsByClingenId} from '@/api/mavedb'
 import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
 import {useEntityCache} from '@/composables/entity-cache'
@@ -748,6 +830,17 @@ export default defineComponent({
       inputAlternateAllele: null as string | null,
       allAlleleOptions: ALLELE_OPTIONS,
       alleles: [] as AlleleResult[],
+      /**
+       * The gnomAD reading currently on screen: the ID exactly as searched, the assembly it was read (or attempted)
+       * under, and how the registry answered. A null mismatch means no verdict on the assembly — either the reading
+       * resolved, or it failed for a reason that says nothing about the coordinates.
+       *
+       * This records what the last search did, rather than tracking the form: the results must not restate
+       * themselves as the user types a new identifier into the box.
+       */
+      gnomadReading: null as {id: string; assembly: GenomeAssembly; mismatch: 'reference' | 'position' | null} | null,
+      /** What an "Any" search resolved the string to; null when the search type was chosen explicitly. */
+      detectedSearchType: null as string | null,
       nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       proteinScoreSetListIsExpanded: [] as Array<boolean>,
       associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
@@ -800,11 +893,41 @@ export default defineComponent({
       )
     },
     currentSearchColor(): {accent: string; bg: string; activeText?: string} {
-      return SEARCH_COLORS[this.searchType || 'hgvs'] || SEARCH_COLORS.hgvs
+      return SEARCH_COLORS[this.searchType || 'any'] || SEARCH_COLORS.any
     },
     currentPlaceholder(): string {
+      // A specific search type prompts with one of its own examples, but "Any" accepts too many shapes for one
+      // example to describe, so it shares the homepage's wording instead.
+      if (this.searchType === 'any') {
+        return SEARCH_PLACEHOLDERS.any.full
+      }
       const option = this.searchTypeOptions.find((o) => o.code === this.searchType)
       return option?.examples?.[0] || 'Enter a value'
+    },
+    /** The search type an "Any" search resolved to, for display alongside the results. */
+    detectedSearchTypeOption(): {code: string; name: string} | null {
+      if (!this.detectedSearchType) {
+        return null
+      }
+      return this.searchTypeOptions.find((option) => option.code === this.detectedSearchType) ?? null
+    },
+    /** How the gnomAD ID that was searched got read, how it would read under the other assembly, and how that went. */
+    gnomadInterpretation(): {
+      id: string
+      name: string
+      hgvs: string | null
+      otherName: string
+      mismatch: 'reference' | 'position' | null
+    } | null {
+      if (!this.gnomadReading) return null
+      const {id, assembly, mismatch} = this.gnomadReading
+      return {
+        id,
+        name: GENOME_ASSEMBLY_NAMES[assembly],
+        hgvs: gnomadIdToHgvs(id, assembly),
+        otherName: GENOME_ASSEMBLY_NAMES[otherAssembly(assembly)],
+        mismatch
+      }
     }
   },
 
@@ -846,7 +969,7 @@ export default defineComponent({
         if (typeof newVal === 'string') {
           this.searchType = newVal
         } else if (!newVal && this.defaultSearchVisible) {
-          this.searchType = 'hgvs'
+          this.searchType = 'any'
         }
       }
     },
@@ -985,11 +1108,22 @@ export default defineComponent({
         this.maveMdScoreSetsError = true
       }
     },
-    searchForText: function (example: string, searchType: string) {
+    searchForText: async function (example: string, searchType: string) {
+      // A gene symbol example is really a link to its gene page, so navigate before touching any search state.
+      // Selecting a type and resetting the form queues watchers that clear the search text and rewrite the query
+      // params, and those rewrites would abort the navigation out from under us.
+      const geneSymbol = geneSymbolSearchTarget(example, searchType)
+      if (geneSymbol && geneSymbolRegex.test(geneSymbol)) {
+        this.router.push({name: 'gene', params: {symbol: geneSymbol}})
+        return
+      }
       this.searchType = searchType
       this.showSearch('default')
+      // Let the search type watcher run before the box is filled. It clears the box on a type change, and queued as
+      // it is, it would otherwise flush during the search below and wipe out the example we just put there.
+      await this.$nextTick()
       this.searchText = example
-      this.defaultSearch()
+      await this.defaultSearch()
       this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
     },
     clearSearch() {
@@ -1001,6 +1135,8 @@ export default defineComponent({
       this.inputAlternateAllele = null
       this.searchResultsVisible = false
       this.alleles = []
+      this.gnomadReading = null
+      this.detectedSearchType = null
       this.router.replace({query: {}})
     },
     showSearch(searchMethod: 'guided' | 'default' = 'default') {
@@ -1012,7 +1148,7 @@ export default defineComponent({
         delete query.search
         delete query.searchType
         query.mode = 'guided'
-        this.searchType = 'hgvs'
+        this.searchType = 'any'
       } else {
         delete query.gene
         delete query.variantType
@@ -1024,9 +1160,36 @@ export default defineComponent({
       this.router.replace({query})
       this.clearSearch()
     },
-    defaultSearch: async function () {
+    defaultSearch: async function (forcedAssembly?: GenomeAssembly) {
       if (this.searchText) this.searchText = this.searchText.trim()
+
+      // A gene symbol navigates away instead of producing results here, so it is handled before this screen records
+      // the search in its query params. The search is also stripped from the entry being left behind: were it to
+      // remain, returning here would re-run it on mount and bounce the user straight back to the gene page.
+      const geneSymbol = geneSymbolSearchTarget(this.searchText ?? '', this.searchType)
+      if (geneSymbol) {
+        if (!geneSymbolRegex.test(geneSymbol)) {
+          this.toast.add({
+            severity: 'error',
+            summary: 'Invalid search',
+            detail: `Please provide a valid gene symbol (e.g. ${this.searchTypeOptions.find((o) => o.code === 'geneSymbol')?.examples?.join(', ')})`,
+            life: 10000
+          })
+          return
+        }
+        const query = {...this.route.query}
+        delete query.search
+        await this.router.replace({query})
+        this.router.push({name: 'gene', params: {symbol: geneSymbol}})
+        return
+      }
+
       this.searchResultsVisible = true
+      // Record the assembly being attempted, so a forced reading that fails to resolve still reports what was
+      // tried rather than leaving the previous, now-discarded result on screen.
+      this.gnomadReading =
+        forcedAssembly && this.searchText ? {id: this.searchText, assembly: forcedAssembly, mismatch: null} : null
+      this.detectedSearchType = null
       const query = {...this.route.query}
       delete query.mode
       delete query.gene
@@ -1043,14 +1206,46 @@ export default defineComponent({
       this.alleles = []
       this.loading = true
       if (this.searchText !== null && this.searchText !== '') {
-        await this.fetchDefaultSearchResults(this.searchText)
+        await this.fetchDefaultSearchResults(this.searchText, null, undefined, forcedAssembly)
       }
       this.loading = false
       await this.searchVariants()
     },
-    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null, forcedSearchType?: string) {
-      const searchType = forcedSearchType ?? this.searchType
+    /**
+     * Re-read the current gnomAD ID under the other assembly.
+     *
+     * The same coordinates can be valid under both assemblies while naming a different variant in each, so this lets
+     * the user correct an ID that resolved under the wrong one.
+     */
+    switchGnomadAssembly: async function () {
+      if (!this.gnomadReading) return
+      await this.defaultSearch(otherAssembly(this.gnomadReading.assembly))
+    },
+    fetchDefaultSearchResults: async function (
+      searchString: string,
+      maneStatus: string | null = null,
+      forcedSearchType?: string,
+      forcedAssembly?: GenomeAssembly | null
+    ) {
+      let searchType = forcedSearchType ?? this.searchType
       let searchStr = searchString.trim()
+
+      // The "Any" type is a stand-in: work out what the string actually is, then take the usual path for that type.
+      if (searchType === 'any') {
+        const detectedSearchType = detectSearchType(searchStr)
+        if (!detectedSearchType) {
+          this.toast.add({
+            severity: 'error',
+            summary: 'Unrecognized identifier',
+            detail: `${searchStr} does not look like any supported variant identifier or gene symbol. Choose a search type to see examples of what is accepted.`,
+            life: 10000
+          })
+          return
+        }
+        searchType = detectedSearchType
+        // Record it for display: the selected type stays "Any", but the user should see what it was taken to be.
+        this.detectedSearchType = detectedSearchType
+      }
 
       try {
         let responseData
@@ -1087,6 +1282,72 @@ export default defineComponent({
             return
           }
           responseData = await getAlleleByClinVar(searchStr)
+        } else if (searchType === 'gnomadId') {
+          if (!gnomadIdRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: `Please provide a valid gnomAD variant ID (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
+              life: 10000
+            })
+            return
+          }
+          try {
+            const gnomadResult = await getAlleleByGnomad(searchStr, forcedAssembly ?? undefined)
+            this.gnomadReading = {id: searchStr, assembly: gnomadResult.assembly, mismatch: null}
+            responseData = gnomadResult.allele
+          } catch (error: unknown) {
+            // Coordinates that don't fit an assembly aren't a failure to report as one: that is the answer. Which way
+            // they fail to fit decides what can be said about them, so classify it and hand it to the template too,
+            // rather than confining it to a toast that has to guess.
+            const {data} = getErrorResponse(error)
+            const mismatch =
+              data?.errorType === 'IncorrectReferenceAllele'
+                ? 'reference'
+                : data?.errorType === 'IncorrectHgvsPosition'
+                  ? 'position'
+                  : null
+            if (!mismatch) throw error
+            if (this.gnomadReading) this.gnomadReading.mismatch = mismatch
+
+            const actualAllele = data?.actualAllele as string | undefined
+            const givenAllele = data?.givenAllele as string | undefined
+            const reason =
+              mismatch === 'position'
+                ? 'That position lies past the end of the chromosome there.'
+                : actualAllele && givenAllele
+                  ? `The reference base at that position is ${actualAllele}, not ${givenAllele}.`
+                  : ''
+            this.toast.add(
+              forcedAssembly
+                ? {
+                    severity: 'warn',
+                    summary: `Not ${GENOME_ASSEMBLY_NAMES[forcedAssembly]} coordinates`,
+                    detail: [
+                      `${searchStr} cannot be read as ${GENOME_ASSEMBLY_NAMES[forcedAssembly]}.`,
+                      reason,
+                      `It may only be valid as ${GENOME_ASSEMBLY_NAMES[otherAssembly(forcedAssembly)]}.`
+                    ]
+                      .filter(Boolean)
+                      .join(' '),
+                    life: 10000
+                  }
+                : {
+                    severity: 'warn',
+                    summary: 'Variant not found',
+                    detail: [
+                      `${searchStr} does not fit the reference sequence in either ` +
+                        `${GENOME_ASSEMBLY_NAMES.grch38} or ${GENOME_ASSEMBLY_NAMES.grch37}.`,
+                      reason,
+                      'Check the position and reference allele.'
+                    ]
+                      .filter(Boolean)
+                      .join(' '),
+                    life: 10000
+                  }
+            )
+            return
+          }
         } else if (searchType === 'vrsDigest') {
           if (!vrsDigestRegex.test(searchStr)) {
             this.toast.add({
@@ -1179,6 +1440,15 @@ export default defineComponent({
               }
               break
             }
+          } else if (result.genomicAlleles?.length || result.transcriptAlleles?.length) {
+            // The registry resolved these coordinates against the reference but holds no registered allele for them,
+            // so it answers with a blank node id (_:CA) rather than a CA id. Show what the coordinates resolve to
+            // instead of discarding it; an unregistered allele can have no MaveDB measurements either way.
+            const unregisteredAllele = createAlleleResult(result, maneStatus)
+            unregisteredAllele.clingenAlleleId = undefined
+            unregisteredAllele.clingenAlleleUrl = undefined
+            unregisteredAllele.variantsStatus = 'Loaded'
+            this.alleles.push(unregisteredAllele)
           }
         }
         if (this.alleles.length > 0) {
@@ -1258,6 +1528,7 @@ export default defineComponent({
       this.searchResultsVisible = true
       this.syncGuidedQueryParams()
       this.alleles = []
+      this.detectedSearchType = null
       this.loading = true
       await this.fetchGuidedSearchResults()
       this.loading = false
@@ -1329,7 +1600,7 @@ export default defineComponent({
     },
 
     searchColorStyle(code: string, variant: 'active' | 'inactive' | 'chip' = 'chip'): Record<string, string> {
-      const colors = SEARCH_COLORS[code] || SEARCH_COLORS.hgvs
+      const colors = SEARCH_COLORS[code] || SEARCH_COLORS.any
       switch (variant) {
         case 'active':
           return {

@@ -286,9 +286,12 @@
           <span aria-hidden="true">&larr;</span> New search
         </button>
       </div>
-      <!-- Which reference genome the gnomAD ID was read under -->
+      <!--
+        Which reference genome the gnomAD ID was read under. A reading that hit a mismatch says so in the empty state
+        below instead, which can explain what went wrong rather than implying the coordinates were understood.
+      -->
       <div
-        v-if="gnomadInterpretation"
+        v-if="gnomadInterpretation && !gnomadInterpretation.mismatch"
         class="mb-5 flex flex-col gap-2.5 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="min-w-0">
@@ -320,11 +323,18 @@
           A resolved reading always yields an allele, registered or not, so an empty result alongside an attempted
           reading means the coordinates don't exist in that assembly rather than that MaveDB lacks the data.
         -->
-        <template v-if="gnomadInterpretation">
+        <template v-if="gnomadInterpretation?.mismatch">
           <div class="text-base font-semibold text-gray-600">Not {{ gnomadInterpretation.name }} coordinates</div>
-          <div class="mt-1.5 text-sm text-gray-500">
-            {{ searchText }} does not match the {{ gnomadInterpretation.name }} reference sequence at that position.
+          <div v-if="gnomadInterpretation.mismatch === 'reference'" class="mt-1.5 text-sm text-gray-500">
+            {{ gnomadInterpretation.id }} does not match the {{ gnomadInterpretation.name }} reference sequence at that
+            position.
           </div>
+          <div v-else class="mt-1.5 text-sm text-gray-500">
+            {{ gnomadInterpretation.id }} lies past the end of that chromosome in {{ gnomadInterpretation.name }}.
+          </div>
+          <code v-if="gnomadInterpretation.hgvs" class="mt-1 block font-mono text-xs text-gray-400">
+            {{ gnomadInterpretation.hgvs }}
+          </code>
           <button
             class="mt-3 cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold"
             :style="searchColorStyle('gnomadId')"
@@ -820,8 +830,15 @@ export default defineComponent({
       inputAlternateAllele: null as string | null,
       allAlleleOptions: ALLELE_OPTIONS,
       alleles: [] as AlleleResult[],
-      /** Which assembly the current gnomAD ID was read under; null when the search wasn't a gnomAD ID search. */
-      gnomadAssembly: null as GenomeAssembly | null,
+      /**
+       * The gnomAD reading currently on screen: the ID exactly as searched, the assembly it was read (or attempted)
+       * under, and how the registry answered. A null mismatch means no verdict on the assembly — either the reading
+       * resolved, or it failed for a reason that says nothing about the coordinates.
+       *
+       * This records what the last search did, rather than tracking the form: the results must not restate
+       * themselves as the user types a new identifier into the box.
+       */
+      gnomadReading: null as {id: string; assembly: GenomeAssembly; mismatch: 'reference' | 'position' | null} | null,
       /** What an "Any" search resolved the string to; null when the search type was chosen explicitly. */
       detectedSearchType: null as string | null,
       nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
@@ -894,15 +911,22 @@ export default defineComponent({
       }
       return this.searchTypeOptions.find((option) => option.code === this.detectedSearchType) ?? null
     },
-    /** How the current gnomAD ID was read, and how it would read under the other assembly. */
-    gnomadInterpretation(): {name: string; hgvs: string | null; otherName: string} | null {
-      if (!this.gnomadAssembly || !this.searchText) {
-        return null
-      }
+    /** How the gnomAD ID that was searched got read, how it would read under the other assembly, and how that went. */
+    gnomadInterpretation(): {
+      id: string
+      name: string
+      hgvs: string | null
+      otherName: string
+      mismatch: 'reference' | 'position' | null
+    } | null {
+      if (!this.gnomadReading) return null
+      const {id, assembly, mismatch} = this.gnomadReading
       return {
-        name: GENOME_ASSEMBLY_NAMES[this.gnomadAssembly],
-        hgvs: gnomadIdToHgvs(this.searchText, this.gnomadAssembly),
-        otherName: GENOME_ASSEMBLY_NAMES[otherAssembly(this.gnomadAssembly)]
+        id,
+        name: GENOME_ASSEMBLY_NAMES[assembly],
+        hgvs: gnomadIdToHgvs(id, assembly),
+        otherName: GENOME_ASSEMBLY_NAMES[otherAssembly(assembly)],
+        mismatch
       }
     }
   },
@@ -1095,6 +1119,9 @@ export default defineComponent({
       }
       this.searchType = searchType
       this.showSearch('default')
+      // Let the search type watcher run before the box is filled. It clears the box on a type change, and queued as
+      // it is, it would otherwise flush during the search below and wipe out the example we just put there.
+      await this.$nextTick()
       this.searchText = example
       await this.defaultSearch()
       this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
@@ -1108,7 +1135,7 @@ export default defineComponent({
       this.inputAlternateAllele = null
       this.searchResultsVisible = false
       this.alleles = []
-      this.gnomadAssembly = null
+      this.gnomadReading = null
       this.detectedSearchType = null
       this.router.replace({query: {}})
     },
@@ -1158,9 +1185,10 @@ export default defineComponent({
       }
 
       this.searchResultsVisible = true
-      // Show the assembly being attempted, so a forced reading that fails to resolve still reports what was tried
-      // rather than leaving the previous, now-discarded result on screen.
-      this.gnomadAssembly = forcedAssembly ?? null
+      // Record the assembly being attempted, so a forced reading that fails to resolve still reports what was
+      // tried rather than leaving the previous, now-discarded result on screen.
+      this.gnomadReading =
+        forcedAssembly && this.searchText ? {id: this.searchText, assembly: forcedAssembly, mismatch: null} : null
       this.detectedSearchType = null
       const query = {...this.route.query}
       delete query.mode
@@ -1190,8 +1218,8 @@ export default defineComponent({
      * the user correct an ID that resolved under the wrong one.
      */
     switchGnomadAssembly: async function () {
-      if (!this.gnomadAssembly) return
-      await this.defaultSearch(otherAssembly(this.gnomadAssembly))
+      if (!this.gnomadReading) return
+      await this.defaultSearch(otherAssembly(this.gnomadReading.assembly))
     },
     fetchDefaultSearchResults: async function (
       searchString: string,
@@ -1266,38 +1294,55 @@ export default defineComponent({
           }
           try {
             const gnomadResult = await getAlleleByGnomad(searchStr, forcedAssembly ?? undefined)
-            this.gnomadAssembly = gnomadResult.assembly
+            this.gnomadReading = {id: searchStr, assembly: gnomadResult.assembly, mismatch: null}
             responseData = gnomadResult.allele
           } catch (error: unknown) {
-            // A gnomAD ID that doesn't match an assembly's reference sequence isn't a failure to report as one: it is
-            // the answer, and the useful thing to say is which base is actually there.
+            // Coordinates that don't fit an assembly aren't a failure to report as one: that is the answer. Which way
+            // they fail to fit decides what can be said about them, so classify it and hand it to the template too,
+            // rather than confining it to a toast that has to guess.
             const {data} = getErrorResponse(error)
-            if (data?.errorType !== 'IncorrectReferenceAllele') {
-              throw error
-            }
-            const actualAllele = data.actualAllele as string | undefined
-            const givenAllele = data.givenAllele as string | undefined
-            const baseNote =
-              actualAllele && givenAllele
-                ? ` The reference base at that position is ${actualAllele}, not ${givenAllele}.`
-                : ''
+            const mismatch =
+              data?.errorType === 'IncorrectReferenceAllele'
+                ? 'reference'
+                : data?.errorType === 'IncorrectHgvsPosition'
+                  ? 'position'
+                  : null
+            if (!mismatch) throw error
+            if (this.gnomadReading) this.gnomadReading.mismatch = mismatch
+
+            const actualAllele = data?.actualAllele as string | undefined
+            const givenAllele = data?.givenAllele as string | undefined
+            const reason =
+              mismatch === 'position'
+                ? 'That position lies past the end of the chromosome there.'
+                : actualAllele && givenAllele
+                  ? `The reference base at that position is ${actualAllele}, not ${givenAllele}.`
+                  : ''
             this.toast.add(
               forcedAssembly
                 ? {
                     severity: 'warn',
                     summary: `Not ${GENOME_ASSEMBLY_NAMES[forcedAssembly]} coordinates`,
-                    detail:
-                      `${searchStr} cannot be read as ${GENOME_ASSEMBLY_NAMES[forcedAssembly]}.${baseNote} ` +
-                      `It is only valid as ${GENOME_ASSEMBLY_NAMES[otherAssembly(forcedAssembly)]}.`,
+                    detail: [
+                      `${searchStr} cannot be read as ${GENOME_ASSEMBLY_NAMES[forcedAssembly]}.`,
+                      reason,
+                      `It may only be valid as ${GENOME_ASSEMBLY_NAMES[otherAssembly(forcedAssembly)]}.`
+                    ]
+                      .filter(Boolean)
+                      .join(' '),
                     life: 10000
                   }
                 : {
                     severity: 'warn',
                     summary: 'Variant not found',
-                    detail:
-                      `${searchStr} does not match the reference sequence in either ` +
-                      `${GENOME_ASSEMBLY_NAMES.grch38} or ${GENOME_ASSEMBLY_NAMES.grch37}.${baseNote} ` +
-                      'Check the position and reference allele.',
+                    detail: [
+                      `${searchStr} does not fit the reference sequence in either ` +
+                        `${GENOME_ASSEMBLY_NAMES.grch38} or ${GENOME_ASSEMBLY_NAMES.grch37}.`,
+                      reason,
+                      'Check the position and reference allele.'
+                    ]
+                      .filter(Boolean)
+                      .join(' '),
                     life: 10000
                   }
             )

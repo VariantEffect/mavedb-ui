@@ -113,8 +113,8 @@
   --color-badge-alert: #fef3c7;
 
   /* ── Search Types ──────────────────────────────────────────── */
-  --color-any: #5c6b7a;
-  --color-any-light: #eceff2;
+  --color-hgvs: #5c6b7a;
+  --color-hgvs-light: #eceff2;
   --color-dbsnp: #e6b84d;
   --color-dbsnp-light: #fdf3d7;
   --color-clinvar: #5aafa0;

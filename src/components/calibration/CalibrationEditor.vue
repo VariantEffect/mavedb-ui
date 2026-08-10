@@ -37,45 +37,21 @@
     @toggle-boundary="onToggleBoundary"
     @toggle-infinity="onToggleInfinity"
     @toggle-oddspaths="onToggleOddspaths"
-    @update:baseline-score="
-      draft.baselineScore = $event
-      markChanged()
-    "
-    @update:baseline-score-description="
-      draft.baselineScoreDescription = $event
-      markChanged()
-    "
+    @update:baseline-score="draft.baselineScore = $event; markChanged()"
+    @update:baseline-score-description="draft.baselineScoreDescription = $event; markChanged()"
     @update:class-based="classBased = $event"
     @update:classification-field="onClassificationFieldUpdate"
-    @update:evidence-sources="
-      draft.evidenceSources = $event
-      markChanged()
-    "
+    @update:evidence-sources="draft.evidenceSources = $event; markChanged()"
     @update:evidence-strength="onEvidenceStrengthUpdate"
     @update:is-superseding-calibration="isSupersedingScoreCalibration = $event"
-    @update:method-sources="
-      draft.methodSources = $event
-      markChanged()
-    "
-    @update:notes="
-      draft.notes = $event
-      markChanged()
-    "
+    @update:method-sources="draft.methodSources = $event; markChanged()"
+    @update:notes="draft.notes = $event; markChanged()"
     @update:range-value="onRangeValueUpdate"
-    @update:research-use-only="
-      draft.researchUseOnly = $event
-      markChanged()
-    "
+    @update:research-use-only="draft.researchUseOnly = $event; markChanged()"
     @update:selected-score-set="onScoreSetSelected"
     @update:superseded-calibration="supersededScoreCalibration = $event"
-    @update:threshold-sources="
-      draft.thresholdSources = $event
-      markChanged()
-    "
-    @update:title="
-      draft.title = $event
-      markChanged()
-    "
+    @update:threshold-sources="draft.thresholdSources = $event; markChanged()"
+    @update:title="draft.title = $event; markChanged()"
   />
 </template>
 

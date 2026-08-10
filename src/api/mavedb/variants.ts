@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import config from '@/config'
-import {histogramScoreSetVariantDataUrl} from '@/api/mavedb/score-sets'
+import {variantPageVariantDataUrl} from '@/api/mavedb/score-sets'
 import {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
@@ -31,8 +31,9 @@ export async function getVariantDetail(urn: string): Promise<VariantEffectMeasur
   return response.data
 }
 
-export async function getHistogramVariantData(scoreSetUrn: string): Promise<string> {
-  const response = await axios.get(histogramScoreSetVariantDataUrl(scoreSetUrn))
+/** The containing score set's variant table, as read by the variant page. */
+export async function getVariantPageScoreSetData(scoreSetUrn: string): Promise<string> {
+  const response = await axios.get(variantPageVariantDataUrl(scoreSetUrn))
   return response.data
 }
 

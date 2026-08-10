@@ -1,6 +1,16 @@
-import {describe, expect, it} from 'vitest'
-
-import {CHROMOSOME_REFSEQ_IDS, gnomadIdToHgvs, gnomadIdToHgvsCandidates, otherAssembly, parseGnomadId} from './gnomad'
+import {describe, expect, it, test} from 'vitest'
+import {
+  CHROMOSOME_REFSEQ_IDS,
+  gnomadIdToHgvs,
+  gnomadIdToHgvsCandidates,
+  otherAssembly,
+  parseGnomadId,
+  formatFrequency,
+  gnomadFromVariantRow,
+  gnomadVariantUrl,
+  type GnomadFrequency
+} from './gnomad'
+import type {RawVariant} from '@/lib/variants'
 
 /** The GRCh38 translation of a gnomAD ID, which is the one tried first. */
 function grch38Hgvs(gnomadId: string): string | undefined {
@@ -142,5 +152,114 @@ describe('CHROMOSOME_REFSEQ_IDS', () => {
         expect(ids.grch38, chromosome).not.toBe(ids.grch37)
       }
     }
+  })
+})
+
+/** A variant data row whose gnomad namespace is fully populated; overrides replace individual cells. */
+function row(overrides: Partial<NonNullable<RawVariant['gnomad']>> = {}): RawVariant {
+  return {
+    accession: 'urn:mavedb:00000001-a-1#1',
+    scores: {score: 0.5},
+    gnomad: {
+      gnomad_af: 1.86e-6,
+      gnomad_ac: 3,
+      gnomad_an: 1613510,
+      gnomad_faf95_max: 6.8e-7,
+      gnomad_faf95_max_ancestry: 'nfe',
+      gnomad_id: '10-87961093-A-G',
+      gnomad_version: 'v4.1',
+      ...overrides
+    }
+  }
+}
+
+const frequency: GnomadFrequency = {
+  alleleFrequency: 1.86e-6,
+  alleleCount: 3,
+  alleleNumber: 1613510,
+  faf95Max: 6.8e-7,
+  faf95MaxAncestry: 'nfe',
+  dbIdentifier: '10-87961093-A-G',
+  dbVersion: 'v4.1'
+}
+
+describe('gnomadFromVariantRow', () => {
+  test('reads a populated namespace into the display shape', () => {
+    expect(gnomadFromVariantRow(row())).toEqual(frequency)
+  })
+
+  test('nullish row or absent namespace → null', () => {
+    expect(gnomadFromVariantRow(null)).toBeNull()
+    expect(gnomadFromVariantRow(undefined)).toBeNull()
+    expect(gnomadFromVariantRow({accession: 'x', scores: {score: 0.5}})).toBeNull()
+  })
+
+  test("a variant with no gnomAD record reports 'NA' across the namespace → null", () => {
+    const unannotated = row({
+      gnomad_af: 'NA',
+      gnomad_ac: 'NA',
+      gnomad_an: 'NA',
+      gnomad_faf95_max: 'NA',
+      gnomad_faf95_max_ancestry: 'NA',
+      gnomad_id: 'NA',
+      gnomad_version: 'NA'
+    })
+    expect(gnomadFromVariantRow(unannotated)).toBeNull()
+  })
+
+  test.each(['gnomad_af', 'gnomad_ac', 'gnomad_an', 'gnomad_id'] as const)(
+    'a missing %s makes the record unusable → null',
+    (field) => {
+      expect(gnomadFromVariantRow(row({[field]: 'NA'}))).toBeNull()
+    }
+  )
+
+  test('FAF95 is optional — absent leaves the rest intact', () => {
+    const result = gnomadFromVariantRow(row({gnomad_faf95_max: 'NA', gnomad_faf95_max_ancestry: 'NA'}))
+    expect(result).toMatchObject({alleleFrequency: 1.86e-6, faf95Max: null, faf95MaxAncestry: null})
+  })
+
+  test('a zero allele frequency is a real value, not a missing one', () => {
+    expect(gnomadFromVariantRow(row({gnomad_af: 0, gnomad_ac: 0}))).toMatchObject({
+      alleleFrequency: 0,
+      alleleCount: 0
+    })
+  })
+
+  test('an absent version degrades gracefully rather than dropping the record', () => {
+    expect(gnomadFromVariantRow(row({gnomad_version: 'NA'}))?.dbVersion).toBe('unknown')
+  })
+})
+
+describe('formatFrequency', () => {
+  test('nullish → em dash', () => {
+    expect(formatFrequency(null)).toBe('—')
+    expect(formatFrequency(undefined)).toBe('—')
+  })
+
+  test('very rare (< 1e-4) → scientific notation, else 3 significant figures', () => {
+    expect(formatFrequency(0.00001)).toBe('1.00e-5')
+    expect(formatFrequency(0.0123456)).toBe('0.0123')
+    expect(formatFrequency(0)).toBe('0.00e+0')
+  })
+})
+
+describe('gnomadVariantUrl — dataset matches the record version', () => {
+  test.each([
+    ['v4.1', 'gnomad_r4'],
+    ['v3.1.2', 'gnomad_r3'],
+    ['v2.1.1', 'gnomad_r2_1'],
+    // Bare majors, as older records and fixtures carry them.
+    ['4', 'gnomad_r4'],
+    ['3', 'gnomad_r3'],
+    ['2', 'gnomad_r2_1']
+  ])('version %s → %s', (dbVersion, dataset) => {
+    const url = gnomadVariantUrl({dbIdentifier: '1-55051215-G-A', dbVersion})
+    expect(url).toContain(`dataset=${dataset}`)
+    expect(url).toContain('/variant/1-55051215-G-A')
+  })
+
+  test('an unrecognisable version falls back to the current dataset', () => {
+    expect(gnomadVariantUrl({dbIdentifier: 'x', dbVersion: 'unknown'})).toContain('dataset=gnomad_r4')
   })
 })

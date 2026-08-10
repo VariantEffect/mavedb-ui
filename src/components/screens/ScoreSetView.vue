@@ -508,7 +508,7 @@ import {
   deleteScoreSet,
   publishScoreSet,
   getScoreSetClinicalControlOptions,
-  histogramScoreSetVariantDataUrl
+  scoreSetChartVariantDataUrl
 } from '@/api/mavedb'
 import {components} from '@/schema/openapi'
 import MvLoader from '@/components/common/MvLoader.vue'
@@ -719,7 +719,7 @@ export default {
           this.setItemId(newValue)
           let scoresUrl = null
           if (this.itemType?.restCollectionName && this.itemId) {
-            scoresUrl = histogramScoreSetVariantDataUrl(this.itemId)
+            scoresUrl = scoreSetChartVariantDataUrl(this.itemId)
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()

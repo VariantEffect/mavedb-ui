@@ -28,7 +28,7 @@ function entry(
 
 const SCORE_SET_ENTRIES: AvailableCsvNamespace[] = [
   entry({namespace: 'scores', label: 'Scores', group: 'data'}),
-  entry({namespace: 'gnomad', label: 'gnomAD allele frequency', group: 'annotation'}),
+  entry({namespace: 'gnomad', label: 'gnomAD population frequency', group: 'annotation'}),
   entry({namespace: 'clinvar.2024_11', label: 'ClinVar significance (November 2024)', group: 'annotation'}),
   entry({namespace: 'calibration.urn:mavedb:calibration-1', label: 'Brnich et al. 2019', group: 'calibration'}),
   entry({namespace: 'score_set', label: 'Score set and publications', group: 'provenance'})
@@ -398,7 +398,7 @@ describe('useCsvNamespaces extras', () => {
   const NAMESPACE_ENTRIES: AvailableCsvNamespace[] = [
     entry({namespace: 'scores', label: 'Score', group: 'data'}),
     entry({namespace: 'scores_custom', label: 'Investigator-provided score columns', group: 'data'}),
-    entry({namespace: 'gnomad', label: 'gnomAD allele frequency', group: 'annotation'})
+    entry({namespace: 'gnomad', label: 'gnomAD population frequency', group: 'annotation'})
   ]
 
   const EXTRAS = [{label: "Omit HGVS columns this score set doesn't use", value: 'dropUnusedHgvsColumns'}]

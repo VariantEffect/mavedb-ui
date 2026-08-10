@@ -9,7 +9,8 @@
               :model="tableDownloadMenu"
               severity="secondary"
               size="small"
-              @click="primaryTableDownload.command()">
+              @click="primaryTableDownload.command()"
+            >
               <template #default>
                 <i class="pi pi-table mr-1.5 text-xs" />
                 Download variant CSV
@@ -21,7 +22,8 @@
               :model="annotationDownloadOptions"
               severity="secondary"
               size="small"
-              @click="primaryAnnotationDownload?.command()">
+              @click="primaryAnnotationDownload?.command()"
+            >
               <template #default>
                 <i class="pi pi-download mr-1.5 text-xs" />
                 Download VA-Spec annotations
@@ -31,7 +33,8 @@
             <span
               v-if="downloadInProgress"
               aria-live="polite"
-              class="flex items-center gap-1.5 text-xs text-text-muted">
+              class="flex items-center gap-1.5 text-xs text-text-muted"
+            >
               <i class="pi pi-spin pi-spinner text-xs" />
               Preparing {{ lookup.downloadInProgressLabel.value }}…
             </span>
@@ -66,7 +69,8 @@
       <MvEmptyState
         v-else-if="lookup.variants.value.length === 0"
         description="No variants were found for this allele."
-        title="No variants found" />
+        title="No variants found"
+      />
 
       <template v-else>
         <!-- ── MEASUREMENTS SECTION ───────────────────────────── -->
@@ -84,7 +88,8 @@
                 active-border="var(--color-nucleotide-border)"
                 color="var(--color-nucleotide)"
                 :count="lookup.nucleotideCount.value"
-                label="Nucleotide level" />
+                label="Nucleotide level"
+              />
               <MvBadgeToggle
                 v-if="lookup.proteinCount.value > 0"
                 v-model="lookup.showProtein.value"
@@ -92,7 +97,8 @@
                 active-border="var(--color-protein-border)"
                 color="var(--color-protein)"
                 :count="lookup.proteinCount.value"
-                label="Protein level" />
+                label="Protein level"
+              />
               <MvBadgeToggle
                 v-if="lookup.associatedNucleotideCount.value > 0"
                 v-model="lookup.showAssociatedNucleotide.value"
@@ -100,7 +106,8 @@
                 active-border="var(--color-synonymous-nucleotide-border)"
                 color="var(--color-synonymous-nucleotide)"
                 :count="lookup.associatedNucleotideCount.value"
-                label="Synonymous nucleotide" />
+                label="Synonymous nucleotide"
+              />
             </div>
           </div>
           <!-- Desktop: horizontal scroll strip -->
@@ -118,7 +125,8 @@
               :normal-odds-path="lookup.getNormalOddsPath(variant.content.urn)"
               :study-title="variant.content.scoreSet?.title || 'Untitled score set'"
               :type="variant.type"
-              @select="lookup.selectVariant(variant.content.urn)" />
+              @select="lookup.selectVariant(variant.content.urn)"
+            />
           </div>
           <!-- Mobile: dropdown selector -->
           <div class="tablet:hidden px-4 py-3">
@@ -128,7 +136,8 @@
               option-label="label"
               option-value="urn"
               :options="measurementOptions"
-              @update:model-value="lookup.selectVariant($event)" />
+              @update:model-value="lookup.selectVariant($event)"
+            />
           </div>
         </div>
 
@@ -136,7 +145,8 @@
         <template v-if="lookup.selectedVariantDetail.value">
           <!-- Desktop: single card with two columns -->
           <div
-            class="mave-gradient-bar relative mt-6 hidden tablet:block rounded-lg border border-border bg-surface px-[18px] py-3.5">
+            class="mave-gradient-bar relative mt-6 hidden tablet:block rounded-lg border border-border bg-surface px-[18px] py-3.5"
+          >
             <div class="grid grid-cols-2">
               <div class="border-r border-border-light pr-[18px]">
                 <VariantInfoSection
@@ -144,40 +154,47 @@
                   :classification="lookup.calibrationResolution.classification.value"
                   :clingen-allele-id="lookup.selectedClingenAlleleId.value"
                   :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
-                  :genomic-locations="lookup.clingenAllele.genomicLocations.value" />
+                  :genomic-locations="lookup.clingenAllele.genomicLocations.value"
+                />
               </div>
               <div class="pl-[18px]">
                 <MvAssayFactsCard
                   :columns="1"
                   :score-set="lookup.selectedScoreSet.value ?? undefined"
-                  :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined" />
+                  :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
+                />
               </div>
             </div>
           </div>
 
           <!-- Mobile: separate cards -->
           <div
-            class="mt-6 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5">
+            class="mt-6 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5"
+          >
             <VariantInfoSection
               :allele-name="lookup.clingenAllele.alleleName.value"
               :classification="lookup.calibrationResolution.classification.value"
               :clingen-allele-id="lookup.selectedClingenAlleleId.value"
               :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
-              :genomic-locations="lookup.clingenAllele.genomicLocations.value" />
+              :genomic-locations="lookup.clingenAllele.genomicLocations.value"
+            />
           </div>
           <div
-            class="mt-4 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5">
+            class="mt-4 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5"
+          >
             <MvAssayFactsCard
               :columns="1"
               :score-set="lookup.selectedScoreSet.value ?? undefined"
-              :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined" />
+              :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
+            />
           </div>
         </template>
 
         <!-- ── ANNOTATIONS CARD ──────────────────────────────── -->
         <div
           v-if="lookup.selectedVariantDetail.value && lookup.selectedVariantScore.value != null"
-          class="mave-gradient-bar relative mt-6 rounded-lg border border-border bg-surface px-[18px] py-3.5">
+          class="mave-gradient-bar relative mt-6 rounded-lg border border-border bg-surface px-[18px] py-3.5"
+        >
           <div class="annotations-columns grid grid-cols-1 tablet:grid-cols-3">
             <!-- Classification -->
             <div class="tablet:pr-[18px]">
@@ -188,26 +205,36 @@
                   lookup.selectedVariantScore.value !== 'NA'
                     ? Number(lookup.selectedVariantScore.value).toPrecision(4)
                     : undefined
-                " />
+                "
+              />
               <MvDetailRow label="ACMG code">
                 <MvEvidenceTag
                   v-if="lookup.calibrationResolution.formattedEvidenceCode.value"
-                  :code="lookup.calibrationResolution.formattedEvidenceCode.value" />
+                  :code="lookup.calibrationResolution.formattedEvidenceCode.value"
+                />
               </MvDetailRow>
               <MvDetailRow
                 label="OddsPath ratio"
-                :value="lookup.calibrationResolution.scoreRange.value?.oddspathsRatio ?? undefined" />
+                :value="lookup.calibrationResolution.scoreRange.value?.oddspathsRatio ?? undefined"
+              />
             </div>
-            <!-- Placeholder columns for future data -->
+            <!-- Population frequency: gnomAD links to a single mapped variant, so this is a direct
+                 assertion about the measured allele rather than an aggregate over related variants.
+                 TODO(#746) moves this to a reverse translated data model with a notion of related variants.
+                  -->
             <div
-              class="border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:px-[18px]">
+              class="flex flex-col border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:px-[18px]"
+            >
               <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">
                 Population Frequency
               </div>
-              <p class="text-xs-plus italic text-text-muted">Data coming soon</p>
+              <MvGnomadSummary v-if="lookup.selectedVariantGnomad.value" :gnomad="lookup.selectedVariantGnomad.value" />
+              <p v-else class="text-xs-plus italic text-text-muted">No gnomAD record for this variant</p>
             </div>
+            <!-- Placeholder column for future data -->
             <div
-              class="border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:pl-[18px]">
+              class="border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:pl-[18px]"
+            >
               <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">
                 Splicing Predictions
               </div>
@@ -219,7 +246,8 @@
         <!-- ── SCORE DISTRIBUTION CHART ──────────────────────── -->
         <div v-if="lookup.selectedScoreSet.value" class="mt-6 rounded-lg border border-border bg-surface">
           <div
-            class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 tablet:px-5 py-3.5">
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 tablet:px-5 py-3.5"
+          >
             <div class="min-w-0">
               <router-link
                 class="text-base tablet:text-lg font-bold text-link"
@@ -227,7 +255,8 @@
                   name: 'scoreSet',
                   params: {urn: lookup.selectedScoreSet.value.urn},
                   query: {variant: lookup.selectedVariantDetail.value?.urn}
-                }">
+                }"
+              >
                 {{ lookup.selectedScoreSet.value.title }}
               </router-link>
             </div>
@@ -244,7 +273,8 @@
                 :selected-calibration="lookup.selectedCalibration.value || undefined"
                 :variants="lookup.scores.value"
                 @calibration-changed="lookup.selectedCalibration.value = $event"
-                @selection-changed="() => {}" />
+                @selection-changed="() => {}"
+              />
             </div>
             <div v-else class="flex min-h-[200px] items-center justify-center">
               <MvLoader text="Loading variant information..." />
@@ -253,7 +283,8 @@
           <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light p-5">
             <CalibrationTable
               :highlighted-range-label="lookup.calibrationResolution.scoreRange.value?.label || null"
-              :score-calibration="lookup.selectedCalibrationObject.value" />
+              :score-calibration="lookup.selectedCalibrationObject.value"
+            />
           </div>
         </div>
       </template>
@@ -263,7 +294,8 @@
       header="Download clinical table"
       kind="variant"
       :urn="lookup.selectedVariantUrn.value"
-      @confirm="downloadSelectedCsv" />
+      @confirm="downloadSelectedCsv"
+    />
   </MvLayout>
 </template>
 
@@ -287,6 +319,7 @@ import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
 import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import MvBadgeToggle from '@/components/common/MvBadgeToggle.vue'
 import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
+import MvGnomadSummary from '@/components/variant/MvGnomadSummary.vue'
 import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
@@ -311,6 +344,7 @@ export default defineComponent({
     MvEmptyState,
     MvErrorState,
     MvEvidenceTag,
+    MvGnomadSummary,
     MvLayout,
     MvLoader,
     MvMeasurementCard,

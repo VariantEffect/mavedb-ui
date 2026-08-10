@@ -4,7 +4,7 @@ import {
   downloadVariantCsv,
   getVariantAnnotation,
   getVariantDetail,
-  getHistogramVariantData,
+  getVariantPageScoreSetData,
   lookupVariantsByClingenId
 } from '@/api/mavedb/variants'
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
@@ -19,6 +19,7 @@ import {
 import {triggerDownload} from '@/lib/downloads'
 import {describeRequestError} from '@/lib/errors'
 import {getExperimentKeyword} from '@/lib/experiments'
+import {gnomadFromVariantRow, type GnomadFrequency} from '@/lib/gnomad'
 import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
 import type {MeasurementType} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
@@ -66,6 +67,7 @@ export interface UseVariantLookupReturn {
   scores: ComputedRef<Variant[] | null>
   variantScoreRow: ComputedRef<Variant | undefined>
   selectedVariantScore: ComputedRef<number | string | null>
+  selectedVariantGnomad: ComputedRef<GnomadFrequency | null>
 
   // Calibration
   selectedCalibration: Ref<string | null>
@@ -170,6 +172,7 @@ export function useVariantLookup(
   })
   const variantScoreRow = computed(() => (scores.value || []).find((s) => s.accession === selectedVariantUrn.value))
   const selectedVariantScore = computed(() => variantScoreRow.value?.scores?.score ?? null)
+  const selectedVariantGnomad = computed(() => gnomadFromVariantRow(variantScoreRow.value))
 
   // ── Calibration ───────────────────────────────────────────
   const selectedCalibrationObject = computed<ScoreCalibration | null>(() => {
@@ -222,7 +225,7 @@ export function useVariantLookup(
   async function fetchScores(scoreSetUrn: string) {
     if (scoresCache.value[scoreSetUrn]) return
     try {
-      const data = await getHistogramVariantData(scoreSetUrn)
+      const data = await getVariantPageScoreSetData(scoreSetUrn)
       scoresCache.value = {
         ...scoresCache.value,
         [scoreSetUrn]: parseScoreSetVariantData(data)
@@ -427,6 +430,7 @@ export function useVariantLookup(
     scores,
     variantScoreRow,
     selectedVariantScore,
+    selectedVariantGnomad,
     selectedCalibration,
     selectedCalibrationObject,
     calibrationResolution,

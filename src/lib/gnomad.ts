@@ -1,4 +1,36 @@
+/**
+ * @fileoverview
+ * gnomAD population frequency annotations and related utilities.
+ *
+ * gnomAD is a population-scale variant frequency database. MaveDB links each mapped variant to the
+ * single gnomAD record sharing its ClinGen allele ID, so a variant's frequency is a direct assertion
+ * about that variant — there is no projection or pooling to reason about.
+ *
+ * Frequencies reach the client as the `gnomad` namespace of the score-set variant data CSV, where
+ * every field arrives as a number or the string `'NA'`. {@link gnomadFromVariantRow} is the seam that
+ * turns one of those rows into the shape the display components consume.
+ */
 import {gnomadIdRegex} from './mavemd'
+import type {components} from '@/schema/openapi'
+import type {RawVariant} from '@/lib/variants'
+
+/**
+ * One gnomAD frequency record, as consumed by the display components.
+ *
+ * Picked from the generated schema rather than restated, so renaming or retyping a field on the API's
+ * model breaks compilation here.
+ *
+ * Caveat: the CSV columns come from the API's namespace specs, a different code path from the view
+ * model. Both project the same `GnomADVariant` ORM columns, so this tracks names and types but is not
+ * a guarantee that the two stay column-for-column aligned.
+ */
+export type GnomadFrequency = Pick<
+  components['schemas']['GnomADVariantWithMappedVariants'],
+  'alleleFrequency' | 'alleleCount' | 'alleleNumber' | 'faf95Max' | 'faf95MaxAncestry' | 'dbIdentifier' | 'dbVersion'
+>
+
+/** A CSV cell from the `gnomad` namespace: a number, the `'NA'` sentinel, or absent. */
+type GnomadCell = number | string | null | undefined
 
 /**
  * Translation of gnomAD variant IDs (e.g. 1-11796321-G-A) into genomic HGVS.
@@ -167,4 +199,59 @@ export function gnomadIdToHgvsCandidates(gnomadId: string): GnomadHgvsCandidate[
 /** The HGVS reading of a gnomAD ID under one assembly, or null if the ID cannot be translated. */
 export function gnomadIdToHgvs(gnomadId: string, assembly: GenomeAssembly): string | null {
   return gnomadIdToHgvsCandidates(gnomadId).find((candidate) => candidate.assembly === assembly)?.hgvs ?? null
+}
+
+function numberOrNull(value: GnomadCell): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function stringOrNull(value: GnomadCell): string | null {
+  if (typeof value === 'number') return String(value)
+  return value && value.toUpperCase() !== 'NA' ? value : null
+}
+
+/**
+ * Read a variant's gnomAD frequency out of its score-set data row.
+ *
+ * Returns null unless the row carries the fields the display depends on — the frequency itself, the
+ * AC/AN behind it, and the gnomAD variant id used to link out. Variants with no gnomAD record report
+ * `'NA'` across the namespace and yield null here.
+ *
+ * Requires the `gnomad` namespace to have been requested; see `variantPageVariantDataUrl`.
+ */
+export function gnomadFromVariantRow(variant: RawVariant | null | undefined): GnomadFrequency | null {
+  const gnomad = variant?.gnomad
+  if (!gnomad) return null
+
+  const alleleFrequency = numberOrNull(gnomad.gnomad_af)
+  const alleleCount = numberOrNull(gnomad.gnomad_ac)
+  const alleleNumber = numberOrNull(gnomad.gnomad_an)
+  const dbIdentifier = stringOrNull(gnomad.gnomad_id)
+  if (alleleFrequency == null || alleleCount == null || alleleNumber == null || dbIdentifier == null) {
+    return null
+  }
+
+  return {
+    alleleFrequency,
+    alleleCount,
+    alleleNumber,
+    faf95Max: numberOrNull(gnomad.gnomad_faf95_max),
+    faf95MaxAncestry: stringOrNull(gnomad.gnomad_faf95_max_ancestry),
+    dbIdentifier,
+    dbVersion: stringOrNull(gnomad.gnomad_version) ?? 'unknown'
+  }
+}
+
+/** Deep link to a gnomAD variant page, choosing the dataset that matches the record's version. */
+export function gnomadVariantUrl(gnomad: {dbIdentifier: string; dbVersion: string}): string {
+  // Versions are stored with a leading "v" (e.g. "v4.1"), so strip non-digits before reading the major.
+  const major = parseInt(gnomad.dbVersion.replace(/^\D+/, ''), 10)
+  const dataset = major === 3 ? 'gnomad_r3' : major === 2 ? 'gnomad_r2_1' : 'gnomad_r4'
+  return `https://gnomad.broadinstitute.org/variant/${encodeURIComponent(gnomad.dbIdentifier)}?dataset=${dataset}`
+}
+
+/** A frequency (e.g. gnomAD AF): scientific notation for the very rare, else 3 significant figures. */
+export function formatFrequency(value: number | null | undefined): string {
+  if (value == null) return '—'
+  return value < 0.0001 ? value.toExponential(2) : value.toPrecision(3)
 }

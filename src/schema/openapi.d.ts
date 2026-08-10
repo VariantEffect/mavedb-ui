@@ -4508,6 +4508,8 @@ export interface components {
       evidenceSources: components["schemas"]["PublicationIdentifier"][];
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifier"][];
+      supersededCalibration?: components["schemas"]["ShorterScoreCalibration"] | null;
+      supersedingCalibration?: components["schemas"]["ShorterScoreCalibration"] | null;
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Recordtype */
@@ -4571,6 +4573,8 @@ export interface components {
       methodSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
+      supersededCalibration?: components["schemas"]["ShorterScoreCalibration"] | null;
+      supersedingCalibration?: components["schemas"]["ShorterScoreCalibration"] | null;
       /** Scoreseturn */
       scoreSetUrn?: string | null;
     };
@@ -5131,6 +5135,15 @@ export interface components {
       mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
+    };
+    /** ShorterScoreCalibration */
+    ShorterScoreCalibration: {
+      /** Urn */
+      urn: string;
+      /** Title */
+      title: string;
+      /** Recordtype */
+      recordType?: string;
     };
     /** ShorterScoreSet */
     ShorterScoreSet: {

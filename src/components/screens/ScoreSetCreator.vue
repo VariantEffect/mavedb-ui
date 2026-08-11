@@ -473,18 +473,18 @@ export default {
     const publications = usePublicationIdentifiers()
     const licenseSearch = useAutocomplete<License>('/licenses/active')
 
-    const extractScoreSets = (data: unknown): ShortScoreSet[] => {
+    const extractPublicScoreSets = (data: unknown): ShortScoreSet[] => {
       const record = data as Record<string, unknown>
       const raw = (record.scoreSets as ShortScoreSet[]) || []
       return raw.filter(sc => sc.private === false)
     }
     const supersededSearch = useAutocomplete<ShortScoreSet>('/me/score-sets/search', {
       method: 'POST',
-      extract: extractScoreSets
+      extract: extractPublicScoreSets
     })
     const metaAnalyzesSearch = useAutocomplete<ShortScoreSet>('/score-sets/search', {
       method: 'POST',
-      extract: extractScoreSets
+      extract: extractPublicScoreSets
     })
 
     const extraMetadataField = useJsonFileField('extraMetadata')

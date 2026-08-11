@@ -11,7 +11,6 @@
     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       <span v-if="gnomad.faf95Max !== null" class="text-text-primary"
         >FAF95: <span class="font-mono text-text-muted">{{ formatFrequency(gnomad.faf95Max) }}</span>
-        <span v-if="gnomad.faf95MaxAncestry" class="text-text-muted">({{ gnomad.faf95MaxAncestry }})</span>
       </span>
       <span v-else class="text-text-muted">FAF95 —</span>
     </div>

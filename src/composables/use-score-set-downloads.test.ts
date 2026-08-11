@@ -185,9 +185,41 @@ describe('useScoreSetDownloads annotation streaming shares the indicator', () =>
     expect(downloads.fileDownloadInProgress.value).toBe(false)
   })
 
-  it('counts records by byte, so a multi-byte character cannot skew the total', async () => {
-    // The old implementation decoded each chunk to a string first; retaining bytes is both exact and what
-    // keeps a large download out of the tab's memory.
+  it('tallies variants the server could not annotate, so a caller can report them', async () => {
+    const errorRecord = '{"variant_urn":"urn:1","annotation":null,"error":{"type":"ValueError","detail":"bad"}}\n'
+    mockStream([errorRecord, '{"variant_urn":"urn:2","annotation":{"type":"Stub"}}\n'], '2')
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    expect(await downloads.streamVariantAnnotations('study-result')).toEqual({received: 2, errored: 1})
+  })
+
+  it('saves a stream containing error records, since the file is complete', async () => {
+    // A variant the server could not annotate is reported in-band. The download is not a failure.
+    const errorRecord = '{"variant_urn":"urn:1","annotation":null,"error":{"type":"KeyError","detail":"score"}}\n'
+    mockStream([errorRecord], '1')
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    await expect(downloads.streamVariantAnnotations('study-result')).resolves.toEqual({received: 1, errored: 1})
+  })
+
+  it('counts an error record split across chunks exactly once', async () => {
+    // Records are scanned per chunk, so a boundary landing mid-record must not lose or double it.
+    mockStream(['{"variant_urn":"urn:1","annotation":null,"err', 'or":{"type":"KeyError","detail":"s"}}\n'], '1')
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    expect(await downloads.streamVariantAnnotations('study-result')).toEqual({received: 1, errored: 1})
+  })
+
+  it('does not mistake an "error" nested inside an annotation for a failed record', async () => {
+    // The substring test is only a prefilter; the record is parsed to confirm the key is its own.
+    mockStream(['{"variant_urn":"urn:1","annotation":{"notes":"see \\"error\\" handling"}}\n'], '1')
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    expect(await downloads.streamVariantAnnotations('study-result')).toEqual({received: 1, errored: 0})
+  })
+
+  it('is not skewed by a multi-byte character', async () => {
+    // The body is still retained as bytes — only one chunk at a time is decoded, to scan its lines.
     mockStream(['{"p":"p.Trp26€"}\n', '{"p":"p.Met1?"}\n'], '2')
     const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
     const {values, stop} = recordProgress(downloads.fileDownloadProgress)

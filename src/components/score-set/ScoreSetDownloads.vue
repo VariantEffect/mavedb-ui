@@ -144,28 +144,19 @@ export default defineComponent({
       if (this.hasPathogenicityCalibrations) {
         options.push({
           label: 'Pathogenicity Statement',
-          command: () =>
-            this.reportingFailure('Pathogenicity Statement', () =>
-              this.streamVariantAnnotations('pathogenicity-statement', 'Pathogenicity Statement')
-            )
+          command: () => this.streamAnnotations('pathogenicity-statement', 'Pathogenicity Statement')
         })
       }
       if (this.hasFunctionalImpactCalibrations) {
         options.push({
           label: 'Functional Impact Statement',
-          command: () =>
-            this.reportingFailure('Functional Impact Statement', () =>
-              this.streamVariantAnnotations('functional-statement', 'Functional Impact Statement')
-            )
+          command: () => this.streamAnnotations('functional-statement', 'Functional Impact Statement')
         })
       }
 
       options.push({
         label: 'Functional Study Result',
-        command: () =>
-          this.reportingFailure('Functional Study Result', () =>
-            this.streamVariantAnnotations('study-result', 'Functional Study Result')
-          )
+        command: () => this.streamAnnotations('study-result', 'Functional Study Result')
       })
 
       return options
@@ -194,6 +185,29 @@ export default defineComponent({
           life: 6000
         })
       }
+    },
+
+    /**
+     * Download an annotation stream, reporting a failure as an error and a partial one as a warning.
+     *
+     * A stream in which some variants could not be annotated still completes: the file is whole, and the
+     * failed variants are in it as records carrying an `error` field. Saying nothing would let a user
+     * treat a partial export as a full one.
+     */
+    async streamAnnotations(annotationType: string, what: string) {
+      await this.reportingFailure(what, async () => {
+        const outcome = await this.streamVariantAnnotations(annotationType, what)
+        if (outcome && outcome.errored > 0) {
+          this.$toast.add({
+            severity: 'warn',
+            summary: `${what} downloaded with errors`,
+            detail:
+              `${outcome.errored} of ${outcome.received} variants could not be annotated.` +
+              ' Those records carry an "error" field instead of an annotation.',
+            life: 10000
+          })
+        }
+      })
     },
 
     async handleCustomDownload(selection: {namespaces: string[]; extras: string[]}) {

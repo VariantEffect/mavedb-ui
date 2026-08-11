@@ -11,6 +11,34 @@ type ScoreSet = components['schemas']['ScoreSet']
 
 export const TEXT_COLUMNS = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
 
+/** What a completed annotation stream contained, tallied as it arrived. */
+export interface AnnotationStreamOutcome {
+  /** Records received. Equals `X-Total-Count` for a complete stream — the server emits one per variant. */
+  received: number
+  /**
+   * Variants the server could not annotate. Those records are in the saved file, carrying an `error`
+   * object in place of an annotation. Variants with no mapping data are not counted here: a null
+   * annotation is an expected absence, not a failure.
+   */
+  errored: number
+}
+
+/**
+ * Whether an NDJSON line is a record the server marked as failed.
+ *
+ * The substring test is a prefilter, not the decision: `"error"` can appear anywhere inside a large
+ * annotation, so a candidate line is parsed to confirm the key is the record's own. Parsing only
+ * candidates matters — these records nest deeply, and parsing every one of a large stream is slow.
+ */
+function isErrorRecord(line: string): boolean {
+  if (!line.includes('"error"')) return false
+  try {
+    return JSON.parse(line)?.error != null
+  } catch {
+    return false
+  }
+}
+
 interface UseScoreSetDownloadsOptions {
   scoreSet: Ref<ScoreSet | null>
 }
@@ -98,10 +126,11 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     }
   }
 
+  /** Resolves to what the stream contained, so the caller can report partial failures. */
   async function streamVariantAnnotations(annotationType: string, label = 'annotations') {
     const urn = scoreSet.value?.urn
     if (!urn) return
-    await withIndicator(label, () => streamAnnotationsInto(urn, annotationType))
+    return await withIndicator(label, () => streamAnnotationsInto(urn, annotationType))
   }
 
   async function streamAnnotationsInto(urn: string, annotationType: string) {
@@ -121,30 +150,40 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
       const reader = response.body?.getReader()
       if (!reader) throw new Error('Response body is not readable')
 
-      // Held as raw bytes rather than decoded strings. Accumulating strings and then joining them cost
-      // roughly five times the payload — JS strings are UTF-16, so the decoded chunks alone doubled it,
-      // the join doubled that again, and the Blob copied the result. A large pathogenicity download ran
-      // the tab out of memory.
+      // The body is retained as raw bytes, never as accumulated strings. Accumulating decoded chunks and
+      // joining them cost roughly five times the payload — JS strings are UTF-16, so the chunks alone
+      // doubled it, the join doubled that again, and the Blob copied the result. A large pathogenicity
+      // download ran the tab out of memory. Each chunk is decoded to scan its lines and then dropped, so
+      // only one chunk plus a partial line is ever live.
       const parts: Uint8Array[] = []
+      const decoder = new TextDecoder()
+      let partialLine = ''
       let processedCount = 0
+      let erroredCount = 0
 
       while (true) {
         const {done, value} = await reader.read()
         if (done) break
 
         parts.push(value)
-        // NDJSON terminates every record with a newline, and 0x0A cannot appear inside a multi-byte UTF-8
-        // sequence, so counting the byte is exact and needs no decoding or chunk-boundary bookkeeping.
-        for (const byte of value) {
-          if (byte === 0x0a) processedCount += 1
+
+        // `stream: true` carries a multi-byte character split across chunks into the next decode, and
+        // popping the final element keeps a record split across chunks from being counted twice.
+        const lines = (partialLine + decoder.decode(value, {stream: true})).split('\n')
+        partialLine = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line) continue
+          processedCount += 1
+          if (isErrorRecord(line)) erroredCount += 1
         }
+
         // Without a total there is nothing to divide by; stay indeterminate rather than report Infinity.
         fileDownloadProgress.value =
           totalCount > 0 ? Math.min(100, Math.round((processedCount / totalCount) * 100)) : null
       }
 
-      // The server generator yields one line per variant, so a short body means it stopped early —
-      // status and headers went out with the first chunk, so a truncated stream is the only symptom it
+      // The server emits exactly one record per variant, so a short body means it stopped early — status
+      // and headers went out with the first chunk, so truncation is the only symptom a mid-stream failure
       // can produce. Refuse to save a file that is quietly missing records.
       if (totalCount > 0 && processedCount < totalCount) {
         throw new Error(
@@ -160,6 +199,8 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
       anchor.download = `${urn}_annotated_variants_${annotationType}.ndjson`
       anchor.click()
       URL.revokeObjectURL(url)
+
+      return {received: processedCount, errored: erroredCount}
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       if (message !== 'The user aborted a request.') {

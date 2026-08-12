@@ -8,7 +8,8 @@
         label="Scores"
         severity="secondary"
         size="small"
-        @click="reportingFailure('scores', () => downloadFile('scores'))" />
+        @click="reportingFailure('scores', () => downloadFile('scores'))"
+      />
       <PButton
         v-if="hasCounts"
         :disabled="fileDownloadInProgress"
@@ -16,21 +17,24 @@
         label="Counts"
         severity="secondary"
         size="small"
-        @click="reportingFailure('counts', () => downloadFile('counts'))" />
+        @click="reportingFailure('counts', () => downloadFile('counts'))"
+      />
       <PButton
         v-if="!isMetaDataEmpty"
         icon="pi pi-download"
         label="Metadata"
         severity="secondary"
         size="small"
-        @click="downloadMetadata" />
+        @click="downloadMetadata"
+      />
       <PButton
         :disabled="fileDownloadInProgress"
         icon="pi pi-download"
         label="Mapped Variants"
         severity="secondary"
         size="small"
-        @click="reportingFailure('mapped variants', downloadMappedVariantsFile)" />
+        @click="reportingFailure('mapped variants', downloadMappedVariantsFile)"
+      />
 
       <SplitButton
         :button-props="{class: 'p-button-sm p-button-secondary'}"
@@ -43,15 +47,17 @@
             originalEvent: $event,
             item: annotatedVariantDownloadOptions[0]
           })
-        " />
+        "
+      />
 
       <PButton
         :disabled="fileDownloadInProgress"
         icon="pi pi-sliders-h"
-        label="Custom Data"
+        label="Custom CSV"
         severity="secondary"
         size="small"
-        @click="customDialogVisible = true" />
+        @click="customDialogVisible = true"
+      />
     </div>
 
     <!-- One bar for every download on this panel. Determinate only for the VA-Spec streams, which can
@@ -61,7 +67,8 @@
         class="grow"
         :mode="fileDownloadProgress === null ? 'indeterminate' : 'determinate'"
         style="height: 1.2em"
-        :value="fileDownloadProgress ?? 0" />
+        :value="fileDownloadProgress ?? 0"
+      />
       <span class="whitespace-nowrap text-xs text-text-muted">
         Preparing {{ fileDownloadLabel }}…
         <template v-if="fileDownloadProgress !== null">{{ fileDownloadProgress }}%</template>
@@ -84,7 +91,8 @@
       header="Custom data download"
       kind="scoreSet"
       :urn="scoreSet.urn"
-      @confirm="handleCustomDownload" />
+      @confirm="handleCustomDownload"
+    />
   </div>
 </template>
 

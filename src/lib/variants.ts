@@ -45,7 +45,7 @@ export interface RawVariant {
   mavedb?: {
     post_mapped_hgvs_c?: string
     post_mapped_hgvs_p?: string
-    post_mapped_vrs_digest?: string
+    post_mapped_vrs_id?: string
   }
   vep?: {
     vep_functional_consequence?: string

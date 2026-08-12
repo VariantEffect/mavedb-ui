@@ -53,6 +53,17 @@ export interface RawVariant {
   clingen?: {
     clingen_allele_id?: string
   }
+  // The `gnomad` namespace. Numeric fields arrive as numbers via the CSV parser's dynamic typing, or
+  // as the string 'NA' where the variant has no gnomAD record. Read via `gnomadFromVariantRow`.
+  gnomad?: {
+    gnomad_af?: number | string
+    gnomad_ac?: number | string
+    gnomad_an?: number | string
+    gnomad_faf95_max?: number | string
+    gnomad_faf95_max_ancestry?: string
+    gnomad_id?: string
+    gnomad_version?: string
+  }
 
   control?: ClinicalControlVariant
   mavedb_label?: string

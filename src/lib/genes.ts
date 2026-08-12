@@ -1,4 +1,5 @@
-import {getErrorResponse, type GeneResponse, type GeneScoreSet} from '@/api/mavedb'
+import {type GeneResponse, type GeneScoreSet} from '@/api/mavedb'
+import {getErrorResponse} from '@/lib/errors'
 
 export type GeneErrorState = 'not-found' | 'retryable'
 

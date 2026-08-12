@@ -778,7 +778,8 @@ import {
   getAlleleByGnomad,
   getGeneBySymbol
 } from '@/api/clingen'
-import {getCollection, getErrorResponse, lookupVariantsByClingenId} from '@/api/mavedb'
+import {getCollection, lookupVariantsByClingenId} from '@/api/mavedb'
+import {getErrorResponse} from '@/lib/errors'
 import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
 import {useEntityCache} from '@/composables/entity-cache'
 import MvLoader from '@/components/common/MvLoader.vue'

@@ -7,13 +7,17 @@ type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
 type ScoreSetsSearchResponse = components['schemas']['ScoreSetsSearchResponse']
 export type ScoreSetsSearchFilterOptionsResponse = components['schemas']['ScoreSetsSearchFilterOptionsResponse']
 
-const HISTOGRAM_VARIANT_DATA_NAMESPACES = ['vep', 'scores', 'clingen']
+// Both screens read a score set's whole variant table from the same endpoint, but they render different
+// things from it, so each names the namespaces it actually consumes. Keeping these separate matters at
+// scale: a saturation-mutagenesis score set is 100k+ rows, and an unused namespace is 100k+ wasted cells.
+const SCORE_SET_CHART_NAMESPACES = ['vep', 'scores', 'clingen', 'mavedb']
 
-function scoreSetVariantDataParams(
-  options: {includePostMappedHgvs?: boolean; namespaces?: string[]} = {}
-): URLSearchParams {
+// The variant page additionally reads the selected measurement's gnomAD frequency out of its row; this
+// request is the only source of it. See `gnomadFromVariantRow`.
+const VARIANT_PAGE_NAMESPACES = [...SCORE_SET_CHART_NAMESPACES, 'gnomad']
+
+function scoreSetVariantDataParams(options: {namespaces?: string[]} = {}): URLSearchParams {
   const params = new URLSearchParams()
-  if (options.includePostMappedHgvs) params.append('include_post_mapped_hgvs', 'true')
   for (const namespace of options.namespaces ?? []) params.append('namespaces', namespace)
   return params
 }
@@ -24,11 +28,14 @@ function scoreSetVariantDataUrl(urn: string, params: URLSearchParams = new URLSe
   return query ? `${baseUrl}?${query}` : baseUrl
 }
 
-export function histogramScoreSetVariantDataUrl(urn: string): string {
-  return scoreSetVariantDataUrl(
-    urn,
-    scoreSetVariantDataParams({includePostMappedHgvs: true, namespaces: HISTOGRAM_VARIANT_DATA_NAMESPACES})
-  )
+/** Variant data for a score set page's histogram and heatmap. */
+export function scoreSetChartVariantDataUrl(urn: string): string {
+  return scoreSetVariantDataUrl(urn, scoreSetVariantDataParams({namespaces: SCORE_SET_CHART_NAMESPACES}))
+}
+
+/** Variant data for the variant page: the score distribution chart plus the selected row's annotations. */
+export function variantPageVariantDataUrl(urn: string): string {
+  return scoreSetVariantDataUrl(urn, scoreSetVariantDataParams({namespaces: VARIANT_PAGE_NAMESPACES}))
 }
 
 // ---------------------------------------------------------------------------
@@ -103,14 +110,29 @@ export async function publishScoreSet(urn: string) {
 }
 
 export async function getScoreSetClinicalControlOptions(urn: string) {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/clinical-controls/options`)
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/clinical-controls/options`
+  )
   return response.data
 }
 
 export async function downloadScoreSetFile(urn: string, type: 'scores' | 'counts'): Promise<string> {
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/${type}?drop_na_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/${type}?drop_unused_hgvs_columns=true`
   )
+  return response.data
+}
+
+/**
+ * Fetch the CSV column namespaces this score set has data for.
+ */
+export async function getScoreSetCsvNamespaces(
+  urn: string,
+  signal?: AbortSignal
+): Promise<components['schemas']['AvailableCsvNamespace'][]> {
+  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/csv-namespaces`, {
+    signal
+  })
   return response.data
 }
 
@@ -121,14 +143,14 @@ export async function downloadScoreSetVariantData(urn: string, params: URLSearch
 
 export async function getScoreSetScoresPreview(urn: string): Promise<string> {
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?drop_na_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?drop_unused_hgvs_columns=true`
   )
   return response.data
 }
 
 export async function getScoreSetCountsPreview(urn: string): Promise<string> {
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?drop_na_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?drop_unused_hgvs_columns=true`
   )
   return response.data
 }
@@ -138,7 +160,9 @@ export async function downloadMappedVariants(urn: string) {
   return response.data
 }
 
-export async function getRecentlyPublishedScoreSets(signal?: AbortSignal): Promise<components['schemas']['ScoreSet'][]> {
+export async function getRecentlyPublishedScoreSets(
+  signal?: AbortSignal
+): Promise<components['schemas']['ScoreSet'][]> {
   const response = await axios.get(`${config.apiBaseUrl}/score-sets/recently-published`, {
     headers: {accept: 'application/json'},
     signal

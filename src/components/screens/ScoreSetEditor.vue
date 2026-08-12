@@ -257,7 +257,8 @@ import {useHead} from '@unhead/vue'
 
 import ToggleSwitch from 'primevue/toggleswitch'
 
-import {searchMyExperiments, updateScoreSetWithVariants, getErrorResponse} from '@/api/mavedb'
+import {searchMyExperiments, updateScoreSetWithVariants} from '@/api/mavedb'
+import {getErrorResponse} from '@/lib/errors'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import ScoreSetContextFields from '@/components/forms/ScoreSetContextFields.vue'

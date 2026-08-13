@@ -20,9 +20,9 @@
     :research-use-only="draft.researchUseOnly"
     :selected-score-set="selectedScoreSet"
     :show-score-set-selector="showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn)"
-    :superseded-calibration="supersededScoreCalibration"
     :superseded-calibration-suggestions="supersededScoreCalibrationSuggestionsList"
     :superseded-loading="supersededScoreCalibrationSuggestionsLoading"
+    :superseded-score-calibration="supersededScoreCalibration"
     :threshold-sources="draft.thresholdSources || []"
     :title="draft.title"
     :validation-errors="validationErrors"
@@ -49,7 +49,7 @@
     @update:range-value="onRangeValueUpdate"
     @update:research-use-only="draft.researchUseOnly = $event; markChanged()"
     @update:selected-score-set="onScoreSetSelected"
-    @update:superseded-calibration="supersededScoreCalibration = $event"
+    @update:superseded-score-calibration="supersededScoreCalibration = $event"
     @update:threshold-sources="draft.thresholdSources = $event; markChanged()"
     @update:title="draft.title = $event; markChanged()"
   />
@@ -99,14 +99,14 @@ export default defineComponent({
   emits: ['canceled', 'saved', 'update:draft'],
 
   setup(props) {
-    const extractScoreCalibrations = (data: unknown): ScoreCalibration[] => {
+    const extractPublicScoreCalibrations = (data: unknown): ScoreCalibration[] => {
       const record = data as Record<string, unknown>
       const raw = (record.scoreCalibrations as ScoreCalibration[]) || []
       return raw.filter((sc) => sc.private === false)
     }
     const supersededSearch = useAutocomplete<ScoreCalibration>('/score-calibrations/me/search', {
       method: 'POST',
-      extract: extractScoreCalibrations
+      extract: extractPublicScoreCalibrations
     })
 
     function searchSupersededCalibrations(event: {query?: string}) {
@@ -445,6 +445,11 @@ export default defineComponent({
       this.saving = true
 
       try {
+        if (this.isSupersedingScoreCalibration && this.supersededScoreCalibration) {
+          this.draft.supersededCalibrationUrn = this.supersededScoreCalibration.urn
+        } else {
+          this.draft.supersededCalibrationUrn = null
+        }
         const result = await this.saveCalibrationDraft()
 
         if (result.success) {

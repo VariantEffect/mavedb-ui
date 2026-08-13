@@ -147,6 +147,7 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
   const buildBlankDraft = (): DraftScoreCalibration => ({
     urn: props.calibrationUrn || null,
     scoreSetUrn: props.scoreSetUrn || null,
+    supersededCalibrationUrn: null,
     title: '',
     notes: null,
     baselineScore: null,

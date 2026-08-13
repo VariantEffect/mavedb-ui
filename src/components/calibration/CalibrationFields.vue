@@ -70,11 +70,11 @@
                 :force-selection="true"
                 :invalid="invalid"
                 :loading="supersededLoading"
-                :model-value="supersededCalibration"
+                :model-value="supersededScoreCalibration"
                 option-label="title"
                 :suggestions="supersededCalibrationSuggestions"
                 @complete="$emit('search-superseded-calibration', $event)"
-                @update:model-value="$emit('update:supersededCalibration', $event)"
+                @update:model-value="$emit('update:supersededScoreCalibration', $event)"
               >
                 <template #option="slotProps">
                   <div v-if="isEmptySentinel(slotProps.option)" class="text-center text-sm text-text-muted">
@@ -89,7 +89,6 @@
           </MvFloatField>
         </div>
       </div>
-      <!-- @complete="searchSupersededCalibrations" -->
 
       <!-- Calibration title -->
       <div class="wizard-row">
@@ -492,7 +491,7 @@ export default defineComponent({
     evidenceSources: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
     publicationSuggestions: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
     publicationSearchLoading: {type: Boolean, default: false},
-    supersededCalibration: {type: Object as PropType<ScoreCalibration | null>, default: null},
+    supersededScoreCalibration: {type: Object as PropType<ScoreCalibration | null>, default: null},
     supersededCalibrationSuggestions: {type: Array as PropType<ScoreCalibration[]>, default: () => []},
     supersededLoading: {type: Boolean, default: false},
     editableScoreSets: {type: Array as PropType<MinimalScoreSet[]>, default: () => []},
@@ -516,7 +515,7 @@ export default defineComponent({
     'update:evidenceSources',
     'update:classification-field',
     'update:range-value',
-    'update:supersededCalibration',
+    'update:supersededScoreCalibration',
     'update:evidence-strength',
     'add-classification',
     'remove-classification',
@@ -532,25 +531,10 @@ export default defineComponent({
   ],
 
   setup() {
-    // const extractScoreCalibrations = (data: unknown) => ((data as Record<string, unknown>)?.scoreCalibrations as ScoreCalibration[]) || []
-    // const supersededSearch = useAutocomplete<ScoreCalibration>('/score-calibrations/me/search', {
-    //   method: 'POST',
-    //   extract: extractScoreCalibrations
-    // })
-
-    // function searchSupersededCalibrations(event: {query?: string}) {
-    //   const searchText = (event.query || '').trim()
-    //   if (searchText.length > 0) {
-    //     supersededSearch.search(searchText)
-    //   }
-    // }
-
     return {
       desc: calibrationDescriptions(),
       isEmptySentinel,
       pubOptionLabel,
-      // searchSupersededCalibrations,
-      // supersededSearch,
       onClearInput: clearAutoCompleteInput
     }
   }

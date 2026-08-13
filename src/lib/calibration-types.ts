@@ -38,6 +38,7 @@ export interface DraftScoreCalibration
   > {
   urn: string | null
   scoreSetUrn: string | null
+  supersededCalibrationUrn: string | null  
   functionalClassifications: DraftFunctionalClassification[] | null
 }
 
@@ -63,6 +64,7 @@ export interface FunctionalClassificationHelper {
 export const DRAFT_CALIBRATION_COPYABLE_KEYS: (keyof DraftScoreCalibration)[] = [
   'urn',
   'scoreSetUrn',
+  'supersededCalibrationUrn',
   'title',
   'notes',
   'baselineScore',

@@ -11,6 +11,7 @@
     :evidence-strengths="evidenceStrengths"
     :functional-classification-helpers="functionalClassificationHelpers"
     :functional-classifications="draft.functionalClassifications || []"
+    :is-superseding-calibration="isSupersedingScoreCalibration"
     :method-sources="draft.methodSources || []"
     :notes="draft.notes"
     :publication-search-loading="publicationSearchLoading"
@@ -19,6 +20,9 @@
     :research-use-only="draft.researchUseOnly"
     :selected-score-set="selectedScoreSet"
     :show-score-set-selector="showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn)"
+    :superseded-calibration-suggestions="supersededScoreCalibrationSuggestionsList"
+    :superseded-loading="supersededScoreCalibrationSuggestionsLoading"
+    :superseded-score-calibration="supersededScoreCalibration"
     :threshold-sources="draft.thresholdSources || []"
     :title="draft.title"
     :validation-errors="validationErrors"
@@ -28,6 +32,7 @@
     @publication-selected="onPublicationSelected"
     @remove-classification="removeClassification"
     @search-publications="searchPublicationIdentifiers"
+    @search-superseded-calibration="searchSupersededCalibrations"
     @toggle-acmg="onToggleAcmg"
     @toggle-boundary="onToggleBoundary"
     @toggle-infinity="onToggleInfinity"
@@ -38,11 +43,13 @@
     @update:classification-field="onClassificationFieldUpdate"
     @update:evidence-sources="draft.evidenceSources = $event; markChanged()"
     @update:evidence-strength="onEvidenceStrengthUpdate"
+    @update:is-superseding-calibration="isSupersedingScoreCalibration = $event"
     @update:method-sources="draft.methodSources = $event; markChanged()"
     @update:notes="draft.notes = $event; markChanged()"
     @update:range-value="onRangeValueUpdate"
     @update:research-use-only="draft.researchUseOnly = $event; markChanged()"
     @update:selected-score-set="onScoreSetSelected"
+    @update:superseded-score-calibration="supersededScoreCalibration = $event"
     @update:threshold-sources="draft.thresholdSources = $event; markChanged()"
     @update:title="draft.title = $event; markChanged()"
   />
@@ -52,6 +59,7 @@
 import {defineComponent, type PropType} from 'vue'
 import {cloneDeep} from 'lodash'
 
+import {useAutocomplete} from '@/composables/use-autocomplete'
 import CalibrationFields from '@/components/calibration/CalibrationFields.vue'
 import {
   useCalibrationEditor,
@@ -68,7 +76,11 @@ import {
   createClassificationHelper
 } from '@/lib/calibration-types'
 import type {MinimalScoreSet} from '@/lib/calibration-types'
+import {suggestionsForAutocomplete} from '@/lib/form-helpers'
 import type {ValidationErrors} from '@/lib/form-validation'
+import {components} from '@/schema/openapi'
+
+type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 export type {DraftScoreCalibration, DraftFunctionalClassification, DraftAcmgClassification}
 
@@ -87,7 +99,29 @@ export default defineComponent({
   emits: ['canceled', 'saved', 'update:draft'],
 
   setup(props) {
-    return {...useCalibrationEditor(props)}
+    const extractPublicScoreCalibrations = (data: unknown): ScoreCalibration[] => {
+      const record = data as Record<string, unknown>
+      const raw = (record.scoreCalibrations as ScoreCalibration[]) || []
+      return raw.filter((sc) => sc.private === false)
+    }
+    const supersededSearch = useAutocomplete<ScoreCalibration>('/score-calibrations/me/search', {
+      method: 'POST',
+      extract: extractPublicScoreCalibrations
+    })
+
+    function searchSupersededCalibrations(event: {query?: string}) {
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        supersededSearch.search(searchText)
+      }
+    }
+
+    return {
+      ...useCalibrationEditor(props),
+      searchSupersededCalibrations,
+      supersededScoreCalibrationSuggestions: supersededSearch.items,
+      supersededScoreCalibrationSuggestionsLoading: supersededSearch.loading
+    }
   },
 
   data() {
@@ -95,7 +129,9 @@ export default defineComponent({
       evidenceStrengths: EVIDENCE_STRENGTH.map((es) => ({label: es, value: es})),
       criterions: [PATHOGENIC_CRITERION, BENIGN_CRITERION],
       editableScoreSets: [] as MinimalScoreSet[],
+      isSupersedingScoreCalibration: false,
       selectedScoreSet: null as MinimalScoreSet | null,
+      supersededScoreCalibration: null as ScoreCalibration | null,
       adjustedClassificationErrors: null as ValidationErrors | null,
       saving: false
     }
@@ -112,6 +148,10 @@ export default defineComponent({
         }
       }
       return {...result, ...this.adjustedClassificationErrors}
+    },
+
+    supersededScoreCalibrationSuggestionsList() {
+      return suggestionsForAutocomplete(this.supersededScoreCalibrationSuggestions)
     }
   },
 
@@ -405,6 +445,11 @@ export default defineComponent({
       this.saving = true
 
       try {
+        if (this.isSupersedingScoreCalibration && this.supersededScoreCalibration) {
+          this.draft.supersededCalibrationUrn = this.supersededScoreCalibration.urn
+        } else {
+          this.draft.supersededCalibrationUrn = null
+        }
         const result = await this.saveCalibrationDraft()
 
         if (result.success) {

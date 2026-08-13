@@ -32,6 +32,64 @@
         </div>
       </div>
 
+      <!-- Superseding toggle -->
+      <div class="wizard-row">
+        <div class="wizard-help">
+          <label>{{ desc.superseding.help }}</label>
+        </div>
+        <div class="wizard-field flex items-center">
+          <ToggleSwitch
+            :model-value="isSupersedingCalibration"
+            @update:model-value="$emit('update:isSupersedingCalibration', $event)"
+          />
+          <div class="ml-3 text-sm">
+            {{
+              isSupersedingCalibration
+                ? 'Yes, this supersedes another calibration'
+                : 'No, this does not supersede another calibration'
+            }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Superseded calibration selector -->
+      <div v-if="isSupersedingCalibration" class="wizard-row">
+        <div class="wizard-help">
+          {{ desc.supersededCalibration.help }}
+          <p v-if="desc.supersededCalibration.detail" class="wizard-help-detail">
+            {{ desc.supersededCalibration.detail }}
+          </p>
+        </div>
+        <div class="wizard-field">
+          <MvFloatField :error="validationErrors.supersededCalibrationUrn" label="Supersedes">
+            <template #default="{id, invalid}">
+              <AutoComplete
+                :id="id"
+                field="title"
+                fluid
+                :force-selection="true"
+                :invalid="invalid"
+                :loading="supersededLoading"
+                :model-value="supersededScoreCalibration"
+                option-label="title"
+                :suggestions="supersededCalibrationSuggestions"
+                @complete="$emit('search-superseded-calibration', $event)"
+                @update:model-value="$emit('update:supersededScoreCalibration', $event)"
+              >
+                <template #option="slotProps">
+                  <div v-if="isEmptySentinel(slotProps.option)" class="text-center text-sm text-text-muted">
+                    No matching calibrations found.
+                  </div>
+                  <div v-else-if="slotProps.option.urn && slotProps.option.title">
+                    {{ slotProps.option.urn }}: {{ slotProps.option.title }}
+                  </div>
+                </template>
+              </AutoComplete>
+            </template>
+          </MvFloatField>
+        </div>
+      </div>
+
       <!-- Calibration title -->
       <div class="wizard-row">
         <div class="wizard-help">
@@ -304,7 +362,9 @@
 
       <div class="wizard-row wizard-classifications-header">
         <div class="wizard-help">
-          <span class="wizard-classifications-title">{{ classBased ? 'Functional Classes' : 'Functional Ranges' }}</span>
+          <span class="wizard-classifications-title">{{
+            classBased ? 'Functional Classes' : 'Functional Ranges'
+          }}</span>
         </div>
         <div class="wizard-field flex justify-end">
           <PButton
@@ -365,6 +425,7 @@
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
+import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
@@ -379,7 +440,7 @@ import MvFloatField from '@/components/forms/MvFloatField.vue'
 import MvTagField from '@/components/forms/MvTagField.vue'
 import MvUploadField from '@/components/forms/MvUploadField.vue'
 import {calibrationDescriptions} from '@/data/field-descriptions'
-import {clearAutoCompleteInput, pubOptionLabel} from '@/lib/form-helpers'
+import {clearAutoCompleteInput, isEmptySentinel, pubOptionLabel} from '@/lib/form-helpers'
 import type {
   DraftFunctionalClassification,
   FunctionalClassificationHelper,
@@ -389,11 +450,13 @@ import type {ValidationErrors} from '@/lib/form-validation'
 import {components} from '@/schema/openapi'
 
 type PublicationIdentifier = components['schemas']['PublicationIdentifier']
+type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 export default defineComponent({
   name: 'CalibrationFields',
 
   components: {
+    AutoComplete,
     CalibrationClassificationRow,
     InputNumber,
     InputText,
@@ -410,6 +473,7 @@ export default defineComponent({
 
   props: {
     title: {type: String, default: ''},
+    isSupersedingCalibration: {type: Boolean, default: false},
     notes: {type: String as PropType<string | null>, default: null},
     baselineScore: {type: Number as PropType<number | null>, default: null},
     baselineScoreDescription: {type: String as PropType<string | null>, default: null},
@@ -427,14 +491,19 @@ export default defineComponent({
     evidenceSources: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
     publicationSuggestions: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
     publicationSearchLoading: {type: Boolean, default: false},
+    supersededScoreCalibration: {type: Object as PropType<ScoreCalibration | null>, default: null},
+    supersededCalibrationSuggestions: {type: Array as PropType<ScoreCalibration[]>, default: () => []},
+    supersededLoading: {type: Boolean, default: false},
     editableScoreSets: {type: Array as PropType<MinimalScoreSet[]>, default: () => []},
     selectedScoreSet: {type: Object as PropType<MinimalScoreSet | null>, default: null},
     showScoreSetSelector: {type: Boolean, default: false},
-    validationErrors: {type: Object as PropType<ValidationErrors>, default: () => ({})}
+    validationErrors: {type: Object as PropType<ValidationErrors>, default: () => ({})},
+    wizardMode: {type: Boolean, default: false}
   },
 
   emits: [
     'update:title',
+    'update:isSupersedingCalibration',
     'update:notes',
     'update:baselineScore',
     'update:baselineScoreDescription',
@@ -446,6 +515,7 @@ export default defineComponent({
     'update:evidenceSources',
     'update:classification-field',
     'update:range-value',
+    'update:supersededScoreCalibration',
     'update:evidence-strength',
     'add-classification',
     'remove-classification',
@@ -454,13 +524,19 @@ export default defineComponent({
     'toggle-acmg',
     'toggle-oddspaths',
     'search-publications',
+    'search-superseded-calibration',
     'publication-selected',
     'classes-file-selected',
     'classes-file-cleared'
   ],
 
   setup() {
-    return {desc: calibrationDescriptions(), pubOptionLabel, onClearInput: clearAutoCompleteInput}
+    return {
+      desc: calibrationDescriptions(),
+      isEmptySentinel,
+      pubOptionLabel,
+      onClearInput: clearAutoCompleteInput
+    }
   }
 })
 </script>

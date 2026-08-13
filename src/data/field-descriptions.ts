@@ -123,6 +123,8 @@ export function experimentDescriptions(
 
 interface CalibrationDescriptions {
   scoreSet: FieldDescription
+  superseding: FieldDescription
+  supersededCalibration: FieldDescription
   title: FieldDescription
   notes: FieldDescription
   baselineScore: FieldDescription
@@ -149,6 +151,15 @@ export function calibrationDescriptions(): CalibrationDescriptions {
     scoreSet: {
       hint: 'The score set this calibration applies to.',
       help: 'Select the score set to which this calibration will apply.'
+    },
+    superseding: {
+      hint: 'Whether this calibration replaces a previously published one.',
+      help: 'Does this calibration correct errors in and replace a calibration previously published on MaveDB that you created?'
+    },
+    supersededCalibration: {
+      hint: 'The calibration this one replaces.',
+      help: 'What calibration does this supersede?',
+      detail: "Type the superseded calibration's MaveDB URN here and select it from the list."
     },
     title: {
       hint: 'Display name for this calibration.',

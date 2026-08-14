@@ -405,7 +405,8 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
-import {getExperiment, searchMyExperiments, createScoreSet, uploadVariantData, getErrorResponse} from '@/api/mavedb'
+import {getExperiment, searchMyExperiments, createScoreSet, uploadVariantData} from '@/api/mavedb'
+import {getErrorResponse} from '@/lib/errors'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import ScoreSetContextFields from '@/components/forms/ScoreSetContextFields.vue'
@@ -473,14 +474,18 @@ export default {
     const publications = usePublicationIdentifiers()
     const licenseSearch = useAutocomplete<License>('/licenses/active')
 
-    const extractScoreSets = (data: unknown) => ((data as Record<string, unknown>)?.scoreSets as ShortScoreSet[]) || []
+    const extractPublicScoreSets = (data: unknown): ShortScoreSet[] => {
+      const record = data as Record<string, unknown>
+      const raw = (record.scoreSets as ShortScoreSet[]) || []
+      return raw.filter(sc => sc.private === false)
+    }
     const supersededSearch = useAutocomplete<ShortScoreSet>('/me/score-sets/search', {
       method: 'POST',
-      extract: extractScoreSets
+      extract: extractPublicScoreSets
     })
     const metaAnalyzesSearch = useAutocomplete<ShortScoreSet>('/score-sets/search', {
       method: 'POST',
-      extract: extractScoreSets
+      extract: extractPublicScoreSets
     })
 
     const extraMetadataField = useJsonFileField('extraMetadata')

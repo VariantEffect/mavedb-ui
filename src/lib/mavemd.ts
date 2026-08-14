@@ -1,5 +1,6 @@
 import type {ClinGenAllele, ClinGenGenomicAllele, ClinGenTranscriptAllele} from '@/api/clingen'
 import type {components} from '@/schema/openapi'
+import {hgvsSearchStringRegex} from './mave-hgvs'
 
 type VariantMeasurement = components['schemas']['VariantEffectMeasurementWithShortScoreSet']
 
@@ -32,6 +33,67 @@ export const clinVarVariationIdRegex = /^[0-9]+$/m
  * Regular expression for valid Reference SNP cluster IDs that can be used in ClinGen searches.
  */
 export const rsIdRegex = /^rs[0-9]+$/im
+
+/**
+ * Regular expression for valid gnomAD variant IDs that can be used in ClinGen searches.
+ *
+ * gnomAD writes these as chromosome-position-reference-alternate (e.g. 1-11796321-G-A). The capture groups are those
+ * four parts, in that order, which parseGnomadId relies on to translate an ID into HGVS.
+ */
+export const gnomadIdRegex = /^(1[0-9]|2[0-2]|[1-9]|X|Y|MT?)-([0-9]+)-([ACGT]+)-([ACGT]+)$/i
+
+/**
+ * Regular expression for HGNC gene symbols.
+ *
+ * A symbol begins with a letter and may carry digits, hyphenated parts (HLA-A, MT-CO1) and a trailing @ for cluster
+ * symbols (IGH@). This is by far the most permissive of the identifier patterns — any bare word satisfies it — so it
+ * is only ever applied once every more specific form has been ruled out.
+ */
+export const geneSymbolRegex = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*@?$/i
+
+/**
+ * Identifier patterns in the order they are tried when detecting what a search string is.
+ *
+ * Order matters wherever the patterns overlap. A VRS digest also satisfies the deliberately loose HGVS pattern, since
+ * that only asks for an identifier, a colon and a description, so it has to be recognized first. A bare number is a
+ * ClinVar Variation ID only once the more specific forms have been ruled out, and a gene symbol — which any bare word
+ * resembles — only once everything else has been.
+ */
+const SEARCH_TYPE_PATTERNS: [string, RegExp][] = [
+  ['vrsDigest', vrsDigestRegex],
+  ['clinGenAlleleId', clinGenAlleleIdRegex],
+  ['dbSnpRsId', rsIdRegex],
+  ['gnomadId', gnomadIdRegex],
+  ['hgvs', hgvsSearchStringRegex],
+  ['clinVarVariationId', clinVarVariationIdRegex],
+  ['geneSymbol', geneSymbolRegex]
+]
+
+/**
+ * Work out which kind of identifier a search string is, for the "Any" search type.
+ *
+ * @returns The matching search type code, or null if the string resembles no supported identifier.
+ */
+export function detectSearchType(searchString: string): string | null {
+  const trimmedSearchString = searchString.trim()
+  return SEARCH_TYPE_PATTERNS.find(([, pattern]) => pattern.test(trimmedSearchString))?.[0] ?? null
+}
+
+/**
+ * The gene symbol a search is for, standardized to uppercase, or null when the search isn't for a gene symbol.
+ *
+ * Uppercase is how gene pages are addressed everywhere else. A symbol arrived at through the "Any" type has already
+ * satisfied {@link geneSymbolRegex}; one from an explicitly chosen gene symbol search has not, so callers that care
+ * about malformed input should still validate what they get back.
+ */
+export function geneSymbolSearchTarget(searchText: string, searchType: string | null): string | null {
+  const trimmedSearchText = searchText.trim()
+  if (!trimmedSearchText) {
+    return null
+  }
+  const resolvedSearchType = searchType === 'any' ? detectSearchType(trimmedSearchText) : searchType
+  return resolvedSearchType === 'geneSymbol' ? trimmedSearchText.toUpperCase() : null
+}
 
 /** A single MANE coordinate extracted from a ClinGen transcript allele. */
 export interface ManeCoordinate {

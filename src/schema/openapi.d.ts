@@ -747,6 +747,32 @@ export interface paths {
      */
     delete: operations["delete_score_set_api_v1_score_sets__urn__delete"];
   };
+  "/api/v1/score-sets/{urn}/csv-namespaces": {
+    /**
+     * List the CSV column namespaces this score set has data for
+     * @description List the CSV column namespaces this score set has data for, labeled and grouped for a picker.
+     *
+     * Each entry's `namespace` is a value accepted by the `namespaces` parameter of the CSV endpoints.
+     * Deliberately a separate request rather than a field on the score set: it costs several queries and is
+     * only needed when a user opens a download dialog, so it should not sit on the score-set page's
+     * critical path.
+     *
+     * Parameters
+     * __________
+     * urn : str
+     *     The URN of the score set to inspect.
+     * db : Session
+     *     The database session to use.
+     * user_data : Optional[UserData]
+     *     The user data of the current user. If None, no user-specific permissions are checked.
+     *
+     * Returns
+     * _______
+     * list[AvailableCsvNamespace]
+     *     The namespaces with data, each with a human-readable label and group.
+     */
+    get: operations["get_score_set_csv_namespaces_api_v1_score_sets__urn__csv_namespaces_get"];
+  };
   "/api/v1/score-sets/{urn}/variants/data": {
     /**
      * Get score set variant data in CSV format
@@ -765,11 +791,19 @@ export interface paths {
      *     The maximum number of variants to return. If None, returns all variants.
      * namespaces: List[str]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-     *     Supported values: "scores", "counts", "vep", "gnomad", "clingen", and ClinVar-versioned
-     *     namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024).
-     *     Multiple ClinVar namespaces with different YEAR_MONTH values may be requested simultaneously.
+     *     Supported values: "scores" (the required score column), "scores_custom" (the investigator's
+     *     remaining score columns, emitted under the "scores" prefix), "counts", "mavedb", "vep", "gnomad",
+     *     "clingen", "score_set", and ClinVar- and calibration-parameterized namespaces. Multiple ClinVar
+     *     and calibration namespaces may be requested simultaneously.
+     * drop_unused_hgvs_columns : bool, optional
+     *     Whether to omit the HGVS coordinate columns this score set does not use, e.g. hgvs_nt for a
+     *     protein-only score set. Defaults to False.
      * drop_na_columns : bool, optional
-     *     Whether to drop columns that contain only NA values. Defaults to False.
+     *     Deprecated spelling of drop_unused_hgvs_columns, accepted for one release.
+     * include_post_mapped_hgvs : bool, optional
+     *     Deprecated: equivalent to requesting the "mavedb" namespace. Accepted for one release.
+     * include_custom_columns : bool, optional
+     *     Deprecated: equivalent to requesting the "scores_custom" namespace. Accepted for one release.
      * db : Session
      *     The database session to use.
      * user_data : Optional[UserData]
@@ -1328,6 +1362,62 @@ export interface paths {
      */
     get: operations["get_variant_api_v1_variants__urn__get"];
   };
+  "/api/v1/variants/{urn}/csv-namespaces": {
+    /**
+     * List the CSV column namespaces this variant has data for
+     * @description List the CSV column namespaces this variant has data for, labeled and grouped for a picker.
+     *
+     * Widens over the variant's equivalent measurements the same way the CSV does, so a calibration
+     * belonging to another score set that also measured this allele is offered here too.
+     *
+     * Parameters
+     * __________
+     * urn : str
+     *     The URN of the variant to inspect.
+     * db : Session
+     *     The database session to use.
+     * user_data : Optional[UserData]
+     *     The user data of the current user. If None, no user-specific permissions are checked.
+     *
+     * Returns
+     * _______
+     * list[AvailableCsvNamespace]
+     *     The namespaces with data, each with a human-readable label and group.
+     */
+    get: operations["get_variant_csv_namespaces_api_v1_variants__urn__csv_namespaces_get"];
+  };
+  "/api/v1/variants/{urn}/csv": {
+    /**
+     * Get variant data in CSV format
+     * @description Return tabular data for a single variant, identified by URN, in CSV format.
+     *
+     * Where the variant-level annotation endpoints return nested VA-Spec objects, this flattens the same
+     * interpretation into columns a clinical information system can consume: ACMG criteria, evidence
+     * strengths, and evidence outcome codes alongside the measurement they were derived from.
+     *
+     * A row is emitted for every current measurement of the variant's ClinGen allele, so a variant assayed
+     * in several score sets yields several rows. The requested variant is always first.
+     *
+     * Parameters
+     * __________
+     * urn : str
+     *     The URN of the variant to fetch.
+     * namespaces : Optional[List[str]]
+     *     The groups of columns to include. When omitted, the response includes the fixed groups plus one
+     *     namespace per calibration eligible to annotate these measurements and the most recent ClinVar
+     *     release covering them.
+     * db : Session
+     *     The database session to use.
+     * user_data : Optional[UserData]
+     *     The user data of the current user. If None, no user-specific permissions are checked.
+     *
+     * Returns
+     * _______
+     * Any
+     *     StreamingResponse containing the CSV data.
+     */
+    get: operations["get_variant_csv_data_api_v1_variants__urn__csv_get"];
+  };
   "/api/v1/alphafold-files/version": {
     /**
      * Proxy Alphafold Index
@@ -1627,6 +1717,28 @@ export interface components {
       name: string;
       /** Version */
       version: string;
+    };
+    /**
+     * AvailableCsvNamespace
+     * @description One CSV column namespace a record has data for, ready to be offered as a choice.
+     *
+     * Labels are served rather than derived client-side: only the server knows a calibration's title or a
+     * ClinVar release date.
+     */
+    AvailableCsvNamespace: {
+      /** Recordtype */
+      recordType?: string;
+      /** Namespace */
+      namespace: string;
+      /** Label */
+      label: string;
+      group: components["schemas"]["CsvNamespaceGroup"];
+      scoreSet?: components["schemas"]["ShorterScoreSet"] | null;
+      /**
+       * Selectedbydefault
+       * @default true
+       */
+      selectedByDefault?: boolean;
     };
     /** Body_create_score_calibration_route_api_v1_score_calibrations__post */
     Body_create_score_calibration_route_api_v1_score_calibrations__post: {
@@ -2391,6 +2503,12 @@ export interface components {
        */
       copies: components["schemas"]["Range"] | number;
     };
+    /**
+     * CsvNamespaceGroup
+     * @description Presentational grouping, so a client can section a namespace picker.
+     * @enum {string}
+     */
+    CsvNamespaceGroup: "data" | "annotation" | "calibration" | "provenance";
     /**
      * CurrentUser
      * @description User view model for information about the current user.
@@ -5132,10 +5250,15 @@ export interface components {
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
-    /** ShorterScoreSet */
+    /**
+     * ShorterScoreSet
+     * @description A score set's identity: enough to name it in a UI without rooting the display on its URN.
+     */
     ShorterScoreSet: {
       /** Urn */
       urn: string;
+      /** Title */
+      title: string;
       /** Recordtype */
       recordType?: string;
     };
@@ -10129,6 +10252,69 @@ export interface operations {
     };
   };
   /**
+   * List the CSV column namespaces this score set has data for
+   * @description List the CSV column namespaces this score set has data for, labeled and grouped for a picker.
+   *
+   * Each entry's `namespace` is a value accepted by the `namespaces` parameter of the CSV endpoints.
+   * Deliberately a separate request rather than a field on the score set: it costs several queries and is
+   * only needed when a user opens a download dialog, so it should not sit on the score-set page's
+   * critical path.
+   *
+   * Parameters
+   * __________
+   * urn : str
+   *     The URN of the score set to inspect.
+   * db : Session
+   *     The database session to use.
+   * user_data : Optional[UserData]
+   *     The user data of the current user. If None, no user-specific permissions are checked.
+   *
+   * Returns
+   * _______
+   * list[AvailableCsvNamespace]
+   *     The namespaces with data, each with a human-readable label and group.
+   */
+  get_score_set_csv_namespaces_api_v1_score_sets__urn__csv_namespaces_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AvailableCsvNamespace"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Get score set variant data in CSV format
    * @description Return tabular variant data from a score set, identified by URN, in CSV format.
    *
@@ -10145,11 +10331,19 @@ export interface operations {
    *     The maximum number of variants to return. If None, returns all variants.
    * namespaces: List[str]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-   *     Supported values: "scores", "counts", "vep", "gnomad", "clingen", and ClinVar-versioned
-   *     namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024).
-   *     Multiple ClinVar namespaces with different YEAR_MONTH values may be requested simultaneously.
+   *     Supported values: "scores" (the required score column), "scores_custom" (the investigator's
+   *     remaining score columns, emitted under the "scores" prefix), "counts", "mavedb", "vep", "gnomad",
+   *     "clingen", "score_set", and ClinVar- and calibration-parameterized namespaces. Multiple ClinVar
+   *     and calibration namespaces may be requested simultaneously.
+   * drop_unused_hgvs_columns : bool, optional
+   *     Whether to omit the HGVS coordinate columns this score set does not use, e.g. hgvs_nt for a
+   *     protein-only score set. Defaults to False.
    * drop_na_columns : bool, optional
-   *     Whether to drop columns that contain only NA values. Defaults to False.
+   *     Deprecated spelling of drop_unused_hgvs_columns, accepted for one release.
+   * include_post_mapped_hgvs : bool, optional
+   *     Deprecated: equivalent to requesting the "mavedb" namespace. Accepted for one release.
+   * include_custom_columns : bool, optional
+   *     Deprecated: equivalent to requesting the "scores_custom" namespace. Accepted for one release.
    * db : Session
    *     The database session to use.
    * user_data : Optional[UserData]
@@ -10167,11 +10361,24 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: "scores", "counts", "vep", "gnomad", "clingen", and/or ClinVar-versioned namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024). */
+        /** @description One or more groups of columns to include. Naming any group replaces the default set rather than adding to it, so list every group you want. Fixed groups: "scores", "scores_custom", "counts", "mavedb", "vep", "gnomad", "clingen", "score_set", "relationship". Versioned groups: "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01") for one ClinVar release, and "calibration.<calibration urn>" for one score calibration's functional and ACMG interpretation. Several ClinVar and calibration namespaces may be requested at once; each carries its release or URN in the column header. To discover which namespaces are available for a record, query the `csv-namespaces` endpoint. */
         namespaces?: string[];
+        drop_unused_hgvs_columns?: boolean | null;
+        /**
+         * @deprecated
+         * @description Deprecated: use `drop_unused_hgvs_columns`, which names what it actually does. This parameter only ever dropped the HGVS coordinate columns a score set does not use, never every NA column. It will be removed in a future release; `drop_unused_hgvs_columns` wins if both are given.
+         */
         drop_na_columns?: boolean | null;
-        include_custom_columns?: boolean | null;
+        /**
+         * @deprecated
+         * @description Deprecated: request the `mavedb` namespace instead, e.g. `?namespaces=scores&namespaces=mavedb`. Passing true here is equivalent to appending that namespace. It will be removed in a future release.
+         */
         include_post_mapped_hgvs?: boolean | null;
+        /**
+         * @deprecated
+         * @description Deprecated: request the `scores_custom` namespace instead. Passing true here is equivalent to appending that namespace, whose columns are emitted under the `scores` prefix as before. It will be removed in a future release.
+         */
+        include_custom_columns?: boolean | null;
       };
       header?: {
         "x-active-roles"?: string | null;
@@ -10287,6 +10494,11 @@ export interface operations {
         start?: number;
         /** @description Number of variants to return */
         limit?: number;
+        drop_unused_hgvs_columns?: boolean | null;
+        /**
+         * @deprecated
+         * @description Deprecated: use `drop_unused_hgvs_columns`, which names what it actually does. This parameter only ever dropped the HGVS coordinate columns a score set does not use, never every NA column. It will be removed in a future release; `drop_unused_hgvs_columns` wins if both are given.
+         */
         drop_na_columns?: boolean | null;
       };
       header?: {
@@ -10348,6 +10560,11 @@ export interface operations {
         start?: number;
         /** @description Number of variants to return */
         limit?: number;
+        drop_unused_hgvs_columns?: boolean | null;
+        /**
+         * @deprecated
+         * @description Deprecated: use `drop_unused_hgvs_columns`, which names what it actually does. This parameter only ever dropped the HGVS coordinate columns a score set does not use, never every NA column. It will be removed in a future release; `drop_unused_hgvs_columns` wins if both are given.
+         */
         drop_na_columns?: boolean | null;
       };
       header?: {
@@ -12442,6 +12659,145 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["VariantEffectMeasurementWithScoreSet"];
         };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List the CSV column namespaces this variant has data for
+   * @description List the CSV column namespaces this variant has data for, labeled and grouped for a picker.
+   *
+   * Widens over the variant's equivalent measurements the same way the CSV does, so a calibration
+   * belonging to another score set that also measured this allele is offered here too.
+   *
+   * Parameters
+   * __________
+   * urn : str
+   *     The URN of the variant to inspect.
+   * db : Session
+   *     The database session to use.
+   * user_data : Optional[UserData]
+   *     The user data of the current user. If None, no user-specific permissions are checked.
+   *
+   * Returns
+   * _______
+   * list[AvailableCsvNamespace]
+   *     The namespaces with data, each with a human-readable label and group.
+   */
+  get_variant_csv_namespaces_api_v1_variants__urn__csv_namespaces_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AvailableCsvNamespace"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get variant data in CSV format
+   * @description Return tabular data for a single variant, identified by URN, in CSV format.
+   *
+   * Where the variant-level annotation endpoints return nested VA-Spec objects, this flattens the same
+   * interpretation into columns a clinical information system can consume: ACMG criteria, evidence
+   * strengths, and evidence outcome codes alongside the measurement they were derived from.
+   *
+   * A row is emitted for every current measurement of the variant's ClinGen allele, so a variant assayed
+   * in several score sets yields several rows. The requested variant is always first.
+   *
+   * Parameters
+   * __________
+   * urn : str
+   *     The URN of the variant to fetch.
+   * namespaces : Optional[List[str]]
+   *     The groups of columns to include. When omitted, the response includes the fixed groups plus one
+   *     namespace per calibration eligible to annotate these measurements and the most recent ClinVar
+   *     release covering them.
+   * db : Session
+   *     The database session to use.
+   * user_data : Optional[UserData]
+   *     The user data of the current user. If None, no user-specific permissions are checked.
+   *
+   * Returns
+   * _______
+   * Any
+   *     StreamingResponse containing the CSV data.
+   */
+  get_variant_csv_data_api_v1_variants__urn__csv_get: {
+    parameters: {
+      query?: {
+        /** @description One or more groups of columns to include. Naming any group replaces the default set rather than adding to it, so list every group you want. Fixed groups: "scores", "scores_custom", "counts", "mavedb", "vep", "gnomad", "clingen", "score_set", "relationship". Versioned groups: "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01") for one ClinVar release, and "calibration.<calibration urn>" for one score calibration's functional and ACMG interpretation. Several ClinVar and calibration namespaces may be requested at once; each carries its release or URN in the column header. To discover which namespaces are available for a record, query the `csv-namespaces` endpoint. */
+        namespaces?: string[] | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Variant data in CSV format, one row per measurement of the variant's allele. Columns cover identity, mapped coordinates, the measured score, external annotations, and each requested calibration's functional and ACMG interpretation. */
+      200: {
+        content: {
+          "application/json": unknown;
+          "text/csv": unknown;
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
       };
       /** @description Authentication required. */
       401: {

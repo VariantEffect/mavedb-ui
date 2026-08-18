@@ -8,10 +8,10 @@ type VariantDetail = components['schemas']['VariantDetail']
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 type VariantVrsMatch = components['schemas']['VariantVrsMatch']
 
-// The ClinGen-allele-centric variant page's entrypoint: every measurement whose cross-layer
-// equivalence class touches this CAID/PAID, in the API's default order (direct-first). `includeSuperseded`
-// opts in to superseded score-set versions. A CA query always includes its protein consequence and the
-// sibling nt changes; a PA query, its nt encodings — the same on every surface.
+// Entrypoint for the ClinGen-allele-centric variant page: every measurement whose cross-layer
+// equivalence class touches this CAID/PAID, in the API's default order (direct-first).
+// A CA query also pulls in its protein consequence and that consequence's other encodings;
+// a PA query pulls in its nt encodings. `includeSuperseded` opts in to superseded score-set versions.
 export const getAlleleMeasurements = memoizeRead(
   async (
     clingenAlleleId: string,
@@ -26,8 +26,7 @@ export const getAlleleMeasurements = memoizeRead(
     )
     return response.data
   },
-  (clingenAlleleId, options) =>
-    `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.asOf ?? ''}`
+  (clingenAlleleId, options) => `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.asOf ?? ''}`
 )
 
 export async function lookupVariantsByVrsDigest(identifier: string): Promise<VariantVrsMatch[]> {

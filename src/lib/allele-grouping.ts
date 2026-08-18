@@ -13,6 +13,8 @@ import type {KeySection} from '@/composables/use-key-drawer'
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 
+// ── CONFIDENCE BADGES: how a group's coordinate was established ──
+
 /**
  * Confidence/provenance axis (orthogonal to Cat-VRS's `relation`); strongest confidence first. The
  * measured allele carries no derivation — it is flagged `isFocus` on the identity instead (the API
@@ -62,12 +64,15 @@ export interface ConfidenceBadge {
 }
 
 // Single source for the confidence axis (badges + the Key drawer's "confidence" section), keyed by outcome
-// rather than raw `Derivation`. `convergent` and `candidate` share a color (identity ambiguity);
-// `projection` gets its own (certain but derived). Insertion order is the drawer's display order.
+// rather than raw `Derivation`. Each value paints from its own same-named CSS token (see the "Allele
+// relationship axis" block in assets/app.css) so a token can never drift from the label it styles.
+// `convergent` and `candidate` share a hex — both say "not the change that was measured" — but hold
+// separate tokens so they can diverge without touching this file. Insertion order is the drawer's
+// display order.
 export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   measured: {
     label: 'This measurement',
-    class: 'bg-sage/15 text-sage',
+    class: 'bg-measured-light text-measured',
     definition: 'Directly measured in this assay.'
   },
   projection: {
@@ -77,13 +82,13 @@ export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   },
   convergent: {
     label: 'Convergent',
-    class: 'bg-synonymous-nucleotide-light text-synonymous-nucleotide',
+    class: 'bg-convergent-light text-convergent',
     definition:
       'A different nucleotide change than what was measured, which happens to produce the same protein change as the measured variant.'
   },
   candidate: {
     label: 'Candidate',
-    class: 'bg-synonymous-nucleotide-light text-synonymous-nucleotide',
+    class: 'bg-candidate-light text-candidate',
     definition:
       'A possible nucleotide change encoding a protein-level measurement. This variant is one of several synonymous codons. The assay did not report which one was measured.'
   }
@@ -100,6 +105,8 @@ export function confidenceBadge(group: Pick<AlleleGroup, 'measured' | 'derivatio
   if (group.measured) return ALLELE_CONFIDENCE.measured
   return group.derivation ? (ALLELE_CONFIDENCE[group.derivation] ?? null) : null
 }
+
+// ── GROUPING: collapse a variant's alleles into rendered groups ──
 
 export interface GroupAllelesInput {
   alleles: Record<string, AlleleIdentity>
@@ -142,17 +149,19 @@ function pickDerivation(members: AlleleMember[]): Derivation | null {
   return best
 }
 
-// Mutual by construction, but honor a one-sided link too so a group is never split by iteration order.
-function buildPartnerMap(alleles: Record<string, AlleleIdentity>): Map<string, string> {
-  const partnerOf = new Map<string, string>()
+// A digest -> its projection map: the two members of a projection pair (the same change expressed at
+// coding and genomic level). Mutual by construction, but honor a one-sided link too so a pair is never
+// split by iteration order.
+function buildProjectionMap(alleles: Record<string, AlleleIdentity>): Map<string, string> {
+  const projectionOf = new Map<string, string>()
   for (const [digest, identity] of Object.entries(alleles)) {
-    const sibling = identity.projectionOf
-    if (sibling && sibling !== digest && alleles[sibling]) {
-      partnerOf.set(digest, sibling)
-      partnerOf.set(sibling, digest)
+    const projection = identity.projectionOf
+    if (projection && projection !== digest && alleles[projection]) {
+      projectionOf.set(digest, projection)
+      projectionOf.set(projection, digest)
     }
   }
-  return partnerOf
+  return projectionOf
 }
 
 function makeMember(
@@ -182,25 +191,24 @@ function makeMember(
  */
 export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
   const {alleles, annotations, pageClingenAlleleId} = input
-  const partnerOf = buildPartnerMap(alleles)
+  const projectionOf = buildProjectionMap(alleles)
 
-  // Pair-and-consume: each allele is visited once; its projection partner (if any) is pulled in immediately.
+  // Pair-and-consume: each allele is visited once; its projection (if any) is pulled in immediately.
   const done = new Set<string>()
   const groups: AlleleGroup[] = []
   for (const [digest, identity] of Object.entries(alleles)) {
     if (done.has(digest)) continue
     done.add(digest)
     const members = [makeMember(digest, identity, annotations, pageClingenAlleleId)]
-    const sibling = partnerOf.get(digest)
-    if (sibling && !done.has(sibling)) {
-      done.add(sibling)
-      members.push(makeMember(sibling, alleles[sibling], annotations, pageClingenAlleleId))
+    const projection = projectionOf.get(digest)
+    if (projection && !done.has(projection)) {
+      done.add(projection)
+      members.push(makeMember(projection, alleles[projection], annotations, pageClingenAlleleId))
     }
     // Sort members genomic → cDNA → protein so the group reads consistently regardless of input order.
     members.sort((a, b) => (LEVEL_ORDER[a.level ?? ''] ?? 99) - (LEVEL_ORDER[b.level ?? ''] ?? 99))
 
-    // Coalesce annotations across levels (present-wins); only a real present-vs-present disagreement
-    // counts as divergence. Missing-on-one-level is not treated as different.
+    // See coalesceAnnotations for the present-wins/conflict rule.
     const {merged, conflict} = coalesceAnnotations(members)
 
     groups.push({

@@ -371,15 +371,15 @@
           </MvCollapsible>
         </div>
 
-        <!-- Card body: the searched change first, then the rest of its equivalence class, one row per
-             measurement so the whole class stays visible. -->
+        <!-- Card body: searched change first (Section 1), then the rest of its equivalence class (Section 2).
+             One row per measurement, no score-set dedup, so the full class stays visible. -->
         <div
           v-if="
             allele.variantsStatus === 'Loaded' &&
             (searchedMeasurements(allele).length || relatedEvidence(allele).length)
           "
         >
-          <!-- Section 1: exactly what was searched, measured directly. -->
+          <!-- Section 1: what was searched, measured directly. -->
           <div v-if="searchedMeasurements(allele).length" aria-label="Directly measured" role="group">
             <div class="flex items-center gap-2 px-5 pt-3.5 pb-0.5">
               <span class="text-sm font-bold uppercase tracking-wide text-gray-500">{{ searchedHeading(allele) }}</span>
@@ -400,7 +400,7 @@
             class="mx-5 h-px bg-gray-100"
           ></div>
 
-          <!-- Section 2: the same functional change measured elsewhere, one row per measurement. -->
+          <!-- Section 2: the same functional change, measured elsewhere. -->
           <div v-if="relatedEvidence(allele).length" :aria-label="relatedHeading(allele)" role="group">
             <div class="flex items-center gap-2 px-5 pt-3.5 pb-0.5">
               <span class="text-sm font-bold uppercase tracking-wide text-gray-500">{{ relatedHeading(allele) }}</span>
@@ -423,7 +423,7 @@
         </div>
 
         <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
-          <!-- VRS Digest based searches may not always resolve to variants with a ClinGen Allele ID -->
+          <!-- VRS digest searches may not resolve to a ClinGen Allele ID -->
           <template v-if="allele.variantUrn && !allele.clingenAlleleId">
             <p class="mb-3 text-sm text-gray-600">
               This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
@@ -733,8 +733,7 @@ export default defineComponent({
     searchType: {
       handler(newVal, oldVal) {
         if (newVal !== oldVal && this.defaultSearchVisible) {
-          // Don't clear searchText on initial hydration from query params (oldVal is null).
-          // Only clear when the user actively switches search type.
+          // oldVal is null on initial hydration from query params; only clear on an actual user-driven switch.
           if (oldVal != null) {
             this.searchText = ''
           }
@@ -779,8 +778,7 @@ export default defineComponent({
     inputGene(newVal) {
       const normalized = newVal?.toUpperCase() ?? null
       if (newVal && newVal !== normalized) {
-        // Setting inputGene re-triggers this watcher with the normalized value, return
-        // early to avoid syncing query params twice.
+        // Re-entrant: normalizing retriggers this watcher, so return early to avoid a duplicate sync.
         this.inputGene = normalized
         return
       }
@@ -1083,9 +1081,9 @@ export default defineComponent({
               if (searchType !== 'hgvs' || aminoAcidAlleles[i].hgvs?.includes(searchString)) {
                 const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
                 if (transcripts.length > 0) {
-                  // Policy: a protein change is ONE result, not one per transcript spelling. Anchor the card
-                  // on the PA (its equivalence-class query returns the protein-level evidence directly) and
-                  // merge every registered transcript's coordinates onto it so all spellings are listed.
+                  // Policy: one result per protein change, not per transcript spelling. Anchor on the PA
+                  // (its equivalence class already returns protein-level evidence) and merge each
+                  // transcript's spelling onto it.
                   const card = createAlleleResult(result, maneStatus)
                   for (let j = 0; j < transcripts.length; j++) {
                     const associatedId = extractIdFromUrl(transcripts[j]?.['@id'])
@@ -1094,8 +1092,8 @@ export default defineComponent({
                   }
                   this.alleles.push(card)
                 } else {
-                  // No registered transcripts to merge; createAlleleResult titles it from the record's
-                  // own protein hgvs (falling back to the ClinGen ID).
+                  // No transcripts to merge; createAlleleResult titles it from the record's own protein
+                  // hgvs, falling back to the ClinGen ID.
                   this.alleles.push(createAlleleResult(result, null))
                 }
               }
@@ -1121,7 +1119,7 @@ export default defineComponent({
         })
       }
     },
-    // ── Result composition ────────────────────────────────────
+    // Result composition:
     // Section 1: the searched change itself, measured directly (nucleotide for a CA, protein for a PA).
     searchedMeasurements(allele: AlleleResult): AlleleMeasurement[] {
       return allele.variants.direct
@@ -1131,8 +1129,7 @@ export default defineComponent({
         ? 'Searched · measured directly (protein)'
         : 'Searched · measured directly (nucleotide)'
     },
-    // Section 2: the rest of the equivalence class (protein consequence + sibling encodings), one row per
-    // measurement so every representation stays visible.
+    // Section 2: the rest of the equivalence class (protein consequence + its encodings), one row per measurement.
     relatedEvidence(allele: AlleleResult): AlleleMeasurement[] {
       return [...allele.variants.proteinConsequence, ...allele.variants.nucleotideEncoding]
     },
@@ -1159,13 +1156,12 @@ export default defineComponent({
         if (!caId) continue
         allele.variantsStatus = 'Loading'
         try {
-          // The full equivalence class: a CA query returns its protein consequence and sibling nt changes,
+          // Full equivalence class: a CA query returns its protein consequence and the other encodings of it,
           // a PA query its nt encodings — the same set the variant page shows.
           const measurements = await getAlleleMeasurements(caId)
 
-          // Bucket each measurement by the API's relationship directly — the display labels (below) interpret
-          // each bucket for the searched level. Variant-level: every measurement is its own row (no score-set
-          // dedup), so the whole equivalence class stays visible even when one screen assayed many of it.
+          // Bucket by the API's relationship field; searchedHeading/relatedHeading interpret each bucket
+          // for display. No score-set dedup — every measurement gets its own row.
           const buckets: AlleleResult['variants'] = {direct: [], proteinConsequence: [], nucleotideEncoding: []}
           for (const m of measurements) {
             const bucket =

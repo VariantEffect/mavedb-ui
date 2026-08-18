@@ -109,7 +109,7 @@
       />
 
       <template v-else>
-        <!-- ═══ MEASUREMENTS — the body; strongly about the measured variant (Y) ═══ -->
+        <!-- ── MEASUREMENTS — the body, following the measured variant (Y) ── -->
         <!-- Switcher -->
         <div class="rounded-lg border border-border bg-surface">
           <div class="flex flex-wrap items-center gap-2.5 border-b border-border-light px-4 tablet:px-5 py-3.5">
@@ -138,9 +138,8 @@
               />
             </div>
           </div>
-          <!-- Anchor heading: names the frame of reference so the per-card relationship badges
-               ("This variant" / "Its protein consequence" / "Encodes the protein consequence") read as
-               self-explaining rather than needing a per-badge tooltip. -->
+          <!-- Anchor heading: names the frame of reference so the per-card relationship badges read as
+               self-explaining without needing a per-badge tooltip. -->
           <div class="px-4 tablet:px-5 pt-3.5 text-xs-minus text-text-muted">
             What each result assayed, relative to this variant:
           </div>
@@ -199,11 +198,11 @@
             <h3 class="mave-section-title !mb-0">Functional evidence</h3>
             <span class="text-xs-minus text-text-muted">measured in this score set</span>
             <span
-              v-if="primaryConfidenceBadge"
+              v-if="pageConfidenceBadge"
               v-key-term="'confidence'"
               class="ml-auto rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px]"
-              :class="primaryConfidenceBadge.class"
-              >{{ primaryConfidenceBadge.label }}</span
+              :class="pageConfidenceBadge.class"
+              >{{ pageConfidenceBadge.label }}</span
             >
             <span
               v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
@@ -278,11 +277,10 @@
           </div>
         </div>
 
-        <!-- ═══ CLINICAL, POPULATION & RELATED VARIATION ═══ 
-             This variant (X) is pinned with its own clinical/population data (a property of this exact allele, so it never follows the selection). 
-             The measured allele (Y) is pinned when the selection assayed a different allele. 
-             All other alleles and the rest of the equivalence class collapses underneath, each carrying its own per-level reference so the same 
-             information is available at every level. ═══ -->
+        <!-- ── CLINICAL, POPULATION & RELATED VARIATION ──
+             X (this variant) is always pinned — its clinical/population data belongs to this exact allele, so
+             it never follows the selection. Y (the measured allele) is pinned too when the selection assayed a
+             different allele. Everything else collapses underneath, each carrying its own per-level reference. -->
         <div
           v-if="lookup.selectedVariantDetail.value && alleleGroups.length > 0"
           class="relative mt-4 rounded-lg border border-border bg-surface px-[18px] py-3.5"
@@ -329,11 +327,10 @@
                 @calibration-changed="lookup.selectedCalibration.value = $event"
                 @selection-changed="() => {}"
               />
-              <p
-                v-if="primaryGroup && !primaryGroup.measured"
-                class="mt-2 text-xs italic leading-tight text-text-muted"
-              >
-                This allele was not directly measured — the highlighted point is a measured allele that shares its
+              <!-- Shown only when the page variant is in this envelope but wasn't itself measured — otherwise
+                   we can't say whether it was measured, so we say nothing rather than guess from a stand-in. -->
+              <p v-if="pageGroup && !pageGroup.measured" class="mt-2 text-xs italic leading-tight text-text-muted">
+                This allele was not directly measured. The highlighted bin contains a measured allele that shares its
                 protein consequence.
               </p>
             </div>
@@ -390,11 +387,10 @@ import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
 type SequenceLevel = components['schemas']['SequenceLevel']
 
 /**
- * The variant detail page. It is critical that this page makes clear the seam between the PAGE VARIANT (X)
- * and the SELECTED MEASURED VARIANT (Y). The page header for the PAGE variant (X) with its identity and
- * registry link; the measurement body (which follows the selection, i.e. the measured variant Y) and how
- * it relates to X; a combined clinical/population + related-alleles ledger anchored back on X; and the
- * score distribution last. Each section names its subject so the per-section re-anchoring reads as intentional.
+ * Variant detail page. Distinguishes the PAGE VARIANT (X, identified by clingenAlleleId) from the
+ * SELECTED MEASURED VARIANT (Y, whichever measurement is chosen). Header and clinical/population data
+ * anchor on X; the measurement body follows the selection (Y) and states its relationship back to X.
+ * Sections must name their subject so this re-anchoring reads as intentional, not inconsistent.
  */
 export default defineComponent({
   name: 'VariantScreen',
@@ -474,24 +470,23 @@ export default defineComponent({
         pageClingenAlleleId: this.clingenAlleleId
       })
     },
-    // The page's own allele group (page-root preferred, falling back to the measured allele).
-    primaryGroup(): AlleleGroup | null {
-      const groups = this.alleleGroups
-      return groups.find((g) => g.pageRoot) ?? groups.find((g) => g.measured) ?? groups[0] ?? null
+    // The page variant's own allele group — never a stand-in group, or claims keyed off this (the
+    // Functional-evidence badge, the histogram caption) get attributed to the wrong allele. Null is a
+    // real state (envelope doesn't carry the page variant); consumers render nothing, not a guess.
+    pageGroup(): AlleleGroup | null {
+      return this.alleleGroups.find((g) => g.pageRoot) ?? null
     },
-    // The page allele's (X) own sequence level, read off its pageRoot member — null if the selected
-    // measurement's envelope doesn't happen to carry X's own identity.
+    // The page variant's own sequence level, read off its page-root member.
     pageLevel(): SequenceLevel | null {
-      const group = this.alleleGroups.find((g) => g.pageRoot)
-      const root = group?.members.find((m) => m.pageRoot)
+      const root = this.pageGroup?.members.find((m) => m.pageRoot)
       return (root?.level ?? null) as SequenceLevel | null
     },
-    // True when the page itself is anchored on the protein-level entity (a PA id) — X *is* the protein
-    // change, not a nucleotide variant that separately produces one.
+    // True when the page itself is anchored on the protein-level entity (a PA id) — the page variant *is*
+    // the protein change, not a nucleotide variant that separately produces one.
     pageIsProteinRooted(): boolean {
       return this.pageLevel === 'protein'
     },
-    // ClinGen Allele Registry deep link for the page allele (X).
+    // ClinGen Allele Registry deep link for the page variant.
     clingenRegistryUrl(): string {
       return clingenAlleleUrlFromCanonicalId(this.clingenAlleleId)
     },
@@ -510,8 +505,10 @@ export default defineComponent({
       }
       return 'The selected measurement measured'
     },
-    primaryConfidenceBadge(): ConfidenceBadge | null {
-      return this.primaryGroup ? confidenceBadge(this.primaryGroup) : null
+    // How the page variant relates to what this result measured. Null (badge hidden) when the page
+    // variant is absent from this result's envelope — there is nothing to state a relationship about.
+    pageConfidenceBadge(): ConfidenceBadge | null {
+      return this.pageGroup ? confidenceBadge(this.pageGroup) : null
     },
     today(): Date {
       return new Date()

@@ -66,9 +66,9 @@ export function clinicalExtremesPerClass(
   const benign = definitive(BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS)
   if (!pathogenic.length && !benign.length) return []
 
-  // A direct call on the assayed allele is a stronger headliner than one projected from a sibling allele,
+  // A direct call on the assayed allele is a stronger headliner than one projected from an encoding,
   // so pick the exemplar from the direct members when a class has any; fall back to the whole (projected)
-  // group only when the class is present solely via siblings.
+  // group only when the class is present solely via the encodings.
   const preferDirect = (group: DisplayVariant[]) => {
     const direct = group.filter((v) => !v.control?.projected)
     return direct.length ? direct : group
@@ -78,8 +78,7 @@ export function clinicalExtremesPerClass(
   const furthestFrom = (group: DisplayVariant[], anchor: number) =>
     group.reduce((best, v) => (Math.abs(scoreOf(v) - anchor) > Math.abs(scoreOf(best) - anchor) ? v : best))
 
-  // Both classes present: separate along the learned damaging direction. Only one: fall back to the
-  // variant furthest from the set's median (still a headline extreme, just without a contrast class).
+  // Single-class fallback (median-furthest) is still a headline extreme, just without a contrast class.
   if (pathogenic.length && benign.length) {
     const pathMedian = median(pathogenic.map(scoreOf))
     const benignMedian = median(benign.map(scoreOf))

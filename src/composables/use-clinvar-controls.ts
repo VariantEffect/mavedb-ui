@@ -8,9 +8,8 @@ import type {ClinvarControl, ClinvarControlOption} from '@/lib/clinvar-controls'
 import type {DisplayVariant} from '@/lib/variants'
 
 /**
- * Shared clinical-control state for a single score set. This was previously owned privately by
- * `ScoreSetHistogram.vue`. The fetch is keyed purely by (db, version) — the interactive minimum-star
- * filter stays a per-consumer display concern and is NOT part of this store.
+ * Shared clinical-control state for a single score set. The fetch is keyed purely by (db, version) — the
+ * interactive minimum-star filter stays a per-consumer display concern and is NOT part of this store.
  *
  * The store owns db/version selection, the controls fetch (cached per db+version), and mutation of
  * `variant.control` onto the passed-in variants. It self-drives via watchers on `urn` and `variants`;
@@ -126,7 +125,7 @@ export function useClinvarControls(
     const list = variants.value ?? []
 
     // Gather every control reaching each variant, tagged with the digest of the allele it annotates, then
-    // reduce based on precedence + hard/soft discordance. A protein-change variant whose DNA siblings
+    // reduce based on precedence + hard/soft discordance. A protein-change variant whose encodings
     // disagree can be reached by several controls; the fold — not last-write-wins — decides its placement.
     const linksByUrn = new Map<string, ControlLink[]>()
     for (const control of state.controls) {

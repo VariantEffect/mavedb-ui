@@ -36,10 +36,11 @@
     </span>
     <span v-else class="stat-value">—</span>
 
-    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projections provenance.
-         It states the headline is inferred, not a direct assertion on this variant, and opens the records it was pooled from. 
-         For a non-projected headline it's pure context (records that did not drive the call), and a caller can suppress it 
-         for a *direct* headline where those alleles are already laid out elsewhere (e.g. MvAlleleLedger). -->
+    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projection's
+         provenance: it states the headline is inferred, not a direct assertion on this variant, and opens the
+         records it was pooled from. For a non-projected headline it's pure context (records that didn't drive
+         the call), and a caller can suppress it for a *direct* headline where those alleles are already laid
+         out elsewhere (e.g. MvAlleleLedger). -->
     <template v-if="underlyingClinvar.length && (showUnderlyingPopover || isProjectedHeadline)">
       <button
         class="text-xs text-link"
@@ -106,15 +107,11 @@ type SequenceLevel = components['schemas']['SequenceLevel']
  * The ClinVar stat cell shared by the score-set variant panel and the variant screen. Runs the same
  * level-gated placement fold as the histogram ({@link resolveClinvarHeadline}) so the two agree:
  *  - the measured allele's own call wins as the headline, with its link inline;
- *  - at *protein* level, an unannotated measured allele projects a representative from its encoding siblings
- *    (flagged for soft/hard discordance); the popover lists the siblings it folded over;
+ *  - at *protein* level, an unannotated measured allele projects a representative from its encodings
+ *    (flagged for soft/hard discordance); the popover lists the encodings it folded over;
  *  - at *nucleotide* level, an unannotated measured allele stays explicit ('No ClinVar record for this
  *    variant') — we don't borrow a related allele's call — and any related records show as context;
  *  - a germline-less `-` record on the measured allele shows 'No germline classification' and links out.
- * The popover always carries the related-allele records as context (allele HGVS, release, link), minus the
- * measured allele's own record and its cross-frame duplicates.
- * `clinvarVersion` is passed by the parent so this cell resolves the same release as other histogram and stat cells.
- * `plain` / the `#label` slot let a caller drop the `.stat` chrome and supply its own label.
  */
 export default defineComponent({
   name: 'VariantClinvarStat',
@@ -138,10 +135,10 @@ export default defineComponent({
     // The ClinVar release to reduce over (raw `MM_YYYY`), so this cell agrees with all parents.
     // `null` (store not ready / no controls) → fall back to the latest release per allele.
     clinvarVersion: {type: String as PropType<string | null>, default: null},
-    // Hide the "N related record(s)" popover for a *direct* (non-projected) headline — for callers (e.g. the
+    // Hide the "N related record(s)" popover for a *direct* (non-projected) headline — for callers (e.g.
     // MvAlleleLedger) that already lay those alleles out as their own cards, where the popover would just
-    // restate what's one click away. Note that this prop has no effect on projected/pooled headlines. This
-    // popover is essential provenance for projected headlines.
+    // restate what's one click away. No effect on projected/pooled headlines, where the popover is
+    // essential provenance and always shows.
     showUnderlyingPopover: {type: Boolean, default: true}
   },
 
@@ -161,7 +158,7 @@ export default defineComponent({
     },
     // True when the headline (a usable call, or a hard-discordant "Conflicting") was pooled from related
     // alleles rather than read off the subject's own record — the context records below are exactly the
-    // siblings that were pooled. Otherwise the context records are just that: related records that did
+    // encodings that were pooled. Otherwise the context records are just that: related records that did
     // not drive a direct call (or an `absent` headline).
     isProjectedHeadline(): boolean {
       if (this.headline.kind === 'call') return this.headline.placement.projected

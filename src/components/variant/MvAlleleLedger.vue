@@ -1,18 +1,20 @@
 <template>
   <div>
-    <div class="mb-3 flex flex-wrap items-baseline gap-x-2">
+    <div class="mb-1 flex flex-wrap items-baseline gap-x-2">
       <h3 class="mave-section-title !mb-0">Clinical &amp; population data</h3>
-      <span class="text-xs-minus text-text-muted">reference data for all alleles related to this variant</span>
     </div>
+    <!-- Frame heading: this block is anchored on the *measured* allele, not the page header's looked-up
+         variant — two reference points, one screen. Naming it here keeps the per-row badges short instead
+         of each spelling out "…than the measured allele" (mirrors the measurement carousel's own anchor
+         heading). -->
+    <p class="mb-3 text-xs-minus text-text-muted">How each allele relates to what this result measured:</p>
 
-    <!-- One uniform card per allele group. This variant (X) leads; the measured allele (Y) follows when the
-         selection assayed a different allele; the rest of the equivalence class collapses underneath. Every
-         card renders the same full clinical/population stat components — the only difference is the role
-         badge and emphasis. -->
+    <!-- One card per allele group, uniform except for role badge and emphasis: this variant (X) leads, the
+         measured allele (Y) follows, everything else collapses underneath. -->
     <div class="flex flex-col gap-2">
       <div
         v-for="entry in entries"
-        v-show="entry.role !== 'other' || expanded"
+        v-show="entry.role !== 'other' || expanded || !hasPinnedEntry"
         :key="entry.group.key"
         class="rounded-md px-3.5 py-3"
         :class="cardClass(entry.role)"
@@ -160,26 +162,37 @@ export default defineComponent({
   },
 
   computed: {
-    // The page allele's group (X) — pageRoot preferred, falling back to the measured/first group.
-    primaryGroup(): AlleleGroup | null {
-      return this.groups.find((g) => g.pageRoot) ?? this.groups.find((g) => g.measured) ?? this.groups[0] ?? null
+    // The page variant's own group, when the selected result's envelope carries it at all. Null is a real
+    // state, not a defect: a result reached through the page's ClinGen id may not include that exact allele
+    // among its own alleles.
+    pageGroup(): AlleleGroup | null {
+      return this.groups.find((g) => g.pageRoot) ?? null
     },
-    // The measured allele's group (Y), only when it differs from X (otherwise the headline already is it).
+    // The measured allele's group, pinned only when it differs from the page variant's (otherwise the lead
+    // card already is it).
     pinnedMeasured(): AlleleGroup | null {
       const measured = this.groups.find((g) => g.measured) ?? null
-      return measured && measured !== this.primaryGroup ? measured : null
+      return measured && measured !== this.pageGroup ? measured : null
     },
-    // Everything that is neither the headline (X) nor the pinned measured allele (Y).
+    // Everything that is neither the page variant nor the pinned measured allele.
     otherGroups(): AlleleGroup[] {
-      return this.groups.filter((g) => g !== this.primaryGroup && g !== this.pinnedMeasured)
+      return this.groups.filter((g) => g !== this.pageGroup && g !== this.pinnedMeasured)
     },
-    // The ordered render list: X, then measured Y, then the rest (collapsed). Roles drive badge + emphasis.
+    // The ordered render list: page variant, then the measured allele, then the rest (collapsed). Roles
+    // drive badge + emphasis, and are assigned from what a group *is* — a group is never given the `page`
+    // role as a stand-in. When the page variant is absent the list simply leads with the measured allele
+    // under its own badge, rather than labelling it "This variant" and asserting an identity it lacks.
     entries(): LedgerEntry[] {
       const list: LedgerEntry[] = []
-      if (this.primaryGroup) list.push({group: this.primaryGroup, role: 'page'})
+      if (this.pageGroup) list.push({group: this.pageGroup, role: 'page'})
       if (this.pinnedMeasured) list.push({group: this.pinnedMeasured, role: 'measured'})
       for (const g of this.otherGroups) list.push({group: g, role: 'other'})
       return list
+    },
+    // Whether any entry is pinned. When nothing is (no page variant and no measured allele in this
+    // envelope), the collapsed rows are all there is, so they must not start hidden behind the toggle.
+    hasPinnedEntry(): boolean {
+      return this.pageGroup != null || this.pinnedMeasured != null
     }
   },
 
@@ -204,18 +217,18 @@ export default defineComponent({
     allHgvsTitle(group: AlleleGroup): string {
       return group.members.map((m) => `${this.levelLabel(m.level)}: ${m.hgvs || '—'}`).join('  ·  ')
     },
-    // The page role gets its own fixed (teal "subject") badge, distinct from the green confidence axis and
-    // from every clinical-classification color — "This variant" (the page's own subject) and "This
-    // measurement" (what was actually assayed) are deliberately different colors so the two are never
-    // confused. Every other role (measured, resolved, convergent, candidate) reads its label/class off the shared
-    // confidence axis, so "This measurement" here is the same badge — and the same Key entry — as
-    // everywhere else in the app.
+    // "page" gets its own fixed subject badge — deliberately distinct from the confidence-axis colors used
+    // everywhere else, so "This variant" (the page's subject) and "This measurement" (what was assayed) are
+    // never confused. Every other role reads its label/class off the shared confidence axis, so those
+    // badges match the same Key entry used throughout the app.
     roleBadge(entry: LedgerEntry): {label: string; class: string} {
       if (entry.role === 'page') return {label: 'This variant', class: 'bg-subject/15 text-subject'}
       const badge = confidenceBadge(entry.group)
+      // No derivation and not measured: the API recorded no relationship (pre-reverse-translation data, or
+      // a classification gap). "Unclassified" says so, rather than the old "Related" asserting one that wasn't.
       return badge
         ? {label: badge.label, class: badge.class}
-        : {label: 'Related', class: 'bg-border-light text-text-muted'}
+        : {label: 'Unclassified', class: 'bg-border-light text-text-muted'}
     },
     cardClass(role: LedgerRole): string {
       if (role === 'page') return 'border-2 border-subject/40 bg-subject/[0.05]'

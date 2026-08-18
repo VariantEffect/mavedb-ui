@@ -5,7 +5,7 @@
  * For an AA-resolution score set one measured protein change is encoded by several DNA variants, whose
  * ClinVar classifications can disagree. This module reduces the set of controls that reach a single
  * variant to one placement the histogram can bin off — applying source precedence (the assayed-level
- * allele's own call wins; projection siblings are only a fallback) and grading how the winning calls
+ * allele's own call wins; the encodings are only a fallback) and grading how the winning calls
  * disagree ({@link Discordance}). Directional-over-uncertain is precedence, not discordance.
  */
 
@@ -24,6 +24,8 @@ import type {components} from '@/schema/openapi'
 
 type ClinvarAnnotation = components['schemas']['ClinvarAnnotation']
 type SequenceLevel = components['schemas']['SequenceLevel']
+
+// ── PLACEMENT: reduce one variant's ClinVar controls to a single call ──
 
 /**
  * How the ClinVar calls reaching a measurement disagree, ordered by placement difficulty.
@@ -52,10 +54,10 @@ export interface ControlLink extends ControlClassification {
 
 /** Fields present on every placement, usable or not — enough to reconstruct the winning set behind the fold. */
 interface BaseControlPlacement {
-  /** The winning set's distinct calls (assayed-level controls if any, else the projection siblings). */
+  /** The winning set's distinct calls (assayed-level controls if any, else the encodings). */
   classifications: ControlClassification[]
   /**
-   * True when the winning set came from **projection siblings**. The measured allele itself had no
+   * True when the winning set came from the **encodings**. The measured allele itself had no
    * ClinVar record, so this classification is about a *related* variant at a different level, not the
    * entity we assayed.
    */
@@ -102,22 +104,19 @@ const starsOf = (reviewStatus: string) => CLINVAR_REVIEW_STATUS_STARS[reviewStat
  * Reduce the ClinVar controls reaching one variant to a single {@link ClinvarControlPlacement}.
  *
  * **Precedence:** if any control annotates the variant's own subject allele (`alleleDigest` ∈ the subject
- * digest set — the measured/page allele, including its c↔g twin), those controls are the winning set and the
- * projection siblings are ignored — a direct call on the assayed entity is not diluted by the fan-out.
+ * digest set — the measured/page allele, including its projection), those controls are the winning set and
+ * the encodings are ignored — a direct call on the assayed entity is not diluted by the fan-out.
  *
- * **Projection is level-gated.** Falling through to sibling controls is only legitimate at the *protein*
- * assay level, where ClinVar (a nucleotide resource) cannot annotate the measured allele itself, so the
- * encoding siblings are the only available signal. At nucleotide level (`cdna`/`genomic`) the measured
- * variant *can* carry its own record, so its absence is real information: we do **not** borrow a sibling's
- * call (which would both overreach and double-count — that sibling is its own scored row). With no direct
- * record at nucleotide level, this returns `null`. Otherwise the siblings are the winning set. Over it:
- *   - **hard** (both a P/LP and a B/LB call) → `discordance: 'hard'`, not a usable control;
- *   - **soft** (a directional lean + an uncertain record — a VUS or a ClinVar-*Conflicting* call) →
- *     `discordance: 'soft'`, usable — the lean is the representative, but the surface can flag the soft conflict;
- *   - **concordant** (≥2 distinct calls in a single direction, e.g. LB + B, no uncertain record) →
- *     `discordance: 'concordant'`, usable, representative by star tiebreak;
- *   - the distinct calls flow through as `classifications`, and `directional` records whether any confident
- *     P/LP or B/LB call is present, so the histogram can drop VUS when a directional call dominates.
+ * **Falling back to the encodings is level-gated.** It's only legitimate at *protein* assay level, where
+ * ClinVar (a nucleotide resource) cannot annotate the measured allele itself, so the encodings are the only
+ * available signal. At nucleotide level (`cdna`/`genomic`) the measured variant *can* carry its own record,
+ * so its absence is real information: we do **not** borrow an encoding's call (that would both overreach and
+ * double-count — the encoding is its own scored row). With no direct record at nucleotide level, this
+ * returns `null`.
+ *
+ * The winning set is then graded for {@link Discordance} and reduced to a representative call
+ * (directional-preferred, then highest star). `directional` records whether any confident P/LP or B/LB call
+ * is present, so callers can drop VUS when a directional call dominates.
  *
  * Returns `null` when no *classified* control reaches the variant.
  */
@@ -127,7 +126,7 @@ export function reduceControlPlacement(
   assayLevel?: SequenceLevel | null
 ): ClinvarControlPlacement | null {
   // Drop ClinVar "no classification" placeholders (a literal `-`/empty) up front, so they neither become a
-  // call nor — as a `-` on the assayed allele — block fall-through to a real projection sibling.
+  // call nor — as a `-` on the assayed allele — block fall-through to a real encoding.
   const classified = links.filter((link) => isClassifiedSignificance(link.significance))
   if (classified.length === 0) {
     return null
@@ -143,7 +142,7 @@ export function reduceControlPlacement(
   if (winning.length === 0) {
     return null
   }
-  // Fell through to siblings — but only *claim* projection when the subject digest is known; an absent
+  // Fell through to the encodings — but only *claim* projection when the subject digest is known; an absent
   // digest means unknown provenance, which we don't surface as "related variant" (avoids mislabeling).
   const projected = subjectSet.size > 0 && assayedLevel.length === 0
 
@@ -163,9 +162,8 @@ export function reduceControlPlacement(
   // Any non-directional call is "uncertain" — a VUS *or* ClinVar's own aggregate Conflicting value.
   const uncertainPresent = classifications.some((c) => !isDirectional(c.significance))
 
-  // Grade the disagreement. Opposite directions is hard (unusable). Otherwise, with a single direction:
-  // a co-occurring uncertain record (VUS/Conflicting) is a *soft conflict* — the lean stands but the direction
-  // may not be settled; ≥2 distinct calls in that one direction (no uncertain record) is merely concordant.
+  // Grade per Discordance: opposing directions is hard; a single direction plus an uncertain record is soft;
+  // ≥2 same-direction calls alone is concordant.
   if (pathogenicCalls.length > 0 && benignCalls.length > 0) {
     // Hard: opposing directional assertions break the projection premise, so there is no single winning call.
     // No representative is computed, and the type withholds those fields so no surface can read a fake one.
@@ -198,6 +196,8 @@ export function reduceControlPlacement(
   }
 }
 
+// ── HEADLINE: what a one-line ClinVar surface displays ──
+
 /**
  * A note qualifying a representative `call` — what, beyond the call itself, the headline should say.
  * - `none` — a lone, unambiguous call; show it plainly.
@@ -215,7 +215,7 @@ export type ClinvarCallNote = 'none' | 'concordant' | 'soft-vus' | 'soft-conflic
  * What a one-headline ClinVar surface should display for a measurement — a discriminated union so the
  * component switches on `kind` instead of re-deriving a precedence ladder in its template.
  * - `conflicting` — hard-discordant winning set; no single call to show.
- * - `call` — the representative usable call (assayed-level or a projection sibling), with a {@link ClinvarCallNote}
+ * - `call` — the representative usable call (assayed-level or an encoding), with a {@link ClinvarCallNote}
  *   qualifying it (concordant aside, or a soft-conflict flag). The lib owns that decision so the template renders it.
  * - `presence` — no usable call, but a ClinVar record exists on the measurement (a `-` germline-less
  *   submission); name the state and link out.
@@ -242,14 +242,13 @@ function resolveCallNote(placement: UsableControlPlacement): ClinvarCallNote {
 
 /**
  * Resolve what a one-headline ClinVar surface shows, over a resolved walk. Runs the level-gated fold, then
- * falls back through a fixed precedence so every such surface (stat cell, variant screen) agrees:
+ * falls back through a fixed precedence — see {@link ClinvarHeadline} for what each kind means — so every
+ * such surface (stat cell, variant screen) agrees:
  *   1. a usable/hard placement → `call`/`conflicting`;
- *   2. the measured allele's *own* record (a `-`, since a classification would have folded above) → `presence`,
- *      naming the germline-less state and linking out;
- *   3. no record on the measured allele, but records reach related alleles (a nucleotide measurement we
- *      declined to project) → `absent` — the measured variant has no ClinVar record; the related records are
- *      offered as context, never promoted to a call or a germline-less state on this variant;
- *   4. nothing reaches the measurement → `none`.
+ *   2. else the measured allele's own record, if any (a `-`, since a classification would have folded
+ *      above) → `presence`;
+ *   3. else, if related alleles carry records → `absent` (never promoted to a call);
+ *   4. else → `none`.
  */
 export function resolveClinvarHeadline(
   records: MeasurementClinvarRecord[],
@@ -273,7 +272,7 @@ export function resolveClinvarHeadline(
     }
   }
   // The subject allele's own record (if any) is germline-less — a classification would have folded above.
-  // `onAssayed` was tagged against this same subject, so it covers the c↔g twin too.
+  // `onAssayed` was tagged against this same subject, so it covers its projection too.
   const assayedRecord = records.find((r) => r.onAssayed)
   if (assayedRecord) return {kind: 'presence', record: assayedRecord}
   // No record on the measured allele. Any records that reach it are on *related* alleles — we won't promote

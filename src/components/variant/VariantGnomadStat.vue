@@ -9,17 +9,18 @@
     <span v-else-if="headlineState === 'enumerated'" class="stat-value font-semibold"
       >Up to AF {{ formatFrequency(underlyingGnomadMaxAf) }}</span
     >
-    <!-- Nucleotide subject with no frequency of its own but related variants carry frequencies: be explicit 
-     rather than borrow related variants' frequencies. Related frequencies, if any, show below as context. -->
+    <!-- Nucleotide subject with no frequency of its own but related variants carry frequencies: be explicit
+         rather than borrow related variants' frequencies. Related frequencies, if any, show below as context. -->
     <span v-else-if="headlineState === 'absent'" class="stat-value text-sm italic text-text-muted">
       No gnomAD record for this variant
     </span>
     <span v-else class="stat-value">—</span>
 
-    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projections provenance.
-         It states the headline is inferred, not a direct assertion on this variant, and opens the records it was pooled from. 
-         For a non-projected headline it's pure context (records that did not drive the call), and a caller can suppress it 
-         for a *direct* headline where those alleles are already laid out elsewhere (e.g. MvAlleleLedger). -->
+    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projection's
+         provenance: it states the headline is inferred, not a direct assertion on this variant, and opens the
+         records it was pooled from. For a non-projected headline it's pure context (records that didn't drive
+         the call), and a caller can suppress it for a *direct* headline where those alleles are already laid
+         out elsewhere (e.g. MvAlleleLedger). -->
     <template v-if="underlyingGnomad.length && (showUnderlyingPopover || headlineState === 'enumerated')">
       <button
         class="text-xs text-link"
@@ -99,15 +100,15 @@ export default defineComponent({
     annotations: {type: Object as PropType<Record<string, AlleleAnnotations>>, default: () => ({})},
     // Digest-keyed allele identities. Supplies each underlying frequency's HGVS label.
     alleles: {type: Object as PropType<Record<string, AlleleIdentity>>, default: () => ({})},
-    // The subject allele's digest(s) — excluded (with its c↔g twin) from the related-frequency enumeration,
+    // The subject allele's digest(s) — excluded (with its projection) from the related-frequency enumeration,
     // so the subject's own frequency never reappears as "related".
     assayLevelDigest: {type: [String, Array] as PropType<SubjectDigest>, default: null},
     // The subject allele's sequence level. Gates the enumeration: at nucleotide level a missing frequency
     // stays explicit ('absent') rather than borrowing related variants'. `null` → enumerate (unknown).
     assayLevel: {type: String as PropType<SequenceLevel | null>, default: null},
     // Hide the "N related frequencies" popover for a direct/absent headline — for callers (e.g. MvAlleleLedger)
-    // that already lay those alleles out as their own cards. An enumerated (pooled) headline always
-    // shows its popover regardless as it is essential provenance for the pooled number.
+    // that already lay those alleles out as their own cards. An enumerated (pooled) headline always shows
+    // its popover — essential provenance for the pooled number.
     showUnderlyingPopover: {type: Boolean, default: true}
   },
 

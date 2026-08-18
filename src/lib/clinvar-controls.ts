@@ -37,20 +37,9 @@ type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type ClinvarAnnotation = components['schemas']['ClinvarAnnotation']
 
 /**
- * List of ClinVar clinical significance classifications.
- *
- * Each classification contains:
- * - `name`: The full name of the clinical significance (e.g., "Pathogenic").
- * - `description`: A detailed description of the classification.
- * - `shortDescription`: An abbreviated or short label for the classification.
- *
- * These classifications are used to describe the clinical significance of variants
- * according to ClinVar standards, including categories such as "Pathogenic", "Likely pathogenic",
- * "Benign", "Likely benign", "Uncertain significance", and combinations thereof.
- *
- * NOTE: The "Conflicting" classification is dynamically generated based on the version of ClinVar,
- * as the terminology changed in 2025. The function `clinvarConflictingSignificanceClassification`
- * adjusts the label accordingly provided a ClinVar version.
+ * ClinVar clinical significance classifications, excluding "Conflicting" — that one is version-dependent
+ * (ClinVar's terminology changed in 2025) and generated separately by
+ * {@link clinvarConflictingSignificanceClassificationForVersion}.
  */
 export const CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
   {
@@ -221,7 +210,7 @@ export function latestClinvar(annotations: AlleleAnnotations | null): ClinvarAnn
 export interface MeasurementClinvarRecord {
   /** VRS digest of the allele this record annotates. */
   digest: string
-  /** True when the record is on the measured allele itself (digest === assayLevelDigest), not a sibling. */
+  /** True when the record is on the measured allele itself (digest === assayLevelDigest), not an encoding. */
   onAssayed: boolean
   /** Reference-frame HGVS of the annotated allele, for labeling; null when the sidecar has none. */
   hgvs: string | null
@@ -231,7 +220,7 @@ export interface MeasurementClinvarRecord {
 }
 
 /** Canonical identity of a ClinVar record: the variation id when present, else the allele id. Dedupes records
- *  shared across reference frames, keys them in a list, and excludes the one already shown in a headline. */
+ * shared across reference frames, keys them in a list, and excludes the one already shown in a headline. */
 export function clinvarRecordId(clinvar: {clinvarVariationId?: string | null; clinvarAlleleId: string}): string {
   return clinvar.clinvarVariationId ?? clinvar.clinvarAlleleId
 }
@@ -267,16 +256,16 @@ export function resolveClinvarRecords(
 }
 
 /**
- * The distinct *underlying* records for the popover, projected from a resolved walk — the records on sibling
- * alleles the headline folded over. Excludes the measured allele's own record (`onAssayed`): that is the
+ * The distinct *underlying* records for the popover, projected from a resolved walk — the records on the
+ * encodings the headline folded over. Excludes the measured allele's own record (`onAssayed`): that is the
  * primary, already shown as the headline, not "underlying" — so a lone assayed record yields no popover, and
- * a protein-level allele's projected headline still lists the nucleotide sibling it was drawn from.
+ * a protein-level allele's projected headline still lists the encoding it was drawn from.
  *
  * These are the *related-allele* records offered as context — beside a direct call (transparency: records
- * that did not drive it), beneath a projected call (the siblings it folded over), or under an `absent`
+ * that did not drive it), beneath a projected call (the encodings it folded over), or under an `absent`
  * nucleotide headline. Excludes the measured allele's own record (`onAssayed`) **and its cross-frame
  * duplicates**: the same ClinVar record seen under another reference-frame digest is the very record already
- * shown, not a distinct sibling, so it must not reappear here.
+ * shown, not a distinct encoding, so it must not reappear here.
  *
  * Germline-less `-` submissions are kept (a record that exists is worth linking to; only the control fold
  * drops `-`). Dedupes by ClinVar record id across the DNA/protein frames that share one record (preferring a
@@ -322,7 +311,7 @@ export function formatClinicalSignificance(significance: string | null | undefin
  * model emits a literal `-` (occasionally empty) on an axis with no submission — e.g. a record carrying
  * somatic/oncogenicity data but no germline classification. Such a value is not a usable classification:
  * it must not become a clinvar control, render as a call, or (as a `-` on the *assayed* allele) block
- * fall-through to a sibling allele. Filter significances through this before treating them as calls.
+ * fall-through to an encoding. Filter significances through this before treating them as calls.
  */
 export function isClassifiedSignificance(significance: string | null | undefined): boolean {
   const s = significance?.trim()
@@ -337,20 +326,7 @@ export function isUncertainSignificance(significance: string): boolean {
   )
 }
 
-/**
- * Returns an array of ClinVar clinical significance classifications,
- * appending a "Conflicting" classification with a description that
- * depends on the provided version string. ClinVar changed the verbiage
- * for conflicting classifications in 2025, so this function adjusts
- * the label based on the version.
- *
- * If the version (expected in the format "prefix_YYYY") is greater than 2024,
- * the "Conflicting classifications of pathogenicity" label is used.
- * Otherwise, "Conflicting interpretations of pathogenicity" is used.
- *
- * @param version - The ClinVar version string, expected to contain a year after an underscore (e.g., "v_2023").
- * @returns An array of clinical significance classification objects, including the appropriate "Conflicting" classification.
- */
+/** {@link CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS} plus the version-appropriate "Conflicting" entry. */
 export function clinvarClinicalSignificanceClassifications(
   version: string | null
 ): typeof CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS {
@@ -361,14 +337,9 @@ export function clinvarClinicalSignificanceClassifications(
 }
 
 /**
- * Returns the appropriate ClinVar conflicting significance classification object for a given version.
- *
- * Depending on the version string (expected in the format "prefix_YYYY"), this function returns
- * an object containing the name, description, and shortDescription for the conflicting significance
- * classification. For versions after 2024, the naming reflects updated ClinVar terminology.
- *
- * @param version - The version string, expected to contain a year after an underscore (e.g., "clinvar_2025").
- * @returns An object with `name`, `description`, and `shortDescription` fields describing the conflicting classification.
+ * The "Conflicting" classification, worded for the given ClinVar version — ClinVar renamed this from
+ * "interpretations" to "classifications" starting with the 2025 releases (`version`'s year after 2024).
+ * `null` (unknown version) is treated as post-rename.
  */
 export function clinvarConflictingSignificanceClassificationForVersion(version: string | null): {
   name: string
@@ -391,14 +362,8 @@ export function clinvarConflictingSignificanceClassificationForVersion(version: 
 }
 
 /**
- * Returns the appropriate label for conflicting clinical significance series based on the provided version string.
- *
- * The label changes depending on the numeric value after the underscore in the version string:
- * - If the numeric part is greater than 2024, returns "Conflicting classifications".
- * - Otherwise, returns "Conflicting interpretations".
- *
- * @param version - The version string in the format "prefix_number" (e.g., "v_2025").
- * @returns The label for conflicting clinical significance series.
+ * The "Conflicting classifications"/"Conflicting interpretations" series label — same version rule as
+ * {@link clinvarConflictingSignificanceClassificationForVersion}.
  */
 export function conflictingClinicalSignificanceSeriesLabelForVersion(version: string | null): string {
   if (version === null || Number(version.split('_')[1]) > 2024) {

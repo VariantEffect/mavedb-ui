@@ -16,10 +16,9 @@
     </div>
 
     <template v-else-if="detail">
-      <!-- Identity + score headline: the coordinate, its alternate nucleotide spelling when one
-           disambiguates, and the functional score (or "Not scored") pushed to the right. Always shown —
-           the score is the headline fact, and reporting it here is what keeps an unscored selection from
-           reading as a dead end when the histogram has no bar to jump to. -->
+      <!-- Identity + score headline: coordinate, its alternate nucleotide spelling when one disambiguates,
+           and the score (or "Not scored") pushed right. Always shown — an unscored selection still needs
+           to report its measurement here, since the histogram may have no bar to jump to. -->
       <div class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5">
         <span class="font-mono text-base font-bold leading-none text-text-primary">{{ coordinate || detail.urn }}</span>
         <span
@@ -86,7 +85,8 @@
         No reference annotations were found for this variant.
       </p>
 
-      <!-- Status and links — the superseded badge and full-details link, shared by both states. -->
+      <!-- Status and links — the superseded badge and full-details link, shown below either the facts
+           grid or the empty state above. -->
       <div
         v-if="!detail.isCurrent || detail.clingenAlleleId"
         class="border-t border-border-light bg-surface flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
@@ -135,7 +135,7 @@ type AlleleAnnotations = components['schemas']['AlleleAnnotations']
  *
  * Deliberately lean: assay-level facts (identity, consequence {@link VariantConsequenceStat}, the selected calibration's classification)
  * plus two annotation cells that reach past the assayed allele — {@link VariantGnomadStat} and
- * {@link VariantClinvarStat}. These each own their own presentation and their fold/enumeration wiring to sibling
+ * {@link VariantClinvarStat}. These each own their own presentation and their fold/enumeration wiring to the encoding
  * alleles.
  *
  * Coordinates follow the page's current frame; the classification follows the page's selected calibration. A

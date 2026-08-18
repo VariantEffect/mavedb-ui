@@ -24,7 +24,7 @@ describe('groupAlleles — projection pairing + confidence', () => {
   // the protein apex is a deterministic projection, unpaired.
   const nucleotide: Record<string, AlleleIdentity> = {
     c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, isFocus: true, projectionOf: 'g'},
-    g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'is_genomic_of', isFocus: false, derivation: 'projection', projectionOf: 'c'},
+    g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'coordinate_representation_of', isFocus: false, derivation: 'projection', projectionOf: 'c'},
     p: {level: 'protein', hgvs: 'NP_x:p.Leu2Phe', relation: 'translation_of', isFocus: false, derivation: 'projection'}
   }
 
@@ -48,9 +48,9 @@ describe('groupAlleles — projection pairing + confidence', () => {
   const protein: Record<string, AlleleIdentity> = {
     p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, isFocus: true},
     c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'g1'},
-    g1: {level: 'genomic', hgvs: 'NC_x:g.200C>G', relation: 'is_genomic_of', isFocus: false, derivation: 'candidate', projectionOf: 'c1'},
+    g1: {level: 'genomic', hgvs: 'NC_x:g.200C>G', relation: 'coordinate_representation_of', isFocus: false, derivation: 'candidate', projectionOf: 'c1'},
     c2: {level: 'cdna', hgvs: 'NM_x:c.16C>A', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'g2'},
-    g2: {level: 'genomic', hgvs: 'NC_x:g.200C>A', relation: 'is_genomic_of', isFocus: false, derivation: 'candidate', projectionOf: 'c2'}
+    g2: {level: 'genomic', hgvs: 'NC_x:g.200C>A', relation: 'coordinate_representation_of', isFocus: false, derivation: 'candidate', projectionOf: 'c2'}
   }
 
   it('keeps the apex measured and collapses each candidate hypothesis into one group', () => {
@@ -130,7 +130,7 @@ describe('groupAlleles — projection pairing + confidence', () => {
   })
 
   it('badges measured over derivation, maps projection→Resolved / convergent→Convergent / candidate→Candidate, else null', () => {
-    // `measured` wins even if a derivation is also present (a stray measured sibling still reads "This measurement").
+    // `measured` wins even if a derivation is also present (a stray measured member still reads "This measurement").
     expect(confidenceBadge({measured: true, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.measured)
     expect(confidenceBadge({measured: false, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.projection)
     // A synonymous cousin under a nucleotide assay: a distinct change sharing the consequence, not ambiguous.
@@ -148,7 +148,7 @@ describe('groupAlleles — projection pairing + confidence', () => {
     const groups = run({
       alleles: {
         c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, clingenAlleleId: 'CA1', isFocus: true, projectionOf: 'g'},
-        g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'is_genomic_of', clingenAlleleId: 'CA1', isFocus: false, derivation: 'projection', projectionOf: 'c'}
+        g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'coordinate_representation_of', clingenAlleleId: 'CA1', isFocus: false, derivation: 'projection', projectionOf: 'c'}
       },
       pageClingenAlleleId: 'CA1'
     })

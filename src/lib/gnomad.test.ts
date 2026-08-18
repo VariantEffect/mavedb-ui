@@ -103,9 +103,9 @@ describe('collectGnomadFrequencies — enumeration of encoding-variant frequenci
       expect(ids(collectGnomadFrequencies(annotations, {}, ['subject']))).toEqual(['B'])
     })
 
-    test('excludes the subject`s cross-frame twin (same gnomAD id on a non-subject digest)', () => {
-      // The subject (coding) has no gnomAD of its own; its genomic twin carries the record. Anchoring on both
-      // subject digests drops the twin so the subject`s own frequency is never listed as related.
+    test('excludes the subject`s projection (same gnomAD id on a non-subject digest)', () => {
+      // The subject (coding) has no gnomAD of its own; its genomic projection carries the record. Anchoring on both
+      // subject digests drops the projection so the subject`s own frequency is never listed as related.
       const annotations = {
         'subject-c': {gnomad: null},
         'subject-g': {gnomad: gnomad({dbIdentifier: 'S'})},

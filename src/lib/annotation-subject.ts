@@ -4,7 +4,7 @@
  * Usually a single digest — the measured allele. But a variant page's subject is one physical allele stored
  * as two digests: its coding and genomic representations (a c↔g projection pair). External databases attach
  * to only one of them (no fixed level→source mapping), so both must count as "the subject's own" or a record
- * on the twin reads as a related allele.
+ * on the projection reads as a different allele.
  */
 export type SubjectDigest = string | string[] | null | undefined
 

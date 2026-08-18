@@ -120,16 +120,32 @@
   --color-ga4gh: #0f6ca4;
   --color-ga4gh-light: #e3f0f9;
 
-  /* ── Measurement Types (variant screen) ────────────────────── */
+  /* ── Assay Level (variant screen) ──────────────────────────── */
+  /* The level a result measured the change at — see LEVEL_BUCKETS in lib/measurement-types.ts. */
   --color-nucleotide: #a8247c;
   --color-nucleotide-light: #fce8f4;
   --color-nucleotide-border: #eec3e0;
   --color-amino-acid: #7e5daf;
   --color-amino-acid-light: #f1ecf8;
   --color-amino-acid-border: #b5a0d0;
-  --color-synonymous-nucleotide: #8a5700;
-  --color-synonymous-nucleotide-light: #fef8e1;
-  --color-synonymous-nucleotide-border: #f5c97a;
+
+  /* ── Allele relationship axis (variant screen ledger) ──────── */
+  /* One token per value of the ledger's relationship-to-the-measured-allele axis
+     (ALLELE_CONFIDENCE in lib/allele-grouping.ts).
+
+     `convergent` and `candidate` intentionally share a hex today: both say "this is not the change
+     that was measured", and the ledger groups them visually against `resolved`. They are separate
+     tokens rather than one so the two can diverge without touching component code. */
+  --color-measured: #78b793; /* = --color-sage; the focus allele, the axis's zero point */
+  --color-measured-light: #e5f2e4;
+  --color-resolved: #475569;
+  --color-resolved-light: #eef1f5;
+  --color-convergent: #8a5700;
+  --color-convergent-light: #fef8e1;
+  --color-convergent-border: #f5c97a;
+  --color-candidate: #8a5700;
+  --color-candidate-light: #fef8e1;
+  --color-candidate-border: #f5c97a;
 
   /* ── Role Badges ───────────────────────────────────────────── */
   --color-role-admin: #1a56a0;
@@ -145,10 +161,10 @@
 
   /* ── Semantic colors ─────────────────────────────────────────── */
   --color-link: #0074d9;
+  /* The page's own subject allele (the CAID the page is rooted on). Deliberately NOT part of the
+     allele relationship axis above. The page root is a different frame, not a value on that axis. */
   --color-subject: #4a9ba8;
   --color-subject-light: #ddecee;
-  --color-resolved: #475569;
-  --color-resolved-light: #eef1f5;
   --color-superseded: #92400e;
   --color-superseded-light: #fef3c7;
   --color-border: #dee2e6;

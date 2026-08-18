@@ -51,7 +51,7 @@ export interface UnderlyingGnomad {
  * this set of distinct frequencies, deduplicating by gnomAD variant id and preferring a coding HGVS for
  * the label. Sort by descending allele frequency.
  *
- * `subjectDigests` names the subject allele (the measured/page allele, including its c↔g twin); its own
+ * `subjectDigests` names the subject allele (the measured/page allele, including its projection); its own
  * frequency is the headline, so it — and any other frame carrying the same gnomAD record — is excluded here,
  * mirroring the ClinVar underlying-record enumeration.
  */
@@ -62,7 +62,7 @@ export function collectGnomadFrequencies(
 ): UnderlyingGnomad[] {
   if (!annotations) return []
   const subjectSet = new Set(subjectDigests ?? [])
-  // The subject's own gnomAD id(s): exclude these so the subject's frequency (or its cross-frame twin) never
+  // The subject's own gnomAD id(s): exclude these so the subject's frequency (or its projection's) never
   // reappears as a "related" one.
   const subjectIds = new Set<string>()
   for (const digest of subjectSet) {

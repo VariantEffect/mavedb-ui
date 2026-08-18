@@ -113,40 +113,40 @@ describe('enumerateUnderlyingClinvar — the popover projection', () => {
     expect(ids(enumerate(annotations, {}))).toEqual(['b', 'a'])
   })
 
-  test('keeps a distinct related sibling as context beside the measured allele`s own call', () => {
+  test('keeps a distinct encoding as context beside the measured allele`s own call', () => {
     const annotations = {
       assayed: {clinvar: [clinvar({clinvarAlleleId: 'assayed', clinicalSignificance: 'Pathogenic'})]},
       sib: {clinvar: [clinvar({clinvarAlleleId: 'sib', clinicalSignificance: 'Uncertain significance'})]}
     }
-    // The measured allele's own call is the headline; the genuinely distinct sibling is offered as context.
+    // The measured allele's own call is the headline; the genuinely distinct encoding is offered as context.
     expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'assayed')))).toEqual(['sib'])
   })
 
   test('the same record under a non-assayed reference frame is not "underlying" the assayed call', () => {
     const annotations = {
       // One ClinVar record (variation V1), annotated on the measured protein allele `p` and again on its
-      // genomic frame `g`. `g` is not a distinct sibling — it's the same record you're already looking at.
+      // genomic frame `g`. `g` is not a distinct encoding — it's the same record you're already looking at.
       p: {clinvar: [clinvar({clinvarAlleleId: 'x', clinvarVariationId: 'V1'})]},
       g: {clinvar: [clinvar({clinvarAlleleId: 'x', clinvarVariationId: 'V1'})]}
     }
     expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'p')))).toEqual([])
   })
 
-  test('an unclassified (`-`) assayed record does not win — siblings still surface', () => {
+  test('an unclassified (`-`) assayed record does not win — the encodings still surface', () => {
     const annotations = {
       assayed: {clinvar: [clinvar({clinvarAlleleId: 'assayed', clinicalSignificance: '-'})]},
       sib: {clinvar: [clinvar({clinvarAlleleId: 'sib', clinicalSignificance: 'Uncertain significance'})]}
     }
-    // A `-` on the measured allele carries no call, so the fold projects from the sibling — which is underlying.
+    // A `-` on the measured allele carries no call, so the fold projects from the encoding — which is underlying.
     expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'assayed')))).toEqual(['sib'])
   })
 
-  test('keeps a projected headline`s source sibling (measured allele carries no record)', () => {
+  test('keeps a projected headline`s source encoding (measured allele carries no record)', () => {
     const annotations = {
       assayed: {clinvar: null},
       sib: {clinvar: [clinvar({clinvarAlleleId: 'sib', clinicalSignificance: 'Pathogenic'})]}
     }
-    // The nucleotide sibling the protein-level headline was projected from is still an underlying record.
+    // The encoding the protein-level headline was projected from is still an underlying record.
     expect(ids(enumerateUnderlyingClinvar(resolveClinvarRecords(annotations, {}, 'assayed')))).toEqual(['sib'])
   })
 

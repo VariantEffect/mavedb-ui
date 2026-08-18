@@ -70,15 +70,15 @@ describe('reduceControlPlacement — divergence fold', () => {
     })
   })
 
-  describe('precedence — the assayed level wins; siblings are ignored', () => {
-    test('a lone assayed VUS blocks a sibling LP (any assayed call stops the fall-through)', () => {
+  describe('precedence — the assayed level wins; the encodings are ignored', () => {
+    test('a lone assayed VUS blocks an encoding`s LP (any assayed call stops the fall-through)', () => {
       const p = reduceControlPlacement([link(VUS, ASSAY), link(LP, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([VUS])
       expect(usable(p).directional).toBe(false)
       expect(p.projected).toBe(false)
     })
 
-    test('an assayed directional call is not overridden into hard discordance by a discordant sibling', () => {
+    test('an assayed directional call is not overridden into hard discordance by a discordant encoding', () => {
       const p = reduceControlPlacement([link(P, ASSAY), link(B, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([P])
       expect(p.discordance).toBe('none')
@@ -90,13 +90,13 @@ describe('reduceControlPlacement — divergence fold', () => {
       const p = reduceControlPlacement([link(P, ASSAY), link(B, ASSAY), link(LP, SIB)], ASSAY)!
       expect(p.discordance).toBe('hard')
       expect(p.projected).toBe(false)
-      // The sibling LP is not consulted — only the two assayed-level calls.
+      // The encoding's LP is not consulted — only the two assayed-level calls.
       expect(sigs(p)).toEqual([B, P])
     })
   })
 
-  describe('fall-through to projection siblings (measured allele unannotated → projected = true)', () => {
-    test('single sibling call → placed on its side, flagged projected', () => {
+  describe('fall-through to the encodings (measured allele unannotated → projected = true)', () => {
+    test('single encoding call → placed on its side, flagged projected', () => {
       const p = reduceControlPlacement([link(LB, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([LB])
       expect(usable(p).directional).toBe(true)
@@ -183,7 +183,7 @@ describe('reduceControlPlacement — divergence fold', () => {
       })
     })
 
-    test('VUS-only siblings → not directional (lands in the VUS series)', () => {
+    test('VUS-only encodings → not directional (lands in the VUS series)', () => {
       const p = reduceControlPlacement([link(VUS, SIB), link(VUS, SIB2)], ASSAY)!
       expect(usable(p).directional).toBe(false)
       expect(p.discordance).toBe('none')
@@ -193,7 +193,7 @@ describe('reduceControlPlacement — divergence fold', () => {
   })
 
   describe('classifications set — distinct, order-preserving, status-carrying', () => {
-    test('duplicate significances across siblings collapse to one classification', () => {
+    test('duplicate significances across encodings collapse to one classification', () => {
       const p = reduceControlPlacement([link(P, SIB), link(P, SIB2)], ASSAY)!
       expect(p.classifications).toHaveLength(1)
       expect(p.classifications[0].significance).toBe(P)
@@ -270,9 +270,9 @@ describe('reduceControlPlacement — divergence fold', () => {
       expect(reduceControlPlacement([link('-', ASSAY), link('-', SIB)], ASSAY)).toBeNull()
     })
 
-    test('a dash on the assayed allele does NOT block fall-through to a real sibling', () => {
+    test('a dash on the assayed allele does NOT block fall-through to a real enbling', () => {
       // The `-` (no germline classification) is filtered, so the assayed allele reads as unannotated and
-      // the real sibling LP wins — the fall-through fires, projected.
+      // the real encoding's LP wins — the fall-through fires, projected.
       const p = reduceControlPlacement([link('-', ASSAY), link(LP, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([LP])
       expect(p.projected).toBe(true)
@@ -313,7 +313,7 @@ function rec(significance: string, digest: string, reviewStatus: string = ONE_ST
 }
 
 describe('reduceControlPlacement — assay-level gating of projection', () => {
-  test('protein level projects a sibling call when the measured allele has none', () => {
+  test('protein level projects an encoding`s call when the measured allele has none', () => {
     const p = reduceControlPlacement([link(P, SIB)], ASSAY, 'protein')
     expect(p?.projected).toBe(true)
     expect(usable(p!).clinicalSignificance).toBe(P)
@@ -334,9 +334,9 @@ describe('reduceControlPlacement — assay-level gating of projection', () => {
     expect(reduceControlPlacement([link(P, SIB)], ASSAY)?.projected).toBe(true)
   })
 
-  test('a subject digest *set* (c↔g twin) counts a record on either representation as direct', () => {
-    // The physical allele is stored as ASSAY (coding) + SIB (its genomic twin); ClinVar linked the record to
-    // the twin. Anchoring on both digests keeps it a direct call, not a projection off a "sibling".
+  test('a subject digest *set* (a projection pair) counts a record on either representation as direct', () => {
+    // The physical allele is stored as ASSAY (coding) + SIB (its genomic projection); ClinVar linked the record to
+    // the projection. Anchoring on both digests keeps it a direct call, not a projection off another allele.
     const p = reduceControlPlacement([link(P, SIB)], [ASSAY, SIB], 'cdna')
     expect(usable(p!).clinicalSignificance).toBe(P)
     expect(usable(p!).projected).toBe(false)
@@ -348,7 +348,7 @@ describe('resolveClinvarHeadline — the display decision', () => {
     expect(resolveClinvarHeadline([], ASSAY)).toEqual({kind: 'none'})
   })
 
-  test('nucleotide level, no direct record but classified siblings → kind "absent"', () => {
+  test('nucleotide level, no direct record but classified encodings → kind "absent"', () => {
     expect(resolveClinvarHeadline([rec(P, SIB)], ASSAY, 'cdna')).toEqual({kind: 'absent'})
     expect(resolveClinvarHeadline([rec(P, SIB), rec(VUS, SIB2)], ASSAY, 'genomic')).toEqual({kind: 'absent'})
   })
@@ -357,8 +357,8 @@ describe('resolveClinvarHeadline — the display decision', () => {
     expect(resolveClinvarHeadline([rec(P, SIB)], ASSAY, 'protein').kind).toBe('call')
   })
 
-  test('measured allele has no record, only germline-less related records → absent (not a sibling presence)', () => {
-    // The measured variant has no record of its own; a sibling`s `-` must not be shown as this variant`s state.
+  test('measured allele has no record, only germline-less related records → absent (not an encoding`s presence)', () => {
+    // The measured variant has no record of its own; an encoding`s `-` must not be shown as this variant`s state.
     expect(resolveClinvarHeadline([rec('-', SIB)], ASSAY, 'cdna')).toEqual({kind: 'absent'})
     expect(resolveClinvarHeadline([rec('-', SIB)], ASSAY, 'protein')).toEqual({kind: 'absent'})
   })
@@ -390,7 +390,7 @@ describe('resolveClinvarHeadline — the display decision', () => {
     expect(headline.kind).toBe('conflicting')
   })
 
-  test('a directional lean + a Conflicting sibling → kind "call", note "soft-conflicting"', () => {
+  test('a directional lean + a Conflicting encoding → kind "call", note "soft-conflicting"', () => {
     const headline = resolveClinvarHeadline([rec(P, SIB), rec(CONFLICTING, SIB2)], ASSAY)
     expect(headline.kind).toBe('call')
     if (headline.kind !== 'call') throw new Error('expected a call')
@@ -400,7 +400,7 @@ describe('resolveClinvarHeadline — the display decision', () => {
     expect(headline.note).toBe('soft-conflicting')
   })
 
-  test('a directional lean + a VUS sibling → kind "call", note "soft-vus"', () => {
+  test('a directional lean + a VUS encoding → kind "call", note "soft-vus"', () => {
     const headline = resolveClinvarHeadline([rec(LP, SIB), rec(VUS, SIB2)], ASSAY)
     expect(headline.kind).toBe('call')
     if (headline.kind !== 'call') throw new Error('expected a call')
@@ -438,7 +438,7 @@ describe('resolveClinvarHeadline — the display decision', () => {
     expect(headline.clinvar.clinicalSignificance).toBe(LP)
   })
 
-  test('presence prefers the measured allele`s own `-` record over a sibling`s', () => {
+  test('presence prefers the measured allele`s own `-` record over an encoding`s', () => {
     const headline = resolveClinvarHeadline([rec('-', SIB), rec('-', ASSAY)], ASSAY)
     expect(headline.kind).toBe('presence')
     if (headline.kind !== 'presence') throw new Error('expected presence')

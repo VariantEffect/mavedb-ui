@@ -6,6 +6,11 @@
   <MvLayout :require-auth="true">
     <template #header>
       <MvPageHeader max-width="1280px" title="Create a new experiment" variant="toolbar">
+        <template #subtitle>
+          <p class="pb-3 text-sm text-text-muted">
+            Fields marked <span class="font-bold text-danger">*</span> are required.
+          </p>
+        </template>
         <template #actions>
           <PButton severity="secondary" size="small" @click="resetForm">Clear</PButton>
           <PButton severity="warn" size="small" @click="backDashboard">Cancel</PButton>

@@ -52,6 +52,7 @@
         <MvFloatField
           :error="fieldError('name')"
           label="Target name"
+          required
           @update:model-value="$emit('update:name', $event)"
         >
           <template #default="{id, invalid}">
@@ -95,7 +96,7 @@
     <!-- Target category -->
     <div :class="wizardMode && 'wizard-row'">
       <div v-if="wizardMode" class="wizard-help">
-        <label>{{ desc.category.help }}</label>
+        <label>{{ desc.category.help }} <MvRequiredMarker /></label>
       </div>
       <div :class="wizardMode && 'wizard-field'">
         <div class="field">
@@ -201,7 +202,7 @@
           <p v-if="desc.taxonomy.detail" class="wizard-help-detail">{{ desc.taxonomy.detail }}</p>
         </div>
         <div :class="wizardMode && 'wizard-field'">
-          <MvFloatField :error="fieldError('targetSequence.taxonomy')" label="Taxonomy">
+          <MvFloatField :error="fieldError('targetSequence.taxonomy')" label="Taxonomy" required>
             <template #default="{id, invalid}">
               <AutoComplete
                 :id="id"
@@ -231,7 +232,7 @@
       <!-- Sequence type -->
       <div :class="wizardMode && 'wizard-row'">
         <div v-if="wizardMode" class="wizard-help">
-          <label>{{ desc.sequenceType.help }}</label>
+          <label>{{ desc.sequenceType.help }} <MvRequiredMarker /></label>
         </div>
         <div :class="wizardMode && 'wizard-field'">
           <div class="field">
@@ -249,7 +250,7 @@
       <!-- Target sequence (FASTA upload / textarea display) -->
       <div :class="wizardMode && 'wizard-row'">
         <div v-if="wizardMode" class="wizard-help">
-          <label>{{ desc.referenceSequence.help }}</label>
+          <label>{{ desc.referenceSequence.help }} <MvRequiredMarker /></label>
         </div>
         <div :class="wizardMode && 'wizard-field'">
           <div class="field">
@@ -269,6 +270,7 @@
               empty-text="Drop a FASTA file here"
               :error="fieldError('targetSequence.sequence')"
               label="Reference sequence"
+              required
               :show-label="!wizardMode"
               @remove="$emit('file-cleared')"
               @select="$emit('file-selected', $event)"
@@ -305,7 +307,7 @@
           <label>{{ desc.assembly.help }}</label>
         </div>
         <div :class="wizardMode && 'wizard-field'">
-          <MvFloatField :error="fieldError('targetAccession.assembly')" label="Assembly">
+          <MvFloatField :error="fieldError('targetAccession.assembly')" label="Assembly" required>
             <template #default="{id, invalid}">
               <PSelect
                 :id="id"
@@ -326,7 +328,7 @@
           <label>{{ desc.geneName.help }}</label>
         </div>
         <div :class="wizardMode && 'wizard-field'">
-          <MvFloatField :error="fieldError('targetAccession.gene')" label="Gene name">
+          <MvFloatField :error="fieldError('targetAccession.gene')" label="Gene name" required>
             <template #default="{id, invalid}">
               <PSelect
                 :id="id"
@@ -350,7 +352,11 @@
           <label>{{ desc.accession.help }}</label>
         </div>
         <div :class="wizardMode && 'wizard-field'">
-          <MvFloatField :error="fieldError('targetAccession.accession')" label="Accession/Transcript Identifier">
+          <MvFloatField
+            :error="fieldError('targetAccession.accession')"
+            label="Accession/Transcript Identifier"
+            required
+          >
             <template #default="{id, invalid}">
               <AutoComplete
                 :id="id"
@@ -399,6 +405,7 @@ import ToggleSwitch from 'primevue/toggleswitch'
 
 import MvFieldError from '@/components/forms/MvFieldError.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import MvUploadField from '@/components/forms/MvUploadField.vue'
 import type {GeneNameOption} from '@/composables/use-target-gene'
 import {targetDescriptions} from '@/data/field-descriptions'
@@ -427,6 +434,7 @@ export default defineComponent({
     InputNumber,
     MvFieldError,
     MvFloatField,
+    MvRequiredMarker,
     MvUploadField,
     PInputText: InputText,
     PSelect: Select,

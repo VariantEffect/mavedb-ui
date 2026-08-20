@@ -230,6 +230,7 @@ import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
 import {BROWSE_CATEGORIES, CONTRIBUTE_CATEGORIES, FEATURED_COLLECTIONS, WATERMARK_BARS} from '@/data/home'
 import {NEWS_ITEMS, NEWS_ITEMS_LIMIT, NEWS_TAG_STYLES} from '@/data/news'
 import {SEARCH_COLORS, SEARCH_PLACEHOLDERS, SEARCH_TYPES} from '@/data/search'
+import {geneSymbolRegex, geneSymbolSearchTarget} from '@/lib/mavemd'
 import {getRecentlyPublishedScoreSets} from '@/api/mavedb/score-sets'
 import {components} from '@/schema/openapi'
 
@@ -259,7 +260,7 @@ export default defineComponent({
 
   data() {
     return {
-      searchType: 'hgvs',
+      searchType: 'any',
       searchText: '',
       isDesktop: false,
       mdQuery: null as MediaQueryList | null,
@@ -271,10 +272,10 @@ export default defineComponent({
 
   computed: {
     activeSearchColor(): {accent: string; bg: string; activeText?: string} {
-      return SEARCH_COLORS[this.searchType] || SEARCH_COLORS.hgvs
+      return SEARCH_COLORS[this.searchType] || SEARCH_COLORS.any
     },
     activeSearchPlaceholder(): string {
-      const p = SEARCH_PLACEHOLDERS[this.searchType] || SEARCH_PLACEHOLDERS.hgvs
+      const p = SEARCH_PLACEHOLDERS[this.searchType] || SEARCH_PLACEHOLDERS.any
       return this.isDesktop ? p.full : p.short
     }
   },
@@ -305,6 +306,14 @@ export default defineComponent({
     submitSearch() {
       const text = this.searchText.trim()
       if (!text) return
+      // A gene symbol resolves to a gene page, so go straight there. Routing through the variant search screen would
+      // otherwise leave a page the user never asked for sitting between the two in their history. A malformed symbol
+      // is left to the search screen, which owns the error message for it.
+      const geneSymbol = geneSymbolSearchTarget(text, this.searchType)
+      if (geneSymbol && geneSymbolRegex.test(geneSymbol)) {
+        this.router.push({name: 'gene', params: {symbol: geneSymbol}})
+        return
+      }
       this.router.push({path: '/mavemd', query: {search: text, searchType: this.searchType}})
     }
   }

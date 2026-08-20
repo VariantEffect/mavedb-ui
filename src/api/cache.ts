@@ -20,6 +20,11 @@ export const READ_CACHE_TTL_MS = 30 * 1000 // 30 seconds
  * expires. Rejected requests are dropped from the cache (retried on the next call), so a transient failure
  * never sticks. Only use for idempotent GETs whose results this client does not itself mutate — a resource
  * edited through this app would serve stale data for up to the TTL.
+ *
+ * Keys are content-only: no caller threads the viewer through one. Several responses are viewer-scoped
+ * (`scoreCalibrations`, `supersedingScoreSet`), so a cached entry outlives the identity that fetched it —
+ * hence {@link clearReadCache} on sign-out. Sign-in navigates away and back, which rebuilds these caches
+ * anyway, so it needs no equivalent hook.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mirror p-memoize's own function constraint; returning Fn verbatim preserves optional params
 export function memoizeRead<Fn extends (...args: any[]) => Promise<unknown>>(
@@ -27,8 +32,21 @@ export function memoizeRead<Fn extends (...args: any[]) => Promise<unknown>>(
   cacheKey: (...args: Parameters<Fn>) => string,
   ttlMs: number = READ_CACHE_TTL_MS
 ): Fn {
+  const cache = new ExpiryMap<string, Awaited<ReturnType<Fn>>>(ttlMs)
+  readCaches.add(cache)
   return pMemoize(fn, {
-    cache: new ExpiryMap(ttlMs),
+    cache,
     cacheKey: (args) => cacheKey(...args)
   })
+}
+
+// Every cache `memoizeRead` has handed out, so an identity change can drop all of them at once. Only
+// `clear()` is needed, so the set is typed to that rather than to ExpiryMap's generics.
+const readCaches = new Set<{clear: () => void}>()
+
+/** Drop every memoized read. Call when the viewer changes — cached entries may be viewer-scoped. */
+export function clearReadCache(): void {
+  for (const cache of readCaches) {
+    cache.clear()
+  }
 }

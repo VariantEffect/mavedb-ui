@@ -113,12 +113,18 @@
   --color-badge-alert: #fef3c7;
 
   /* ── Search Types ──────────────────────────────────────────── */
+  --color-hgvs: #5c6b7a;
+  --color-hgvs-light: #eceff2;
   --color-dbsnp: #e6b84d;
   --color-dbsnp-light: #fdf3d7;
   --color-clinvar: #5aafa0;
   --color-clinvar-light: #c8ece5;
   --color-ga4gh: #0f6ca4;
   --color-ga4gh-light: #e3f0f9;
+  --color-gnomad: #5b4ba8;
+  --color-gnomad-light: #ece9f7;
+  --color-gene: #b5446e;
+  --color-gene-light: #fbeaf1;
 
   /* ── Assay Level (variant screen) ──────────────────────────── */
   /* The level a result measured the change at — see LEVEL_BUCKETS in lib/measurement-types.ts. */

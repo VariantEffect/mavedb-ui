@@ -2,14 +2,22 @@
   <div class="rounded-lg border border-border bg-white p-5">
     <h3 class="mave-section-title">Download files</h3>
     <div class="flex flex-wrap gap-2">
-      <PButton icon="pi pi-download" label="Scores" severity="secondary" size="small" @click="downloadFile('scores')" />
+      <PButton
+        :disabled="fileDownloadInProgress"
+        icon="pi pi-download"
+        label="Scores"
+        severity="secondary"
+        size="small"
+        @click="reportingFailure('scores', () => downloadFile('scores'))"
+      />
       <PButton
         v-if="hasCounts"
+        :disabled="fileDownloadInProgress"
         icon="pi pi-download"
         label="Counts"
         severity="secondary"
         size="small"
-        @click="downloadFile('counts')"
+        @click="reportingFailure('counts', () => downloadFile('counts'))"
       />
       <PButton
         v-if="!isMetaDataEmpty"
@@ -19,46 +27,52 @@
         size="small"
         @click="downloadMetadata"
       />
-      <div class="relative inline-block">
-        <PButton
-          :disabled="streamDownloadInProgress"
-          icon="pi pi-download"
-          label="Variant Details"
-          severity="secondary"
-          size="small"
-          @click="streamVariantDetails"
-        />
-        <div v-if="streamTarget === 'variantDetails'" class="absolute inset-x-0 top-full mt-1">
-          <ProgressBar show-value style="height: 1.5em" :value="streamDownloadProgress" />
-        </div>
-      </div>
+      <PButton
+        :disabled="fileDownloadInProgress"
+        icon="pi pi-download"
+        label="Variant Details"
+        severity="secondary"
+        size="small"
+        @click="reportingFailure('variant details', () => streamVariantDetails())"
+      />
 
-      <div class="relative inline-block">
-        <SplitButton
-          :button-props="{class: 'p-button-sm p-button-secondary'}"
-          :disabled="streamDownloadInProgress"
-          label="Annotated Variants"
-          :menu-button-props="{class: 'p-button-sm p-button-secondary'}"
-          :model="annotatedVariantDownloadOptions"
-          @click="
-            annotatedVariantDownloadOptions[0]?.command?.({
-              originalEvent: $event,
-              item: annotatedVariantDownloadOptions[0]
-            })
-          "
-        />
-        <div v-if="streamTarget === 'annotatedVariants'" class="absolute inset-x-0 top-full mt-1">
-          <ProgressBar show-value style="height: 1.5em" :value="streamDownloadProgress" />
-        </div>
-      </div>
+      <SplitButton
+        :button-props="{class: 'p-button-sm p-button-secondary'}"
+        :disabled="fileDownloadInProgress"
+        label="Annotated Variants"
+        :menu-button-props="{class: 'p-button-sm p-button-secondary'}"
+        :model="annotatedVariantDownloadOptions"
+        @click="
+          annotatedVariantDownloadOptions[0]?.command?.({
+            originalEvent: $event,
+            item: annotatedVariantDownloadOptions[0]
+          })
+        "
+      />
 
       <PButton
+        :disabled="fileDownloadInProgress"
         icon="pi pi-sliders-h"
-        label="Custom Data"
+        label="Custom CSV"
         severity="secondary"
         size="small"
         @click="customDialogVisible = true"
       />
+    </div>
+
+    <!-- One bar for every download on this panel. Determinate only for the VA-Spec streams, which can
+         count records; see `fileDownloadProgress` in use-score-set-downloads. -->
+    <div v-if="fileDownloadInProgress" aria-live="polite" class="mt-3 flex items-center gap-2">
+      <ProgressBar
+        class="grow"
+        :mode="fileDownloadProgress === null ? 'indeterminate' : 'determinate'"
+        style="height: 1.2em"
+        :value="fileDownloadProgress ?? 0"
+      />
+      <span class="whitespace-nowrap text-xs text-text-muted">
+        Preparing {{ fileDownloadLabel }}…
+        <template v-if="fileDownloadProgress !== null">{{ fileDownloadProgress }}%</template>
+      </span>
     </div>
 
     <!-- Galaxy integration -->
@@ -71,37 +85,25 @@
       </div>
     </div>
 
-    <!-- Custom data dialog -->
-    <PDialog
+    <MvCsvColumnDialog
       v-model:visible="customDialogVisible"
-      :base-z-index="901"
-      header="Custom Data Download"
-      modal
-      :style="{width: '28rem'}"
-    >
-      <div class="flex flex-col gap-3 py-2">
-        <label v-for="opt in dataTypeOptions" :key="opt.value" class="flex cursor-pointer items-center gap-2 text-sm">
-          <Checkbox v-model="selectedDataOptions" :value="opt.value" />
-          {{ opt.label }}
-        </label>
-      </div>
-      <template #footer>
-        <PButton label="Cancel" severity="secondary" size="small" @click="customDialogVisible = false" />
-        <PButton icon="pi pi-download" label="Download" size="small" @click="handleCustomDownload" />
-      </template>
-    </PDialog>
+      :extra-options="extraDownloadOptions"
+      header="Custom data download"
+      kind="scoreSet"
+      :urn="scoreSet.urn"
+      @confirm="handleCustomDownload"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import {defineComponent, toRef, type PropType} from 'vue'
 import PButton from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import PDialog from 'primevue/dialog'
 import type {MenuItem} from 'primevue/menuitem'
 import ProgressBar from 'primevue/progressbar'
 import SplitButton from 'primevue/splitbutton'
 
+import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import {useScoreSetDownloads} from '@/composables/use-score-set-downloads'
 import config from '@/config'
 import type {components} from '@/schema/openapi'
@@ -112,28 +114,18 @@ type ScoreSet = components['schemas']['ScoreSet']
 export default defineComponent({
   name: 'ScoreSetDownloads',
 
-  components: {PButton, Checkbox, PDialog, ProgressBar, SplitButton},
+  components: {MvCsvColumnDialog, PButton, ProgressBar, SplitButton},
 
   props: {
     hasCounts: {type: Boolean, default: false},
     hasPathogenicityCalibrations: {type: Boolean, default: false},
     hasFunctionalImpactCalibrations: {type: Boolean, default: false},
     isMetaDataEmpty: {type: Boolean, default: true},
-    scoreSet: {type: Object as PropType<ScoreSet>, required: true},
-    // The ClinVar control version the page resolved (histogram controlVersion), MM_YYYY form; enables
-    // the ClinVar column in the custom CSV download.
-    clinvarVersion: {type: String as PropType<string | null>, default: null}
+    scoreSet: {type: Object as PropType<ScoreSet>, required: true}
   },
 
   setup(props) {
-    const scoreSetRef = toRef(props, 'scoreSet')
-    const hasCountsRef = toRef(props, 'hasCounts')
-    const clinvarVersionRef = toRef(props, 'clinvarVersion')
-    const downloads = useScoreSetDownloads({
-      scoreSet: scoreSetRef,
-      hasCounts: hasCountsRef,
-      clinvarVersion: clinvarVersionRef
-    })
+    const downloads = useScoreSetDownloads({scoreSet: toRef(props, 'scoreSet')})
 
     const routeProps = store.state.routeProps as {galaxyUrl: string; toolId: string; requestFromGalaxy: string}
 
@@ -152,19 +144,19 @@ export default defineComponent({
       if (this.hasPathogenicityCalibrations) {
         options.push({
           label: 'Pathogenicity Statement',
-          command: () => this.streamVariantAnnotations('pathogenicity-statement')
+          command: () => this.streamAnnotations('pathogenicity-statement', 'Pathogenicity Statement')
         })
       }
       if (this.hasFunctionalImpactCalibrations) {
         options.push({
           label: 'Functional Impact Statement',
-          command: () => this.streamVariantAnnotations('functional-statement')
+          command: () => this.streamAnnotations('functional-statement', 'Functional Impact Statement')
         })
       }
 
       options.push({
         label: 'Functional Study Result',
-        command: () => this.streamVariantAnnotations('study-result')
+        command: () => this.streamAnnotations('study-result', 'Functional Study Result')
       })
 
       return options
@@ -176,12 +168,50 @@ export default defineComponent({
   },
 
   methods: {
-    async handleCustomDownload() {
+    /**
+     * Run a download, reporting any failure as a toast.
+     *
+     * Without this a rejection from a template `@click` is an unhandled promise, which is how a truncated
+     * or out-of-memory annotation download used to surface: a console error and nothing in the UI.
+     */
+    async reportingFailure(what: string, download: () => Promise<unknown>) {
       try {
-        await this.downloadMultipleData()
-      } catch {
-        this.$toast.add({severity: 'error', summary: 'Error downloading custom data', life: 3000})
+        await download()
+      } catch (error: unknown) {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Could not download ${what}`,
+          detail: error instanceof Error ? error.message : undefined,
+          life: 6000
+        })
       }
+    },
+
+    /**
+     * Download an annotation stream, reporting a failure as an error and a partial one as a warning.
+     *
+     * A stream in which some variants could not be annotated still completes: the file is whole, and the
+     * failed variants are in it as records carrying an `error` field. Saying nothing would let a user
+     * treat a partial export as a full one.
+     */
+    async streamAnnotations(annotationType: string, what: string) {
+      await this.reportingFailure(what, async () => {
+        const outcome = await this.streamVariantAnnotations(annotationType, what)
+        if (outcome && outcome.errored > 0) {
+          this.$toast.add({
+            severity: 'warn',
+            summary: `${what} downloaded with errors`,
+            detail:
+              `${outcome.errored} of ${outcome.received} variants could not be annotated.` +
+              ' Those records carry an "error" field instead of an annotation.',
+            life: 10000
+          })
+        }
+      })
+    },
+
+    async handleCustomDownload(selection: {namespaces: string[]; extras: string[]}) {
+      await this.reportingFailure('custom data', () => this.downloadMultipleData(selection))
     },
 
     async sendToGalaxy(downloadType: string) {
@@ -199,8 +229,8 @@ export default defineComponent({
             outputType = 'table'
             break
           case 'variantDetails':
-            // /mapped-variants was retired in #743; /variant-details is the replacement (VRS pair + Cat-VRS + annotations),
-            // streamed as NDJSON.
+            // /mapped-variants was retired in #743; /variant-details is the replacement (VRS pair +
+            // Cat-VRS + annotations), streamed as NDJSON.
             endpoint = 'variant-details'
             outputType = 'json'
             break
@@ -221,3 +251,15 @@ export default defineComponent({
   }
 })
 </script>
+
+<style scoped>
+/*
+ * PrimeVue animates the determinate fill with `transition: width 1s ease-in-out` from 0%. A download that
+ * finishes quickly reaches 100% and unmounts the bar before the animation lands, leaving a fifth-full bar
+ * beside a label reading 100% — and each new value restarts the animation, so the fill lags throughout.
+ * Progress arrives in jumps of a whole chunk anyway, so track the value exactly rather than easing to it.
+ */
+:deep(.p-progressbar-determinate .p-progressbar-value) {
+  transition: none;
+}
+</style>

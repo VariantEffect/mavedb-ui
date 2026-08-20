@@ -2,8 +2,8 @@ import axios from 'axios'
 
 import {memoizeRead} from '@/api/cache'
 import config from '@/config'
-import {components} from '@/schema/openapi'
 import type {LeanVariant} from '@/lib/variants'
+import {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
 type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
@@ -115,7 +115,7 @@ export async function publishScoreSet(urn: string) {
   return response.data
 }
 
-export async function getScoreSetClinvarControlOptions(urn: string) {
+export async function getScoreSetClinicalControlOptions(urn: string) {
   const response = await axios.get(
     `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/clinical-controls/options`
   )
@@ -124,8 +124,19 @@ export async function getScoreSetClinvarControlOptions(urn: string) {
 
 export async function downloadScoreSetFile(urn: string, type: 'scores' | 'counts'): Promise<string> {
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/${type}?drop_na_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/${type}?drop_unused_hgvs_columns=true`
   )
+  return response.data
+}
+
+/** Fetch the CSV column namespaces this score set has data for. */
+export async function getScoreSetCsvNamespaces(
+  urn: string,
+  signal?: AbortSignal
+): Promise<components['schemas']['AvailableCsvNamespace'][]> {
+  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/csv-namespaces`, {
+    signal
+  })
   return response.data
 }
 
@@ -135,11 +146,11 @@ export async function downloadScoreSetVariantData(urn: string, params: URLSearch
 }
 
 // The preview table renders only a handful of rows, so it passes `limit` to fetch just those rather
-// than the whole dataset. Note: `drop_na_columns` is evaluated over the returned rows, so with a limit
-// the shown column set reflects the sampled rows (fine for a preview; the download buttons fetch the
-// full, unlimited file).
+// than the whole dataset. Note: `drop_unused_hgvs_columns` is evaluated over the returned rows, so with
+// a limit the shown column set reflects the sampled rows (fine for a preview; the download buttons fetch
+// the full, unlimited file).
 export async function getScoreSetScoresPreview(urn: string, limit?: number): Promise<string> {
-  const params = new URLSearchParams({drop_na_columns: 'true'})
+  const params = new URLSearchParams({drop_unused_hgvs_columns: 'true'})
   if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
     `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?${params.toString()}`
@@ -148,7 +159,7 @@ export async function getScoreSetScoresPreview(urn: string, limit?: number): Pro
 }
 
 export async function getScoreSetCountsPreview(urn: string, limit?: number): Promise<string> {
-  const params = new URLSearchParams({drop_na_columns: 'true'})
+  const params = new URLSearchParams({drop_unused_hgvs_columns: 'true'})
   if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
     `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?${params.toString()}`

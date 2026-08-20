@@ -284,7 +284,7 @@
                   </template>
                 </Select>
                 <PButton
-                  v-if="uniprotId != null"
+                  v-if="hasMappedVariants && uniprotId != null"
                   icon="pi pi-box"
                   label="Protein Structure"
                   severity="secondary"
@@ -509,7 +509,12 @@ import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/cal
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {dominantAssayLevel} from '@/lib/measurement-types'
 import {type DisplayVariant} from '@/lib/variants'
-import {deleteScoreSet, publishScoreSet, getScoreSetClinvarControlOptions, leanScoreSetVariantsUrl} from '@/api/mavedb'
+import {
+  deleteScoreSet,
+  publishScoreSet,
+  getScoreSetClinicalControlOptions,
+  leanScoreSetVariantsUrl
+} from '@/api/mavedb'
 import {components} from '@/schema/openapi'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
@@ -629,6 +634,10 @@ export default {
   }),
 
   computed: {
+    hasMappedVariants() {
+      // A mapping state of "complete" or "incomplete" indicates that at least some variants have been mapped to a reference genome
+      return ['complete', 'incomplete'].includes(this.item?.mappingState ?? '')
+    },
     clinicalModeHelpText() {
       if (!this.mappedModeAvailable) {
         return 'This score set has no mapped variants, so only submitted coordinates are available.'
@@ -828,7 +837,7 @@ export default {
     async checkClinicalVariants() {
       if (!this.item) return
       try {
-        await getScoreSetClinvarControlOptions(this.item.urn)
+        await getScoreSetClinicalControlOptions(this.item.urn)
         this.hasClinicalVariants = true
       } catch {
         // No clinical variants available

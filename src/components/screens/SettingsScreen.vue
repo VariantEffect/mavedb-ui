@@ -153,15 +153,8 @@ import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 import {useRouter} from 'vue-router'
 
-import {
-  createAccessKey,
-  createRoleAccessKey,
-  deleteAccessKey,
-  getErrorResponse,
-  getMyCollections,
-  searchMyExperiments,
-  searchMyScoreSets
-} from '@/api/mavedb'
+import {createAccessKey, createRoleAccessKey, deleteAccessKey, getMyCollections, searchMyExperiments, searchMyScoreSets} from '@/api/mavedb'
+import {getErrorResponse} from '@/lib/errors'
 import MvAccessKeyRow from '@/components/common/MvAccessKeyRow.vue'
 import MvOrcidLink from '@/components/common/MvOrcidLink.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'

@@ -33,7 +33,8 @@ import {v4 as uuidv4} from 'uuid'
 import {computed, ref, Ref} from 'vue'
 
 import config from '../config'
-import {getErrorResponse} from '@/api/mavedb'
+import {clearReadCache} from '@/api/cache'
+import {getErrorResponse} from '@/lib/errors'
 
 export interface OidcUserProfileBase {
   auth_time: number
@@ -167,6 +168,10 @@ export async function continueAuthenticationFromRedirect() {
  */
 export function signOut() {
   clearIdToken()
+
+  // Cached reads are keyed by content, not viewer, and some responses are viewer-scoped — drop them
+  // so the signed-out session cannot keep rendering the previous identity's view.
+  clearReadCache()
 
   // clear any pending post-auth redirect when the user signs out manually.
   try {

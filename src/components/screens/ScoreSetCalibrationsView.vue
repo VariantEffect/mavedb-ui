@@ -232,7 +232,6 @@ import {
   getScoreSetCalibrations
 } from '@/api/mavedb'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
-import axios from 'axios'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
@@ -242,6 +241,7 @@ import useAuth from '@/composition/auth'
 import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
+import {describeRequestError} from '@/lib/errors'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
@@ -257,17 +257,6 @@ type ScoreSet = components['schemas']['ScoreSet']
 
 const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
-
-function extractErrorDetail(error: unknown): string {
-  if (
-    axios.isAxiosError(error) &&
-    error.response?.data?.detail &&
-    (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
-  ) {
-    return error.response.data.detail as string
-  }
-  return String(error)
-}
 
 export default {
   name: 'ScoreSetCalibrationsView',
@@ -510,7 +499,7 @@ export default {
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Published',
-              detail: `An error occurred while publishing the calibration: ${extractErrorDetail(error)}. Please try again later.`,
+              detail: `An error occurred while publishing the calibration: ${describeRequestError(error)}. Please try again later.`,
               life: 4000
             })
           }
@@ -534,7 +523,7 @@ export default {
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Demoted',
-          detail: `An error occurred while demoting the calibration: ${extractErrorDetail(error)}. Please try again later.`,
+          detail: `An error occurred while demoting the calibration: ${describeRequestError(error)}. Please try again later.`,
           life: 4000
         })
       }
@@ -555,7 +544,7 @@ export default {
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Promoted',
-          detail: `An error occurred while promoting the calibration: ${extractErrorDetail(error)}. Please try again later.`,
+          detail: `An error occurred while promoting the calibration: ${describeRequestError(error)}. Please try again later.`,
           life: 4000
         })
       }
@@ -583,7 +572,7 @@ export default {
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Deleted',
-              detail: `An error occurred while deleting the calibration: ${extractErrorDetail(error)}. Please try again later.`,
+              detail: `An error occurred while deleting the calibration: ${describeRequestError(error)}. Please try again later.`,
               life: 4000
             })
           }
@@ -610,7 +599,7 @@ export default {
         this.$toast.add({
           severity: 'error',
           summary: 'Download Failed',
-          detail: `An error occurred while downloading the calibrations: ${extractErrorDetail(error)}. Please try again later.`,
+          detail: `An error occurred while downloading the calibrations: ${describeRequestError(error)}. Please try again later.`,
           life: 4000
         })
       }

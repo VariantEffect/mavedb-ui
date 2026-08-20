@@ -35,6 +35,8 @@ MaveDB displays ClinVar significance classifications and **star** status alongsi
 
 Mapped variants in MaveDB are cross-referenced with the [gnomAD database](https://gnomad.broadinstitute.org/) to retrieve population allele frequency data. This integration provides context about the prevalence of variants in diverse human populations, which is an important factor in clinical variant interpretation alongside functional evidence.
 
+A variant's frequency is displayed on its [variant page](../mavemd/variant-page.md), and is available in bulk through the `gnomad` namespace of the variant data download. Each frequency is matched by ClinGen allele ID, so it is a direct assertion about that variant rather than an aggregate over related variants. Variants absent from gnomAD show no frequency.
+
 ## Ensembl VEP
 
 MaveDB uses the [Ensembl Variant Effect Predictor (VEP)](https://www.ensembl.org/info/docs/tools/vep/index.html) to annotate mapped variants with predicted functional consequences, including effects on protein coding sequences, splicing, and regulatory regions. These VEP annotations are displayed alongside variant effect scores on score set pages, providing additional context for interpreting the functional impact of each variant.

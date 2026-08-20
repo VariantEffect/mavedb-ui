@@ -36,6 +36,17 @@ Each dataset on the variant page includes an [assay fact](../reference/assay-fac
 
 For the full list of assay fact properties and their definitions, see the [assay facts reference](../reference/assay-facts.md).
 
+## Annotations
+
+Beneath the assay details, an annotations card gathers evidence about the variant itself, independent of any one assay. **Classification** reports the selected measurement's functional score, ACMG code, and OddsPath ratio.
+
+**Population frequency** reports the variant's frequency in [gnomAD](../finding-data/external-integrations.md#gnomad), where it is present:
+
+- **AF** -- The allele frequency, followed by the allele count and allele number it was computed from.
+- **FAF95** -- The filtering allele frequency at 95% confidence, a conservative sampling-adjusted estimate, with the genetic ancestry group that attains it. A variant whose FAF95 exceeds a disease's maximum credible allele frequency is too common to be pathogenic (ACMG BA1/BS1).
+
+The gnomAD release the frequencies were drawn from is shown alongside them, with a link to the variant's gnomAD page. Variants absent from gnomAD are reported as having no record rather than as having zero frequency.
+
 ## Interactive histogram
 
 The variant page includes the same interactive score histogram shown on score set pages, but with the selected variant's position highlighted within the distribution. This visualization helps you see where the variant falls relative to all other measured variants in the assay.

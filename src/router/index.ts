@@ -256,7 +256,28 @@ const routes: RouteRecordRaw[] = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  /**
+   * Start a new page at the top, the way a full page load would.
+   *
+   * The history API never scrolls on its own, so without this a route change leaves the window wherever the previous
+   * page left it — arriving part way down a page the user has not seen before.
+   */
+  scrollBehavior(to, from, savedPosition) {
+    // Going back or forward returns to where that entry was left.
+    if (savedPosition) {
+      return savedPosition
+    }
+    if (to.hash) {
+      return {el: to.hash}
+    }
+    // Screens that mirror their state into the query string, such as the search screens, navigate on every keystroke
+    // of state change. Those are not new pages, so leave the scroll position alone.
+    if (to.path === from.path) {
+      return false
+    }
+    return {top: 0}
+  }
 })
 
 export default router

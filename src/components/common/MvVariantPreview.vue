@@ -3,35 +3,39 @@
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5">
       <h3 class="mave-section-title">
         Variants preview
-        <span v-if="scoreSet.numVariants" class="font-normal text-xs text-text-muted lowercase">
-          ({{ scoreSet.numVariants.toLocaleString() }} total variants)
+        <span v-if="scoreSet.numVariants" class="font-normal text-text-muted">
+          ({{ scoreSet.numVariants.toLocaleString() }})
         </span>
       </h3>
       <div class="flex flex-wrap items-center gap-2">
         <PButton
           v-if="!processingErrors"
+          :disabled="fileDownloadInProgress"
           icon="pi pi-download"
           label="Scores"
           severity="secondary"
           size="small"
-          @click="downloadFile('scores')"
-        />
+          @click="downloadFile('scores')" />
         <PButton
           v-if="!processingErrors && hasCountData"
+          :disabled="fileDownloadInProgress"
           icon="pi pi-download"
           label="Counts"
           severity="secondary"
           size="small"
-          @click="downloadFile('counts')"
-        />
+          @click="downloadFile('counts')" />
         <PButton
           v-if="!processingErrors"
+          :disabled="fileDownloadInProgress"
           icon="pi pi-sliders-h"
           label="Custom Data"
           severity="secondary"
           size="small"
-          @click="customDialogVisible = true"
-        />
+          @click="customDialogVisible = true" />
+        <span v-if="fileDownloadInProgress" aria-live="polite" class="flex items-center gap-2 text-xs text-text-muted">
+          <i class="pi pi-spin pi-spinner text-xs" />
+          Preparing {{ fileDownloadLabel }}…
+        </span>
         <slot name="actions" />
       </div>
     </div>
@@ -54,7 +58,9 @@
       <div v-if="scoresRows.length > 0">
         <div class="flex items-center justify-between border-b border-border-light bg-bg px-4 py-2 tablet:px-5">
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Scores</span>
-          <span class="text-xs text-text-muted"> Showing {{ scoresRows.length }} of {{ totalLabel }} </span>
+          <span class="text-xs text-text-muted">
+            Showing {{ scoresRows.length }} of {{ totalLabel }}
+          </span>
         </div>
         <div class="overflow-x-auto">
           <table class="variant-table w-full">
@@ -80,10 +86,11 @@
       </div>
       <div v-else-if="countsRows.length > 0">
         <div
-          class="flex items-center justify-between border-b border-border-light border-t bg-bg px-4 py-2 tablet:px-5"
-        >
+          class="flex items-center justify-between border-b border-border-light border-t bg-bg px-4 py-2 tablet:px-5">
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Counts</span>
-          <span class="text-xs text-text-muted"> Showing {{ countsRows.length }} of {{ totalLabel }} </span>
+          <span class="text-xs text-text-muted">
+            Showing {{ countsRows.length }} of {{ totalLabel }}
+          </span>
         </div>
         <div class="overflow-x-auto">
           <table class="variant-table w-full">
@@ -105,34 +112,26 @@
 
       <div
         v-if="scoresRows.length === 0 && countsRows.length === 0"
-        class="px-5 py-8 text-center text-sm italic text-text-muted"
-      >
+        class="px-5 py-8 text-center text-sm italic text-text-muted">
         No data available.
       </div>
     </template>
   </div>
 
-  <!-- Custom data dialog -->
-  <PDialog v-model:visible="customDialogVisible" header="Custom Data Download" modal :style="{width: '28rem'}">
-    <div class="flex flex-col gap-3 py-2">
-      <label v-for="opt in dataTypeOptions" :key="opt.value" class="flex cursor-pointer items-center gap-2 text-sm">
-        <Checkbox v-model="selectedDataOptions" :value="opt.value" />
-        {{ opt.label }}
-      </label>
-    </div>
-    <template #footer>
-      <PButton label="Cancel" severity="secondary" size="small" @click="customDialogVisible = false" />
-      <PButton icon="pi pi-download" label="Download" size="small" @click="downloadMultipleData" />
-    </template>
-  </PDialog>
+  <MvCsvColumnDialog
+    v-model:visible="customDialogVisible"
+    :extra-options="extraDownloadOptions"
+    header="Custom data download"
+    kind="scoreSet"
+    :urn="scoreSet.urn"
+    @confirm="downloadMultipleData" />
 </template>
 
 <script lang="ts">
 import {defineComponent, toRef, type PropType} from 'vue'
 import PButton from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import PDialog from 'primevue/dialog'
 
+import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import {getScoreSetScoresPreview, getScoreSetCountsPreview} from '@/api/mavedb'
 import MvStatusMessage from '@/components/common/MvStatusMessage.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
@@ -147,7 +146,7 @@ const MAX_ROWS = 5
 export default defineComponent({
   name: 'MvVariantPreview',
 
-  components: {Checkbox, MvLoader, MvStatusMessage, PButton, PDialog},
+  components: {MvCsvColumnDialog, MvLoader, MvStatusMessage, PButton},
 
   props: {
     scoreSet: {type: Object as PropType<ScoreSet>, required: true}
@@ -183,28 +182,16 @@ export default defineComponent({
     hasCountData(): boolean {
       return this.countColumns.some((col) => !TEXT_COLUMNS.includes(col))
     },
-    // The preview fetches only MAX_ROWS, so the true total comes from the score set's variant count
-    // rather than the (truncated) fetched rows.
-    totalLabel(): string {
-      return (this.scoreSet.numVariants ?? this.scoresData.length).toLocaleString()
-    },
     scoresRows(): ScoresOrCountsRow[] {
       return this.scoresData.slice(0, MAX_ROWS)
     },
     countsRows(): ScoresOrCountsRow[] {
       return this.hasCountData ? this.countsData.slice(0, MAX_ROWS) : []
     },
-    dataTypeOptions(): Array<{label: string; value: string}> {
-      const options = [
-        {label: 'Scores', value: 'scores'},
-        {label: 'Reference-frame HGVS', value: 'mappedHgvs'},
-        {label: 'Custom columns', value: 'includeCustomColumns'},
-        {label: 'Without NA columns', value: 'dropNaColumns'}
-      ]
-      if (this.hasCountData) {
-        options.splice(1, 0, {label: 'Counts', value: 'counts'})
-      }
-      return options
+    // The preview fetches only MAX_ROWS, so the true total comes from the score set's variant count
+    // rather than the (truncated) fetched rows.
+    totalLabel(): string {
+      return (this.scoreSet.numVariants ?? this.scoresData.length).toLocaleString()
     }
   },
 

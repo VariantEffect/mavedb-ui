@@ -3,21 +3,45 @@
     <template #header>
       <MvPageHeader eyebrow="Variant" max-width="1000px" :title="pageTitle">
         <template v-if="lookup.variants.value.length > 0" #actions>
-          <div class="hidden tablet:block">
+          <div class="hidden tablet:flex tablet:items-center tablet:gap-2">
             <SplitButton
-              :model="annotatedVariantDownloadOptions"
+              :disabled="downloadInProgress"
+              :model="tableDownloadMenu"
               severity="secondary"
               size="small"
-              @click="annotatedVariantDownloadOptions[0]?.command"
+              @click="primaryTableDownload.command()"
+            >
+              <template #default>
+                <i class="pi pi-table mr-1.5 text-xs" />
+                Download variant CSV
+              </template>
+            </SplitButton>
+            <SplitButton
+              v-if="annotationDownloadOptions.length > 0"
+              :disabled="downloadInProgress"
+              :model="annotationDownloadOptions"
+              severity="secondary"
+              size="small"
+              @click="primaryAnnotationDownload?.command()"
             >
               <template #default>
                 <i class="pi pi-download mr-1.5 text-xs" />
-                Download annotations
+                Download VA-Spec annotations
               </template>
             </SplitButton>
+            <!-- Indeterminate: a gzipped download exposes no measurable total. -->
+            <span
+              v-if="downloadInProgress"
+              aria-live="polite"
+              class="flex items-center gap-1.5 text-xs text-text-muted"
+            >
+              <i class="pi pi-spin pi-spinner text-xs" />
+              Preparing {{ lookup.downloadInProgressLabel.value }}…
+            </span>
           </div>
           <MvRowActionMenu :actions="downloadActions" class="tablet:hidden" />
         </template>
+
         <template v-if="lookup.variants.value.length > 0" #subtitle>
           <p class="mt-2 text-sm text-text-muted">
             <template v-if="lookup.geneName.value">{{ lookup.geneName.value }} &middot; </template>
@@ -347,6 +371,13 @@
         </div>
       </template>
     </div>
+    <MvCsvColumnDialog
+      v-model:visible="csvDialogVisible"
+      header="Download clinical table"
+      kind="variant"
+      :urn="lookup.selectedVariantUrn.value"
+      @confirm="downloadSelectedCsv"
+    />
   </MvLayout>
 </template>
 
@@ -368,6 +399,7 @@ import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
+import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import MvBadgeToggle from '@/components/common/MvBadgeToggle.vue'
 import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
 import {useClinvarControls} from '@/composables/use-clinvar-controls'
@@ -385,6 +417,12 @@ import type {components} from '@/schema/openapi'
 import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
 
 type SequenceLevel = components['schemas']['SequenceLevel']
+
+/** One entry in a download control: a label and the download it triggers. */
+interface DownloadOption {
+  label: string
+  command: () => void
+}
 
 /**
  * Variant detail page. Distinguishes the PAGE VARIANT (X, identified by clingenAlleleId) from the
@@ -411,6 +449,7 @@ export default defineComponent({
     MvPageHeader,
     MvRowActionMenu,
     MvPageLoading,
+    MvCsvColumnDialog,
     PSelect: Select,
     ScoreSetHistogram,
     SplitButton
@@ -448,6 +487,12 @@ export default defineComponent({
     }
   },
 
+  data() {
+    return {
+      csvDialogVisible: false
+    }
+  },
+
   computed: {
     queryAxisState(): {includeSuperseded: boolean; asOf: string | null; selectedVariantUrn: string | null} {
       return {
@@ -455,6 +500,10 @@ export default defineComponent({
         asOf: this.lookup.asOf.value,
         selectedVariantUrn: this.lookup.selectedVariantUrn.value
       }
+    },
+    /** Any download in flight; the buttons stay disabled until it settles. */
+    downloadInProgress(): boolean {
+      return this.lookup.downloadInProgressLabel.value !== null
     },
     // Anchor to the page allele (X); never shift to the measured allele on selection.
     pageTitle(): string {
@@ -538,14 +587,44 @@ export default defineComponent({
         urn: m.variantUrn
       }))
     },
-    downloadActions(): RowAction[] {
-      return this.annotatedVariantDownloadOptions.map((opt) => ({
-        label: opt.label,
-        handler: opt.command
-      }))
+    /**
+     * The flat table download: one CSV of this allele's measurements.
+     *
+     * Always offered. Unlike the VA-Spec objects it needs no mapping, score, or calibration — an
+     * unmapped variant still has an identity, a score, and provenance worth exporting.
+     */
+    tableDownloadOptions(): DownloadOption[] {
+      return [
+        {label: 'Download variant CSV', command: () => this.lookup.downloadVariantCsvFile()},
+        {
+          label: 'Choose CSV columns…',
+          command: () => {
+            this.csvDialogVisible = true
+          }
+        }
+      ]
     },
-    annotatedVariantDownloadOptions(): {label: string; command: () => void}[] {
-      const options: {label: string; command: () => void}[] = []
+
+    /** What clicking the table button itself does: download with the default column set. */
+    primaryTableDownload(): DownloadOption {
+      return this.tableDownloadOptions[0]
+    },
+
+    /** What its caret offers: everything beyond the one-click default. */
+    tableDownloadMenu(): DownloadOption[] {
+      return this.tableDownloadOptions.slice(1)
+    },
+
+    /**
+     * The VA-Spec downloads: nested, standards-compliant annotation objects.
+     *
+     * A different product from the table — machine-readable GA4GH structures rather than something to
+     * open in a spreadsheet — so they get their own control rather than sharing a menu. Each requires
+     * progressively more of the variant to exist, so the list is empty for an unmapped variant and the
+     * button is hidden entirely.
+     */
+    annotationDownloadOptions(): DownloadOption[] {
+      const options: DownloadOption[] = []
       const activeVariant = this.lookup.selectedVariantDetail.value
       if (!activeVariant) return options
 
@@ -573,6 +652,21 @@ export default defineComponent({
       }
 
       return options
+    },
+
+    /** What clicking the annotations button itself does: the highest-level statement available. */
+    primaryAnnotationDownload(): DownloadOption | undefined {
+      return this.annotationDownloadOptions[0]
+    },
+
+    /** The narrow-screen equivalent: both groups in one menu, separated so they stay distinguishable. */
+    downloadActions(): RowAction[] {
+      const asAction = (option: DownloadOption): RowAction => ({label: option.label, handler: option.command})
+      const annotations = this.annotationDownloadOptions
+      return [
+        ...this.tableDownloadOptions.map(asAction),
+        ...(annotations.length > 0 ? [{separator: true} as RowAction, ...annotations.map(asAction)] : [])
+      ]
     }
   },
 
@@ -609,6 +703,10 @@ export default defineComponent({
 
   methods: {
     formatScore,
+
+    downloadSelectedCsv({namespaces}: {namespaces: string[]}) {
+      this.lookup.downloadVariantCsvFile(namespaces)
+    },
 
     toIsoDate(date: Date): string {
       const year = date.getFullYear()

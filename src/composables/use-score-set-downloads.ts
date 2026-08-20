@@ -1,6 +1,7 @@
 import {computed, ref, type Ref} from 'vue'
 
 import {downloadScoreSetFile, downloadScoreSetVariantData} from '@/api/mavedb'
+import type {CsvExtraOption} from '@/composables/use-csv-namespaces'
 import config from '@/config'
 import {triggerDownload} from '@/lib/downloads'
 import type {components} from '@/schema/openapi'
@@ -9,82 +10,97 @@ type ScoreSet = components['schemas']['ScoreSet']
 
 export const TEXT_COLUMNS = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
 
+/** What a completed NDJSON stream contained, tallied as it arrived. */
+export interface AnnotationStreamOutcome {
+  /** Records received. Equals `X-Total-Count` for a complete stream — the server emits one per variant. */
+  received: number
+  /**
+   * Variants the server could not annotate. Those records are in the saved file, carrying an `error`
+   * object in place of an annotation. Variants with no mapping data are not counted here: a null
+   * annotation is an expected absence, not a failure.
+   */
+  errored: number
+}
+
+/**
+ * Whether an NDJSON line is a record the server marked as failed.
+ *
+ * The substring test is a prefilter, not the decision: `"error"` can appear anywhere inside a large
+ * annotation, so a candidate line is parsed to confirm the key is the record's own. Parsing only
+ * candidates matters — these records nest deeply, and parsing every one of a large stream is slow.
+ */
+function isErrorRecord(line: string): boolean {
+  if (!line.includes('"error"')) return false
+  try {
+    return JSON.parse(line)?.error != null
+  } catch {
+    return false
+  }
+}
+
 interface UseScoreSetDownloadsOptions {
   scoreSet: Ref<ScoreSet | null>
-  hasCounts?: Ref<boolean>
-  // The ClinVar control version the page has resolved via the histogram.
-  clinvarVersion?: Ref<string | null>
 }
 
-// Convert and pad the ClinVar version, or return null if the version isn't in the expected shape.
-function clinvarNamespace(version: string | null | undefined): string | null {
-  if (!version) return null
-  const match = /^(\d{1,2})_(\d{4})$/.exec(version)
-  if (!match) return null
-  return `clinvar.${match[2]}_${match[1].padStart(2, '0')}`
-}
-
-export function useScoreSetDownloads({scoreSet, hasCounts, clinvarVersion}: UseScoreSetDownloadsOptions) {
+export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
   const customDialogVisible = ref(false)
-  const selectedDataOptions = ref<string[]>([])
-  // Shared progress state for the NDJSON streaming downloads (variant details + annotated variants).
-  // Only one stream runs at a time — starting a new one aborts any in-flight stream. `streamTarget`
-  // identifies which button's stream is running, so only that element renders the progress bar.
-  const streamDownloadInProgress = ref(false)
-  const streamDownloadProgress = ref(0)
-  const streamTarget = ref<'variantDetails' | 'annotatedVariants' | null>(null)
   const streamController = ref<AbortController | null>(null)
 
-  const dataTypeOptions = computed(() => {
-    const options = [
-      {label: 'Scores', value: 'scores'},
-      {label: 'Reference-frame HGVS', value: 'mappedHgvs'},
-      // Annotation namespaces served by the reworked CSV export. gnomAD / VEP / ClinGen are unversioned;
-      // ClinVar is versioned and only offered when the page has resolved a control version to target.
-      {label: 'gnomAD allele frequency', value: 'gnomad'},
-      {label: 'VEP consequence', value: 'vep'},
-      {label: 'ClinGen allele ID', value: 'clingen'},
-      {label: 'Custom columns', value: 'includeCustomColumns'},
-      {label: 'Without NA columns', value: 'dropNaColumns'}
-    ]
-    if (hasCounts?.value) {
-      options.splice(1, 0, {label: 'Counts', value: 'counts'})
+  /** What file is currently being prepared, or null when idle. One indicator for every download here. */
+  const fileDownloadLabel = ref<string | null>(null)
+
+  /**
+   * Percent complete, or null when the download cannot report progress.
+   *
+   * Only the NDJSON streams can: they carry `X-Total-Count` and emit one record per line, so records can
+   * be tallied as they arrive. A CSV arrives as a single gzipped body whose `Content-Length` is the
+   * *compressed* size, which browsers compare against decompressed bytes received, so no usable
+   * percentage exists — and most of that wait is the server building the file before any byte is sent.
+   */
+  const fileDownloadProgress = ref<number | null>(null)
+
+  const fileDownloadInProgress = computed(() => fileDownloadLabel.value !== null)
+
+  /** Run *download* with the indicator showing, clearing it even if the request fails. */
+  async function withIndicator<T>(label: string, download: () => Promise<T>): Promise<T | undefined> {
+    if (fileDownloadLabel.value !== null) return
+    fileDownloadLabel.value = label
+    try {
+      return await download()
+    } finally {
+      fileDownloadLabel.value = null
+      fileDownloadProgress.value = null
     }
-    if (clinvarNamespace(clinvarVersion?.value)) {
-      // Place ClinVar right after ClinGen alongside other annotation namespaces.
-      const clingenIndex = options.findIndex((opt) => opt.value === 'clingen')
-      options.splice(clingenIndex + 1, 0, {label: 'ClinVar significance', value: 'clinvar'})
-    }
-    return options
-  })
+  }
+
+  /** Formatting flags. Column groups come from the csv-namespaces endpoint via MvCsvColumnDialog. */
+  const extraDownloadOptions: CsvExtraOption[] = [
+    {label: "Omit HGVS columns this score set doesn't use", value: 'dropUnusedHgvsColumns'}
+  ]
 
   async function downloadFile(type: 'scores' | 'counts') {
     if (!scoreSet.value) return
-    const data = await downloadScoreSetFile(scoreSet.value.urn, type)
-    triggerDownload(data, `${scoreSet.value.urn}_${type}.csv`)
+    await withIndicator(type === 'scores' ? 'Scores' : 'Counts', async () => {
+      const data = await downloadScoreSetFile(scoreSet.value!.urn, type)
+      triggerDownload(data, `${scoreSet.value!.urn}_${type}.csv`)
+    })
   }
 
-  async function downloadMultipleData() {
+  /**
+   * Download the score set's variant data with the chosen column groups. Namespaces pass through
+   * verbatim — they are the API's own vocabulary. (This previously sent an unsupported `data_type`
+   * parameter, so every selection was silently ignored.)
+   */
+  async function downloadMultipleData({namespaces, extras}: {namespaces: string[]; extras: string[]}) {
     if (!scoreSet.value) return
     const params = new URLSearchParams()
-    for (const opt of selectedDataOptions.value) {
-      if (opt === 'scores') params.append('namespaces', 'scores')
-      else if (opt === 'counts') params.append('namespaces', 'counts')
-      else if (opt === 'gnomad') params.append('namespaces', 'gnomad')
-      else if (opt === 'vep') params.append('namespaces', 'vep')
-      else if (opt === 'clingen') params.append('namespaces', 'clingen')
-      else if (opt === 'clinvar') {
-        const namespace = clinvarNamespace(clinvarVersion?.value)
-        if (namespace) params.append('namespaces', namespace)
-      } else if (opt === 'mappedHgvs') params.append('include_post_mapped_hgvs', 'true')
-      else if (opt === 'includeCustomColumns') params.append('include_custom_columns', 'true')
-      else if (opt === 'dropNaColumns') params.append('drop_na_columns', 'true')
-    }
-    // Guarantee at least the core HGVS + score columns when only flags (no namespace) were selected.
-    if (!params.has('namespaces')) params.append('namespaces', 'scores')
-    const data = await downloadScoreSetVariantData(scoreSet.value.urn, params)
-    triggerDownload(data, `${scoreSet.value.urn}_custom.csv`)
-    customDialogVisible.value = false
+    for (const namespace of namespaces) params.append('namespaces', namespace)
+    if (extras.includes('dropUnusedHgvsColumns')) params.append('drop_unused_hgvs_columns', 'true')
+    await withIndicator('Custom data', async () => {
+      const data = await downloadScoreSetVariantData(scoreSet.value!.urn, params)
+      triggerDownload(data, `${scoreSet.value!.urn}_custom.csv`)
+      customDialogVisible.value = false
+    })
   }
 
   function downloadMetadata() {
@@ -96,23 +112,45 @@ export function useScoreSetDownloads({scoreSet, hasCounts, clinvarVersion}: UseS
   function abortStream() {
     if (streamController.value) {
       streamController.value.abort()
-      streamDownloadInProgress.value = false
-      streamDownloadProgress.value = 0
-      streamTarget.value = null
+      fileDownloadLabel.value = null
+      fileDownloadProgress.value = null
     }
   }
 
-  // Stream an NDJSON export (variant details, annotated variants) from a score-set sub-path to a file,
-  // driving the shared progress bar off the server's X-Total-Count. Aborts any in-flight stream first.
-  async function streamNdjson(subPath: string, filename: string, target: 'variantDetails' | 'annotatedVariants') {
-    if (!scoreSet.value) return
-    abortStream()
+  /**
+   * Stream the per-variant record set, one `VariantDetail` per line.
+   *
+   * Replaces the retired `/mapped-variants` download (#743): that endpoint now answers 410, and this
+   * carries strictly more — the VRS pair, Cat-VRS membership, and the annotation layer.
+   *
+   * Resolves to what the stream contained, so the caller can report partial failures.
+   */
+  async function streamVariantDetails(label = 'Variant details') {
+    const urn = scoreSet.value?.urn
+    if (!urn) return
+    return await withIndicator(label, () =>
+      streamNdjsonInto(urn, 'variant-details', `${urn}_variant_details.ndjson`)
+    )
+  }
+
+  /** Resolves to what the stream contained, so the caller can report partial failures. */
+  async function streamVariantAnnotations(annotationType: string, label = 'annotations') {
+    const urn = scoreSet.value?.urn
+    if (!urn) return
+    return await withIndicator(label, () =>
+      streamNdjsonInto(
+        urn,
+        `annotated-variants/${annotationType}`,
+        `${urn}_annotated_variants_${annotationType}.ndjson`
+      )
+    )
+  }
+
+  async function streamNdjsonInto(urn: string, subPath: string, filename: string) {
     streamController.value = new AbortController()
 
     try {
-      streamDownloadInProgress.value = true
-      streamTarget.value = target
-      const response = await fetch(`${config.apiBaseUrl}/score-sets/${scoreSet.value.urn}/${subPath}`, {
+      const response = await fetch(`${config.apiBaseUrl}/score-sets/${urn}/${subPath}`, {
         signal: streamController.value.signal,
         headers: {Accept: 'application/x-ndjson'}
       })
@@ -125,28 +163,57 @@ export function useScoreSetDownloads({scoreSet, hasCounts, clinvarVersion}: UseS
       const reader = response.body?.getReader()
       if (!reader) throw new Error('Response body is not readable')
 
+      // The body is retained as raw bytes, never as accumulated strings. Accumulating decoded chunks and
+      // joining them cost roughly five times the payload — JS strings are UTF-16, so the chunks alone
+      // doubled it, the join doubled that again, and the Blob copied the result. A large pathogenicity
+      // download ran the tab out of memory. Each chunk is decoded to scan its lines and then dropped, so
+      // only one chunk plus a partial line is ever live.
+      const parts: Uint8Array[] = []
       const decoder = new TextDecoder()
-      const chunks: string[] = []
+      let partialLine = ''
       let processedCount = 0
+      let erroredCount = 0
 
       while (true) {
         const {done, value} = await reader.read()
-        if (done) {
-          const blob = new Blob([chunks.join('')], {type: 'application/x-ndjson'})
-          const url = URL.createObjectURL(blob)
-          const anchor = document.createElement('a')
-          anchor.href = url
-          anchor.download = filename
-          anchor.click()
-          URL.revokeObjectURL(url)
-          break
+        if (done) break
+
+        parts.push(value)
+
+        // `stream: true` carries a multi-byte character split across chunks into the next decode, and
+        // popping the final element keeps a record split across chunks from being counted twice.
+        const lines = (partialLine + decoder.decode(value, {stream: true})).split('\n')
+        partialLine = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line) continue
+          processedCount += 1
+          if (isErrorRecord(line)) erroredCount += 1
         }
-        const chunk = decoder.decode(value)
-        chunks.push(chunk)
-        // Count newline characters, and clamp to 100% for progress tracking.
-        processedCount += chunk.split('\n').length - 1
-        streamDownloadProgress.value = totalCount ? Math.min(100, Math.round((processedCount / totalCount) * 100)) : 0
+
+        // Without a total there is nothing to divide by; stay indeterminate rather than report Infinity.
+        fileDownloadProgress.value =
+          totalCount > 0 ? Math.min(100, Math.round((processedCount / totalCount) * 100)) : null
       }
+
+      // The server emits exactly one record per variant, so a short body means it stopped early — status
+      // and headers went out with the first chunk, so truncation is the only symptom a mid-stream failure
+      // can produce. Refuse to save a file that is quietly missing records.
+      if (totalCount > 0 && processedCount < totalCount) {
+        throw new Error(
+          `Download incomplete: received ${processedCount} of ${totalCount} records.` +
+            ' The server stopped sending partway through; check the API logs.'
+        )
+      }
+
+      const blob = new Blob(parts as BlobPart[], {type: 'application/x-ndjson'})
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = filename
+      anchor.click()
+      URL.revokeObjectURL(url)
+
+      return {received: processedCount, errored: erroredCount}
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       if (message !== 'The user aborted a request.') {
@@ -154,36 +221,17 @@ export function useScoreSetDownloads({scoreSet, hasCounts, clinvarVersion}: UseS
       }
     } finally {
       streamController.value = null
-      streamDownloadInProgress.value = false
-      streamDownloadProgress.value = 0
-      streamTarget.value = null
     }
-  }
-
-  function streamVariantDetails() {
-    if (!scoreSet.value) return
-    return streamNdjson('variant-details', `${scoreSet.value.urn}_variant_details.ndjson`, 'variantDetails')
-  }
-
-  function streamVariantAnnotations(annotationType: string) {
-    if (!scoreSet.value) return
-    return streamNdjson(
-      `annotated-variants/${annotationType}`,
-      `${scoreSet.value.urn}_annotated_variants_${annotationType}.ndjson`,
-      'annotatedVariants'
-    )
   }
 
   return {
     // State
     customDialogVisible,
-    selectedDataOptions,
-    streamDownloadInProgress,
-    streamDownloadProgress,
-    streamTarget,
+    fileDownloadInProgress,
+    fileDownloadLabel,
+    fileDownloadProgress,
 
-    // Computed
-    dataTypeOptions,
+    extraDownloadOptions,
 
     // Methods
     downloadFile,

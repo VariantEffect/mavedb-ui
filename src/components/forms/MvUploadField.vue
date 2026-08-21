@@ -10,6 +10,7 @@
       :accept="accept"
       :aria-describedby="error ? errorId : undefined"
       :aria-label="label"
+      :aria-required="required || undefined"
       :auto="false"
       :custom-upload="true"
       :file-limit="1"

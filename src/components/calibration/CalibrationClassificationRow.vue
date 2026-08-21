@@ -202,7 +202,11 @@
           <div v-if="desc.className.detail" class="wizard-help-detail" v-html="desc.className.detail" />
         </div>
         <div class="wizard-field">
-          <MvFloatField :error="validationErrors[`functionalClassifications.${index}.class`]" label="Class name">
+          <MvFloatField
+            :error="validationErrors[`functionalClassifications.${index}.class`]"
+            label="Class name"
+            required
+          >
             <template #default="{id, invalid}">
               <InputText
                 :id="id"

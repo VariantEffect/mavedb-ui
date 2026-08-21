@@ -82,11 +82,7 @@
           <div v-if="desc.baselineScore.detail" class="wizard-help-detail" v-html="desc.baselineScore.detail" />
         </div>
         <div class="wizard-field">
-          <MvFloatField
-            :error="validationErrors['baselineScore']"
-            label="Baseline Score"
-            :required="baselineScoreRequired"
-          >
+          <MvFloatField :error="validationErrors['baselineScore']" label="Baseline Score">
             <template #default="{id, invalid}">
               <InputNumber
                 :id="id"
@@ -474,14 +470,6 @@ export default defineComponent({
   },
 
   computed: {
-    /**
-     * A calibration needs either a baseline score or at least one functional classification, so the
-     * baseline score is required only while no classifications have been defined.
-     */
-    baselineScoreRequired(): boolean {
-      return this.functionalClassifications.length === 0
-    },
-
     /** Method and threshold sources are required once the calibration defines functional classifications. */
     sourcesRequired(): boolean {
       return this.functionalClassifications.length > 0

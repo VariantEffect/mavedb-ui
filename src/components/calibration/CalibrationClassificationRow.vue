@@ -33,6 +33,7 @@
         <MvFloatField
           :error="validationErrors[`functionalClassifications.${index}.label`]"
           label="Functional range label"
+          required
         >
           <template #default="{id, invalid}">
             <InputText

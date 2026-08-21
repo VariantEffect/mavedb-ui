@@ -14,6 +14,9 @@
       >
         <template #subtitle>
           <div class="mt-0.5 font-mono text-xs text-text-muted">{{ item?.urn }}</div>
+          <p class="mt-1 text-sm text-text-muted">
+            Fields marked <span class="font-bold text-danger">*</span> are required.
+          </p>
         </template>
         <template v-if="item" #actions>
           <PButton size="small" @click="validateAndSave()">Save changes</PButton>

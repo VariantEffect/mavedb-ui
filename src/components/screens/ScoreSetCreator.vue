@@ -312,6 +312,7 @@
                 <CalibrationEditor
                   ref="calibrationEditor"
                   :allow-class-based="false"
+                  :show-required-legend="false"
                   @update:draft="calibrationDraft = $event"
                 />
               </div>

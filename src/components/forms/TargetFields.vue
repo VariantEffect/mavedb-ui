@@ -78,6 +78,7 @@
         <MvFloatField
           :error="fieldError('targetSequence.label')"
           label="Target label"
+          :required="isMultiTarget"
           @update:model-value="$emit('update:label', $event)"
         >
           <template #default="{id, invalid}">
@@ -97,6 +98,7 @@
     <div :class="wizardMode && 'wizard-row'">
       <div v-if="wizardMode" class="wizard-help">
         <label>{{ desc.category.help }} <MvRequiredMarker /></label>
+        <p v-if="desc.category.detail" class="wizard-help-detail">{{ desc.category.detail }}</p>
       </div>
       <div :class="wizardMode && 'wizard-field'">
         <div class="field">
@@ -233,6 +235,7 @@
       <div :class="wizardMode && 'wizard-row'">
         <div v-if="wizardMode" class="wizard-help">
           <label>{{ desc.sequenceType.help }} <MvRequiredMarker /></label>
+          <p v-if="desc.sequenceType.detail" class="wizard-help-detail">{{ desc.sequenceType.detail }}</p>
         </div>
         <div :class="wizardMode && 'wizard-field'">
           <div class="field">
@@ -251,6 +254,7 @@
       <div :class="wizardMode && 'wizard-row'">
         <div v-if="wizardMode" class="wizard-help">
           <label>{{ desc.referenceSequence.help }} <MvRequiredMarker /></label>
+          <p v-if="desc.referenceSequence.detail" class="wizard-help-detail">{{ desc.referenceSequence.detail }}</p>
         </div>
         <div :class="wizardMode && 'wizard-field'">
           <div class="field">

@@ -14,7 +14,7 @@
       </button>
     </div>
 
-    <MvFloatField :label="label">
+    <MvFloatField :label="label" :required="required">
       <template #default>
         <div v-if="previewing" class="markdown-preview p-inputwrapper-filled">
           <!-- eslint-disable vue/no-v-html -->
@@ -31,6 +31,7 @@
           v-else
           :id="fieldId"
           :aria-describedby="error ? errorId : undefined"
+          :aria-required="required || undefined"
           class="w-full"
           fluid
           :invalid="!!error"
@@ -64,7 +65,8 @@ export default defineComponent({
     rows: {type: Number, default: 10},
     error: {type: String as PropType<string | null>, default: null},
     id: {type: String as PropType<string | null>, default: null},
-    hint: {type: String as PropType<string | null>, default: null}
+    hint: {type: String as PropType<string | null>, default: null},
+    required: {type: Boolean, default: false}
   },
 
   emits: ['update:modelValue'],

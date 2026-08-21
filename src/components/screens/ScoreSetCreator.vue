@@ -6,6 +6,11 @@
   <MvLayout :require-auth="true">
     <template #header>
       <MvPageHeader max-width="1280px" title="Create a new score set" variant="toolbar">
+        <template #subtitle>
+          <p class="pb-3 text-sm text-text-muted">
+            Fields marked <span class="font-bold text-danger">*</span> are required.
+          </p>
+        </template>
         <template #actions>
           <PButton severity="secondary" size="small" @click="resetForm">Clear</PButton>
           <PButton severity="warn" size="small" @click="backDashboard">Cancel</PButton>
@@ -307,6 +312,7 @@
                 <CalibrationEditor
                   ref="calibrationEditor"
                   :allow-class-based="false"
+                  :show-required-legend="false"
                   @update:draft="calibrationDraft = $event"
                 />
               </div>
@@ -736,14 +742,11 @@ export default {
           return this.targetValidities[step - 4] ?? false
         case step === 4 + this.numTargets: {
           if (!this.investigatorIsProvidingScoreCalibrations) return true
-          if (!this.calibrationDraft) return false
+          if (!this.calibrationDraft?.title) return false
           for (const scoreRange of this.calibrationDraft.functionalClassifications || []) {
             if (!scoreRange.label || !scoreRange.functionalClassification) return false
           }
-          return (
-            (this.calibrationDraft.functionalClassifications?.length ?? 0) > 0 ||
-            this.calibrationDraft.baselineScore !== null
-          )
+          return true
         }
         default:
           return true

@@ -1,4 +1,7 @@
 <template>
+  <div v-if="showRequiredLegend !== false" class="pb-3 text-sm text-text-muted">
+    Fields marked <span class="font-bold text-danger">*</span> are required.
+  </div>
   <CalibrationFields
     :allow-class-based="allowClassBased"
     :baseline-score="draft.baselineScore"
@@ -81,7 +84,9 @@ export default defineComponent({
     calibrationUrn: {type: String, default: null},
     scoreSetUrn: {type: String, default: null},
     allowClassBased: {type: Boolean, default: true},
-    showScoreSetSelector: {type: [Boolean, null] as unknown as PropType<boolean | null>, default: null}
+    showScoreSetSelector: {type: [Boolean, null] as unknown as PropType<boolean | null>, default: null},
+    /** Set false when the host page already explains the required-field marker. */
+    showRequiredLegend: {type: Boolean, default: true}
   },
 
   emits: ['canceled', 'saved', 'update:draft'],

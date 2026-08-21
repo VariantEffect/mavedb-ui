@@ -1,14 +1,16 @@
 <template>
   <div :class="error ? 'mv-field-error' : 'field'">
-    <label v-if="showLabel" class="mb-1 block font-semibold text-xs text-text-secondary" :for="fieldId">{{
-      label
-    }}</label>
+    <label v-if="showLabel" class="mb-1 block font-semibold text-xs text-text-secondary" :for="fieldId">
+      {{ label }}
+      <MvRequiredMarker v-if="required" />
+    </label>
     <FileUpload
       :id="fieldId"
       ref="fileUploadRef"
       :accept="accept"
       :aria-describedby="error ? errorId : undefined"
       :aria-label="label"
+      :aria-required="required || undefined"
       :auto="false"
       :custom-upload="true"
       :file-limit="1"
@@ -37,12 +39,13 @@
 import {defineComponent, type PropType} from 'vue'
 import FileUpload from 'primevue/fileupload'
 import MvFieldError from '@/components/forms/MvFieldError.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import {useFieldId} from '@/composables/scoped-id'
 
 export default defineComponent({
   name: 'MvUploadField',
 
-  components: {FileUpload, MvFieldError},
+  components: {FileUpload, MvFieldError, MvRequiredMarker},
 
   inheritAttrs: false,
 
@@ -52,7 +55,8 @@ export default defineComponent({
     error: {type: String as PropType<string | null>, default: null},
     id: {type: String as PropType<string | null>, default: null},
     emptyText: {type: String, default: 'Drop a file here'},
-    showLabel: {type: Boolean, default: true}
+    showLabel: {type: Boolean, default: true},
+    required: {type: Boolean, default: false}
   },
 
   emits: ['select', 'remove'],

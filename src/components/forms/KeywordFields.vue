@@ -64,7 +64,8 @@
         <div v-if="descriptionVisible(kw.key)" class="mt-2">
           <MvFloatField
             :error="validationErrors[`keywordDescriptions.${kw.key}`]"
-            :label="`${kw.descriptionLabel} ${keywordKeys[kw.key] === 'Other' ? '(Required)' : '(Optional)'}`"
+            :label="kw.descriptionLabel"
+            :required="keywordKeys[kw.key] === 'Other'"
           >
             <template #default="{id, invalid}">
               <PTextarea

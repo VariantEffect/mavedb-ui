@@ -340,7 +340,8 @@ export function targetDescriptions(): TargetDescriptions {
     },
     category: {
       hint: 'The biological category of the target.',
-      help: 'The biological category of the target.'
+      help: 'Target category',
+      detail: 'The biological category of the target.'
     },
     externalIdentifier: {
       hint: 'Link this target to an external database accession.',
@@ -355,11 +356,13 @@ export function targetDescriptions(): TargetDescriptions {
     },
     sequenceType: {
       hint: 'DNA or protein.',
-      help: 'What type of sequence is the target?'
+      help: 'Sequence type',
+      detail: 'What type of sequence is the target?'
     },
     referenceSequence: {
       hint: 'The reference sequence used as the target for the assay.',
-      help: 'Upload a FASTA file containing the reference sequence used as the target for the assay.'
+      help: 'Reference sequence',
+      detail: 'Upload a FASTA file containing the reference sequence used as the target for the assay.'
     },
     isChromosome: {
       hint: 'Whether this target represents a whole chromosome.',

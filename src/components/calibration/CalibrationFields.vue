@@ -9,7 +9,7 @@
           <p>{{ desc.scoreSet.help }}</p>
         </div>
         <div class="wizard-field">
-          <MvFloatField :error="validationErrors['scoreSetUrn']" label="Score Set">
+          <MvFloatField :error="validationErrors['scoreSetUrn']" label="Score Set" required>
             <template #default="{id, invalid}">
               <PSelect
                 :id="id"
@@ -40,7 +40,7 @@
           <div v-if="desc.title.detail" class="wizard-help-detail" v-html="desc.title.detail" />
         </div>
         <div class="wizard-field">
-          <MvFloatField :error="validationErrors['title']" label="Calibration Title">
+          <MvFloatField :error="validationErrors['title']" label="Calibration Title" required>
             <template #default="{id, invalid}">
               <InputText
                 :id="id"
@@ -162,6 +162,7 @@
             :loading="publicationSearchLoading"
             :model-value="methodSources"
             :option-label="pubOptionLabel"
+            :required="sourcesRequired"
             :suggestions="publicationSuggestions"
             :typeahead="true"
             @complete="$emit('search-publications', $event)"
@@ -196,6 +197,7 @@
             :loading="publicationSearchLoading"
             :model-value="thresholdSources"
             :option-label="pubOptionLabel"
+            :required="sourcesRequired"
             :suggestions="publicationSuggestions"
             :typeahead="true"
             @complete="$emit('search-publications', $event)"
@@ -230,6 +232,7 @@
             :loading="publicationSearchLoading"
             :model-value="evidenceSources"
             :option-label="pubOptionLabel"
+            :required="evidenceSourcesRequired"
             :suggestions="publicationSuggestions"
             :typeahead="true"
             @complete="$emit('search-publications', $event)"
@@ -276,7 +279,7 @@
         <!-- Classes file (class-based mode) -->
         <div v-if="classBased" class="wizard-row">
           <div class="wizard-help">
-            <label>{{ desc.classesFile.help }}</label>
+            <label>{{ desc.classesFile.help }} <MvRequiredMarker /></label>
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div v-if="desc.classesFile.detail" class="wizard-help-detail" v-html="desc.classesFile.detail" />
           </div>
@@ -293,6 +296,7 @@
               empty-text="Drop a CSV file here"
               :error="validationErrors['classesFile']"
               label="Classes file"
+              required
               :show-label="false"
               @select="$emit('classes-file-selected', $event)"
             />
@@ -376,6 +380,7 @@ import CalibrationClassificationRow from '@/components/calibration/CalibrationCl
 import MvFieldError from '@/components/forms/MvFieldError.vue'
 import MvFileStatus from '@/components/forms/MvFileStatus.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import MvTagField from '@/components/forms/MvTagField.vue'
 import MvUploadField from '@/components/forms/MvUploadField.vue'
 import {calibrationDescriptions} from '@/data/field-descriptions'
@@ -400,6 +405,7 @@ export default defineComponent({
     MvFieldError,
     MvFileStatus,
     MvFloatField,
+    MvRequiredMarker,
     MvTagField,
     MvUploadField,
     PButton: Button,
@@ -461,6 +467,18 @@ export default defineComponent({
 
   setup() {
     return {desc: calibrationDescriptions(), pubOptionLabel, onClearInput: clearAutoCompleteInput}
+  },
+
+  computed: {
+    /** Method and threshold sources are required once the calibration defines functional classifications. */
+    sourcesRequired(): boolean {
+      return this.functionalClassifications.length > 0
+    },
+
+    /** Evidence sources are required only when a classification carries ACMG evidence. */
+    evidenceSourcesRequired(): boolean {
+      return this.functionalClassifications.some((fc) => fc.acmgClassification != null)
+    }
   }
 })
 </script>

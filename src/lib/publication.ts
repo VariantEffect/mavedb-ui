@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import type {components} from '@/schema/openapi'
+import {normalizeDoi} from '@/lib/identifiers'
 
 export type PublicationAuthor = components['schemas']['PublicationAuthors']
 export type PublicationIdentifier = components['schemas']['SavedPublicationIdentifier']
@@ -45,4 +46,27 @@ export function shortCitationForPublication(publication: PublicationIdentifier):
  */
 export function publicationFirstAuthor(publication: PublicationIdentifier): PublicationAuthor | undefined {
     return publication.authors.find((author) => author.primary)
+}
+
+/**
+ * Resolve an external URL for a publication.
+ *
+ * The publication identifier's own `url` is preferred when present, since the API resolves it to the article's
+ * canonical web location. Failing that, a DOI is turned into a doi.org link, and a numeric PubMed identifier into a
+ * pubmed.ncbi.nlm.nih.gov link.
+ *
+ * @param publication A publication identifier.
+ * @returns An external publication URL, or null if the publication carries no resolvable link.
+ */
+export function getPublicationUrl(publication: PublicationIdentifier): string | null {
+    if (publication.url) {
+        return publication.url
+    }
+    if (publication.doi) {
+        return `https://doi.org/${normalizeDoi(publication.doi)}`
+    }
+    if (publication.dbName === 'PubMed' && /^[0-9]+$/.test(publication.identifier)) {
+        return `https://pubmed.ncbi.nlm.nih.gov/${publication.identifier}/`
+    }
+    return null
 }

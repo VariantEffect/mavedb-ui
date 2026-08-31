@@ -1,7 +1,7 @@
 <template>
-  <div v-if="showRequiredLegend !== false" class="pb-3 text-sm text-text-muted">
+  <p v-if="showRequiredLegend !== false" class="pb-3 text-sm text-text-muted">
     Fields marked <span class="font-bold text-danger">*</span> are required.
-  </div>
+  </p>
   <CalibrationFields
     :allow-class-based="allowClassBased"
     :baseline-score="draft.baselineScore"

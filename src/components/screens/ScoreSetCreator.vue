@@ -7,7 +7,7 @@
     <template #header>
       <MvPageHeader max-width="1280px" title="Create a new score set" variant="toolbar">
         <template #subtitle>
-          <p class="pb-3 text-sm text-text-muted">
+          <p class="text-sm text-text-muted">
             Fields marked <span class="font-bold text-danger">*</span> are required.
           </p>
         </template>

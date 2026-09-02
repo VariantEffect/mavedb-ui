@@ -231,6 +231,7 @@ import {
   deleteScoreCalibration,
   getScoreSetCalibrations
 } from '@/api/mavedb'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
@@ -292,6 +293,9 @@ export default {
 
     const calibrationAuthorizations = ref<Record<string, CalibrationAuthorizations>>({})
 
+    const scoreSet = useItem<ScoreSet>({itemTypeName: 'scoreSet'})
+    useCanonicalUrn(scoreSet.item, urnRef)
+
     return {
       head,
       userIsAuthenticated,
@@ -300,7 +304,7 @@ export default {
       confirm,
       getScoreSetShortName,
       ...useCalibrationDialog(),
-      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
+      ...scoreSet,
       ...useScopedId()
     }
   },

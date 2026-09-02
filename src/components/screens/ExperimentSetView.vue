@@ -64,6 +64,7 @@ import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import useItem from '@/composition/item.ts'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {components} from '@/schema/openapi'
 
@@ -93,8 +94,11 @@ export default defineComponent({
     const urnRef = toRef(props, 'itemId')
     const {permissions} = useDatasetPermissions('experiment-set', urnRef, ACTIONS)
 
+    const experimentSet = useItem<ExperimentSet>({itemTypeName: 'experimentSet'})
+    useCanonicalUrn(experimentSet.item, urnRef)
+
     return {
-      ...useItem<ExperimentSet>({itemTypeName: 'experimentSet'}),
+      ...experimentSet,
       permissions
     }
   },

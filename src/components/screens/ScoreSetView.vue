@@ -569,7 +569,7 @@ export default {
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref<Variant[]>([])
     const selectedCalibrations = ref<(string | null)[]>([null, null])
-    const urnRef = ref(props.itemId)
+    const urnRef = toRef(props, 'itemId')
 
     const {permissions} = useDatasetPermissions('score-set', urnRef, ACTIONS)
 
@@ -581,7 +581,7 @@ export default {
     const heatmapChart = useChartExport(heatmapExportFn)
 
     const scoreSet = useItem<ScoreSet>({itemTypeName: 'scoreSet'})
-    useCanonicalUrn(scoreSet.item, toRef(props, 'itemId'))
+    useCanonicalUrn(scoreSet.item, urnRef)
 
     return {
       head,

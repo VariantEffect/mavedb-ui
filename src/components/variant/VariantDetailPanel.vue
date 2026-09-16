@@ -80,7 +80,13 @@
         />
       </div>
 
-      <!-- No facts to display: a quiet empty state. -->
+      <!-- No direct facts. A reverse-translation fan-out isn't "nothing": name candidate nucleotides
+           even if the protein change itself has no direct annotations. -->
+      <p v-else-if="candidateFanoutCount > 0" class="px-4 py-3 text-xs text-text-muted tablet:px-5">
+        This amino-acid change reverse-translates to {{ candidateFanoutCount }} candidate nucleotide allele{{
+          candidateFanoutCount === 1 ? '' : 's'
+        }}; no population or clinical evidence was found for this variant or the candidate nucleotide alleles.
+      </p>
       <p v-else class="px-4 py-3 text-xs text-text-muted tablet:px-5">
         No reference annotations were found for this variant.
       </p>
@@ -120,6 +126,7 @@ import VariantConsequenceStat from '@/components/variant/VariantConsequenceStat.
 import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
 import {getVariantDetail} from '@/api/mavedb/variants'
+import {groupAlleles} from '@/lib/allele-grouping'
 import {collectGnomadFrequencies} from '@/lib/gnomad'
 import {formatScore} from '@/lib/scores'
 import {enumerateUnderlyingClinvar, resolveClinvarRecords} from '@/lib/clinvar-controls'
@@ -229,6 +236,18 @@ export default defineComponent({
     // template falls back to an empty state instead.
     anyAnnotationsAvailable(): boolean {
       return !!this.consequence?.consequence || this.selectedClassification != null || this.hasGnomad || this.hasClinvar
+    },
+    // Count of `candidate`-derivation groups: a protein change reverse-translates to N candidate nucleotide
+    // alleles (ambiguous codon choice). Grouped so a candidate's c↔g spellings count once. Lets the empty
+    // state say "no direct evidence, but a fan-out exists" instead of asserting a blanket absence — the
+    // candidates carry their own (VEP) consequence, reachable via full details, so "nothing found" is false.
+    candidateFanoutCount(): number {
+      if (!this.detail?.alleles) return 0
+      return groupAlleles({
+        alleles: this.detail.alleles,
+        annotations: this.detail.annotations ?? {},
+        pageClingenAlleleId: this.detail.clingenAlleleId ?? null
+      }).filter((group) => group.derivation === 'candidate').length
     },
     // A distinct underlying nucleotide coordinate — an alternate spelling worth keeping the identity line for,
     // so it disambiguates coding variants that collapse to the same protein change.

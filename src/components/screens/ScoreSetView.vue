@@ -465,7 +465,7 @@ import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
 import PrimeDialog from 'primevue/dialog'
 import Drawer from 'primevue/drawer'
-import {ref} from 'vue'
+import {ref, toRef} from 'vue'
 import {useHead} from '@unhead/vue'
 
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
@@ -495,6 +495,7 @@ import ScoreSetVisualizer from '@/components/score-set/ScoreSetVisualizer.vue'
 import useScopedId from '@/composables/scoped-id'
 import useItem from '@/composition/item.ts'
 import useRemoteData from '@/composition/remote-data'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import {useChartExport, type ChartExportFns} from '@/composables/use-chart-export'
@@ -568,7 +569,7 @@ export default {
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref<Variant[]>([])
     const selectedCalibrations = ref<(string | null)[]>([null, null])
-    const urnRef = ref(props.itemId)
+    const urnRef = toRef(props, 'itemId')
 
     const {permissions} = useDatasetPermissions('score-set', urnRef, ACTIONS)
 
@@ -579,6 +580,9 @@ export default {
     const clinicalHistogramChart = useChartExport(clinicalHistogramExportFn)
     const heatmapChart = useChartExport(heatmapExportFn)
 
+    const scoreSet = useItem<ScoreSet>({itemTypeName: 'scoreSet'})
+    useCanonicalUrn(scoreSet.item, urnRef)
+
     return {
       head,
       config,
@@ -586,7 +590,7 @@ export default {
       selectedCalibrations,
 
       ...useCalibrationDialog(),
-      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
+      ...scoreSet,
       ...useScopedId(),
       ...useVariantCoordinates(),
       scoresData: scoresRemoteData.data,

@@ -189,6 +189,7 @@ import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {components} from '@/schema/openapi'
 import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
@@ -229,9 +230,12 @@ export default defineComponent({
     const urnRef = toRef(props, 'itemId')
     const {permissions} = useDatasetPermissions('experiment', urnRef, ACTIONS)
 
+    const experiment = useItem<Experiment>({itemTypeName: 'experiment'})
+    useCanonicalUrn(experiment.item, urnRef)
+
     return {
       head,
-      ...useItem<Experiment>({itemTypeName: 'experiment'}),
+      ...experiment,
       permissions
     }
   },

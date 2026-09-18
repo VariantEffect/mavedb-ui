@@ -22,6 +22,10 @@
     <MvDetailRow label="Functional consequence">
       <MvClassificationTag v-if="classification" :classification="classification" />
     </MvDetailRow>
+    <MvDetailRow v-if="controlStatus" label="Calibration control">
+      <MvBadge :value="controlStatus" />
+      <span class="ml-1.5 text-xs text-text-muted">used to derive this calibration</span>
+    </MvDetailRow>
     <MvDetailRow :align="'flex-start'" :label="`Genomic ${genomicLocations.length > 1 ? 'locations' : 'location'}`">
       <table v-if="genomicLocations.length > 0" class="border-collapse">
         <tr v-for="(loc, i) in genomicLocations" :key="i">
@@ -39,8 +43,10 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
+import MvBadge from '@/components/common/MvBadge.vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
+import type {CalibrationControlStatus} from '@/lib/calibration-controls'
 
 type GenomicLocation = {chromosome: string; start: string | number; referenceGenome: string}
 
@@ -48,6 +54,7 @@ export default defineComponent({
   name: 'VariantInfoSection',
 
   components: {
+    MvBadge,
     MvClassificationTag,
     MvDetailRow
   },
@@ -57,6 +64,7 @@ export default defineComponent({
     clingenAlleleId: {type: [String, null] as PropType<string | null>, default: null},
     clinvarAlleleIds: {type: Array as PropType<string[]>, default: () => []},
     classification: {type: [String, null] as PropType<string | null>, default: null},
+    controlStatus: {type: [String, null] as PropType<CalibrationControlStatus | null>, default: null},
     genomicLocations: {type: Array as PropType<GenomicLocation[]>, default: () => []}
   }
 })

@@ -4,6 +4,7 @@ import _, {cloneDeep} from 'lodash'
 import {getScoreCalibration} from '@/api/mavedb'
 import config from '@/config'
 import {saveCalibration, type CalibrationSaveResult} from '@/lib/calibrations'
+import {GENERIC_DISEASE, toDraftDisease, type DiseaseConcept, type DraftDisease} from '@/lib/diseases'
 import {useValidationErrors, type ValidationErrorState} from '@/composables/use-validation-errors'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
@@ -109,6 +110,10 @@ export interface UseCalibrationEditorReturn {
   draft: DraftScoreCalibration & {__original: DraftScoreCalibration}
   /** File selected for class-based calibration import, or null. */
   draftClassesFile: Ref<File | null>
+  /** Controls CSV selected to replace the calibration's controls on save, or null. */
+  draftControlsFile: Ref<File | null>
+  /** Whether the user has cleared all controls (saved as an empty controls list). */
+  controlsCleared: Ref<boolean>
   /** Whether the draft has unsaved changes relative to the original. */
   isDirty: Ref<boolean>
   /** Whether the draft passes basic validity checks. */
@@ -143,6 +148,8 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
 
   const classBased = ref(false)
   const draftClassesFile = ref<File | null>(null)
+  const draftControlsFile = ref<File | null>(null)
+  const controlsCleared = ref(false)
 
   const buildBlankDraft = (): DraftScoreCalibration => ({
     urn: props.calibrationUrn || null,
@@ -152,6 +159,10 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
     baselineScore: null,
     baselineScoreDescription: null,
     researchUseOnly: false,
+    disease: {...GENERIC_DISEASE},
+    controlsNotPhi: null,
+    controls: [],
+    controlsCount: 0,
     private: true,
     primary: false,
     investigatorProvided: true,
@@ -176,6 +187,12 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
         draftCalibration[k] = data[k] as unknown
       }
     })
+
+    // Disease arrives as a served MappableConcept (load) or an existing {code, label} (blank draft);
+    // normalize to the draft selection, defaulting to the generic term so it's always surfaced.
+    draftCalibration.disease = toDraftDisease(
+      (data as {disease?: DiseaseConcept | DraftDisease | null}).disease
+    )
 
     if (draftCalibration.functionalClassifications == null) {
       draftCalibration.functionalClassifications = []
@@ -239,12 +256,17 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
       baselineScore: dc.baselineScore,
       baselineScoreDescription: dc.baselineScoreDescription,
       researchUseOnly: dc.researchUseOnly,
+      disease: dc.disease,
+      controlsNotPhi: dc.controlsNotPhi,
       functionalClassifications: dc.functionalClassifications,
       thresholdSources: dc.thresholdSources,
       methodSources: dc.methodSources,
       evidenceSources: dc.evidenceSources
     })
-    isDirty.value = !_.isEqual(snapshot(draftCalibration), snapshot(draftCalibration.__original))
+    // A pending controls upload or clear is a change even though it lives outside the draft snapshot.
+    const controlsChanged = draftControlsFile.value != null || controlsCleared.value
+    isDirty.value =
+      controlsChanged || !_.isEqual(snapshot(draftCalibration), snapshot(draftCalibration.__original))
     isValid.value = !!draftCalibration.title
   }
 
@@ -272,6 +294,8 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
     const result = await saveCalibration({
       draft: draftCalibration,
       classesFile: draftClassesFile.value,
+      controlsFile: draftControlsFile.value,
+      controlsCleared: controlsCleared.value,
       existingUrn: props.calibrationUrn || undefined
     })
 
@@ -295,6 +319,8 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
 
     draft: draftCalibration,
     draftClassesFile,
+    draftControlsFile,
+    controlsCleared,
     isDirty,
     isValid,
     classBased,

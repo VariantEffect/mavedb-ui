@@ -130,6 +130,27 @@
         </div>
       </div>
 
+      <!-- Disease / disorder — the clinical condition the calibration applies to. -->
+      <div class="wizard-row">
+        <div class="wizard-help">
+          <label>{{ desc.disease.help }}</label>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div v-if="desc.disease.detail" class="wizard-help-detail" v-html="desc.disease.detail" />
+        </div>
+        <div class="wizard-field">
+          <MvFloatField :error="validationErrors['disease']" label="Disease/Disorder" required>
+            <template #default="{id, invalid}">
+              <DiseaseAutocomplete
+                :id="id"
+                :invalid="invalid"
+                :model-value="disease"
+                @update:model-value="$emit('update:disease', $event)"
+              />
+            </template>
+          </MvFloatField>
+        </div>
+      </div>
+
       <!-- Research use only -->
       <div class="wizard-row">
         <div class="wizard-help">
@@ -308,7 +329,9 @@
 
       <div class="wizard-row wizard-classifications-header">
         <div class="wizard-help">
-          <span class="wizard-classifications-title">{{ classBased ? 'Functional Classes' : 'Functional Ranges' }}</span>
+          <span class="wizard-classifications-title">{{
+            classBased ? 'Functional Classes' : 'Functional Ranges'
+          }}</span>
         </div>
         <div class="wizard-field flex justify-end">
           <PButton
@@ -363,6 +386,9 @@
           </p>
         </div>
       </div>
+
+      <!-- Calibration controls section (controls CSV upload, PHI acknowledgment). -->
+      <slot name="controls" />
     </div>
   </div>
 </template>
@@ -377,6 +403,7 @@ import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 import CalibrationClassificationRow from '@/components/calibration/CalibrationClassificationRow.vue'
+import DiseaseAutocomplete from '@/components/calibration/DiseaseAutocomplete.vue'
 import MvFieldError from '@/components/forms/MvFieldError.vue'
 import MvFileStatus from '@/components/forms/MvFileStatus.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
@@ -385,6 +412,7 @@ import MvTagField from '@/components/forms/MvTagField.vue'
 import MvUploadField from '@/components/forms/MvUploadField.vue'
 import {calibrationDescriptions} from '@/data/field-descriptions'
 import {clearAutoCompleteInput, pubOptionLabel} from '@/lib/form-helpers'
+import type {DraftDisease} from '@/lib/diseases'
 import type {
   DraftFunctionalClassification,
   FunctionalClassificationHelper,
@@ -400,6 +428,7 @@ export default defineComponent({
 
   components: {
     CalibrationClassificationRow,
+    DiseaseAutocomplete,
     InputNumber,
     InputText,
     MvFieldError,
@@ -419,6 +448,7 @@ export default defineComponent({
     notes: {type: String as PropType<string | null>, default: null},
     baselineScore: {type: Number as PropType<number | null>, default: null},
     baselineScoreDescription: {type: String as PropType<string | null>, default: null},
+    disease: {type: Object as PropType<DraftDisease | null>, default: null},
     researchUseOnly: {type: Boolean, default: false},
     classBased: {type: Boolean, default: false},
     classesFileName: {type: String as PropType<string | null>, default: null},
@@ -444,6 +474,7 @@ export default defineComponent({
     'update:notes',
     'update:baselineScore',
     'update:baselineScoreDescription',
+    'update:disease',
     'update:researchUseOnly',
     'update:classBased',
     'update:selectedScoreSet',

@@ -9,6 +9,7 @@
     :class-based="classBased"
     :classes-file-name="draftClassesFile?.name || null"
     :criterions="criterions"
+    :disease="draft.disease ?? null"
     :editable-score-sets="editableScoreSets"
     :evidence-sources="draft.evidenceSources || []"
     :evidence-strengths="evidenceStrengths"
@@ -35,26 +36,48 @@
     @toggle-boundary="onToggleBoundary"
     @toggle-infinity="onToggleInfinity"
     @toggle-oddspaths="onToggleOddspaths"
-    @update:baseline-score="draft.baselineScore = $event; markChanged()"
-    @update:baseline-score-description="draft.baselineScoreDescription = $event; markChanged()"
+    @update:baseline-score="((draft.baselineScore = $event), markChanged())"
+    @update:baseline-score-description="((draft.baselineScoreDescription = $event), markChanged())"
     @update:class-based="classBased = $event"
     @update:classification-field="onClassificationFieldUpdate"
-    @update:evidence-sources="draft.evidenceSources = $event; markChanged()"
+    @update:evidence-sources="((draft.evidenceSources = $event), markChanged())"
     @update:evidence-strength="onEvidenceStrengthUpdate"
-    @update:method-sources="draft.methodSources = $event; markChanged()"
-    @update:notes="draft.notes = $event; markChanged()"
+    @update:method-sources="((draft.methodSources = $event), markChanged())"
+    @update:notes="((draft.notes = $event), markChanged())"
     @update:range-value="onRangeValueUpdate"
-    @update:research-use-only="draft.researchUseOnly = $event; markChanged()"
+    @update:research-use-only="((draft.researchUseOnly = $event), markChanged())"
     @update:selected-score-set="onScoreSetSelected"
-    @update:threshold-sources="draft.thresholdSources = $event; markChanged()"
-    @update:title="draft.title = $event; markChanged()"
-  />
+    @update:threshold-sources="((draft.thresholdSources = $event), markChanged())"
+    @update:title="((draft.title = $event), markChanged())"
+  >
+    <template #controls>
+      <CalibrationControlsField
+        v-if="allowControls"
+        :cleared="controlsCleared"
+        :controls-file-name="draftControlsFile?.name || null"
+        :controls-not-phi="draft.controlsNotPhi ?? null"
+        :has-controls="hasControls"
+        :loaded-controls="draft.controls || []"
+        :phi-error="phiError"
+        :preview-errors="controlsPreviewErrors"
+        :preview-rows="controlsPreviewRows"
+        :reacknowledgment-required="reacknowledgmentRequired"
+        :validation-errors="validationErrors"
+        @clear-controls="onClearControls"
+        @controls-file-cleared="onControlsFileClear"
+        @controls-file-selected="onControlsFileUpload"
+        @restore-controls="onRestoreControls"
+        @update:controls-not-phi="onControlsNotPhiUpdate"
+      />
+    </template>
+  </CalibrationFields>
 </template>
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import {cloneDeep} from 'lodash'
 
+import CalibrationControlsField from '@/components/calibration/CalibrationControlsField.vue'
 import CalibrationFields from '@/components/calibration/CalibrationFields.vue'
 import {
   useCalibrationEditor,
@@ -64,6 +87,7 @@ import {
 } from '@/composables/use-calibration-editor'
 import {searchEditableScoreSets, getScoreSetByUrn} from '@/api/mavedb'
 import {acceptNewPublicationIdentifier} from '@/lib/form-helpers'
+import {parseControlsCsv, phiAcknowledgmentError, type ParsedControlRow} from '@/lib/calibration-controls'
 import {EVIDENCE_STRENGTH, BENIGN_CRITERION, PATHOGENIC_CRITERION} from '@/lib/calibrations'
 import {
   DRAFT_CALIBRATION_COPYABLE_KEYS,
@@ -78,12 +102,15 @@ export type {DraftScoreCalibration, DraftFunctionalClassification, DraftAcmgClas
 export default defineComponent({
   name: 'CalibrationEditor',
 
-  components: {CalibrationFields},
+  components: {CalibrationControlsField, CalibrationFields},
 
   props: {
     calibrationUrn: {type: String, default: null},
     scoreSetUrn: {type: String, default: null},
+    // Parent components may wish to disable class-based editing or controls editing, e.g. when the
+    // calibration is being created alongside a score set and variants are not yet available.
     allowClassBased: {type: Boolean, default: true},
+    allowControls: {type: Boolean, default: true},
     showScoreSetSelector: {type: [Boolean, null] as unknown as PropType<boolean | null>, default: null},
     /** Set false when the host page already explains the required-field marker. */
     showRequiredLegend: {type: Boolean, default: true}
@@ -102,11 +129,37 @@ export default defineComponent({
       editableScoreSets: [] as MinimalScoreSet[],
       selectedScoreSet: null as MinimalScoreSet | null,
       adjustedClassificationErrors: null as ValidationErrors | null,
+      controlsPreviewRows: [] as ParsedControlRow[],
+      controlsPreviewErrors: [] as string[],
+      /** PHI affirmation held aside while a controls change is staged, so cancelling can restore it. */
+      controlsNotPhiBeforeChange: null as boolean | null,
+      controlsChangeStaged: false,
       saving: false
     }
   },
 
   computed: {
+    /** Whether the calibration effectively carries controls, given a pending upload/clear or loaded controls. */
+    hasControls(): boolean {
+      if (this.draftControlsFile) return this.controlsPreviewRows.length > 0
+      if (this.controlsCleared) return false
+      return (this.draft.controls?.length ?? this.draft.controlsCount ?? 0) > 0
+    },
+
+    /** Whether a staged controls change discarded an affirmation the user had already made. */
+    reacknowledgmentRequired(): boolean {
+      return this.controlsChangeStaged && this.controlsNotPhiBeforeChange === true
+    },
+
+    /** Inline PHI acknowledgment error (#677), shown when a published calibration's controls are unacknowledged. */
+    phiError(): string | null {
+      return phiAcknowledgmentError({
+        hasControls: this.hasControls,
+        isPrivate: this.draft.private ?? true,
+        controlsNotPhi: this.draft.controlsNotPhi
+      })
+    },
+
     activeValidationErrors(): ValidationErrors {
       if (!this.adjustedClassificationErrors) return this.validationErrors
       // Merge: non-classification errors from composable + adjusted classification errors.
@@ -395,6 +448,78 @@ export default defineComponent({
       this.draftClassesFile = null
     },
 
+    // ─── Controls handling ───────────────────────────────────────────────
+
+    /**
+     * Staging a controls change invalidates the PHI affirmation. The API resets `controls_not_phi`
+     * whenever controls are replaced, but an explicit value in the request wins
+     * (`lib/score_calibrations.py`) and this editor always sends one — so the client has to clear it,
+     * or an affirmation made against the old controls rides along with the new ones.
+     */
+    stageControlsChange() {
+      if (!this.controlsChangeStaged) {
+        this.controlsNotPhiBeforeChange = this.draft.controlsNotPhi ?? null
+        this.controlsChangeStaged = true
+      }
+      this.draft.controlsNotPhi = null
+      this.clearClientError('controlsNotPhi')
+    },
+
+    /** Reverting to the saved controls restores the affirmation that was made against them. */
+    unstageControlsChange() {
+      if (!this.controlsChangeStaged) return
+      this.draft.controlsNotPhi = this.controlsNotPhiBeforeChange
+      this.controlsChangeStaged = false
+    },
+
+    async onControlsFileUpload(event: {files: File[]}) {
+      const file = event.files[0] || null
+      this.draftControlsFile = file
+      this.controlsCleared = false
+      if (file) {
+        this.stageControlsChange()
+        try {
+          const preview = parseControlsCsv(await file.text())
+          this.controlsPreviewRows = preview.rows
+          this.controlsPreviewErrors = preview.errors
+        } catch {
+          this.controlsPreviewRows = []
+          this.controlsPreviewErrors = ['The controls file could not be read.']
+        }
+      } else {
+        this.controlsPreviewRows = []
+        this.controlsPreviewErrors = []
+        this.unstageControlsChange()
+      }
+      this.markChanged()
+    },
+
+    onControlsFileClear() {
+      this.draftControlsFile = null
+      this.controlsPreviewRows = []
+      this.controlsPreviewErrors = []
+      this.unstageControlsChange()
+      this.markChanged()
+    },
+
+    onClearControls() {
+      this.controlsCleared = true
+      this.stageControlsChange()
+      this.markChanged()
+    },
+
+    onRestoreControls() {
+      this.controlsCleared = false
+      this.unstageControlsChange()
+      this.markChanged()
+    },
+
+    onControlsNotPhiUpdate(value: boolean) {
+      this.draft.controlsNotPhi = value
+      this.clearClientError('controlsNotPhi')
+      this.markChanged()
+    },
+
     // ─── Publication search ──────────────────────────────────────────────
 
     onPublicationSelected(sourceField: 'methodSources' | 'thresholdSources' | 'evidenceSources') {
@@ -407,12 +532,34 @@ export default defineComponent({
 
     async saveCalibration() {
       if (this.saving) return
+
+      // The backend gates PHI acknowledgment on publish, not on save, so guard it here: a published
+      // calibration with controls may not be saved without the acknowledgment. The error also renders
+      // inline via the `phiError` computed; returning undefined leaves the editor open without a save.
+      if (this.phiError) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Confirm the controls contain no PHI before saving.',
+          life: 5000
+        })
+        return
+      }
+
       this.saving = true
 
       try {
         const result = await this.saveCalibrationDraft()
 
         if (result.success) {
+          // Adopt the resolved controls returned by the server and retire the pending upload/clear.
+          this.draft.controls = result.data?.controls ?? this.draft.controls
+          this.draft.controlsCount = result.data?.controlsCount ?? this.draft.controlsCount
+          this.draftControlsFile = null
+          this.controlsCleared = false
+          this.controlsPreviewRows = []
+          this.controlsPreviewErrors = []
+          this.controlsChangeStaged = false
+          this.controlsNotPhiBeforeChange = null
           this.draft.__original = cloneDeep(this.draft)
           this.recomputeMeta()
           this.$emit('saved', result.data)
@@ -431,6 +578,14 @@ export default defineComponent({
         // @ts-expect-error index assignment
         this.draft[k] = original[k]
       })
+      this.draft.disease = original.disease
+
+      this.draftControlsFile = null
+      this.controlsCleared = false
+      this.controlsPreviewRows = []
+      this.controlsPreviewErrors = []
+      this.controlsChangeStaged = false
+      this.controlsNotPhiBeforeChange = null
 
       if (!this.draft.functionalClassifications) {
         this.draft.functionalClassifications = []

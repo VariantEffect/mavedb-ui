@@ -1,6 +1,7 @@
 export * from './access-keys'
 export * from './calibrations'
 export * from './collections'
+export * from './diseases'
 export * from './experiments'
 export * from './genes'
 export * from './orcid'

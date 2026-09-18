@@ -1,3 +1,4 @@
+import type {DraftDisease} from '@/lib/diseases'
 import {components} from '@/schema/openapi'
 
 export type MinimalScoreSet = {
@@ -28,6 +29,7 @@ export interface DraftScoreCalibration
     | 'urn'
     | 'scoreSetUrn'
     | 'functionalClassifications'
+    | 'disease'
     | 'id'
     | 'scoreSetId'
     | 'creationDate'
@@ -39,6 +41,9 @@ export interface DraftScoreCalibration
   urn: string | null
   scoreSetUrn: string | null
   functionalClassifications: DraftFunctionalClassification[] | null
+  // Served as a MappableConcept, edited as a lightweight {code, label} selection; null means unspecified
+  // (the backend resolves it to the generic disease term).
+  disease: DraftDisease | null
 }
 
 /** Helper state tracked alongside each functional classification row. */
@@ -68,6 +73,9 @@ export const DRAFT_CALIBRATION_COPYABLE_KEYS: (keyof DraftScoreCalibration)[] = 
   'baselineScore',
   'baselineScoreDescription',
   'researchUseOnly',
+  'controlsNotPhi',
+  'controls',
+  'controlsCount',
   'thresholdSources',
   'methodSources',
   'evidenceSources'

@@ -12,9 +12,9 @@
               {{ item.publicationYear }} · <span class="italic">{{ item.publicationJournal }}</span>
             </span>
             <a
-              v-if="item.url"
+              v-if="getPublicationUrl(item)"
               class="inline-flex items-center gap-1 text-link no-underline"
-              :href="item.url"
+              :href="getPublicationUrl(item)!"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -88,6 +88,7 @@ import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
 import MvLoader from '@/components/common/MvLoader.vue'
+import {getPublicationUrl} from '@/lib/publication'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
 type PublicationIdentifier = components['schemas']['PublicationIdentifier']
@@ -106,7 +107,8 @@ export default defineComponent({
   setup(props) {
     useHead({title: 'Publication details'})
     return {
-      ...useItem<PublicationIdentifier>({itemTypeName: props.name})
+      ...useItem<PublicationIdentifier>({itemTypeName: props.name}),
+      getPublicationUrl
     }
   },
 

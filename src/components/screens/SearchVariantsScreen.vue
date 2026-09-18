@@ -640,9 +640,25 @@
 
     <!-- SCORE SETS TABLE (shown when no results) -->
     <section v-if="!searchResultsVisible" class="mx-auto w-full max-w-[1000px] px-6 py-10">
-      <div class="text-lg font-bold text-dark">MaveMD score sets</div>
-      <div class="text-sm text-gray-500">
-        {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div class="text-lg font-bold text-dark">MaveMD score sets</div>
+          <div class="text-sm text-gray-500">
+            {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+          </div>
+        </div>
+        <div
+          v-if="!maveMdScoreSetsError"
+          class="flex w-full shrink-0 overflow-hidden rounded-lg border border-gray-200 focus-within:border-sage bg-white transition-colors sm:w-64"
+        >
+          <InputText
+            v-model="filterGene"
+            aria-label="Filter score sets by gene"
+            class="min-w-0 flex-1 !rounded-none !border-none !shadow-none"
+            placeholder="Filter by gene (e.g. BRCA1)"
+            type="search"
+          />
+        </div>
       </div>
 
       <Message v-if="maveMdScoreSetsError" class="mt-5" :closable="false" severity="error">
@@ -655,75 +671,116 @@
         </button>
       </Message>
 
-      <table v-else aria-label="MaveMD score sets by gene" class="mt-5 w-full table-fixed border-collapse text-sm">
-        <thead>
-          <tr>
-            <th
-              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
-              style="width: 55%"
-            >
-              Score set
-            </th>
-            <th
-              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
-              style="width: 30%"
-            >
-              Publication
-            </th>
-            <th
-              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-center text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
-              style="width: 15%"
-            >
-              Calibrations
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="({gene, urns}, gi) in maveMdScoreSetsGroupedByGene" :key="gene">
+      <template v-else>
+        <table aria-label="MaveMD score sets by gene" class="mt-5 w-full table-fixed border-collapse text-base">
+          <thead>
             <tr>
-              <td class="border-b border-gray-100 bg-gray-50/60 px-3 py-1.5 text-gray-700" colspan="3">
-                <span v-if="gi === 0" class="mr-2 text-[0.625rem] font-bold uppercase tracking-wider text-gray-400"
-                  >Gene</span
+              <th
+                class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+                style="width: 60%"
+              >
+                Score set
+              </th>
+              <th
+                class="border-b-2 border-gray-200 pb-2.5 pr-3 text-right text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+                style="width: 15%"
+              >
+                Variants
+              </th>
+              <th
+                class="border-b-2 border-gray-200 pb-2.5 pl-3 text-center text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+                style="width: 25%"
+              >
+                <span
+                  v-tooltip.top="{
+                    value: CALIBRATION_STATUS_LEGEND_HTML,
+                    escape: false,
+                    fitContent: false,
+                    autoHide: false,
+                    class: 'calibration-status-tooltip'
+                  }"
+                  class="cursor-help border-b border-dashed border-gray-300"
                 >
-                <span class="font-semibold">{{ gene }}</span>
-              </td>
+                  Calibrations
+                </span>
+              </th>
             </tr>
-            <tr v-for="urn in urns" :key="urn">
-              <td class="border-b border-gray-100 py-2 pl-5 pr-3">
-                <MvEntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
-              </td>
-              <td class="border-b border-gray-100 px-3 py-2">
-                <router-link
-                  v-if="maveMdScoreSets[urn]"
-                  class="text-sm text-link"
-                  :to="{name: 'scoreSet', params: {urn}}"
-                >
-                  {{ getScoreSetShortName(maveMdScoreSets[urn]!) }}
-                </router-link>
-              </td>
-              <td class="border-b border-gray-100 px-3 py-2 text-center">
-                <router-link :to="{name: 'scoreSetCalibrations', params: {urn}}">
-                  <span
-                    class="inline-block whitespace-nowrap rounded-full border border-purple-300 bg-purple-50 px-2.5 py-px text-xs font-semibold text-purple-800"
+          </thead>
+          <tbody>
+            <template v-for="({gene, urns}, gi) in maveMdScoreSetsGroupedByGene" :key="gene">
+              <tr>
+                <td class="border-b border-gray-100 bg-gray-50/60 px-3 py-1.5 text-gray-700" colspan="3">
+                  <span v-if="gi === 0" class="mr-2 text-[0.625rem] font-bold uppercase tracking-wider text-gray-400"
+                    >Gene</span
                   >
-                    {{ calibrationCountWithEvidence(urn) }} / {{ calibrationCountTotal(urn) }}
+                  <span class="font-semibold">{{ gene }}</span>
+                </td>
+              </tr>
+              <tr v-for="urn in urns" :key="urn">
+                <td class="border-b border-gray-100 py-3 pl-5 pr-3 align-top">
+                  <span class="font-semibold">
+                    <MvEntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
                   </span>
-                </router-link>
+                  <template v-if="maveMdScoreSets[urn]">
+                    <div
+                      v-if="maveMdScoreSets[urn]!.shortDescription"
+                      class="mt-0.5 line-clamp-2 text-sm text-gray-500"
+                    >
+                      {{ maveMdScoreSets[urn]!.shortDescription }}
+                    </div>
+                    <div class="mt-1">
+                      <a
+                        v-if="getPublicationUrl(maveMdScoreSets[urn]!)"
+                        class="text-xs font-medium text-gray-500 hover:text-link hover:underline"
+                        :href="getPublicationUrl(maveMdScoreSets[urn]!)!"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        {{ getScoreSetShortName(maveMdScoreSets[urn]!) }}
+                        <span aria-hidden="true">&nearr;</span>
+                      </a>
+                      <span
+                        v-else-if="maveMdScoreSets[urn]!.primaryPublicationIdentifiers.length > 0"
+                        class="text-xs font-medium text-gray-500"
+                        >{{ getScoreSetShortName(maveMdScoreSets[urn]!) }}</span
+                      >
+                      <span v-else class="text-xs italic text-gray-400">No linked publication</span>
+                    </div>
+                  </template>
+                </td>
+                <td class="border-b border-gray-100 px-3 py-3 text-right align-top tabular-nums">
+                  <span class="font-semibold text-dark">{{ formatVariantCount(maveMdScoreSets[urn]) }}</span>
+                </td>
+                <td class="border-b border-gray-100 px-3 py-3 text-center align-top">
+                  <router-link :to="{name: 'scoreSetCalibrations', params: {urn}}">
+                    <span
+                      class="inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                      :class="calibrationStatus(urn).badgeClass"
+                    >
+                      {{ calibrationStatus(urn).label }}
+                    </span>
+                  </router-link>
+                </td>
+              </tr>
+            </template>
+            <tr v-if="maveMdScoreSetsGroupedByGene.length === 0">
+              <td class="border-b border-gray-100 px-3 py-6 text-center text-sm text-gray-500" colspan="3">
+                No genes match "{{ filterGene }}".
               </td>
             </tr>
-          </template>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
 
-      <div v-if="!guideExpanded" class="mt-3 flex items-center gap-3 border-t border-gray-200 pt-3">
-        <button
-          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-link hover:underline"
-          @click="guideExpanded = true"
-        >
-          Show all {{ maveMdScoreSetUrns.length }} datasets
-        </button>
-        <span class="text-xs text-gray-400">Showing first 8 genes</span>
-      </div>
+        <div v-if="!guideExpanded && !filterGene" class="mt-3 flex items-center gap-3 border-t border-gray-200 pt-3">
+          <button
+            class="cursor-pointer border-none bg-transparent text-sm font-semibold text-link hover:underline"
+            @click="guideExpanded = true"
+          >
+            Show all {{ maveMdScoreSetUrns.length }} datasets
+          </button>
+          <span class="text-xs text-gray-400">Showing first 8 genes</span>
+        </div>
+      </template>
     </section>
   </MvLayout>
 </template>
@@ -758,7 +815,7 @@ import {
 } from '@/lib/mavemd'
 import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
-import {getScoreSetShortName} from '@/lib/score-sets'
+import {getScoreSetShortName, getPublicationUrl} from '@/lib/score-sets'
 import {type GenomeAssembly, GENOME_ASSEMBLY_NAMES, gnomadIdToHgvs, otherAssembly} from '@/lib/gnomad'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
 import {SEARCH_COLORS, SEARCH_PLACEHOLDERS} from '@/data/search'
@@ -786,6 +843,22 @@ import MvLoader from '@/components/common/MvLoader.vue'
 
 const SCORE_SETS_TO_SHOW = 5
 
+/**
+ * Legend for the calibration-status column header, rendered as HTML so the states read as a scannable bullet list.
+ * Passed to the tooltip with `escape: false`; the markup is static, so there is no injection surface.
+ */
+const CALIBRATION_STATUS_LEGEND_HTML = `
+  <div class="cal-status-legend">
+    <div class="cal-status-legend__title">ACMG/AMP calibration status</div>
+    <ul>
+      <li><span class="cal-status-legend__label">None</span> — no calibrations</li>
+      <li><span class="cal-status-legend__label">Uncalibrated</span> — calibrations exist but assign no evidence strengths</li>
+      <li><span class="cal-status-legend__label">Research use only</span> — the only evidence-bearing calibrations are RUO</li>
+      <li><span class="cal-status-legend__label">Calibrated</span> — at least one calibration assigns evidence strengths for clinical use</li>
+    </ul>
+  </div>
+`
+
 type ScoreSet = components['schemas']['ScoreSet']
 type TargetGene = components['schemas']['TargetGene']
 
@@ -810,7 +883,17 @@ export default defineComponent({
     const router = useRouter()
     const toast = useToast()
     const {getEntity} = useEntityCache()
-    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn, AVE_CLINICAL_APPLICATION}
+    return {
+      route,
+      router,
+      toast,
+      getEntity,
+      getScoreSetShortName,
+      getPublicationUrl,
+      scoreSetUrnFromVariantUrn,
+      AVE_CLINICAL_APPLICATION,
+      CALIBRATION_STATUS_LEGEND_HTML
+    }
   },
 
   data: function () {
@@ -847,6 +930,7 @@ export default defineComponent({
       associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
       guideExpanded: false,
+      filterGene: '',
       maveMdScoreSetUrns: [] as string[],
       maveMdScoreSets: {} as {[urn: string]: ScoreSet | undefined},
       maveMdScoreSetsError: false,
@@ -855,8 +939,9 @@ export default defineComponent({
   },
 
   computed: {
-    maveMdScoreSetsGroupedByGene: function () {
-      const groups = _(this.maveMdScoreSetUrns)
+    /** All score sets grouped by gene name, sorted alphabetically — the unfiltered, unsliced source list. */
+    allScoreSetsGroupedByGene: function (): Array<{gene: string; urns: string[]}> {
+      return _(this.maveMdScoreSetUrns)
         .groupBy((urn) => {
           const scoreSet = this.maveMdScoreSets[urn]
           if (!scoreSet) return 'Unknown'
@@ -866,7 +951,14 @@ export default defineComponent({
         .map(([gene, urns]) => ({gene, urns}))
         .sortBy(({gene}) => gene.toLowerCase())
         .value()
-      return this.guideExpanded ? groups : groups.slice(0, 8)
+    },
+    maveMdScoreSetsGroupedByGene: function (): Array<{gene: string; urns: string[]}> {
+      // A gene filter searches the whole collection, so it bypasses the eight-gene preview and returns every match.
+      const filter = this.filterGene.trim().toLowerCase()
+      if (filter) {
+        return this.allScoreSetsGroupedByGene.filter(({gene}) => gene.toLowerCase().includes(filter))
+      }
+      return this.guideExpanded ? this.allScoreSetsGroupedByGene : this.allScoreSetsGroupedByGene.slice(0, 8)
     },
     searchIsClearable: function () {
       return (
@@ -1616,24 +1708,100 @@ export default defineComponent({
       }
     },
 
-    calibrationCountWithEvidence(urn: string): number {
-      const scoreSet = this.maveMdScoreSets[urn]
-      if (!scoreSet?.scoreCalibrations) return 0
-      return scoreSet.scoreCalibrations.filter(
-        (calibration: components['schemas']['ScoreCalibration']) =>
-          Array.isArray(calibration.functionalClassifications) &&
-          calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
-      ).length
+    /** A calibration carries evidence when at least one of its functional classifications assigns an ACMG strength. */
+    calibrationHasEvidence(calibration: components['schemas']['ScoreCalibration']): boolean {
+      return (
+        Array.isArray(calibration.functionalClassifications) &&
+        calibration.functionalClassifications.some((range) => range.acmgClassification)
+      )
     },
 
-    calibrationCountTotal(urn: string): number {
-      return this.maveMdScoreSets[urn]?.scoreCalibrations?.length || 0
+    /**
+     * Derive a labeled ACMG calibration status for a score set, replacing the opaque "with-evidence / total" badge.
+     *
+     * A single calibration that assigns ACMG evidence strengths is enough to call a score set calibrated — the status
+     * does not require every calibration to carry evidence. The one qualification is research-use-only (RUO): when the
+     * only evidence-bearing calibrations are RUO, the score set is flagged as such rather than shown as clinically
+     * calibrated, since RUO calibrations are not intended for clinical interpretation.
+     */
+    calibrationStatus(urn: string): {label: string; badgeClass: string; tooltip: string} {
+      const calibrations = this.maveMdScoreSets[urn]?.scoreCalibrations ?? []
+      const withEvidence = calibrations.filter((c) => this.calibrationHasEvidence(c))
+      const clinicalEvidence = withEvidence.filter((c) => !c.researchUseOnly)
+      const muted = 'border-gray-200 bg-gray-50 text-gray-500'
+
+      if (calibrations.length === 0) {
+        return {
+          label: 'None',
+          badgeClass: muted,
+          tooltip: 'This score set has no clinical evidence calibrations.'
+        }
+      }
+      if (withEvidence.length === 0) {
+        return {
+          label: 'Uncalibrated',
+          badgeClass: muted,
+          tooltip: 'Calibrations exist but none assign ACMG/AMP evidence strengths.'
+        }
+      }
+      if (clinicalEvidence.length === 0) {
+        return {
+          label: 'Research use only',
+          badgeClass: 'border-orange-border bg-orange-light text-orange-cta-dark',
+          tooltip:
+            'The only calibrations assigning ACMG/AMP evidence strengths are marked research-use-only, so they are not intended for clinical variant interpretation.'
+        }
+      }
+      return {
+        label: 'Calibrated',
+        badgeClass: 'border-published-dot bg-published-light text-published',
+        tooltip: 'At least one calibration assigns ACMG/AMP evidence strengths for clinical variant interpretation.'
+      }
+    },
+
+    /** Format a variant count with a thousands separator, or an em dash when the count is unavailable. */
+    formatVariantCount(scoreSet: ScoreSet | undefined): string {
+      return typeof scoreSet?.numVariants === 'number' ? scoreSet.numVariants.toLocaleString() : '—'
     }
   }
 })
 </script>
 
 <style>
+/* Calibration-status legend tooltip. Tooltips teleport to the body, so these rules cannot be scoped.
+   PrimeVue applies the custom class to the same root element as .p-tooltip (not a wrapper around it),
+   so the override must target that root, which is where the theme's max-width is set. */
+.p-tooltip.calibration-status-tooltip {
+  max-width: 30rem;
+}
+
+.calibration-status-tooltip .p-tooltip-text {
+  white-space: normal;
+}
+
+.cal-status-legend__title {
+  margin-bottom: 0.375rem;
+  font-weight: 700;
+}
+
+.cal-status-legend ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+
+.cal-status-legend li {
+  line-height: 1.4;
+}
+
+.cal-status-legend li + li {
+  margin-top: 0.25rem;
+}
+
+.cal-status-legend__label {
+  font-weight: 600;
+}
+
 /* Guided search PrimeVue Select overrides */
 .guided-select-cell .guided-select {
   width: 100%;

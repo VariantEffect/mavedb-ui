@@ -28,6 +28,19 @@
       <span v-else class="text-xs italic text-text-muted/60">N/A</span>
     </div>
 
+    <!-- Disease/Disorder -->
+    <div v-if="diseaseLabel" class="flex items-center gap-3 border-b border-border bg-bg px-4 py-2.5">
+      <span
+        v-tooltip.top="{
+          value: 'The disease or disorder this calibration\'s evidence pertains to.',
+          autoHide: false
+        }"
+        class="cursor-help border-b border-dashed border-border text-xs font-bold uppercase tracking-wide text-text-muted"
+        >Disease/Disorder</span
+      >
+      <span class="text-sm text-text-primary">{{ diseaseLabel }}</span>
+    </div>
+
     <!-- Range table chunks -->
     <template v-if="sortedRanges.length > 0">
       <table
@@ -172,8 +185,35 @@
             />
           </tr>
 
+          <!-- Score set variant count row -->
+          <tr>
+            <td
+              v-tooltip.top="{
+                value: 'The number of variants from this score set that fall within this range.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
+            >
+              Score set variants
+            </td>
+            <td
+              v-for="range in chunk"
+              :key="range.label + '-count'"
+              :class="{highlight: range.label === highlightedRangeLabel}"
+            >
+              <span class="font-mono text-sm font-bold text-text-secondary">{{
+                (range.variantCount ?? 0).toLocaleString()
+              }}</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-count-${n}`"
+              class="pad-cell"
+            />
+          </tr>
+
           <!-- Evidence strength row -->
-          <tr v-if="anyRangeHasEvidenceCode">
+          <tr v-if="anyRangeHasEvidenceCode" :class="{'group-start': clinicalGroupStart === 'evidence'}">
             <td
               v-tooltip.top="{
                 value:
@@ -204,7 +244,7 @@
           </tr>
 
           <!-- OddsPath ratio row -->
-          <tr v-if="anyRangeHasOddsPaths">
+          <tr v-if="anyRangeHasOddsPaths" :class="{'group-start': clinicalGroupStart === 'oddsPath'}">
             <td
               v-tooltip.top="{
                 value:
@@ -233,7 +273,7 @@
           </tr>
 
           <!-- PLR row -->
-          <tr v-if="anyRangeHasPLR">
+          <tr v-if="anyRangeHasPLR" :class="{'group-start': clinicalGroupStart === 'plr'}">
             <td
               v-tooltip.top="{
                 value: 'Positive Likelihood Ratio — the ratio of the true positive rate to the false positive rate.',
@@ -258,29 +298,27 @@
             />
           </tr>
 
-          <!-- Variant count row -->
-          <tr>
-            <td
-              v-tooltip.top="{
-                value: 'The number of variants from this score set that fall within this range.',
-                autoHide: false
-              }"
-              class="row-label row-label-tip"
-            >
-              Variant count
+          <!-- Control placement rows: where each clinical control's score lands among these ranges. -->
+          <tr
+            v-for="(row, rowIndex) in controlRows"
+            :key="`controls-${row.status}`"
+            :class="{'group-start': rowIndex === 0 && clinicalGroupStart === 'controls'}"
+          >
+            <td v-tooltip.top="{value: row.tooltip, autoHide: false}" class="row-label row-label-tip">
+              {{ row.label }}
             </td>
             <td
               v-for="range in chunk"
-              :key="range.label + '-count'"
+              :key="`${range.label}-controls-${row.status}`"
               :class="{highlight: range.label === highlightedRangeLabel}"
             >
-              <span class="font-mono text-sm font-bold text-text-secondary">{{
-                (range.variantCount ?? 0).toLocaleString()
+              <span class="font-mono text-sm font-bold" :class="controlCountClass(range, row.status)">{{
+                controlCountText(range, row.status)
               }}</span>
             </td>
             <td
               v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
-              :key="`pad-count-${n}`"
+              :key="`pad-controls-${row.status}-${n}`"
               class="pad-cell"
             />
           </tr>
@@ -315,6 +353,11 @@
       <span>{{ scoreCalibration.notes }}</span>
     </div>
 
+    <!-- Calibration controls summary -->
+    <div v-if="controlCount" class="border-t border-border bg-bg px-4 py-2.5">
+      <CalibrationControlsSummary :placements="controlPlacements" :range-count="sortedRanges.length" />
+    </div>
+
     <!-- Sources -->
     <div
       v-if="hasAnySources"
@@ -324,7 +367,10 @@
         <i class="pi pi-book text-xs"></i>
         Sources
       </span>
-      <div v-if="scoreCalibration.thresholdSources && scoreCalibration.thresholdSources.length > 0" class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+      <div
+        v-if="scoreCalibration.thresholdSources && scoreCalibration.thresholdSources.length > 0"
+        class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
+      >
         <span
           v-tooltip.top="{
             value: 'The threshold source(s) describes the source of the score threshold used in this calibration.',
@@ -351,7 +397,10 @@
         class="hidden tablet:inline mx-0.5 text-border-light"
         >&mdash;</span
       >
-      <div v-if="scoreCalibration.methodSources && scoreCalibration.methodSources.length > 0" class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+      <div
+        v-if="scoreCalibration.methodSources && scoreCalibration.methodSources.length > 0"
+        class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
+      >
         <span
           v-tooltip.top="{
             value: 'The method source(s) describe the method by which evidence strengths were obtained.',
@@ -375,7 +424,10 @@
         class="hidden tablet:inline mx-0.5 text-border-light"
         >&mdash;</span
       >
-      <div v-if="scoreCalibration.evidenceSources && scoreCalibration.evidenceSources.length > 0" class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+      <div
+        v-if="scoreCalibration.evidenceSources && scoreCalibration.evidenceSources.length > 0"
+        class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
+      >
         <span
           v-tooltip.top="{
             value:
@@ -403,14 +455,22 @@
 import {defineComponent, PropType} from 'vue'
 import {components} from '@/schema/openapi'
 
+import CalibrationControlsSummary from '@/components/calibration/CalibrationControlsSummary.vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
+import type {CalibrationControlStatus} from '@/lib/calibration-controls'
+import {buildControlPlacements, type ControlPlacements} from '@/lib/calibrations'
+import {diseaseDisplayLabel} from '@/lib/diseases'
 import {shortCitationForPublication} from '@/lib/publication'
+
+type FunctionalClassification =
+  components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 
 export default defineComponent({
   name: 'CalibrationTable',
 
   components: {
+    CalibrationControlsSummary,
     MvClassificationTag,
     MvEvidenceTag
   },
@@ -517,6 +577,53 @@ export default defineComponent({
       return this.scoreCalibration.baselineScore !== null && this.scoreCalibration.baselineScore !== undefined
     },
 
+    diseaseLabel(): string | null {
+      return diseaseDisplayLabel(this.scoreCalibration.disease)
+    },
+
+    controlCount(): number {
+      return this.scoreCalibration.controls?.length ?? 0
+    },
+
+    /**
+     * Which clinical row draws the divider under the range's own details. Every row in that block is
+     * conditional, so the boundary can't be a fixed one — it falls to whichever renders first.
+     */
+    clinicalGroupStart(): 'evidence' | 'oddsPath' | 'plr' | 'controls' | null {
+      if (this.anyRangeHasEvidenceCode) return 'evidence'
+      if (this.anyRangeHasOddsPaths) return 'oddsPath'
+      if (this.anyRangeHasPLR) return 'plr'
+      return this.controlRows.length > 0 ? 'controls' : null
+    },
+
+    controlPlacements(): ControlPlacements {
+      return buildControlPlacements(this.scoreCalibration.controls, this.scoreCalibration.functionalClassifications)
+    },
+
+    /**
+     * The per-status control rows to render in the range grid, or none at all. Rows are suppressed
+     * until at least one control has actually landed in a range, so pages that don't load scores
+     * (and calibrations whose controls all fall outside the ranges) get the summary strip alone
+     * rather than a row of empty cells.
+     */
+    controlRows(): {status: CalibrationControlStatus; label: string; tooltip: string}[] {
+      if (!this.controlCount || this.controlPlacements.placedTotal === 0) {
+        return []
+      }
+      return [
+        {
+          status: 'pathogenic',
+          label: 'Pathogenic controls',
+          tooltip: "How many of this calibration's pathogenic controls have a score falling in this range."
+        },
+        {
+          status: 'benign',
+          label: 'Benign controls',
+          tooltip: "How many of this calibration's benign controls have a score falling in this range."
+        }
+      ]
+    },
+
     calibrationNameToDisplay() {
       return this.scoreCalibration.researchUseOnly
         ? `Research Use Only: ${this.scoreCalibration.title}`
@@ -551,6 +658,28 @@ export default defineComponent({
   },
 
   methods: {
+    /** Controls of `status` that landed in `range`; an em dash reads better than a field of zeros. */
+    controlCountText(range: FunctionalClassification, status: CalibrationControlStatus): string {
+      const count = this.controlPlacements.byRange.get(range)?.[status] ?? 0
+      return count === 0 ? '—' : String(count)
+    },
+
+    /**
+     * Tints the count by whether landing here agrees with the control's clinical status. The number is
+     * colored rather than the cell, since cell backgrounds already carry the selected-range highlight.
+     */
+    controlCountClass(range: FunctionalClassification, status: CalibrationControlStatus): string {
+      const count = this.controlPlacements.byRange.get(range)?.[status] ?? 0
+      if (count === 0) {
+        return 'text-text-muted/40'
+      }
+      const classification = range.functionalClassification
+      if (classification !== 'abnormal' && classification !== 'normal') {
+        return 'text-text-secondary'
+      }
+      return (status === 'pathogenic') === (classification === 'abnormal') ? 'text-sage-dark' : 'text-orange-cta-dark'
+    },
+
     columnColorClass(
       range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
     ): string {
@@ -668,6 +797,12 @@ export default defineComponent({
 
 .cal-grid-continuation tr:first-child .row-label {
   border-top: 4px solid var(--color-border);
+}
+
+/* Divides the range's own details (label, classification, interval, variant count) from the
+   clinical block below: evidence strengths, their ratios, and the controls backing them. */
+.cal-grid tr.group-start td {
+  border-top: 2px solid var(--color-border);
 }
 
 /* ── Column color bars ────────────────────── */

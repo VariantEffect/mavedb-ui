@@ -142,6 +142,9 @@ interface CalibrationDescriptions {
   thresholdSources: FieldDescription
   evidenceSources: FieldDescription
   classesFile: FieldDescription
+  disease: FieldDescription
+  controlsFile: FieldDescription
+  controlsPhi: FieldDescription
 }
 
 export function calibrationDescriptions(): CalibrationDescriptions {
@@ -247,6 +250,26 @@ export function calibrationDescriptions(): CalibrationDescriptions {
         'Since you are providing categorical class names, please upload a CSV file mapping variants to these classes. This file should contain the following columns:<br />' +
         '- One of: <code>variant_urn</code>, <code>hgvs_nt</code>, <code>hgvs_pro</code>: The URN or HGVS notation of the variant. This column should be unique.<br />' +
         '- <code>class_name</code>: The name of the class associated with the variant'
+    },
+    disease: {
+      hint: 'MONDO disease or disorder term for the controls.',
+      help: 'What disease or disorder do these controls pertain to?',
+      detail:
+        'The disease context is recorded at the calibration level and must be a <a href="https://www.ebi.ac.uk/ols4/ontologies/mondo" target="_blank">MONDO</a> term. By default, every calibration is assigned the generic "disease or disorder" concept. If your calibration is specific to a particular disease or disorder, please search for and select the appropriate MONDO concept from the list.'
+    },
+    controlsFile: {
+      hint: 'CSV of control variants and their clinical status.',
+      help: 'Controls CSV',
+      detail:
+        'Controls are the variants of known clinical significance used to derive this calibration. Upload a CSV with the following columns:<br />' +
+        '- One of: <code>variant_urn</code>, <code>hgvs_nt</code>, <code>hgvs_pro</code>: The URN or HGVS notation of a variant in this score set. Use <code>variant_urn</code> to disambiguate if an HGVS matches more than one variant.<br />' +
+        '- <code>clinical_status</code>: <code>pathogenic</code> or <code>benign</code> (case-insensitive).'
+    },
+    controlsPhi: {
+      hint: 'Confirm the controls contain no PHI.',
+      help: 'Protected health information',
+      detail:
+        'Control data must not contain protected health information (PHI). A calibration with controls cannot be published until this is confirmed.'
     }
   }
 }

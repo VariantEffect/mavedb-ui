@@ -49,13 +49,23 @@ export const calibrationBadges: Record<string, BadgeConfig> = {
   general: {label: 'General', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'}
 }
 
+// ── Clinical status ──────────────────────────────────────────────────────────
+// Calibration-control clinical significance, following the field's red-pathogenic / blue-benign
+// convention used elsewhere in the app (e.g. the score-set variant search's ClinVar dots).
+
+export const clinicalStatusBadges: Record<'pathogenic' | 'benign', BadgeConfig> = {
+  pathogenic: {label: 'Pathogenic', classes: 'bg-red-50 text-red-700', dotClass: 'bg-red-500'},
+  benign: {label: 'Benign', classes: 'bg-blue-50 text-blue-700', dotClass: 'bg-blue-500'}
+}
+
 // ── Lookup ───────────────────────────────────────────────────────────────────
 
 const allBadges: Record<string, BadgeConfig> = {
   ...statusBadges,
   ...roleBadges,
   ...visibilityBadges,
-  ...calibrationBadges
+  ...calibrationBadges,
+  ...clinicalStatusBadges
 }
 
 /** Look up a badge config by key, falling back to a neutral "Unknown" badge. */

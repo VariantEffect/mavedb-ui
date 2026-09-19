@@ -297,28 +297,40 @@ Additionally, variants with a null score value cannot be exported as Functional 
 
 VRS and VA-Spec objects exported from MaveDB are self-contained but reference other data — sequences, score sets, and variant identifiers — that you can resolve through the MaveDB API. This section walks through the end-to-end workflow of downloading these objects and extracting the information they contain.
 
-### Downloading mapped variants
+### Downloading variant details
 
-Start by fetching the mapped variants for a score set. The response is a JSON array of VRS objects, each paired with its MaveDB scores.
+Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the `preMapped`/`postMapped` VRS pair, the GA4GH categorical variant, and the annotation map. Only mapped variants appear; a variant with no VRS is omitted.
+
+!!! note "Replaces `/mapped-variants`"
+
+    The older `GET /score-sets/{urn}/mapped-variants` endpoint has been removed and now returns `410 Gone`. Use `/variant-details` instead — it carries everything that export did, plus categorical-variant membership and annotations.
 
 === "Python"
 
     ```python
+    import json
+
     import requests
 
     BASE_URL = "https://api.mavedb.org/api/v1"
     urn = "urn:mavedb:00000003-a-1"
 
-    response = requests.get(f"{BASE_URL}/score-sets/{urn}/mapped-variants")
-    mapped_variants = response.json()
-
-    # Each entry contains a VRS object and associated scores
-    for mv in mapped_variants[:3]:
-        variant = mv["post_mapped"]
-        print(variant["id"], variant["expressions"][0]["value"])
+    # stream=True keeps the whole file out of memory; records arrive one per line.
+    with requests.get(f"{BASE_URL}/score-sets/{urn}/variant-details", stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
+            if not line:
+                continue
+            detail = json.loads(line)
+            variant = detail["postMapped"]
+            expressions = variant.get("expressions") or []
+            hgvs = expressions[0]["value"] if expressions else None
+            print(detail["urn"], variant.get("id"), hgvs)
     ```
 
 === "R"
+
+    This buffers the whole response; see the Python tab for line-at-a-time processing.
 
     ```r
     library(httr)
@@ -327,20 +339,22 @@ Start by fetching the mapped variants for a score set. The response is a JSON ar
     base_url <- "https://api.mavedb.org/api/v1"
     urn <- "urn:mavedb:00000003-a-1"
 
-    response <- GET(paste0(base_url, "/score-sets/", urn, "/mapped-variants"))
-    mapped_variants <- content(response, as = "parsed")
+    response <- GET(paste0(base_url, "/score-sets/", urn, "/variant-details"))
+    lines <- strsplit(content(response, as = "text", encoding = "UTF-8"), "\n")[[1]]
 
-    for (mv in mapped_variants[1:3]) {
-      variant <- mv$post_mapped
-      cat(variant$id, variant$expressions[[1]]$value, "\n")
+    for (line in head(Filter(nzchar, lines), 3)) {
+      detail <- fromJSON(line, simplifyVector = FALSE)
+      variant <- detail$postMapped
+      hgvs <- if (length(variant$expressions)) variant$expressions[[1]]$value else NA
+      cat(detail$urn, variant$id, hgvs, "\n")
     }
     ```
 
 === "curl"
 
     ```bash
-    curl -o mapped_variants.json \
-      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants
+    curl -o variant_details.ndjson \
+      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details
     ```
 
 ### Retrieving reference sequences (refget)

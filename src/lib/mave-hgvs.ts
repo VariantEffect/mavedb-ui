@@ -117,6 +117,24 @@ export function variantNotNullOrNA(variant: string | null | undefined): boolean 
 }
 
 /**
+ * Extract the HGVS "type" prefix — the single letter before the dot in an HGVS expression
+ * (e.g. `c` in `NM_003345.4:c.324T>G`, `p` in `NP_000528.2:p.Leu6Gly`). The prefix may sit
+ * at the start of the string or after an accession/colon. Returns the lowercased letter, or
+ * null if the string is empty or not recognizably typed.
+ */
+function hgvsTypePrefix(hgvs: string | null | undefined): string | null {
+  if (!hgvs) return null
+  const match = hgvs.match(/(?:^|:)\s*([cgmnrp])\./i)
+  return match ? match[1].toLowerCase() : null
+}
+
+/** Whether an HGVS expression is nucleotide-level (c./g./n./m./r.) rather than protein (p.). */
+export function isNucleotideHgvs(hgvs: string | null | undefined): boolean {
+  const prefix = hgvsTypePrefix(hgvs)
+  return prefix != null && prefix !== 'p'
+}
+
+/**
  * Return the preferred variant label for a given variant. Protein variation is preferred
  * to nucleotide variation, which is preferred to splice variation.
  *

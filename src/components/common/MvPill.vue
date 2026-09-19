@@ -21,7 +21,7 @@ const VARIANT_CLASSES: Record<PillVariant, string> = {
   calibrated: 'border-calibrated-border bg-calibrated-light text-calibrated',
   collection: 'border-sage bg-sage-dark text-white',
   nucleotide: 'border-nucleotide-border bg-nucleotide-light text-nucleotide',
-  protein: 'border-protein-border bg-protein-light text-protein'
+  protein: 'border-amino-acid-border bg-amino-acid-light text-amino-acid'
 }
 
 export default defineComponent({

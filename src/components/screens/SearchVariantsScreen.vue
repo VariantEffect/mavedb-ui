@@ -441,129 +441,50 @@
           </MvCollapsible>
         </div>
 
-        <!-- Card body: measurements -->
+        <!-- Card body: searched change first (Section 1), then the rest of its equivalence class (Section 2).
+             One row per measurement, no score-set dedup, so the full class stays visible. -->
         <div
           v-if="
             allele.variantsStatus === 'Loaded' &&
-            (allele.variants.nucleotide.length > 0 ||
-              allele.variants.protein.length > 0 ||
-              allele.variants.associatedNucleotide.length > 0)
+            (searchedMeasurements(allele).length || relatedEvidence(allele).length)
           "
         >
-          <!-- Nucleotide measurements -->
-          <div v-if="allele.variants.nucleotide.length > 0" aria-label="Nucleotide level assays" role="group">
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
-              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">Nucleotide level assays</span>
+          <!-- Section 1: what was searched, measured directly. -->
+          <div v-if="searchedMeasurements(allele).length" aria-label="Directly measured" role="group">
+            <div class="flex items-center gap-2 px-5 pt-3.5 pb-0.5">
+              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">{{ searchedHeading(allele) }}</span>
               <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
-                allele.variants.nucleotide.length
+                searchedMeasurements(allele).length
               }}</span>
             </div>
-            <MvScoreSetRow
-              v-for="(variant, idx) in nucleotideScoreSetListIsExpanded[alleleIdx]
-                ? allele.variants.nucleotide
-                : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-              :key="variant.urn ?? idx"
-              class="pl-8"
-              :score-set="variant.scoreSet"
-              :show-description="false"
-              :show-meta="false"
+            <MvMeasurementRow
+              v-for="(m, idx) in searchedMeasurements(allele)"
+              :key="m.variantUrn ?? idx"
+              class="pl-8 pr-5"
+              :measurement="m"
             />
-            <button
-              v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-              :aria-expanded="!!nucleotideScoreSetListIsExpanded[alleleIdx]"
-              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
-              @click="nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]"
-            >
-              {{
-                nucleotideScoreSetListIsExpanded[alleleIdx]
-                  ? 'Show less'
-                  : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
-              }}
-            </button>
           </div>
 
           <div
-            v-if="allele.variants.nucleotide.length > 0 && allele.variants.protein.length > 0"
+            v-if="searchedMeasurements(allele).length && relatedEvidence(allele).length"
             class="mx-5 h-px bg-gray-100"
           ></div>
 
-          <!-- Protein measurements -->
-          <div v-if="allele.variants.protein.length > 0" aria-label="Protein level assays" role="group">
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
-              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">Protein level assays</span>
+          <!-- Section 2: the same functional change, measured elsewhere. -->
+          <div v-if="relatedEvidence(allele).length" :aria-label="relatedHeading(allele)" role="group">
+            <div class="flex items-center gap-2 px-5 pt-3.5 pb-0.5">
+              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">{{ relatedHeading(allele) }}</span>
               <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
-                allele.variants.protein.length
+                relatedEvidence(allele).length
               }}</span>
             </div>
-            <MvScoreSetRow
-              v-for="(variant, idx) in proteinScoreSetListIsExpanded[alleleIdx]
-                ? allele.variants.protein
-                : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
-              :key="variant.urn ?? idx"
-              class="pl-8"
-              :score-set="variant.scoreSet"
-              :show-description="false"
-              :show-meta="false"
+            <div class="px-5 pb-1.5 text-xs italic text-gray-400">{{ relatedDescription(allele) }}</div>
+            <MvMeasurementRow
+              v-for="(m, idx) in relatedEvidence(allele)"
+              :key="m.variantUrn ?? idx"
+              class="pl-8 pr-5"
+              :measurement="m"
             />
-            <button
-              v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-              :aria-expanded="!!proteinScoreSetListIsExpanded[alleleIdx]"
-              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
-              @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
-            >
-              {{
-                proteinScoreSetListIsExpanded[alleleIdx]
-                  ? 'Show less'
-                  : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
-              }}
-            </button>
-          </div>
-
-          <div
-            v-if="
-              allele.variants.associatedNucleotide.length > 0 &&
-              (allele.variants.nucleotide.length > 0 || allele.variants.protein.length > 0)
-            "
-            class="mx-5 h-px bg-gray-100"
-          ></div>
-
-          <!-- Associated nucleotide measurements -->
-          <div
-            v-if="allele.variants.associatedNucleotide.length > 0"
-            aria-label="Associated nucleotide assays"
-            role="group"
-          >
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
-              <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Associated nucleotide</span>
-              <span class="rounded-full bg-sage px-2 py-px text-[0.6875rem] font-semibold text-white">{{
-                allele.variants.associatedNucleotide.length
-              }}</span>
-            </div>
-            <MvScoreSetRow
-              v-for="(variant, idx) in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                ? allele.variants.associatedNucleotide
-                : allele.variants.associatedNucleotide.slice(0, defaultNumScoreSetsToShow)"
-              :key="variant.urn ?? idx"
-              class="pl-8"
-              :score-set="variant.scoreSet"
-              :show-description="false"
-              :show-meta="false"
-            />
-            <button
-              v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-              :aria-expanded="!!associatedNucleotideScoreSetListIsExpanded[alleleIdx]"
-              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
-              @click="
-                associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
-                  !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-              "
-            >
-              {{
-                associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                  ? 'Show less'
-                  : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
-              }}
-            </button>
           </div>
         </div>
 
@@ -572,7 +493,7 @@
         </div>
 
         <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
-          <!-- VRS Digest based searches may not always resolve to variants with a ClinGen Allele ID -->
+          <!-- VRS digest searches may not resolve to a ClinGen Allele ID -->
           <template v-if="allele.variantUrn && !allele.clingenAlleleId">
             <p class="mb-3 text-sm text-gray-600">
               This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
@@ -580,7 +501,11 @@
             <router-link
               v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
               class="text-sm font-semibold text-link hover:underline"
-              :to="{name: 'scoreSet', params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)}}"
+              :to="{
+                name: 'scoreSet',
+                params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)},
+                query: {variant: allele.variantUrn}
+              }"
             >
               View score set &rarr;
             </router-link>
@@ -740,7 +665,7 @@ import {useToast} from 'primevue/usetoast'
 import {useHead} from '@unhead/vue'
 
 import MvCollapsible from '@/components/common/MvCollapsible.vue'
-import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import MvMeasurementRow from '@/components/search/MvMeasurementRow.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import {
   type AlleleResult,
@@ -754,7 +679,8 @@ import {
   vrsDigestRegex,
   scoreSetUrnFromVariantUrn,
   extractIdFromUrl,
-  createAlleleResult
+  createAlleleResult,
+  mergeAlleleSpellings
 } from '@/lib/mavemd'
 import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
@@ -778,15 +704,14 @@ import {
   getAlleleByGnomad,
   getGeneBySymbol
 } from '@/api/clingen'
-import {getCollection, lookupVariantsByClingenId} from '@/api/mavedb'
+import {getCollection} from '@/api/mavedb'
 import {getErrorResponse} from '@/lib/errors'
-import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
+import {getAlleleMeasurements, lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
 import {useEntityCache} from '@/composables/entity-cache'
 import MvLoader from '@/components/common/MvLoader.vue'
 
-const SCORE_SETS_TO_SHOW = 5
-
 type ScoreSet = components['schemas']['ScoreSet']
+type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 type TargetGene = components['schemas']['TargetGene']
 
 export default defineComponent({
@@ -796,10 +721,10 @@ export default defineComponent({
     MvEntityLink,
     InputText,
     MvCollapsible,
+    MvMeasurementRow,
     MvLayout,
     Message,
     MvLoader,
-    MvScoreSetRow,
     PSelect
   },
 
@@ -842,10 +767,6 @@ export default defineComponent({
       gnomadReading: null as {id: string; assembly: GenomeAssembly; mismatch: 'reference' | 'position' | null} | null,
       /** What an "Any" search resolved the string to; null when the search type was chosen explicitly. */
       detectedSearchType: null as string | null,
-      nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
-      proteinScoreSetListIsExpanded: [] as Array<boolean>,
-      associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
-      defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
       guideExpanded: false,
       maveMdScoreSetUrns: [] as string[],
       maveMdScoreSets: {} as {[urn: string]: ScoreSet | undefined},
@@ -933,18 +854,10 @@ export default defineComponent({
   },
 
   watch: {
-    alleles: {
-      handler: function (newValue) {
-        this.nucleotideScoreSetListIsExpanded = newValue.map(() => false)
-        this.proteinScoreSetListIsExpanded = newValue.map(() => false)
-        this.associatedNucleotideScoreSetListIsExpanded = newValue.map(() => false)
-      }
-    },
     searchType: {
       handler(newVal, oldVal) {
         if (newVal !== oldVal && this.defaultSearchVisible) {
-          // Don't clear searchText on initial hydration from query params (oldVal is null).
-          // Only clear when the user actively switches search type.
+          // oldVal is null on initial hydration from query params; only clear on an actual user-driven switch.
           if (oldVal != null) {
             this.searchText = ''
           }
@@ -989,8 +902,7 @@ export default defineComponent({
     inputGene(newVal) {
       const normalized = newVal?.toUpperCase() ?? null
       if (newVal && newVal !== normalized) {
-        // Setting inputGene re-triggers this watcher with the normalized value, return
-        // early to avoid syncing query params twice.
+        // Re-entrant: normalizing retriggers this watcher, so return early to avoid a duplicate sync.
         this.inputGene = normalized
         return
       }
@@ -1362,9 +1274,7 @@ export default defineComponent({
           let mappedVariants
           try {
             mappedVariants = await lookupVariantsByVrsDigest(searchStr)
-          } catch (error: unknown) {
-            const {status} = getErrorResponse(error)
-            if (status === 404) {
+            if (mappedVariants.length === 0) {
               this.toast.add({
                 severity: 'warn',
                 summary: 'VRS identifier not found',
@@ -1373,6 +1283,7 @@ export default defineComponent({
               })
               return
             }
+          } catch (error: unknown) {
             throw error
           }
           for (const mappedVariant of mappedVariants) {
@@ -1392,7 +1303,7 @@ export default defineComponent({
                 transcriptAlleles: [],
                 maneCoordinates: [],
                 variantsStatus: 'Loaded',
-                variants: {nucleotide: [], protein: [], associatedNucleotide: []}
+                variants: {direct: [], proteinConsequence: [], nucleotideEncoding: []}
               })
             }
           }
@@ -1428,15 +1339,20 @@ export default defineComponent({
               if (searchType !== 'hgvs' || aminoAcidAlleles[i].hgvs?.includes(searchString)) {
                 const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
                 if (transcripts.length > 0) {
+                  // Policy: one result per protein change, not per transcript spelling. Anchor on the PA
+                  // (its equivalence class already returns protein-level evidence) and merge each
+                  // transcript's spelling onto it.
+                  const card = createAlleleResult(result, maneStatus)
                   for (let j = 0; j < transcripts.length; j++) {
                     const associatedId = extractIdFromUrl(transcripts[j]?.['@id'])
-                    const associatedData = await getAlleleByCaId(associatedId!)
-                    this.alleles.push(createAlleleResult(associatedData, maneStatus))
+                    if (!associatedId) continue
+                    mergeAlleleSpellings(card, createAlleleResult(await getAlleleByCaId(associatedId), maneStatus))
                   }
+                  this.alleles.push(card)
                 } else {
-                  const bareAllele = createAlleleResult(result, null)
-                  bareAllele.canonicalAlleleName = searchStr
-                  this.alleles.push(bareAllele)
+                  // No transcripts to merge; createAlleleResult titles it from the record's own protein
+                  // hgvs, falling back to the ClinGen ID.
+                  this.alleles.push(createAlleleResult(result, null))
                 }
               }
               break
@@ -1470,58 +1386,75 @@ export default defineComponent({
         })
       }
     },
+    // Result composition:
+    // Section 1: the searched change itself, measured directly (nucleotide for a CA, protein for a PA).
+    searchedMeasurements(allele: AlleleResult): AlleleMeasurement[] {
+      return allele.variants.direct
+    },
+    searchedHeading(allele: AlleleResult): string {
+      return allele.clingenAlleleId?.startsWith('PA')
+        ? 'Searched · measured directly (protein)'
+        : 'Searched · measured directly (nucleotide)'
+    },
+    // Section 2: the rest of the equivalence class (protein consequence + its encodings), one row per measurement.
+    relatedEvidence(allele: AlleleResult): AlleleMeasurement[] {
+      return [...allele.variants.proteinConsequence, ...allele.variants.nucleotideEncoding]
+    },
+    relatedHeading(allele: AlleleResult): string {
+      if (allele.clingenAlleleId?.startsWith('PA')) return 'Nucleotide-level evidence'
+      const label = this.proteinChangeLabel(allele)
+      return label ? `Same protein change (${label})` : 'Same protein change'
+    },
+    relatedDescription(allele: AlleleResult): string {
+      return allele.clingenAlleleId?.startsWith('PA')
+        ? 'DNA variants that produce this protein change'
+        : "Other studies that measured this variant's protein consequence"
+    },
+    // The consequence's protein HGVS, taken from any protein-level measurement in the class (for the heading).
+    proteinChangeLabel(allele: AlleleResult): string | null {
+      const proteinMeasurement = [...allele.variants.proteinConsequence, ...allele.variants.direct].find(
+        (m) => m.assayLevel === 'protein'
+      )
+      return proteinMeasurement?.assayLevelHgvs || proteinMeasurement?.submittedHgvs || null
+    },
     searchVariants: async function () {
       for (const allele of this.alleles) {
         const caId = allele.clingenAlleleId
         if (!caId) continue
         allele.variantsStatus = 'Loading'
         try {
-          const data = await lookupVariantsByClingenId([caId])
+          // Full equivalence class: a CA query returns its protein consequence and the other encodings of it,
+          // a PA query its nt encodings — the same set the variant page shows.
+          const measurements = await getAlleleMeasurements(caId)
 
-          if (caId.startsWith('CA')) {
-            allele.variants.nucleotide = data[0]?.exactMatch?.variantEffectMeasurements || []
-            allele.variants.protein = (data[0]?.equivalentAa || []).flatMap(
-              (entry) => entry.variantEffectMeasurements || []
-            )
-            allele.variants.associatedNucleotide = (data[0]?.equivalentNt || []).flatMap(
-              (entry) => entry.variantEffectMeasurements || []
-            )
-          } else if (caId.startsWith('PA')) {
-            allele.variants.protein = data[0]?.exactMatch?.variantEffectMeasurements || []
-            allele.variants.nucleotide = (data[0]?.equivalentNt || []).flatMap(
-              (entry) => entry.variantEffectMeasurements || []
-            )
+          // Bucket by the API's relationship field; searchedHeading/relatedHeading interpret each bucket
+          // for display. No score-set dedup — every measurement gets its own row.
+          const buckets: AlleleResult['variants'] = {direct: [], proteinConsequence: [], nucleotideEncoding: []}
+          for (const m of measurements) {
+            const bucket =
+              m.relationship === 'direct'
+                ? 'direct'
+                : m.relationship === 'protein_consequence'
+                  ? 'proteinConsequence'
+                  : 'nucleotideEncoding'
+            buckets[bucket].push(m)
           }
+          allele.variants = buckets
           allele.variantsStatus = 'Loaded'
         } catch (error: unknown) {
-          allele.variants = {nucleotide: [], protein: [], associatedNucleotide: []}
+          allele.variants = {direct: [], proteinConsequence: [], nucleotideEncoding: []}
           console.log('Error while loading MaveDB search results for variant', error)
+          allele.variantsStatus = 'Error'
           const {status} = getErrorResponse(error)
-          if (status === 404) {
-            allele.variantsStatus = 'Loaded'
-            this.toast.add({
-              severity: 'info',
-              summary: 'No results found',
-              detail: 'No variants match the provided search criteria.',
-              life: 10000
-            })
-          } else if (status >= 500) {
-            allele.variantsStatus = 'Error'
-            this.toast.add({
-              severity: 'error',
-              summary: 'Server Error',
-              detail: 'The server encountered an unexpected error. Please try again later.',
-              life: 10000
-            })
-          } else {
-            allele.variantsStatus = 'Error'
-            this.toast.add({
-              severity: 'error',
-              summary: 'Error fetching results',
-              detail: 'An error occurred while fetching MaveDB variants.',
-              life: 10000
-            })
-          }
+          this.toast.add({
+            severity: 'error',
+            summary: status >= 500 ? 'Server Error' : 'Error fetching results',
+            detail:
+              status >= 500
+                ? 'The server encountered an unexpected error. Please try again later.'
+                : 'An error occurred while fetching MaveDB variants.',
+            life: 10000
+          })
         }
       }
     },

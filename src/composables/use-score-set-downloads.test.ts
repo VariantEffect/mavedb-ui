@@ -5,12 +5,10 @@ import {useScoreSetDownloads} from './use-score-set-downloads'
 
 const downloadScoreSetFile = vi.fn()
 const downloadScoreSetVariantData = vi.fn()
-const downloadMappedVariants = vi.fn()
 
 vi.mock('@/api/mavedb', () => ({
   downloadScoreSetFile: (...args: unknown[]) => downloadScoreSetFile(...args),
-  downloadScoreSetVariantData: (...args: unknown[]) => downloadScoreSetVariantData(...args),
-  downloadMappedVariants: (...args: unknown[]) => downloadMappedVariants(...args)
+  downloadScoreSetVariantData: (...args: unknown[]) => downloadScoreSetVariantData(...args)
 }))
 
 // The real one reaches for `document`; these tests run in the node environment.
@@ -29,7 +27,6 @@ function recordProgress(source: Ref<number | null>): {values: (number | null)[];
 beforeEach(() => {
   downloadScoreSetFile.mockReset()
   downloadScoreSetVariantData.mockReset()
-  downloadMappedVariants.mockReset()
 })
 
 describe('useScoreSetDownloads download indicator', () => {
@@ -103,20 +100,6 @@ describe('useScoreSetDownloads download indicator', () => {
     expect(fileDownloadLabel.value).toBe('Custom data')
 
     release('accession,score\n')
-    await pending
-
-    expect(fileDownloadLabel.value).toBeNull()
-  })
-
-  it('covers the mapped-variants download too', async () => {
-    let release: (data: unknown) => void = () => {}
-    downloadMappedVariants.mockReturnValueOnce(new Promise((resolve) => (release = resolve)))
-    const {downloadMappedVariantsFile, fileDownloadLabel} = useScoreSetDownloads({scoreSet: SCORE_SET})
-
-    const pending = downloadMappedVariantsFile()
-    expect(fileDownloadLabel.value).toBe('Mapped variants')
-
-    release([])
     await pending
 
     expect(fileDownloadLabel.value).toBeNull()
@@ -283,5 +266,55 @@ describe('useScoreSetDownloads annotation streaming shares the indicator', () =>
     expect(fileDownloadLabel.value).toBe('Functional Study Result')
     expect(downloadScoreSetFile).not.toHaveBeenCalled()
     releaseRead()
+  })
+})
+
+describe('useScoreSetDownloads variant-details streaming', () => {
+  /** Serve a one-record NDJSON body, capturing the URL the stream was opened against. */
+  function mockStream() {
+    const encoder = new TextEncoder()
+    let index = 0
+    const chunks = ['{"variantUrn":"urn:1"}\n']
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: {get: (name: string) => (name === 'X-Total-Count' ? '1' : null)},
+      body: {
+        getReader: () => ({
+          read: async () =>
+            index < chunks.length ? {done: false, value: encoder.encode(chunks[index++])} : {done: true}
+        })
+      }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('Blob', class {})
+    vi.stubGlobal('URL', {createObjectURL: () => 'blob:stub', revokeObjectURL: () => {}})
+    vi.stubGlobal('document', {createElement: () => ({click: () => {}})})
+  })
+
+  // Guards the #743 replacement: /mapped-variants now answers 410, so a resolution that restores it
+  // would ship a permanently failing button. Pin the sub-path rather than trusting the label.
+  it('streams from /variant-details, not the retired /mapped-variants', async () => {
+    const fetchMock = mockStream()
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    await downloads.streamVariantDetails()
+
+    const url = fetchMock.mock.calls[0][0] as string
+    expect(url).toContain('/score-sets/urn:mavedb:00000001-a-1/variant-details')
+    expect(url).not.toContain('mapped-variants')
+  })
+
+  it('shares the one download indicator', async () => {
+    mockStream()
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    const pending = downloads.streamVariantDetails()
+    expect(downloads.fileDownloadLabel.value).toBe('Variant details')
+    await pending
+    expect(downloads.fileDownloadLabel.value).toBeNull()
   })
 })

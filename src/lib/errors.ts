@@ -7,7 +7,7 @@ import axios, {isAxiosError} from 'axios'
  * back through the raw response body to the exception message. Always returns something renderable, so
  * callers can drop it straight into a toast.
  *
- * For the status code rather than the message, see `getErrorResponse` in `@/api/mavedb`.
+ * For the status code rather than the message, see {@link getErrorResponse} below.
  */
 export function describeRequestError(error: unknown): string {
   if (axios.isAxiosError(error) && error.response?.data) {

@@ -1,8 +1,7 @@
 import {computed, ref, type Ref} from 'vue'
 
+import {downloadScoreSetFile, downloadScoreSetVariantData} from '@/api/mavedb'
 import type {CsvExtraOption} from '@/composables/use-csv-namespaces'
-
-import {downloadScoreSetFile, downloadScoreSetVariantData, downloadMappedVariants} from '@/api/mavedb'
 import config from '@/config'
 import {triggerDownload} from '@/lib/downloads'
 import type {components} from '@/schema/openapi'
@@ -11,7 +10,7 @@ type ScoreSet = components['schemas']['ScoreSet']
 
 export const TEXT_COLUMNS = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
 
-/** What a completed annotation stream contained, tallied as it arrived. */
+/** What a completed NDJSON stream contained, tallied as it arrived. */
 export interface AnnotationStreamOutcome {
   /** Records received. Equals `X-Total-Count` for a complete stream — the server emits one per variant. */
   received: number
@@ -53,9 +52,9 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
   /**
    * Percent complete, or null when the download cannot report progress.
    *
-   * Only the VA-Spec streams can: they carry `X-Total-Count` and emit one NDJSON record per line, so
-   * records can be tallied as they arrive. A CSV arrives as a single gzipped body whose `Content-Length`
-   * is the *compressed* size, which browsers compare against decompressed bytes received, so no usable
+   * Only the NDJSON streams can: they carry `X-Total-Count` and emit one record per line, so records can
+   * be tallied as they arrive. A CSV arrives as a single gzipped body whose `Content-Length` is the
+   * *compressed* size, which browsers compare against decompressed bytes received, so no usable
    * percentage exists — and most of that wait is the server building the file before any byte is sent.
    */
   const fileDownloadProgress = ref<number | null>(null)
@@ -104,14 +103,6 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     })
   }
 
-  async function downloadMappedVariantsFile() {
-    if (!scoreSet.value) return
-    await withIndicator('Mapped variants', async () => {
-      const data = await downloadMappedVariants(scoreSet.value!.urn)
-      triggerDownload(JSON.stringify(data), `${scoreSet.value!.urn}_mapped_variants.json`, 'text/json')
-    })
-  }
-
   function downloadMetadata() {
     if (!scoreSet.value) return
     const metadata = JSON.stringify(scoreSet.value.extraMetadata)
@@ -126,18 +117,40 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     }
   }
 
+  /**
+   * Stream the per-variant record set, one `VariantDetail` per line.
+   *
+   * Replaces the retired `/mapped-variants` download (#743): that endpoint now answers 410, and this
+   * carries strictly more — the VRS pair, Cat-VRS membership, and the annotation layer.
+   *
+   * Resolves to what the stream contained, so the caller can report partial failures.
+   */
+  async function streamVariantDetails(label = 'Variant details') {
+    const urn = scoreSet.value?.urn
+    if (!urn) return
+    return await withIndicator(label, () =>
+      streamNdjsonInto(urn, 'variant-details', `${urn}_variant_details.ndjson`)
+    )
+  }
+
   /** Resolves to what the stream contained, so the caller can report partial failures. */
   async function streamVariantAnnotations(annotationType: string, label = 'annotations') {
     const urn = scoreSet.value?.urn
     if (!urn) return
-    return await withIndicator(label, () => streamAnnotationsInto(urn, annotationType))
+    return await withIndicator(label, () =>
+      streamNdjsonInto(
+        urn,
+        `annotated-variants/${annotationType}`,
+        `${urn}_annotated_variants_${annotationType}.ndjson`
+      )
+    )
   }
 
-  async function streamAnnotationsInto(urn: string, annotationType: string) {
+  async function streamNdjsonInto(urn: string, subPath: string, filename: string) {
     streamController.value = new AbortController()
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/score-sets/${urn}/annotated-variants/${annotationType}`, {
+      const response = await fetch(`${config.apiBaseUrl}/score-sets/${urn}/${subPath}`, {
         signal: streamController.value.signal,
         headers: {Accept: 'application/x-ndjson'}
       })
@@ -196,7 +209,7 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `${urn}_annotated_variants_${annotationType}.ndjson`
+      anchor.download = filename
       anchor.click()
       URL.revokeObjectURL(url)
 
@@ -223,8 +236,8 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     // Methods
     downloadFile,
     downloadMultipleData,
-    downloadMappedVariantsFile,
     downloadMetadata,
+    streamVariantDetails,
     streamVariantAnnotations,
     abortStream
   }

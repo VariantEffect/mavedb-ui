@@ -1,5 +1,5 @@
 <template>
-  <div class="mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white p-6">
+  <div class="relative overflow-hidden rounded-lg border border-border bg-white p-6">
     <h3 class="mave-section-title">Metadata</h3>
     <div class="border-b border-border-light pb-4">
       <h3 class="mb-3 text-[15px] font-bold text-text-dark">Abstract</h3>

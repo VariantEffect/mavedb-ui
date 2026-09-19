@@ -12,6 +12,8 @@
         </router-link>
         <span v-else>{{ getScoreSetShortName(scoreSet) }}</span>
       </div>
+      <!-- URN disambiguates correlated score sets whose title/facts read identically across measurements. -->
+      <div v-if="showUrn && scoreSet.urn" class="mt-0.5 font-mono text-xs text-text-muted">{{ scoreSet.urn }}</div>
       <div v-if="geneName || scoreSet.numVariants" class="text-sm text-text-muted">
         <template v-if="geneName">{{ geneName }}</template>
         <template v-if="geneName && scoreSet.numVariants"> &middot; </template>
@@ -31,6 +33,7 @@
         :value="getKeyword('Phenotypic Assay Mechanism')"
       />
       <MvDetailRow fallback="Not specified" label="Model system" :value="getKeyword('Phenotypic Assay Model System')" />
+      <MvDetailRow fallback="Not mapped" label="Assay level" term="assay-level" :value="assayLevelLabel" />
       <MvDetailRow fallback="Not specified" label="Detects splicing?">
         <span
           v-if="detectsSplicing != null"
@@ -73,13 +76,10 @@ import {defineComponent, type PropType} from 'vue'
 
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
-import {
-  findClassificationByType,
-  formatEvidenceCode,
-  getClassificationOddsPath,
-  getPrimaryCalibration
-} from '@/lib/calibrations'
+import {formatEvidenceCode} from '@/lib/acmg'
+import {findClassificationByType, getClassificationOddsPath, getPrimaryCalibration} from '@/lib/calibrations'
 import {getExperimentKeyword} from '@/lib/experiments'
+import {assayLevelDisplay} from '@/lib/measurement-types'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {components} from '@/schema/openapi'
 
@@ -97,16 +97,22 @@ export default defineComponent({
   },
 
   props: {
+    // The measured assay level (protein / cdna / genomic) — score-set-wide, shared across its variants.
+    assayLevel: {type: String as PropType<string | null>, default: null},
     columns: {type: Number as PropType<1 | 2>, default: 2},
     linkTitle: {type: Boolean, default: true},
+    showUrn: {type: Boolean, default: false},
     scoreSet: {type: Object as PropType<ScoreSet>, default: null},
     variantUrn: {type: String, default: null}
   },
 
   computed: {
+    assayLevelLabel(): string | null {
+      return this.assayLevel ? assayLevelDisplay(this.assayLevel).label : null
+    },
     gridClass(): string {
       return this.columns === 2
-        ? 'assay-facts-grid grid grid-cols-1 gap-x-8 tablet:grid-cols-2'
+        ? 'assay-facts-grid assay-facts-grid--2col grid grid-cols-1 gap-x-8 tablet:grid-cols-2'
         : 'assay-facts-grid grid grid-cols-1 gap-x-8'
     },
     geneName(): string | null {
@@ -181,9 +187,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* In 2-col grid, the 2nd item is first in the right column — remove its inherited top border */
+/* In 2-col grid, the 2nd item is first in the right column — remove its inherited top border. Scoped to
+   the 2-col variant so the 1-col layout keeps its divider between every stacked row. */
 @media (min-width: 56rem) {
-  .assay-facts-grid > :nth-child(2) {
+  .assay-facts-grid--2col > :nth-child(2) {
     border-top: none;
   }
 }

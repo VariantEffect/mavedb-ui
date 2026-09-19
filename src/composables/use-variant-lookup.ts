@@ -1,288 +1,209 @@
-import {computed, ref, shallowRef, watch, type ComputedRef, type Ref} from 'vue'
+import pLimit from 'p-limit'
+import {computed, ref, type ComputedRef, type Ref, watch} from 'vue'
 
-import {
-  downloadVariantCsv,
-  getVariantAnnotation,
-  getVariantDetail,
-  getVariantPageScoreSetData,
-  lookupVariantsByClingenId
-} from '@/api/mavedb/variants'
-import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
+import {downloadVariantCsv, getAlleleMeasurements, getVariantAnnotation} from '@/api/mavedb/variants'
 import {useClingenAllele, type UseClingenAlleleReturn} from '@/composables/use-clingen-allele'
+import {scoreSetUrnOf, useMeasurementCache} from '@/composables/use-measurement-cache'
+import {useMeasurementSelection, type UseMeasurementSelectionReturn} from '@/composables/use-measurement-selection'
 
-import {
-  formatEvidenceCode,
-  functionalClassificationContainsVariant,
-  getClassificationOddsPath,
-  getPrimaryCalibration
-} from '@/lib/calibrations'
 import {triggerDownload} from '@/lib/downloads'
 import {describeRequestError} from '@/lib/errors'
 import {getExperimentKeyword} from '@/lib/experiments'
-import {gnomadFromVariantRow, type GnomadFrequency} from '@/lib/gnomad'
-import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
-import type {MeasurementType} from '@/lib/measurement-types'
+import {assayLevelBucket} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
-export type {MeasurementType}
+type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 
-type ScoreCalibration = components['schemas']['ScoreCalibration']
-type ScoreSet = components['schemas']['ScoreSet']
-type VariantEffectMeasurementWithShortScoreSet = components['schemas']['VariantEffectMeasurementWithShortScoreSet']
-type VariantEffectMeasurementWithScoreSet = components['schemas']['VariantEffectMeasurementWithScoreSet']
-type FunctionalClassification =
-  components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+export type {AlleleMeasurement}
 
-export type VariantEntry = {content: VariantEffectMeasurementWithShortScoreSet; type: MeasurementType}
+// Cap concurrent background prefetches so a large equivalence class doesn't fire a request storm on load.
+const PREFETCH_CONCURRENCY = 4
 
-export interface UseVariantLookupReturn {
+export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
   // ClinGen allele (delegated)
   clingenAllele: UseClingenAlleleReturn
 
-  // Variant list
-  variants: Ref<VariantEntry[]>
+  // Measurements list
+  variants: Ref<AlleleMeasurement[]>
   variantsStatus: Ref<'NotLoaded' | 'Loading' | 'Loaded' | 'Error'>
   fetchVariants: () => Promise<void>
 
-  // Filters
+  // Filters (by assayed level)
   showNucleotide: Ref<boolean>
   showProtein: Ref<boolean>
-  showAssociatedNucleotide: Ref<boolean>
+  includeSuperseded: Ref<boolean>
+  // Content valid-time — null = current; reconstructs the molecular/annotation layer as of an instant.
+  asOf: Ref<string | null>
   nucleotideCount: ComputedRef<number>
   proteinCount: ComputedRef<number>
-  associatedNucleotideCount: ComputedRef<number>
-  filteredVariants: ComputedRef<VariantEntry[]>
+  filteredVariants: ComputedRef<AlleleMeasurement[]>
 
-  // Selection
-  selectedVariantUrn: Ref<string | null>
-  selectVariant: (urn: string | null | undefined) => void
-  selectedVariant: ComputedRef<VariantEntry | undefined>
-  selectedVariantDetail: ComputedRef<VariantEffectMeasurementWithScoreSet | null>
-  selectedVariantName: ComputedRef<string | null>
-  selectedClingenAlleleId: ComputedRef<string | null>
-
-  // Scores
-  selectedScoreSet: ComputedRef<ScoreSet | null>
-  selectedScoreSetUrn: ComputedRef<string | null>
-  scores: ComputedRef<Variant[] | null>
-  variantScoreRow: ComputedRef<Variant | undefined>
-  selectedVariantScore: ComputedRef<number | string | null>
-  selectedVariantGnomad: ComputedRef<GnomadFrequency | null>
-
-  // Calibration
-  selectedCalibration: Ref<string | null>
-  selectedCalibrationObject: ComputedRef<ScoreCalibration | null>
-  calibrationResolution: UseCalibrationResolutionReturn
-
-  // Per-variant helpers
-  getAbnormalOddsPath: (urn: string | null | undefined) => string | null
-  getNormalOddsPath: (urn: string | null | undefined) => string | null
-  getVariantClassification: (urn: string | null | undefined) => string | null
-  getVariantEvidenceCode: (urn: string | null | undefined) => string | null
-  getKeyword: (variantContent: VariantEffectMeasurementWithShortScoreSet, key: string) => string | null
+  // Per-measurement helpers (for measurement cards)
+  getKeyword: (scoreSetUrn: string | null | undefined, key: string) => string | null
 
   // Page-level
   geneName: ComputedRef<string | null>
   uniqueAssayCount: ComputedRef<number>
 
   // Downloads
+  // Names the file being prepared, or null when idle. One indicator for every download here, which also
+  // serializes them: a second download is refused while one is in flight.
+  downloadInProgressLabel: Ref<string | null>
   fetchVariantAnnotations: (annotationType: string) => Promise<void>
   downloadVariantCsvFile: (namespaces?: string[]) => Promise<void>
-  /** What download is in flight, or null when idle. Indeterminate; see use-score-set-downloads. */
-  downloadInProgressLabel: Ref<string | null>
 }
 
 /**
- * Variant lookup composable for the VariantScreen.
+ * Variant lookup composable for the ClinGen-allele-centric VariantScreen.
  *
- * Given a ClinGen allele ID, fetches all matching variant effect measurements
- * (nucleotide and protein level), manages measurement-type filters, and drives
- * the selected variant's detail panel, score distribution chart, and calibration
- * resolution.
+ * Given a ClinGen allele ID (a nucleotide `CA` or protein `PA`), fetches its cross-layer equivalence
+ * class of measurements from `GET /clingen-alleles/{caid}/measurements`, in the API's default order.
+ * Manages assay-level filters and drives the selected measurement's detail panel, score distribution
+ * chart, and calibration resolution.
+ *
+ * This is the orchestrating facade: it owns the measurements list, the query-axis controls, and the
+ * fetch flow, and composes the per-URN cache ({@link useMeasurementCache}), selection + its derivations
+ * ({@link useMeasurementSelection}), and allele metadata ({@link useClingenAllele}) into one flat return.
  *
  * Key behaviors:
- * - Variant details and score data are cached per-URN to avoid redundant fetches
- *   when switching between measurement cards.
- * - When filters hide the currently selected variant, the selection auto-falls
- *   back to the first visible measurement.
- * - Delegates to {@link useClingenAllele} for allele metadata and
- *   {@link useCalibrationResolution} for classification resolution.
+ * - The measurements list order is authoritative; the default selection is simply the first entry (or
+ *   the `?variant=` highlight when present).
+ * - Details, score sets, and score data are cached per-URN to avoid redundant fetches when switching
+ *   between measurement cards.
+ * - Any query-axis change (anchor, superseded scope, content valid-time) refetches and clears the caches.
  *
  * Used by: VariantScreen.vue
  */
 export function useVariantLookup(
   clingenAlleleId: Ref<string>,
-  options?: {toast?: {add: (opts: {severity: string; summary: string; detail: string; life: number}) => void}}
+  options?: {
+    highlightUrn?: Ref<string | null>
+    // Seeded from the URL so a shared `?include_superseded=`/`?as_of=` link loads in one fetch.
+    initialIncludeSuperseded?: boolean
+    initialAsOf?: string | null
+    toast?: {add: (opts: {severity: string; summary: string; detail: string; life: number}) => void}
+  }
 ): UseVariantLookupReturn {
-  // ── Leaf composables ──────────────────────────────────────
   const clingenAllele = useClingenAllele(clingenAlleleId)
+  const highlightUrn = options?.highlightUrn ?? ref<string | null>(null)
 
-  // ── Reactive state ────────────────────────────────────────
-  const variants = ref<VariantEntry[]>([])
+  // ── Measurements list + query axes ────────────────────────
+  const variants = ref<AlleleMeasurement[]>([])
   const variantsStatus = ref<'NotLoaded' | 'Loading' | 'Loaded' | 'Error'>('NotLoaded')
-  const selectedVariantUrn = ref<string | null>(null)
-  const downloadInProgressLabel = ref<string | null>(null)
   const showNucleotide = ref(true)
   const showProtein = ref(true)
-  const showAssociatedNucleotide = ref(true)
-  const variantDetailCache = ref<Record<string, VariantEffectMeasurementWithScoreSet>>({})
-  const scoresCache = shallowRef<Record<string, Variant[]>>({})
-  const selectedCalibration = ref<string | null>(null)
+  const includeSuperseded = ref(options?.initialIncludeSuperseded ?? false)
+  const downloadInProgressLabel = ref<string | null>(null)
+  const asOf = ref<string | null>(options?.initialAsOf ?? null)
 
-  // ── Filters ───────────────────────────────────────────────
-  const nucleotideCount = computed(() => variants.value.filter((v) => v.type === 'nucleotide').length)
-  const proteinCount = computed(() => variants.value.filter((v) => v.type === 'protein').length)
-  const associatedNucleotideCount = computed(
-    () => variants.value.filter((v) => v.type === 'associatedNucleotide').length
+  const prefetchLimit = pLimit(PREFETCH_CONCURRENCY)
+  // Bumped each fetch so stale-epoch prefetches (and a slower in-flight list response) bail instead of
+  // repopulating the just-cleared caches.
+  let queryEpoch = 0
+  // One-shot guard: honor an initial `?variant=` deep link that points at a superseded measurement exactly
+  // once (enable superseded so it resolves). After the first fetch, user toggles are always respected —
+  // toggling superseded off never re-enables itself just because the selected variant left the list.
+  let honoredInitialHighlight = false
+
+  // ── Filters (by assayed level) ────────────────────────────
+  const nucleotideCount = computed(
+    () => variants.value.filter((m) => assayLevelBucket(m.assayLevel) === 'nucleotide').length
+  )
+  const proteinCount = computed(
+    () => variants.value.filter((m) => assayLevelBucket(m.assayLevel) === 'amino acid').length
   )
   const filteredVariants = computed(() =>
-    variants.value.filter((v) => {
-      if (v.type === 'nucleotide') return showNucleotide.value
-      if (v.type === 'protein') return showProtein.value
-      if (v.type === 'associatedNucleotide') return showAssociatedNucleotide.value
-      return true
+    variants.value.filter((m) => {
+      const bucket = assayLevelBucket(m.assayLevel)
+      return bucket === 'amino acid' ? showProtein.value : showNucleotide.value
     })
   )
 
-  // ── Selection ─────────────────────────────────────────────
-  const selectedVariant = computed(() => variants.value.find((v) => v.content.urn === selectedVariantUrn.value))
-  const selectedVariantDetail = computed<VariantEffectMeasurementWithScoreSet | null>(() => {
-    if (!selectedVariantUrn.value) return null
-    return variantDetailCache.value[selectedVariantUrn.value] || null
-  })
-  const selectedScoreSet = computed<ScoreSet | null>(() => selectedVariantDetail.value?.scoreSet || null)
-  const selectedVariantName = computed(() => {
-    if (!selectedVariant.value) return null
-    const v = selectedVariant.value.content
-    const mapped = v.mappedVariants.find((m) => m.current)
-    // postMapped is typed as `unknown` in the schema — cast to access VRS expression fields
-    const postMapped = mapped?.postMapped as {expressions?: {value?: string}[]} | undefined
-    return postMapped?.expressions?.[0]?.value || v.hgvsNt || v.hgvsPro || v.hgvsSplice || null
-  })
-  const selectedClingenAlleleId = computed(() => {
-    const mapped = selectedVariantDetail.value?.mappedVariants.find((m) => m.current)
-    return mapped?.clingenAlleleId || null
-  })
-
-  // ── Scores ────────────────────────────────────────────────
-  const selectedScoreSetUrn = computed(() => selectedScoreSet.value?.urn || null)
-  const scores = computed(() => {
-    if (!selectedScoreSetUrn.value) return null
-    return scoresCache.value[selectedScoreSetUrn.value] || null
-  })
-  const variantScoreRow = computed(() => (scores.value || []).find((s) => s.accession === selectedVariantUrn.value))
-  const selectedVariantScore = computed(() => variantScoreRow.value?.scores?.score ?? null)
-  const selectedVariantGnomad = computed(() => gnomadFromVariantRow(variantScoreRow.value))
-
-  // ── Calibration ───────────────────────────────────────────
-  const selectedCalibrationObject = computed<ScoreCalibration | null>(() => {
-    if (!selectedCalibration.value || !selectedScoreSet.value?.scoreCalibrations) return null
-    return (
-      selectedScoreSet.value.scoreCalibrations.find((c: ScoreCalibration) => c.urn === selectedCalibration.value) ||
-      null
-    )
-  })
-
-  const selectedVariantScoreAsNumber = computed<number | null>(() => {
-    const s = selectedVariantScore.value
-    if (s == null || s === 'NA') return null
-    const n = typeof s === 'number' ? s : Number(s)
-    return Number.isNaN(n) ? null : n
-  })
-
-  const calibrationResolution = useCalibrationResolution(
-    selectedCalibrationObject,
-    selectedVariantUrn,
-    selectedVariantScoreAsNumber
-  )
+  // ── Composed sub-domains ──────────────────────────────────
+  const cache = useMeasurementCache(asOf)
+  const selection = useMeasurementSelection(variants, filteredVariants, highlightUrn, cache)
 
   // ── Page-level ────────────────────────────────────────────
   const geneName = computed(() => {
-    const firstVariant = variants.value[0]?.content
-    const targets = firstVariant?.scoreSet?.targetGenes
-    return targets?.length > 0 ? targets[0].name || null : null
+    const firstUrn = variants.value[0]?.variantUrn
+    if (!firstUrn) return null
+    const targets = cache.scoreSets.value[scoreSetUrnOf(firstUrn)]?.targetGenes
+    return targets && targets.length > 0 ? targets[0].name || null : null
   })
-  const uniqueAssayCount = computed(() => {
-    const urns = new Set(variants.value.map((v) => v.content.scoreSet?.urn).filter(Boolean))
-    return urns.size
-  })
+  const uniqueAssayCount = computed(() => new Set(variants.value.map((m) => m.scoreSetUrn)).size)
+
+  function getKeyword(scoreSetUrn: string | null | undefined, key: string): string | null {
+    if (!scoreSetUrn) return null
+    return getExperimentKeyword(cache.scoreSets.value[scoreSetUrn]?.experiment, key)
+  }
 
   // ── Data fetching ─────────────────────────────────────────
-  async function fetchVariantDetail(variantUrn: string) {
-    if (variantDetailCache.value[variantUrn]) return
-    try {
-      const detail = await getVariantDetail(variantUrn)
-      variantDetailCache.value[variantUrn] = detail
-      const scoreSetUrn = detail.scoreSet?.urn
-      if (scoreSetUrn) {
-        fetchScores(scoreSetUrn)
-      }
-    } catch (error) {
-      console.error(`Error fetching variant detail for "${variantUrn}"`, error)
-    }
-  }
-
-  async function fetchScores(scoreSetUrn: string) {
-    if (scoresCache.value[scoreSetUrn]) return
-    try {
-      const data = await getVariantPageScoreSetData(scoreSetUrn)
-      scoresCache.value = {
-        ...scoresCache.value,
-        [scoreSetUrn]: parseScoreSetVariantData(data)
-      }
-    } catch (error) {
-      console.error(`Error fetching scores for score set "${scoreSetUrn}"`, error)
-    }
-  }
-
   async function fetchVariants() {
     variants.value = []
-    variantDetailCache.value = {}
-    scoresCache.value = {}
+    cache.clear()
+    // New query epoch (anchor / as_of / superseded changed). Fresh reads are keyed by as_of/superseded in
+    // the memoized api layer, so a changed axis always misses the cache and hits the network.
+    const epoch = ++queryEpoch
     variantsStatus.value = 'Loading'
-    try {
-      const results = await lookupVariantsByClingenId([clingenAlleleId.value])
-      const lookup = results[0]
+    if (!clingenAlleleId.value) {
+      variantsStatus.value = 'Loaded'
+      return
+    }
 
-      if (clingenAlleleId.value.startsWith('CA')) {
-        const nucleotideVariants = (lookup?.exactMatch?.variantEffectMeasurements || []).map((entry) => ({
-          content: entry,
-          type: 'nucleotide' as const
-        }))
-        const proteinVariants = (
-          lookup?.equivalentAa?.flatMap((entry) => entry.variantEffectMeasurements || []) || []
-        ).map((entry) => ({content: entry, type: 'protein' as const}))
-        const associatedNucleotideVariants = (
-          lookup?.equivalentNt?.flatMap((entry) => entry.variantEffectMeasurements || []) || []
-        ).map((entry) => ({content: entry, type: 'associatedNucleotide' as const}))
-        variants.value = [...nucleotideVariants, ...proteinVariants, ...associatedNucleotideVariants]
-      } else if (clingenAlleleId.value.startsWith('PA')) {
-        const proteinVariants = (lookup?.exactMatch?.variantEffectMeasurements || []).map((entry) => ({
-          content: entry,
-          type: 'protein' as const
-        }))
-        const nucleotideVariants = (
-          lookup?.equivalentNt?.flatMap((entry) => entry.variantEffectMeasurements || []) || []
-        ).map((entry) => ({content: entry, type: 'nucleotide' as const}))
-        variants.value = [...proteinVariants, ...nucleotideVariants]
+    try {
+      // The API order IS the default (direct-first, strongest-evidence) — never re-ranked here.
+      const measurements = await getAlleleMeasurements(clingenAlleleId.value, {
+        includeSuperseded: includeSuperseded.value,
+        asOf: asOf.value ?? undefined
+      })
+
+      // A newer query axis changed while this was in flight; let that fetch own the state so this slower
+      // stale response can't overwrite it.
+      if (epoch !== queryEpoch) return
+      variants.value = measurements
+
+      // Citation path, initial load ONLY: if the page opened on a `?variant=` deep link absent from the
+      // current-only list (e.g. a cited *superseded* measurement), enable superseded once so it resolves and its
+      // banner shows. The watcher refetches. Guarded by the one-shot flag so a later manual toggle-off is
+      // honored (switches to a current variant below) instead of flipping superseded back on.
+      //
+      // NOTE: this deliberately triggers a second full fetch/clear cycle on load (current-only, then
+      // superseded). It's correct but redundant — a proper query cache would dedup the shared
+      // reads for free. Not worth hand-collapsing before such a migration.
+      const shouldHonorCitation =
+        !honoredInitialHighlight &&
+        highlightUrn.value &&
+        !includeSuperseded.value &&
+        !variants.value.some((m) => m.variantUrn === highlightUrn.value)
+      honoredInitialHighlight = true
+      if (shouldHonorCitation) {
+        // Stay 'Loading' through the handoff — the watcher's refetch owns the terminal status, so we skip
+        // the transient 'Loaded' that would otherwise flicker Loaded→Loading→Loaded.
+        includeSuperseded.value = true
+        return
       }
 
       variantsStatus.value = 'Loaded'
-
       if (variants.value.length === 0) return
 
-      const firstUrn = variants.value[0].content.urn
-      if (!firstUrn) return
-      await fetchVariantDetail(firstUrn)
-      selectedVariantUrn.value = firstUrn
+      // Default selection = the `?variant=` highlight if it's in the list, else the first measurement.
+      // Writing the selection triggers useMeasurementSelection's watcher to load the selected detail.
+      const highlighted = highlightUrn.value && variants.value.find((m) => m.variantUrn === highlightUrn.value)
+      const selected = highlighted ? highlightUrn.value! : variants.value[0].variantUrn
+      selection.selectedVariantUrn.value = selected
 
-      // Background-fetch remaining variant details
-      const remainingUrns = variants.value
-        .slice(1)
-        .map((v) => v.content.urn)
-        .filter((urn): urn is string => urn != null)
-      for (const urn of remainingUrns) {
-        fetchVariantDetail(urn)
+      // Prioritize the display variant: load its detail + score set (both quick, and enough to explore —
+      // score, classification, identity, assay facts) before fanning out. The selection watcher loads the
+      // heavier lean score distribution (histogram only), which rides behind this and the prefetch below.
+      await cache.loadDetail(selected)
+      if (epoch !== queryEpoch) return
+
+      // Background-fetch the rest (details + their score sets, which back the cards' assay facts), capped so
+      // a large equivalence class doesn't fire a request storm. Skip if a newer query epoch has started.
+      for (const m of variants.value) {
+        if (m.variantUrn !== selected) {
+          prefetchLimit(() => (epoch === queryEpoch ? cache.loadDetail(m.variantUrn) : Promise.resolve()))
+        }
       }
     } catch (error) {
       console.error('Error while loading variants', error)
@@ -291,7 +212,7 @@ export function useVariantLookup(
   }
 
   async function fetchVariantAnnotations(annotationType: string) {
-    const activeVariant = selectedVariantDetail.value
+    const activeVariant = selection.selectedVariantDetail.value
     if (!activeVariant?.urn || downloadInProgressLabel.value !== null) return
 
     downloadInProgressLabel.value = 'annotations'
@@ -315,7 +236,7 @@ export function useVariantLookup(
    * `fetchVariantAnnotations`. Omitting `namespaces` asks the server for its default set.
    */
   async function downloadVariantCsvFile(namespaces?: string[]) {
-    const activeVariant = selectedVariantDetail.value
+    const activeVariant = selection.selectedVariantDetail.value
     if (!activeVariant?.urn || downloadInProgressLabel.value !== null) return
 
     downloadInProgressLabel.value = 'variant CSV'
@@ -334,115 +255,28 @@ export function useVariantLookup(
     }
   }
 
-  function selectVariant(urn: string | null | undefined) {
-    selectedVariantUrn.value = urn ?? null
-  }
-
-  // ── Per-variant helpers (for measurement cards) ───────────
-  function getKeyword(variantContent: VariantEffectMeasurementWithShortScoreSet, key: string): string | null {
-    return getExperimentKeyword(variantContent?.scoreSet?.experiment, key)
-  }
-
-  function getAbnormalOddsPath(urn: string | null | undefined): string | null {
-    if (!urn) return null
-    return getClassificationOddsPath(getPrimaryCalibration(variantDetailCache.value[urn]?.scoreSet), 'abnormal')
-  }
-
-  function getNormalOddsPath(urn: string | null | undefined): string | null {
-    if (!urn) return null
-    return getClassificationOddsPath(getPrimaryCalibration(variantDetailCache.value[urn]?.scoreSet), 'normal')
-  }
-
-  function getVariantScoreRange(variantUrn: string | null | undefined): FunctionalClassification | null {
-    if (!variantUrn) return null
-    const detail = variantDetailCache.value[variantUrn]
-    const scoreSetUrn = detail?.scoreSet?.urn
-    if (!scoreSetUrn) return null
-
-    const cachedScores = scoresCache.value[scoreSetUrn]
-    if (!cachedScores) return null
-
-    const scoreRow = cachedScores.find((s) => s.accession === variantUrn)
-    const rawScore = scoreRow?.scores?.score
-    if (rawScore == null || rawScore === 'NA') return null
-    const score = typeof rawScore === 'number' ? rawScore : Number(rawScore)
-    if (Number.isNaN(score)) return null
-
-    const cal = getPrimaryCalibration(detail?.scoreSet)
-    if (!cal?.functionalClassifications) return null
-
-    return cal.functionalClassifications.find((r) => functionalClassificationContainsVariant(r, score)) || null
-  }
-
-  function getVariantClassification(variantUrn: string | null | undefined): string | null {
-    return getVariantScoreRange(variantUrn)?.functionalClassification || null
-  }
-
-  function getVariantEvidenceCode(variantUrn: string | null | undefined): string | null {
-    return formatEvidenceCode(getVariantScoreRange(variantUrn)) || null
-  }
-
-  // ── Watchers ──────────────────────────────────────────────
-  watch(
-    clingenAlleleId,
-    async (newValue, oldValue) => {
-      if (newValue !== oldValue) {
-        await fetchVariants()
-      }
-    },
-    {immediate: true}
-  )
-
-  // When filters hide the currently selected variant, fall back to the first visible one.
-  watch(filteredVariants, (visible) => {
-    if (selectedVariantUrn.value && !visible.some((v) => v.content.urn === selectedVariantUrn.value)) {
-      selectedVariantUrn.value = visible[0]?.content.urn ?? null
-    }
-  })
-
-  watch(selectedVariantUrn, async (newUrn) => {
-    selectedCalibration.value = null
-    if (newUrn) {
-      await fetchVariantDetail(newUrn)
-    }
-  })
+  // Any query-axis change (anchor, superseded scope, content valid-time) refetches; fetchVariants clears
+  // the per-URN caches so detail/scores re-resolve under the new as_of.
+  watch([clingenAlleleId, includeSuperseded, asOf], fetchVariants, {immediate: true})
 
   return {
+    ...selection,
     clingenAllele,
     variants,
     variantsStatus,
     fetchVariants,
     showNucleotide,
     showProtein,
-    showAssociatedNucleotide,
+    includeSuperseded,
+    asOf,
     nucleotideCount,
     proteinCount,
-    associatedNucleotideCount,
     filteredVariants,
-    selectedVariantUrn,
-    selectVariant,
-    selectedVariant,
-    selectedVariantDetail,
-    selectedVariantName,
-    selectedClingenAlleleId,
-    selectedScoreSet,
-    selectedScoreSetUrn,
-    scores,
-    variantScoreRow,
-    selectedVariantScore,
-    selectedVariantGnomad,
-    selectedCalibration,
-    selectedCalibrationObject,
-    calibrationResolution,
-    getAbnormalOddsPath,
-    getNormalOddsPath,
-    getVariantClassification,
-    getVariantEvidenceCode,
     getKeyword,
     geneName,
     uniqueAssayCount,
+    downloadInProgressLabel,
     fetchVariantAnnotations,
-    downloadVariantCsvFile,
-    downloadInProgressLabel
+    downloadVariantCsvFile
   }
 }

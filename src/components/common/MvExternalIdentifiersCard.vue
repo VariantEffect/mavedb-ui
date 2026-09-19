@@ -1,5 +1,5 @@
 <template>
-  <div class="mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white p-5">
+  <div class="relative overflow-hidden rounded-lg border border-border bg-white p-5">
     <h3 class="mave-section-title">External Identifiers</h3>
     <div class="flex flex-col gap-3">
       <div>

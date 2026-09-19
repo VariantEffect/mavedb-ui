@@ -88,7 +88,7 @@
         />
 
         <!-- Keywords -->
-        <div class="mave-gradient-bar relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-5">
+        <div class="relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-5">
           <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-dark">Keywords</h3>
           <template v-if="item.keywords && item.keywords.length > 0">
             <div v-for="(kw, i) in item.keywords" :key="i" class="border-b border-border-light py-2.5 last:border-b-0">
@@ -120,7 +120,7 @@
         </div>
 
         <!-- Metadata card (abstract, method, publications) -->
-        <div class="mave-gradient-bar relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-6">
+        <div class="relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-6">
           <div class="border-b border-border-light pb-4">
             <h3 class="mb-3 text-[15px] font-bold text-text-dark">Abstract</h3>
             <!-- eslint-disable vue/no-v-html -->

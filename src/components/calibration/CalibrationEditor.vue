@@ -62,9 +62,9 @@ import {
   type DraftFunctionalClassification,
   type DraftAcmgClassification
 } from '@/composables/use-calibration-editor'
-import {searchEditableScoreSets, getScoreSetByUrn} from '@/api/mavedb'
+import {searchEditableScoreSets, getScoreSet} from '@/api/mavedb'
 import {acceptNewPublicationIdentifier} from '@/lib/form-helpers'
-import {EVIDENCE_STRENGTH, BENIGN_CRITERION, PATHOGENIC_CRITERION} from '@/lib/calibrations'
+import {EVIDENCE_STRENGTH, BENIGN_CRITERION, PATHOGENIC_CRITERION} from '@/lib/acmg'
 import {
   DRAFT_CALIBRATION_COPYABLE_KEYS,
   createDefaultClassification,
@@ -223,7 +223,7 @@ export default defineComponent({
       if (scoreSet) {
         this.selectedScoreSet = scoreSet
       } else {
-        getScoreSetByUrn(urn)
+        getScoreSet(urn)
           .then((data) => {
             this.selectedScoreSet = data as unknown as MinimalScoreSet
             this.editableScoreSets.push(data as unknown as MinimalScoreSet)

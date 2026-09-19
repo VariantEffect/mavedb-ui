@@ -717,12 +717,34 @@ export default function makeHeatmap(): Heatmap {
     }
   }
 
+  // Position the hover tooltip near the pointer, flipping left/up when it would spill past the viewport
+  // edge. Without this a tall tooltip on a thin (DNA) heatmap runs off the bottom of the screen.
+  const positionHoverTooltip = (event: MouseEvent) => {
+    if (!hoverTooltip) {
+      return
+    }
+    const node = hoverTooltip.node() as HTMLElement | null
+    const [pageX, pageY] = d3.pointer(event, document.body)
+    const width = node?.offsetWidth ?? 0
+    const height = node?.offsetHeight ?? 0
+    const margin = 8
+    const viewportRight = window.scrollX + document.documentElement.clientWidth
+    const viewportBottom = window.scrollY + document.documentElement.clientHeight
+
+    let left = pageX + 30
+    if (left + width > viewportRight - margin) {
+      left = pageX - 30 - width
+    }
+    let top = pageY
+    if (top + height > viewportBottom - margin) {
+      top = Math.max(window.scrollY + margin, pageY - height)
+    }
+    hoverTooltip.style('left', left + 'px').style('top', top + 'px')
+  }
+
   const mousemove = (event: MouseEvent, d: HeatmapDatum) => {
     if (!selectionStartDatum && hoverTooltip) {
-      // Move tooltip to be 30px to the right of the pointer.
-      hoverTooltip
-        .style('left', d3.pointer(event, document.body)[0] + 30 + 'px')
-        .style('top', d3.pointer(event, document.body)[1] + 'px')
+      positionHoverTooltip(event)
     }
   }
 
@@ -751,9 +773,7 @@ export default function makeHeatmap(): Heatmap {
 
     if (hoverTooltip && target instanceof Element) {
       showTickLabelTooltip(hoverTooltip, rowNumber)
-      hoverTooltip
-        .style('left', d3.pointer(event, document.body)[0] + 30 + 'px')
-        .style('top', d3.pointer(event, document.body)[1] + 'px')
+      positionHoverTooltip(event)
     }
   }
 

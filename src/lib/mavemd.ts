@@ -2,12 +2,12 @@ import type {ClinGenAllele, ClinGenGenomicAllele, ClinGenTranscriptAllele} from 
 import type {components} from '@/schema/openapi'
 import {hgvsSearchStringRegex} from './mave-hgvs'
 
-type VariantMeasurement = components['schemas']['VariantEffectMeasurementWithShortScoreSet']
+type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 
 /**
  * Regular expression for valid CA or PA ids that can be used in ClinGen searches.
  */
-export const clinGenAlleleIdRegex = /^(CA|PA)[0-9]+$/im
+export const clinGenAlleleIdRegex = /^(CA|PA)[0-9]+$/i
 
 /**
  * Regular expression for GA4GH VRS identifiers: ga4gh:<type>.<32-char base64url digest>.
@@ -16,23 +16,23 @@ export const vrsDigestRegex = /^ga4gh:[^.]+\.[0-9A-Za-z_-]{32}$/
 
 /**
  * Extracts the score set URN from a MaveDB variant URN.
- * Variant URNs follow the format urn:mavedb:XXXXXXXX-X-N-SUFFIX.
- * The score set URN is the first three hyphenated segments.
+ * Variant URNs follow the format urn:mavedb:XXXXXXXX-X-N#SUFFIX.
+ * The score set URN is the portion before the '#' variant separator.
  */
 export function scoreSetUrnFromVariantUrn(variantUrn: string): string | null {
-  const match = variantUrn.match(/^(urn:mavedb:[^-]+-[^-]+-[^-]+)(?:-.+)?$/)
+  const match = variantUrn.match(/^(urn:mavedb:[^-]+-[^-]+-[^-]+)#.+$/)
   return match?.[1] ?? null
 }
 
 /**
  * Regular expression for valid ClinVar Variation IDs that can be used in ClinGen searches.
  */
-export const clinVarVariationIdRegex = /^[0-9]+$/m
+export const clinVarVariationIdRegex = /^[0-9]+$/
 
 /**
  * Regular expression for valid Reference SNP cluster IDs that can be used in ClinGen searches.
  */
-export const rsIdRegex = /^rs[0-9]+$/im
+export const rsIdRegex = /^rs[0-9]+$/i
 
 /**
  * Regular expression for valid gnomAD variant IDs that can be used in ClinGen searches.
@@ -114,13 +114,36 @@ export interface AlleleResult {
   transcriptAlleles: ClinGenTranscriptAllele[]
   maneCoordinates: ManeCoordinate[]
   variantsStatus: string
+  // Measurements of this allele's equivalence class, bucketed by each one's relationship to the searched
+  // change (mirrors the API `AlleleMeasurement.relationship`).
   variants: {
-    nucleotide: VariantMeasurement[]
-    protein: VariantMeasurement[]
-    associatedNucleotide: VariantMeasurement[]
+    direct: AlleleMeasurement[]
+    proteinConsequence: AlleleMeasurement[]
+    nucleotideEncoding: AlleleMeasurement[]
   }
   /** MaveDB variant URN — present when a VRS digest search resolves to a variant without a ClinGen Allele ID. */
-  variantUrn?: string | null
+  variantUrn?: string
+}
+
+/**
+ * Fold one allele's spellings (transcript / genomic / MANE coordinates) into another. Used to collapse a
+ * protein change's several registered transcript alleles onto ONE search result — the change is a single
+ * finding, and its transcript spellings are representations to list, not separate hits. MANE coordinates
+ * are deduplicated so shared entries aren't repeated.
+ */
+export function mergeAlleleSpellings(target: AlleleResult, source: AlleleResult): void {
+  const seen = new Set(target.maneCoordinates.map((c) => `${c.sequenceType}|${c.database}|${c.hgvs}`))
+  for (const coord of source.maneCoordinates) {
+    const key = `${coord.sequenceType}|${coord.database}|${coord.hgvs}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      target.maneCoordinates.push(coord)
+    }
+  }
+  target.transcriptAlleles.push(...source.transcriptAlleles)
+  target.genomicAlleles.push(...source.genomicAlleles)
+  target.grch38Hgvs ??= source.grch38Hgvs
+  target.grch37Hgvs ??= source.grch37Hgvs
 }
 
 /** Extract the trailing path segment from a URL (e.g. ClinGen allele ID from its URL). */
@@ -132,18 +155,23 @@ export function extractIdFromUrl(url: string | undefined): string | undefined {
 
 /** Transform a raw ClinGen allele API response into an AlleleResult for display. */
 export function createAlleleResult(data: ClinGenAllele, maneStatus: string | null): AlleleResult {
+  const clingenAlleleId = extractIdFromUrl(data['@id'])
   const allele: AlleleResult = {
     clingenAlleleUrl: data['@id'],
-    clingenAlleleId: extractIdFromUrl(data['@id']),
-    canonicalAlleleName: data.communityStandardTitle?.[0],
+    clingenAlleleId,
+    // Complete records carry a communityStandardTitle; lean amino-acid records (no title, genomic, or
+    // transcript alleles) only carry the protein hgvs. Fall back to that, then to the ClinGen ID, so the
+    // card always has a heading instead of rendering undefined.
+    canonicalAlleleName:
+      data.communityStandardTitle?.[0] ?? data.aminoAcidAlleles?.[0]?.hgvs?.[0] ?? clingenAlleleId,
     maneStatus,
-    genomicAlleles: data.genomicAlleles || [],
+    genomicAlleles: data.genomicAlleles ?? [],
     grch38Hgvs: null,
     grch37Hgvs: null,
-    transcriptAlleles: data.transcriptAlleles || [],
+    transcriptAlleles: data.transcriptAlleles ?? [],
     maneCoordinates: [],
     variantsStatus: 'NotLoaded',
-    variants: {nucleotide: [], protein: [], associatedNucleotide: []}
+    variants: {direct: [], proteinConsequence: [], nucleotideEncoding: []}
   }
 
   for (const genomicAllele of allele.genomicAlleles) {
@@ -160,16 +188,16 @@ export function createAlleleResult(data: ClinGenAllele, maneStatus: string | nul
       for (const sequenceType of ['nucleotide', 'protein'] as const) {
         const records = mane[sequenceType]
         if (records) {
-          for (const database in records) {
+          for (const [database, record] of Object.entries(records)) {
             allele.maneCoordinates.push({
               sequenceType,
               database,
-              hgvs: records[database].hgvs
+              hgvs: record.hgvs
             })
           }
         }
       }
-      // Assuming all MANE transcripts have the same MANE status, we can set it from the first one we encounter.
+      // All MANE statuses should be identical, use the first.
       break
     }
   }

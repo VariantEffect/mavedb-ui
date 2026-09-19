@@ -8,3 +8,5 @@
 *[GRCh38]: Genome Reference Consortium Human Build 38
 *[NMD]: Nonsense-Mediated Decay
 *[OddsPath]: Odds of Pathogenicity
+*[annotated variant]: A MaveDB variant expressed across molecular levels (genomic, coding, protein) and enriched with external annotations such as ClinVar, gnomAD, and predicted consequences
+*[annotated variants]: MaveDB variants expressed across molecular levels (genomic, coding, protein) and enriched with external annotations such as ClinVar, gnomAD, and predicted consequences

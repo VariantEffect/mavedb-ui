@@ -1,26 +1,23 @@
 import axios from 'axios'
 
+import {memoizeRead} from '@/api/cache'
 import config from '@/config'
+import type {LeanVariant} from '@/lib/variants'
 import {components} from '@/schema/openapi'
 
+type ScoreSet = components['schemas']['ScoreSet']
 type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
 type ScoreSetsSearchResponse = components['schemas']['ScoreSetsSearchResponse']
 export type ScoreSetsSearchFilterOptionsResponse = components['schemas']['ScoreSetsSearchFilterOptionsResponse']
 
-// Both screens read a score set's whole variant table from the same endpoint, but they render different
-// things from it, so each names the namespaces it actually consumes. Keeping these separate matters at
-// scale: a saturation-mutagenesis score set is 100k+ rows, and an unused namespace is 100k+ wasted cells.
-const SCORE_SET_CHART_NAMESPACES = ['vep', 'scores', 'clingen', 'mavedb']
-
-// The variant page additionally reads the selected measurement's gnomAD frequency out of its row; this
-// request is the only source of it. See `gnomadFromVariantRow`.
-const VARIANT_PAGE_NAMESPACES = [...SCORE_SET_CHART_NAMESPACES, 'gnomad']
-
-function scoreSetVariantDataParams(options: {namespaces?: string[]} = {}): URLSearchParams {
-  const params = new URLSearchParams()
-  for (const namespace of options.namespaces ?? []) params.append('namespaces', namespace)
-  return params
-}
+/** Fetch a single score set by URN. */
+export const getScoreSet = memoizeRead(
+  async (urn: string): Promise<ScoreSet> => {
+    const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}`)
+    return response.data
+  },
+  (urn) => urn
+)
 
 function scoreSetVariantDataUrl(urn: string, params: URLSearchParams = new URLSearchParams()): string {
   const query = params.toString()
@@ -28,15 +25,24 @@ function scoreSetVariantDataUrl(urn: string, params: URLSearchParams = new URLSe
   return query ? `${baseUrl}?${query}` : baseUrl
 }
 
-/** Variant data for a score set page's histogram and heatmap. */
-export function scoreSetChartVariantDataUrl(urn: string): string {
-  return scoreSetVariantDataUrl(urn, scoreSetVariantDataParams({namespaces: SCORE_SET_CHART_NAMESPACES}))
+// ---------------------------------------------------------------------------
+// Lean whole-set variant view (GET /score-sets/{urn}/variants)
+// ---------------------------------------------------------------------------
+
+export function leanScoreSetVariantsUrl(urn: string): string {
+  return `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/variants`
 }
 
-/** Variant data for the variant page: the score distribution chart plus the selected row's annotations. */
-export function variantPageVariantDataUrl(urn: string): string {
-  return scoreSetVariantDataUrl(urn, scoreSetVariantDataParams({namespaces: VARIANT_PAGE_NAMESPACES}))
-}
+/** Fetch the lean whole-set variant view for a score set — one pre-chewed record per variant. */
+export const getLeanScoreSetVariants = memoizeRead(
+  async (urn: string): Promise<LeanVariant[]> => {
+    const response = await axios.get(leanScoreSetVariantsUrl(urn), {
+      headers: {accept: 'application/json'}
+    })
+    return response.data || []
+  },
+  (urn) => urn
+)
 
 // ---------------------------------------------------------------------------
 // Search
@@ -123,9 +129,7 @@ export async function downloadScoreSetFile(urn: string, type: 'scores' | 'counts
   return response.data
 }
 
-/**
- * Fetch the CSV column namespaces this score set has data for.
- */
+/** Fetch the CSV column namespaces this score set has data for. */
 export async function getScoreSetCsvNamespaces(
   urn: string,
   signal?: AbortSignal
@@ -141,22 +145,25 @@ export async function downloadScoreSetVariantData(urn: string, params: URLSearch
   return response.data
 }
 
-export async function getScoreSetScoresPreview(urn: string): Promise<string> {
+// The preview table renders only a handful of rows, so it passes `limit` to fetch just those rather
+// than the whole dataset. Note: `drop_unused_hgvs_columns` is evaluated over the returned rows, so with
+// a limit the shown column set reflects the sampled rows (fine for a preview; the download buttons fetch
+// the full, unlimited file).
+export async function getScoreSetScoresPreview(urn: string, limit?: number): Promise<string> {
+  const params = new URLSearchParams({drop_unused_hgvs_columns: 'true'})
+  if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?drop_unused_hgvs_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?${params.toString()}`
   )
   return response.data
 }
 
-export async function getScoreSetCountsPreview(urn: string): Promise<string> {
+export async function getScoreSetCountsPreview(urn: string, limit?: number): Promise<string> {
+  const params = new URLSearchParams({drop_unused_hgvs_columns: 'true'})
+  if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?drop_unused_hgvs_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?${params.toString()}`
   )
-  return response.data
-}
-
-export async function downloadMappedVariants(urn: string) {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/mapped-variants`)
   return response.data
 }
 

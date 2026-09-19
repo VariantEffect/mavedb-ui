@@ -1,13 +1,18 @@
 import axios, {isAxiosError} from 'axios'
+
+import {memoizeRead} from '@/api/cache'
 import {type GenomeAssembly, gnomadIdToHgvsCandidates} from '@/lib/gnomad'
 import type {ClinGenAllele, ClinGenGene} from './types'
 
 const CLINGEN_BASE_URL = 'https://reg.genome.network'
 
-export async function getAlleleByCaId(caId: string): Promise<ClinGenAllele> {
-  const response = await axios.get(`${CLINGEN_BASE_URL}/allele/${caId}`)
-  return response.data
-}
+export const getAlleleByCaId = memoizeRead(
+  async (caId: string): Promise<ClinGenAllele> => {
+    const response = await axios.get(`${CLINGEN_BASE_URL}/allele/${caId}`)
+    return response.data
+  },
+  (caId) => caId
+)
 
 export async function getAlleleByHgvs(hgvs: string): Promise<ClinGenAllele> {
   const response = await axios.get(`${CLINGEN_BASE_URL}/allele`, {

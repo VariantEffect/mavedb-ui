@@ -5,7 +5,6 @@ import {components} from '@/schema/openapi'
 import type {MinimalScoreSet} from '@/lib/calibration-types'
 
 type ScoreCalibration = components['schemas']['ScoreCalibration']
-type ScoreSet = components['schemas']['ScoreSet']
 
 /**
  * Fetch a single score calibration by URN.
@@ -98,16 +97,32 @@ export async function getScoreCalibrationClassificationVariants(
   return response.data
 }
 
+// In-flight requests for calibration variants, keyed by calibration URN. The variant page fetches these
+// from two independent consumers (the classification resolver and the histogram) at the same time; sharing
+// the pending request collapses the duplicate. Not a resolved-result cache — calibration edits flow through
+// this client, so a settled request is dropped and later reads go to the network fresh.
+const inFlightCalibrationVariants = new Map<
+  string,
+  Promise<components['schemas']['FunctionalClassificationVariants'][]>
+>()
+
 /**
- * Fetch variants for all functional classifications in a score calibration.
+ * Fetch variants for all functional classifications in a score calibration. Concurrent callers for the same
+ * calibration share one request.
  */
 export async function getScoreCalibrationVariants(
   calibrationUrn: string
 ): Promise<components['schemas']['FunctionalClassificationVariants'][]> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`
-  )
-  return response.data
+  const existing = inFlightCalibrationVariants.get(calibrationUrn)
+  if (existing) return existing
+  const promise = axios
+    .get(`${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`)
+    .then((response) => response.data)
+    .finally(() => {
+      if (inFlightCalibrationVariants.get(calibrationUrn) === promise) inFlightCalibrationVariants.delete(calibrationUrn)
+    })
+  inFlightCalibrationVariants.set(calibrationUrn, promise)
+  return promise
 }
 
 /**
@@ -119,14 +134,6 @@ export async function searchEditableScoreSets(): Promise<MinimalScoreSet[]> {
     includeExperimentScoreSetUrnsAndCount: false
   })
   return response.data.scoreSets || []
-}
-
-/**
- * Fetch a single score set by URN (used as fallback when a score set isn't in the editable list).
- */
-export async function getScoreSetByUrn(urn: string): Promise<ScoreSet> {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}`)
-  return response.data
 }
 
 export async function getMyCalibrations(): Promise<components['schemas']['ScoreCalibrationWithScoreSetUrn'][]> {

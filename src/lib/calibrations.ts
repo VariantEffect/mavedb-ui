@@ -1,49 +1,20 @@
+/**
+ * @fileoverview
+ * Calibration utilities for score interpretation and histogram visualization.
+ */
+
 import axios from 'axios'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
+import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
 
+export type ScoreCalibration = components['schemas']['ScoreCalibration']
+export type ScoreCalibrationFunctionalClassification =
+  components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
-
-export const NORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-normal)'
-export const ABNORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-abnormal)'
-export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = 'var(--color-cal-unspecified)'
-
-export const BENIGN_CRITERION = 'BS3'
-export const PATHOGENIC_CRITERION = 'PS3'
-
-export const EVIDENCE_STRENGTH_AS_POINTS = {
-  VERY_STRONG: 8,
-  STRONG: 4,
-  MODERATE_PLUS: 3,
-  MODERATE: 2,
-  SUPPORTING: 1
-}
-
-export const INDETERMINATE_CALIBRATION_EVIDENCE = ['INDETERMINATE'] as const
-export const EVIDENCE_STRENGTH = EVIDENCE_STRENGTH_AS_POINTS ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS) : []
-export const NORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${BENIGN_CRITERION}_${key}`)
-  : []
-export const ABNORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${PATHOGENIC_CRITERION}_${key}`)
-  : []
-
-export const EVIDENCE_STRENGTHS = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.fromEntries(
-      Object.entries(EVIDENCE_STRENGTH_AS_POINTS)
-        .map(([key, value]) => [`${BENIGN_CRITERION}_${key}`, value * -1])
-        .concat(
-          Object.entries(EVIDENCE_STRENGTH_AS_POINTS).map(([key, value]) => [`${PATHOGENIC_CRITERION}_${key}`, value])
-        )
-    )
-  : {}
-
-export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
-  Object.entries(EVIDENCE_STRENGTHS).map(([key, value]) => [value, key])
-)
 
 /**
  * Prepares a list of histogram shader configuration objects from persisted score calibration data.
@@ -51,8 +22,7 @@ export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
  * Each functional range in the provided calibration is converted into a HistogramShader descriptor
  * containing:
  * - min / max: numeric bounds either taken directly from the `range` tuple or calculated from variant scores.
- * - title: resolved from the ACMG classification evidence strength (via `EVIDENCE_STRENGTHS_REVERSED`)
- *   when available; otherwise falls back to the range's `label`.
+ * - title: the range's `label`.
  * - color / thresholdColor: both derived from `getRangeColor(range)` to ensure visual consistency.
  * - align: fixed to `'center'` for consistent label placement.
  * - startOpacity / stopOpacity: fixed opacity values (0.15 → 0.05) establishing a subtle gradient.
@@ -79,9 +49,7 @@ export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
  * - This function assumes that variant scores are numeric and filters out any non-numeric or NaN values.
  * - The color derivation logic is centralized in `getRangeColor` to maintain consistency across the application.
  */
-export function prepareCalibrationsForHistogram(
-  scoreCalibrations: components['schemas']['ScoreCalibration']
-): HistogramShader[] {
+export function prepareCalibrationsForHistogram(scoreCalibrations: ScoreCalibration): HistogramShader[] {
   const preparedCalibrations: HistogramShader[] = []
 
   if (!scoreCalibrations.functionalClassifications || scoreCalibrations.functionalClassifications.length === 0) {
@@ -111,36 +79,11 @@ export function prepareCalibrationsForHistogram(
 }
 
 /**
- * Derives the display color associated with a functional range classification.
- *
- * The color returned depends on the `classification` property of the supplied
- * `functionalClassification` object:
- * - `'normal'`        => NORMAL_RANGE_DEFAULT_COLOR
- * - `'abnormal'`      => ABNORMAL_RANGE_DEFAULT_COLOR
- * - `'not_specified'` => NOT_SPECIFIED_RANGE_DEFAULT_COLOR
- * - any other value   => `'#000000'` (fallback)
- *
- * This utility centralizes the mapping logic so UI components can remain
- * agnostic of the underlying color constants.
- *
- * @param range The functional range whose `classification` determines the color.
- * @returns A hex color string representing the classification.
- * @example
- * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
- * @remarks If new classifications are introduced, extend this function to handle them explicitly.
+ * Derives the histogram range-fill color for a functional range from the shared functional-impact
+ * vocabulary (keyed by its `functionalClassification`). Falls back to black for an unknown value.
  */
-export function getClassificationColor(
-  range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-): string {
-  if (range.functionalClassification === 'normal') {
-    return NORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.functionalClassification === 'abnormal') {
-    return ABNORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.functionalClassification === 'not_specified') {
-    return NOT_SPECIFIED_RANGE_DEFAULT_COLOR
-  } else {
-    return '#000000'
-  }
+export function getClassificationColor(range: ScoreCalibrationFunctionalClassification): string {
+  return FUNCTIONAL_CLASSIFICATIONS[range.functionalClassification as FunctionalClassification]?.rangeColor ?? '#000000'
 }
 
 /**
@@ -201,7 +144,7 @@ export function shaderOverlapsBin(range: HistogramShader, bin: HistogramBin): bo
  * - Upper bound check uses <= if inclusive, < if exclusive
  */
 export function functionalClassificationContainsVariant(
-  functionalClassification: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'],
+  functionalClassification: ScoreCalibrationFunctionalClassification,
   variantScore: number | null
 ): boolean {
   if (variantScore === null) {
@@ -230,7 +173,7 @@ export function functionalClassificationContainsVariant(
  * @returns True if any calibration has at least one functional classification with an evidence strength
  */
 export function hasPathogenicityCalibrations(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined,
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
   {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
 ): boolean {
   const scoreCalibrations = scoreSet?.scoreCalibrations
@@ -255,7 +198,7 @@ export function hasPathogenicityCalibrations(
  * @returns True if any calibration has at least one functional classification
  */
 export function hasFunctionalCalibrations(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined,
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
   {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
 ): boolean {
   const scoreCalibrations = scoreSet?.scoreCalibrations
@@ -277,11 +220,30 @@ export function hasFunctionalCalibrations(
  * failing that, the one marked `investigatorProvided`. Returns null if neither exists.
  */
 export function getPrimaryCalibration(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
-): components['schemas']['ScoreCalibration'] | null {
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined
+): ScoreCalibration | null {
   const calibrations = scoreSet?.scoreCalibrations
   if (!calibrations || calibrations.length === 0) return null
   return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
+}
+
+/**
+ * Picks the calibration to show by default: primary, else investigator-provided, else the first
+ * non-research-use-only, else any with functional classifications, else the first. Depends only on the
+ * score set's calibrations (not on variant scores), so it can resolve on the fast path.
+ */
+export function chooseDefaultCalibration(
+  scoreCalibrations: ScoreCalibration[] | null | undefined
+): ScoreCalibration | null {
+  if (!scoreCalibrations || scoreCalibrations.length === 0) return null
+  return (
+    scoreCalibrations.find((c) => c.primary === true) ||
+    scoreCalibrations.find((c) => c.investigatorProvided === true) ||
+    scoreCalibrations.find((c) => c.researchUseOnly !== true) ||
+    scoreCalibrations.find((c) => (c.functionalClassifications?.length ?? 0) > 0) ||
+    scoreCalibrations[0] ||
+    null
+  )
 }
 
 /**
@@ -289,9 +251,9 @@ export function getPrimaryCalibration(
  * classifications list. Returns null if not found.
  */
 export function findClassificationByType(
-  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  calibration: ScoreCalibration | null | undefined,
   type: string
-): components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'] | null {
+): ScoreCalibrationFunctionalClassification | null {
   return calibration?.functionalClassifications?.find((r) => r.functionalClassification === type) || null
 }
 
@@ -300,31 +262,12 @@ export function findClassificationByType(
  * or null if not available. Uses the specified precision (default 2).
  */
 export function getClassificationOddsPath(
-  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  calibration: ScoreCalibration | null | undefined,
   type: string,
   precision: number = 2
 ): string | null {
   const range = findClassificationByType(calibration, type)
   return range?.oddspathsRatio != null ? range.oddspathsRatio.toFixed(precision) : null
-}
-
-/**
- * Formats the ACMG evidence code from a functional classification's ACMG classification data.
- *
- * @param classification - A functional classification that may contain an `acmgClassification`
- *   with `criterion` (e.g. "PS3", "BS3") and `evidenceStrength` (e.g. "Strong", "Moderate").
- * @returns A formatted code like "PS3_STRONG", or an empty string if evidence data is missing.
- */
-export function formatEvidenceCode(
-  classification:
-    | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-    | null
-    | undefined
-): string {
-  if (!classification?.acmgClassification?.evidenceStrength) return ''
-  const criterion = classification.acmgClassification.criterion
-  const strength = classification.acmgClassification.evidenceStrength.toUpperCase()
-  return `${criterion}_${strength}`
 }
 
 export type CalibrationSaveResult =

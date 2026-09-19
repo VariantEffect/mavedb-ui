@@ -164,21 +164,22 @@ The search endpoint uses POST with a JSON body:
       -d '{"text": "BRCA1"}'
     ```
 
-### Download mapped variants (VRS format)
+### Download variant details (VRS format)
 
-For datasets with human targets, [mapped variants](../reference/variant-mapping.md) are available in [GA4GH VRS](https://vrs.ga4gh.org/) format:
+For datasets with human targets, the mapped [variant details](../reference/variant-mapping.md) are available in [GA4GH VRS](https://vrs.ga4gh.org/) format. The `/variant-details` endpoint is the bulk pair of `GET /variants/{urn}`: it streams [newline-delimited JSON](https://jsonlines.org/) (NDJSON), one `VariantDetail` per mapped variant, each carrying the flat `preMapped`/`postMapped` VRS pair, the full [GA4GH Cat-VRS](https://vrs.ga4gh.org/) categorical variant (its equivalence class of related alleles), and the VEP, gnomAD, and ClinVar annotations:
 
 === "Python"
 
     ```python
+    import json
     import requests
 
     response = requests.get(
-        "https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants"
+        "https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details"
     )
 
-    with open("mapped_variants.json", "w") as f:
-        f.write(response.text)
+    # NDJSON: one VariantDetail object per line.
+    variants = [json.loads(line) for line in response.text.splitlines() if line]
     ```
 
 === "R"
@@ -186,15 +187,15 @@ For datasets with human targets, [mapped variants](../reference/variant-mapping.
     ```r
     library(httr)
 
-    response <- GET("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants")
-    writeLines(content(response, as = "text"), "mapped_variants.json")
+    response <- GET("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details")
+    writeLines(content(response, as = "text"), "variant_details.ndjson")
     ```
 
 === "curl"
 
     ```bash
-    curl -o mapped_variants.json \
-      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants
+    curl -o variant_details.ndjson \
+      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details
     ```
 
 ### List score sets in an experiment

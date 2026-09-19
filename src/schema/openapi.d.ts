@@ -31,12 +31,44 @@ export interface paths {
      */
     delete: operations["delete_my_access_key_api_v1_users_me_access_keys__key_id__delete"];
   };
+  "/api/v1/alleles/{identifier}": {
+    /**
+     * Fetch allele detail by VRS digest, CAID, or PAID
+     * @description Fetch the detail envelope for a deduplicated allele, by any of its identifiers.
+     *
+     * The allele-grain counterpart of ``GET /variants/{urn}``. Flat anchor identity (digest, level, HGVS,
+     * ClinGen id, spec-pure VRS) plus the cross-layer equivalence class (each member labelled relative to
+     * the focus) and a digest-keyed annotation map. The ``identifier`` may be:
+     *
+     * - a **VRS digest** (``ga4gh:VA.…``) — focuses that one allele.
+     * - a **CAID** (``CA…``) — the nt-canonical change; The coding frame is the preferential focus,
+     *   falling back to the genomic frame if no coding frame exists.
+     * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
+     *   equivalents surface as reverse-translation candidates.
+     *
+     * This is a **public molecular resource**. It carries no score-set-level information. No scores,
+     * classifications, measurements, or version standing. Only the allele's own identity, its cross-layer
+     * equivalence class, and public reference annotations (VEP / gnomAD / ClinVar).
+     */
+    get: operations["get_allele_api_v1_alleles__identifier__get"];
+  };
   "/api/v1/api/version": {
     /**
      * Show API version
      * @description Describe the API version and project.
      */
     get: operations["show_version_api_v1_api_version_get"];
+  };
+  "/api/v1/clingen-alleles/{clingen_allele_id}/measurements": {
+    /**
+     * List measurements for a ClinGen allele's equivalence class
+     * @description List every measurement whose cross-layer equivalence class touches this ClinGen allele (a ``CA`` or
+     * ``PA``) — the direct measurements assayed at this change plus the reverse-translation-related ones,
+     * each labeled by its assayed level and relationship. This is the ClinGen-allele-centric variant page's
+     * entrypoint. A private score set's measurement is never included; its inline classification is withheld
+     * where the calibration is unreadable while the measurement still shows.
+     */
+    get: operations["get_clingen_allele_measurements_api_v1_clingen_alleles__clingen_allele_id__measurements_get"];
   };
   "/api/v1/users/me/collections": {
     /**
@@ -313,38 +345,47 @@ export interface paths {
   };
   "/api/v1/mapped-variants/{urn}": {
     /**
-     * Fetch mapped variant by URN
-     * @description Fetch a single mapped variant by URN.
+     * Moved to GET /variants/{urn}
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}`` instead.
      */
-    get: operations["show_mapped_variant_api_v1_mapped_variants__urn__get"];
+    get: operations["redirect_mapped_variant_api_v1_mapped_variants__urn__get"];
   };
   "/api/v1/mapped-variants/{urn}/va/study-result": {
     /**
-     * Construct a VA-Spec StudyResult from a mapped variant
-     * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
+     * Moved to GET /variants/{urn}/va/study-result
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}/va/study-result`` instead.
      */
-    get: operations["show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
+    get: operations["redirect_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
   };
   "/api/v1/mapped-variants/{urn}/va/functional-statement": {
     /**
-     * Construct a VA-Spec Statement from a mapped variant
-     * @description Construct a single VA-Spec Statement from a mapped variant by URN.
+     * Moved to GET /variants/{urn}/va/functional-statement
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}/va/functional-statement`` instead.
      */
-    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
+    get: operations["redirect_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
   };
   "/api/v1/mapped-variants/{urn}/va/pathogenicity-statement": {
     /**
-     * Construct a VA-Spec EvidenceLine from a mapped variant
-     * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
+     * Moved to GET /variants/{urn}/va/pathogenicity-statement
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}/va/pathogenicity-statement`` instead.
      */
-    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
+    get: operations["redirect_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/mapped-variants/vrs/{identifier}": {
     /**
-     * Fetch mapped variants by VRS identifier
-     * @description Fetch a single mapped variant by GA4GH identifier.
+     * Moved to GET /variants/vrs/{identifier}
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/vrs/{identifier}`` instead.
+     *
+     * Note that the replacement's ``only_current`` boolean query parameter has been superseded by
+     * ``as_of``; a caller relying on ``only_current=false`` should switch to passing an explicit
+     * ``as_of`` timestamp rather than expecting it to carry over through this redirect.
      */
-    get: operations["show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get"];
+    get: operations["redirect_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get"];
   };
   "/api/v1/orcid/users/{orcid_id}": {
     /**
@@ -773,6 +814,52 @@ export interface paths {
      */
     get: operations["get_score_set_csv_namespaces_api_v1_score_sets__urn__csv_namespaces_get"];
   };
+  "/api/v1/score-sets/{urn}/variants": {
+    /**
+     * Get the lean whole-set variant view for a score set
+     * @description Return the lean whole-set view for a score set: one pre-chewed record per variant carrying the
+     * selection key (variant URN), score, a representative consequence, the bridge identifiers into the
+     * annotation dimensions (ClinGen allele id, assay-level digest), and the DNA + protein parsed
+     * position/ref/alt blocks that drive the heatmap's level toggle.
+     *
+     * The full set is returned in one payload — the score-set page bins/sorts/filters across every
+     * variant client-side. as_of time-travels the annotation layer only (scores are immutable); the
+     * resolved value is echoed in the X-As-Of response header so the content-time is a visible fact.
+     */
+    get: operations["get_score_set_lean_variants_api_v1_score_sets__urn__variants_get"];
+  };
+  "/api/v1/score-sets/{urn}/variant-details": {
+    /**
+     * Download a score set's variant details (VRS + Cat-VRS + annotations)
+     * @description Download the score set's variant details — the whole-set streaming pair of the single-variant
+     * ``GET /variants/{urn}`` detail endpoint, and the substrate-faithful replacement for the retired
+     * ``/mapped-variants`` export.
+     *
+     * One record per *mapped* variant (unmapped variants carry no VRS and are omitted): the same
+     * VariantDetail envelope the single-variant route serves — the flat ``preMapped``/``postMapped`` VRS
+     * pair for VRS consumers, plus the spec-pure GA4GH CategoricalVariant and the digest-keyed
+     * VEP/gnomAD/ClinVar annotation map for the full molecular picture.
+     *
+     * Streamed as NDJSON (like the annotated-variant exports) so a large score set downloads without
+     * materializing every envelope server-side and a client can process it line by line. ``as_of``
+     * time-travels the molecular layer only (scores/classifications are immutable); the resolved value is
+     * echoed in ``X-As-Of`` and the variant count in ``X-Total-Count``.
+     */
+    get: operations["get_score_set_variant_details_api_v1_score_sets__urn__variant_details_get"];
+  };
+  "/api/v1/score-sets/{urn}/mapped-variants": {
+    /**
+     * Removed; see GET /score-sets/{urn}/variant-details
+     * @deprecated
+     * @description This endpoint has been permanently removed.
+     *
+     * Its JSON-array response has been replaced by a streaming NDJSON payload with a different
+     * field shape (flat ``preMapped``/``postMapped`` VRS pair rather than a ``MappedVariant``-keyed
+     * record), so the two are not wire-compatible and this route does not redirect. Use
+     * ``GET /score-sets/{urn}/variant-details`` instead.
+     */
+    get: operations["get_score_set_mapped_variants_removed_api_v1_score_sets__urn__mapped_variants_get"];
+  };
   "/api/v1/score-sets/{urn}/variants/data": {
     /**
      * Get score set variant data in CSV format
@@ -846,33 +933,40 @@ export interface paths {
      */
     get: operations["get_score_set_counts_csv_api_v1_score_sets__urn__counts_get"];
   };
-  "/api/v1/score-sets/{urn}/mapped-variants": {
-    /**
-     * Get mapped variants from score set by URN
-     * @description Return mapped variants from a score set, identified by URN.
-     */
-    get: operations["get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get"];
-  };
   "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-statement": {
     /**
-     * Get pathogenicity statement annotations for mapped variants within a score set
+     * Get pathogenicity statement annotations for variants within a score set
      * @description Retrieve annotated variants with pathogenicity statements for a given score set.
      *
-     * This endpoint streams pathogenicity evidence lines for all current mapped variants
+     * This endpoint streams pathogenicity evidence lines for all current annotated variants
      * associated with a specific score set. The response is returned as newline-delimited
      * JSON (NDJSON) format for efficient processing of large datasets.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to an annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Pathogenicity evidence line details
      *         }
      *     }
      *     ```
+     *
+     *     `annotation` is null where the variant has no mapping data to annotate, or no pathogenicity statements apply
+     *     to it. A variant whose annotation could not be built is reported in-band rather than by
+     *     truncating the stream, and carries an additional `error` object:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the annotated variant>",
+     *         "annotation": null,
+     *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+     *     }
+     *     ```
+     *
+     *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+     *     body is a truncated one.
      *
      * Args:
      *     urn (str): The Uniform Resource Name (URN) of the score set to retrieve
@@ -883,41 +977,58 @@ export interface paths {
      *
      * Returns:
      *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
-     *         evidence lines for each mapped variant. Response includes headers with
+     *         evidence lines for each annotated variant. Response includes headers with
      *         total count, processing start time, and stream type information.
+     *
+     * A score set that exists but has no annotatable variants (never mapped, or none live at ``as_of``)
+     * streams an empty body with ``X-Total-Count: 0`` — an empty collection, not a 404.
      *
      * Raises:
      *     HTTPException: 404 error if the score set with the given URN is not found.
-     *     HTTPException: 404 error if no mapped variants are associated with the score set.
      *     HTTPException: 403 error if the user lacks READ permissions for the score set.
      *
      * Note:
      *     This function logs the request context and validates user permissions before
-     *     processing. Only current (non-historical) mapped variants are included in
-     *     the response.
+     *     processing. Use the `as_of` parameter to reconstruct the molecular layer as it stood at a specific
+     *     instant, over the variant's fixed score. The response is streamed to allow for efficient handling
+     *     of large datasets, and progress updates are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/functional-statement": {
     /**
-     * Get functional impact statement annotations for mapped variants within a score set
+     * Get functional impact statement annotations for annotated variants within a score set
      * @description Retrieve functional impact statements for annotated variants in a score set.
      *
-     * This endpoint streams functional impact statements for all current mapped variants
+     * This endpoint streams functional impact statements for all current annotated variants
      * associated with a specific score set. The response is delivered as newline-delimited
      * JSON (NDJSON) format.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to an annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Functional impact statement details
      *         }
      *     }
      *     ```
+     *
+     *     `annotation` is null where the variant has no mapping data to annotate, or no functional impact statements apply
+     *     to it. A variant whose annotation could not be built is reported in-band rather than by
+     *     truncating the stream, and carries an additional `error` object:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the annotated variant>",
+     *         "annotation": null,
+     *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+     *     }
+     *     ```
+     *
+     *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+     *     body is a truncated one.
      *
      * Args:
      *     urn (str): The unique resource name (URN) identifying the score set.
@@ -926,41 +1037,57 @@ export interface paths {
      *
      * Returns:
      *     StreamingResponse: NDJSON stream containing functional impact statements for each
-     *         mapped variant. Response includes headers with total count, processing start time,
+     *         annotated variant. Response includes headers with total count, processing start time,
      *         and stream type information.
      *
      * Raises:
      *     HTTPException:
      *         - 404 if the score set with the given URN is not found
-     *         - 404 if no mapped variants are associated with the score set
+     *         - 404 if no annotated variants are associated with the score set
      *         - 403 if the user lacks READ permission for the score set
      *
      * Note:
-     *     Only current (non-historical) mapped variants are included in the response.
-     *     The function requires appropriate read permissions on the score set.
+     *     The function requires appropriate read permissions on the score set. Use the `as_of`
+     *     parameter to reconstruct the molecular layer as it stood at a specific instant, over
+     *     the variant's fixed score. The response is streamed to allow for efficient handling of
+     *     large datasets, and progress updates are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/study-result": {
     /**
-     * Get functional study result annotations for mapped variants within a score set
+     * Get functional study result annotations for annotated variants within a score set
      * @description Retrieve functional study results for annotated variants in a score set.
      *
-     * This endpoint streams functional study result annotations for all current mapped variants
+     * This endpoint streams functional study result annotations for all current annotated variants
      * associated with a specific score set. The results are returned as newline-delimited JSON
      * (NDJSON) format for efficient streaming of large datasets.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to a annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Functional study result details
      *         }
      *     }
      *     ```
+     *
+     *     `annotation` is null where the variant has no mapping data to annotate, or no study results apply
+     *     to it. A variant whose annotation could not be built is reported in-band rather than by
+     *     truncating the stream, and carries an additional `error` object:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the annotated variant>",
+     *         "annotation": null,
+     *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+     *     }
+     *     ```
+     *
+     *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+     *     body is a truncated one.
      *
      * Args:
      *     urn (str): The URN (Uniform Resource Name) of the score set to retrieve variants for.
@@ -970,7 +1097,7 @@ export interface paths {
      * Returns:
      *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
      *         Headers include:
-     *         - X-Total-Count: Total number of mapped variants being streamed
+     *         - X-Total-Count: Total number of annotated variants being streamed
      *         - X-Processing-Started: ISO timestamp when processing began
      *         - X-Stream-Type: Set to "functional-study-result"
      *         - Access-Control-Expose-Headers: Exposed headers for CORS
@@ -978,13 +1105,14 @@ export interface paths {
      * Raises:
      *     HTTPException:
      *         - 404 if the score set with the given URN is not found
-     *         - 404 if no mapped variants are associated with the score set
+     *         - 404 if no annotated variants are associated with the score set
      *         - 403 if the user lacks READ permission for the score set
      *
      * Notes:
-     *     - Only returns current mapped variants (MappedVariant.current == True)
-     *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
-     *     - Logs requests and errors for monitoring and debugging purposes
+     *     - The `as_of` parameter allows reconstruction of the molecular layer as it stood at a specific
+     *       instant, over the variant's fixed score. It is ISO 8601 formatted and ideally timezone-aware.
+     *     - The response is streamed to allow for efficient handling of large datasets, and progress updates
+     *       are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get"];
   };
@@ -1013,13 +1141,20 @@ export interface paths {
     /**
      * Get clinical control options for a score set
      * @description Fetch clinical control options for a given score set.
+     *
+     * Each ``(db_name, db_version)`` pair returned here was live at the moment of this call, but
+     * liveness is re-evaluated independently per request. A pair fetched here can have its backing
+     * ``ClinvarAlleleLink`` retired before a later call to ``GET /score-sets/{urn}/clinical-controls``
+     * filters on it, in which case that call 404s. Pin an explicit ``as_of`` on both calls to avoid this
+     * possibility.
      */
     get: operations["get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get"];
   };
   "/api/v1/score-sets/{urn}/gnomad-variants": {
     /**
      * Get gnomad variants for a score set
-     * @description Fetch relevant gnomad variants for a given score set.
+     * @description Fetch relevant gnomad variants for a given score set, each paired with the score-set variants (and
+     * annotated allele digests) it links to over the allele substrate.
      */
     get: operations["get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get"];
   };
@@ -1348,19 +1483,50 @@ export interface paths {
      */
     put: operations["update_user_api_v1_users___id__put"];
   };
-  "/api/v1/variants/clingen-allele-id-lookups": {
+  "/api/v1/variants/vrs/{identifier}": {
     /**
-     * Lookup variants by ClinGen Allele IDs
-     * @description Lookup variants by ClinGen Allele IDs.
+     * Look up variants by VRS identifier
+     * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+     *
+     * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
+     * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+     * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
+     * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
+     * the response never reveals a private allele's existence.
      */
-    post: operations["lookup_variants_api_v1_variants_clingen_allele_id_lookups_post"];
+    get: operations["lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get"];
   };
   "/api/v1/variants/{urn}": {
     /**
-     * Fetch variant by URN
-     * @description Fetch a single variant by URN.
+     * Fetch assayed variant detail by URN
+     * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
+     *
+     * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
+     * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
+     * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
      */
     get: operations["get_variant_api_v1_variants__urn__get"];
+  };
+  "/api/v1/variants/{urn}/va/study-result": {
+    /**
+     * Construct a VA-Spec StudyResult for a variant
+     * @description Construct a single VA-Spec StudyResult for a variant by URN, from its mapping substrate.
+     */
+    get: operations["get_variant_study_result_api_v1_variants__urn__va_study_result_get"];
+  };
+  "/api/v1/variants/{urn}/va/functional-statement": {
+    /**
+     * Construct a VA-Spec functional-impact Statement for a variant
+     * @description Construct a single VA-Spec functional-impact Statement for a variant by URN.
+     */
+    get: operations["get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get"];
+  };
+  "/api/v1/variants/{urn}/va/pathogenicity-statement": {
+    /**
+     * Construct a VA-Spec pathogenicity Statement for a variant
+     * @description Construct a single VA-Spec pathogenicity Statement for a variant by URN.
+     */
+    get: operations["get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/variants/{urn}/csv-namespaces": {
     /**
@@ -1701,16 +1867,120 @@ export interface components {
       state: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
     };
     /**
-     * AnnotationLayer
-     * @description Annotation layer for a variant mapping result.
+     * AlleleAnnotations
+     * @description The external annotations for one allele, sparse — each source absent unless it has data.
+     */
+    AlleleAnnotations: {
+      vep?: components["schemas"]["VepAnnotation"] | null;
+      gnomad?: components["schemas"]["GnomadAnnotation"] | null;
+      /**
+       * Clinvar
+       * @default []
+       */
+      clinvar?: components["schemas"]["ClinvarAnnotation"][];
+    };
+    /**
+     * AlleleDerivation
+     * @description How an allele's representation was arrived at, *relative to the focus allele*: the
+     * confidence/provenance axis, and the one the UI badges on.
      *
-     * Mirrors the ``AnnotationLayer`` enum produced by the dcd-mapping QC API.
-     * Values use full names so they round-trip readably through the database
-     * column; the dcd-mapping payload uses short single-character codes
-     * (``p`` / ``c`` / ``g``) which the worker translates via :func:`from_wire`.
+     * There is deliberately **no** ``authoritative`` value: the focus allele is marked by
+     * :attr:`AlleleIdentity.is_focus`, not by a derivation. That keeps the axis meaningful even when a
+     * variant was not explicitly measured. See the module docstring for why this axis is separate from
+     * the Cat-VRS ``relation``, and why neither may be inferred from the other.
      * @enum {string}
      */
-    AnnotationLayer: "protein" | "cdna" | "genomic";
+    AlleleDerivation: "projection" | "candidate" | "convergent";
+    /**
+     * AlleleDetail
+     * @description The allele-detail envelope (``GET /alleles/{digest|CAID}``).
+     *
+     * ``alleles`` is the full cross-layer equivalence class, keyed by VRS digest; ``isFocus`` marks
+     * the queried allele. ``annotations`` shares those same keys. Measurement-agnostic: no score,
+     * classification, or re-anchored Cat-VRS (those belong to ``GET /variants/{urn}``).
+     */
+    AlleleDetail: {
+      /** Digest */
+      digest: string;
+      /** Level */
+      level?: string | null;
+      /** Hgvs */
+      hgvs?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Vrs */
+      vrs?: Record<string, never> | null;
+      /**
+       * Alleles
+       * @default {}
+       */
+      alleles?: {
+        [key: string]: components["schemas"]["AlleleIdentity"];
+      };
+      /**
+       * Annotations
+       * @default {}
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["AlleleAnnotations"];
+      };
+    };
+    /**
+     * AlleleIdentity
+     * @description One allele in a view's ``alleles`` map, keyed by VRS digest and labelled relative to the
+     * view's focus allele. ``isFocus`` marks the anchor; ``relation`` and ``derivation`` describe
+     * every other member's relationship to it and are absent on the focus itself.
+     */
+    AlleleIdentity: {
+      /** Level */
+      level?: string | null;
+      /** Hgvs */
+      hgvs?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Isfocus */
+      isFocus: boolean;
+      /** Relation */
+      relation?: string | null;
+      derivation?: components["schemas"]["AlleleDerivation"] | null;
+      /** Projectionof */
+      projectionOf?: string | null;
+    };
+    /**
+     * AlleleMeasurement
+     * @description One measurement in the queried ClinGen allele's cross-layer equivalence class.
+     *
+     * ``assayLevel`` is the level at which this measurement was actually assayed (``protein`` / ``cdna`` /
+     * ``genomic``) — always shown, since the measured level is the clinically load-bearing fact.
+     * ``relationship`` says how the measurement relates to the queried ClinGen id: ``direct`` (assayed at
+     * this allele), ``protein_consequence`` (a protein measurement of a nt query's consequence), or
+     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``preferredClassification`` is the
+     * readable functional classification the UI defaults to (primary-first cascade, RUO excluded), omitted
+     * when absent or gated. ``isCurrent`` /
+     * ``supersededByScoreSet`` let a superseded measurement (surfaced only under ``include_superseded``)
+     * self-describe; ``supersededByScoreSet`` is the superseding *score set*'s URN.
+     */
+    AlleleMeasurement: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Score */
+      score?: number | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      relationship: components["schemas"]["MeasurementRelationship"];
+      /** Assaylevelhgvs */
+      assayLevelHgvs?: string | null;
+      /** Submittedhgvs */
+      submittedHgvs?: string | null;
+      /** Scoreseturn */
+      scoreSetUrn: string;
+      /** Scoresettitle */
+      scoreSetTitle: string;
+      preferredClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      /** Iscurrent */
+      isCurrent: boolean;
+      /** Supersededbyscoreset */
+      supersededByScoreSet?: string | null;
+    };
     /** ApiVersion */
     ApiVersion: {
       /** Name */
@@ -1885,33 +2155,6 @@ export interface components {
       /** @description An optional Sequence Reference on which all of the in-cis Alleles are found. When defined, this may be used to implicitly define the `sequenceReference` attribute for each of the CisPhasedBlock member Alleles. */
       sequenceReference?: components["schemas"]["SequenceReference"] | null;
     };
-    /**
-     * ClingenAlleleIdVariantLookupResponse
-     * @description Response model for a variant lookup by ClinGen allele ID
-     */
-    ClingenAlleleIdVariantLookupResponse: {
-      /** Clingenalleleid */
-      clingenAlleleId: string;
-      exactMatch?: components["schemas"]["Variant"] | null;
-      /**
-       * Equivalentnt
-       * @default []
-       */
-      equivalentNt?: components["schemas"]["Variant"][];
-      /**
-       * Equivalentaa
-       * @default []
-       */
-      equivalentAa?: components["schemas"]["Variant"][];
-    };
-    /**
-     * ClingenAlleleIdVariantLookupsRequest
-     * @description A request to search for variants matching a list of ClinGen allele IDs
-     */
-    ClingenAlleleIdVariantLookupsRequest: {
-      /** Clingenalleleids */
-      clingenAlleleIds: string[];
-    };
     /** ClinicalControlOptions */
     ClinicalControlOptions: {
       /** Dbname */
@@ -1919,8 +2162,8 @@ export interface components {
       /** Availableversions */
       availableVersions: string[];
     };
-    /** ClinicalControlWithMappedVariants */
-    ClinicalControlWithMappedVariants: {
+    /** ClinicalControlWithClinvarLinks */
+    ClinicalControlWithClinvarLinks: {
       /** Dbidentifier */
       dbIdentifier: string;
       /** Genesymbol */
@@ -1947,8 +2190,34 @@ export interface components {
       creationDate: string;
       /** Recordtype */
       recordType?: string;
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariantForClinicalControl"][];
+      /** Clinvarlinks */
+      clinvarLinks: components["schemas"]["ClinvarVariantLink"][];
+    };
+    /**
+     * ClinvarAnnotation
+     * @description One ClinVar assertion for an allele (an allele may carry one per release).
+     */
+    ClinvarAnnotation: {
+      /** Clinicalsignificance */
+      clinicalSignificance: string;
+      /** Clinicalreviewstatus */
+      clinicalReviewStatus: string;
+      /** Clinvarvariationid */
+      clinvarVariationId?: string | null;
+      /** Clinvaralleleid */
+      clinvarAlleleId: string;
+      /** Dbversion */
+      dbVersion: string;
+    };
+    /**
+     * ClinvarVariantLink
+     * @description One score-set variant a ClinVar control reaches, tagged with the annotated allele's digest.
+     */
+    ClinvarVariantLink: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Alleledigest */
+      alleleDigest?: string | null;
     };
     /**
      * Coding
@@ -3433,10 +3702,10 @@ export interface components {
       totalScoredVariants: number;
     };
     /**
-     * GnomADVariantWithMappedVariants
-     * @description GnomAD variant view model with mapped variants for non-admin clients.
+     * GnomADVariantWithVariantLinks
+     * @description GnomAD variant + its score-set variant links, for non-admin clients.
      */
-    GnomADVariantWithMappedVariants: {
+    GnomADVariantWithVariantLinks: {
       /** Dbname */
       dbName: string;
       /** Dbidentifier */
@@ -3467,8 +3736,39 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
+      /** Variantlinks */
+      variantLinks: components["schemas"]["GnomadVariantLink"][];
+    };
+    /**
+     * GnomadAnnotation
+     * @description gnomAD population frequency for an allele.
+     */
+    GnomadAnnotation: {
+      /** Allelefrequency */
+      alleleFrequency: number;
+      /** Allelecount */
+      alleleCount: number;
+      /** Allelenumber */
+      alleleNumber: number;
+      /** Faf95Max */
+      faf95Max?: number | null;
+      /** Dbversion */
+      dbVersion: string;
+      /** Dbidentifier */
+      dbIdentifier: string;
+    };
+    /**
+     * GnomadVariantLink
+     * @description One score-set variant a gnomAD frequency record reaches, tagged with the annotated allele's digest.
+     *
+     * Mirrors :class:`clinical_control.ClinvarVariantLink`: a gnomAD variant fans out to every allele that
+     * resolved to it, and each allele belongs to a score-set variant.
+     */
+    GnomadVariantLink: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Alleledigest */
+      alleleDigest?: string | null;
     };
     /**
      * GroupBy
@@ -3479,6 +3779,23 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components["schemas"]["ValidationError"][];
+    };
+    /**
+     * HgvsField
+     * @description An HGVS expression with its parsed substitution block riding alongside when representable.
+     *
+     * ``hgvs`` is always present; ``position``/``ref``/``alt`` appear only for a placeable simple
+     * substitution (the heatmap grid) and are omitted for splice/indels/multivariants.
+     */
+    HgvsField: {
+      /** Hgvs */
+      hgvs: string;
+      /** Position */
+      position?: number | null;
+      /** Ref */
+      ref?: string | null;
+      /** Alt */
+      alt?: string | null;
     };
     /**
      * JobRunDetail
@@ -3606,6 +3923,35 @@ export interface components {
       special?: boolean | null;
       /** Description */
       description?: string | null;
+    };
+    /**
+     * LeanVariant
+     * @description One pre-chewed per-variant record feeding the score-set table, heatmap, and histograms.
+     *
+     * ``variantUrn`` is the universal selection key; ``assayLevelDigest`` bridges into the digest-keyed
+     * annotation dimensions. The submitted HGVS (``hgvsNt``/``hgvsPro``/``hgvsSplice``, target frame) carry
+     * the depositor's frame for the heatmap's raw↔mapped toggle. The mapped (reference) frame is the
+     * ``mapped`` :class:`MappedTriple` plus the ``assayLevel`` pointer (an ``SequenceLevel`` value) naming
+     * the measured/canonical slot: ``mapped[assayLevel]`` is the measured representation and ``mapped.cdna``
+     * the level-invariant search key. Fields are omitted when null.
+     */
+    LeanVariant: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Score */
+      score?: number | null;
+      /** Consequence */
+      consequence?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Assayleveldigest */
+      assayLevelDigest?: string | null;
+      hgvsNt?: components["schemas"]["HgvsField"] | null;
+      hgvsPro?: components["schemas"]["HgvsField"] | null;
+      hgvsSplice?: components["schemas"]["HgvsField"] | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      /** @default {} */
+      mapped?: components["schemas"]["MappedTriple"];
     };
     /**
      * LengthExpression
@@ -3755,96 +4101,31 @@ export interface components {
        */
       mappings?: components["schemas"]["ConceptMapping"][] | null;
     };
-    /** MappedVariant */
-    MappedVariant: {
-      /** Premapped */
-      preMapped?: unknown;
-      /** Postmapped */
-      postMapped?: unknown;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Errormessage */
-      errorMessage?: string | null;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /**
-       * Mappeddate
-       * Format: date
-       */
-      mappedDate: string;
-      /** Mappingapiversion */
-      mappingApiVersion: string;
-      /** Current */
-      current: boolean;
-      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
-      /** Atmismatchedlocus */
-      atMismatchedLocus?: boolean | null;
-      /** Neargap */
-      nearGap?: boolean | null;
-      /** Varianturn */
-      variantUrn: string;
-      /** Id */
-      id: number;
-      /** Clingenalleleid */
-      clingenAlleleId?: string | null;
-      /** Recordtype */
-      recordType?: string;
-    };
-    /** MappedVariantForClinicalControl */
-    MappedVariantForClinicalControl: {
-      /** Varianturn */
-      variantUrn: string;
-    };
     /**
-     * MappedVariantWithMappingDetails
-     * @description Client-facing variant of :class:`SavedMappedVariantWithMappingDetails`.
+     * MappedTriple
+     * @description The mapped (reference-frame) HGVS keyed by level — the canonical projection of the measured change.
+     *
+     * One slot per level. A nucleotide assay populates all three (``mapped[assayLevel]`` is the measured
+     * slot; ``cdna`` is the level-invariant search key, present even when ``assayLevel`` is ``genomic``); a
+     * protein assay populates only ``protein`` (the ambiguous c/g fan-out is not fabricated). Null slots are
+     * omitted under ``response_model_exclude_none``.
      */
-    MappedVariantWithMappingDetails: {
-      /** Premapped */
-      preMapped?: unknown;
-      /** Postmapped */
-      postMapped?: unknown;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Errormessage */
-      errorMessage?: string | null;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /**
-       * Mappeddate
-       * Format: date
-       */
-      mappedDate: string;
-      /** Mappingapiversion */
-      mappingApiVersion: string;
-      /** Current */
-      current: boolean;
-      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
-      /** Atmismatchedlocus */
-      atMismatchedLocus?: boolean | null;
-      /** Neargap */
-      nearGap?: boolean | null;
-      /** Varianturn */
-      variantUrn: string;
-      /** Id */
-      id: number;
-      /** Clingenalleleid */
-      clingenAlleleId?: string | null;
-      /** Recordtype */
-      recordType?: string;
-      targetGeneMapping?: components["schemas"]["TargetGeneMapping"] | null;
+    MappedTriple: {
+      genomic?: components["schemas"]["HgvsField"] | null;
+      cdna?: components["schemas"]["HgvsField"] | null;
+      protein?: components["schemas"]["HgvsField"] | null;
     };
     /**
      * MappingState
      * @enum {string}
      */
     MappingState: "incomplete" | "processing" | "failed" | "complete" | "pending_variant_processing" | "not_attempted" | "queued";
+    /**
+     * MeasurementRelationship
+     * @description How a measurement relates to the queried ClinGen id, by the measurement's *measured* level.
+     * @enum {string}
+     */
+    MeasurementRelationship: "direct" | "protein_consequence" | "nucleotide_encoding";
     /**
      * MembershipOperator
      * @description The logical relationship between members of the set, that indicates how they
@@ -5001,6 +5282,20 @@ export interface components {
       seqrepo_dependency_version: string;
     };
     /**
+     * SequenceLevel
+     * @description The molecular sequence level of a variant representation: genomic DNA, coding DNA, or protein.
+     *
+     * A single, duty-neutral closed set reused across several columns that each carry a different
+     * semantic meaning: the level a variant was *assayed* at (``assay_level``), the level dcd-mapping
+     * *aligned* it at (``alignment_level``), and the level of a stored allele (``level``).
+     *
+     * Values use full names so they round-trip readably through the database column; the dcd-mapping
+     * payload uses short single-character codes (``p`` / ``c`` / ``g``) which the worker translates via
+     * :func:`from_wire`.
+     * @enum {string}
+     */
+    SequenceLevel: "protein" | "cdna" | "genomic";
+    /**
      * SequenceLocation
      * @description A `Location` defined by an interval on a `Sequence`.
      */
@@ -5476,69 +5771,6 @@ export interface components {
       targetSequence?: components["schemas"]["TargetSequenceCreate"] | null;
       targetAccession?: components["schemas"]["TargetAccessionCreate"] | null;
     };
-    /** TargetGeneMapping */
-    TargetGeneMapping: {
-      alignmentLevel: components["schemas"]["AnnotationLayer"];
-      /**
-       * Preferred
-       * @default false
-       */
-      preferred?: boolean;
-      /** Referenceassembly */
-      referenceAssembly?: string | null;
-      /** Referenceaccession */
-      referenceAccession?: string | null;
-      /** Referencesequenceid */
-      referenceSequenceId?: string | null;
-      /** Alignmentscore */
-      alignmentScore?: number | null;
-      /** Nextbestalignmentscore */
-      nextBestAlignmentScore?: number | null;
-      /** Alignmentlength */
-      alignmentLength?: number | null;
-      /** Alignmentstring */
-      alignmentString?: string | null;
-      /** Mismatchcount */
-      mismatchCount?: number | null;
-      /** Gapcount */
-      gapCount?: number | null;
-      /** Percentidentity */
-      percentIdentity?: number | null;
-      /** Totalvariants */
-      totalVariants?: number | null;
-      /** Variantsfailed */
-      variantsFailed?: number | null;
-      /** Variantswithalignmentwarnings */
-      variantsWithAlignmentWarnings?: number | null;
-      /** Variantsmappedcleanly */
-      variantsMappedCleanly?: number | null;
-      /** Toolname */
-      toolName: string;
-      /** Toolversion */
-      toolVersion: string;
-      /** Toolparameters */
-      toolParameters?: Record<string, never> | null;
-      /** Alignmentmetadata */
-      alignmentMetadata?: Record<string, never> | null;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Mappeddate */
-      mappedDate?: string | null;
-      /** Id */
-      id: number;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Recordtype */
-      recordType?: string;
-    };
     /**
      * TargetGeneWithScoreSetUrn
      * @description Target gene view model containing its score set urn.
@@ -5789,14 +6021,89 @@ export interface components {
       type: string;
     };
     /**
-     * Variant
-     * @description View model for a variant, defined by its ClinGen allele id, with associated variant effect measurements
+     * VariantClassification
+     * @description A functional classification the variant falls into, tagged with its calibration context.
+     *
+     * A score set may carry several calibrations, so a variant has one classification per calibration;
+     * ``primary`` flags the UI default. The classifications are calibration-derived but as-of-invariant
+     * (calibrations carry no valid-time), so they are always the current calibration state.
      */
-    Variant: {
+    VariantClassification: {
+      /** Calibrationid */
+      calibrationId: number;
+      /** Primary */
+      primary: boolean;
+      classification: components["schemas"]["SavedFunctionalClassification"];
+    };
+    /**
+     * VariantDetail
+     * @description The assayed variant-detail envelope (``GET /variants/{urn}``).
+     *
+     * Two tiers: flat, UI-ergonomic assay fields (the ``targetHgvs``/``referenceHgvs`` coordinate pair
+     * is a client-side toggle, no refetch; the ``preMapped``/``postMapped`` raw VRS pair lets a
+     * VRS/bulk consumer read the assayed-level and measured VRS directly) plus the spec-pure GA4GH
+     * ``molecularRepresentation`` (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer
+     * rides alongside, keyed by VRS digest: the ``alleles`` identity sidecar (per-allele ``level`` /
+     * ``hgvs`` / ``clingenAlleleId`` / ``relation`` — one entry per linked allele, sharing keys with
+     * ``annotations``) and the ``annotations`` map. ``isCurrent``/``supersededByScoreSet`` let a
+     * superseded variant self-describe: ``supersededByScoreSet`` is the superseding *score set*'s URN,
+     * not a variant URN. Supersession is versioned at the score-set level, and a newer version may add,
+     * drop, or renumber variants — so there is no stable superseding-*variant* pointer to hand back; a
+     * consumer resolves the current measurement by looking this variant up within that score set.
+     *
+     * Unlike most MaveDB response models, this one serializes with ``exclude_none=False`` on both routes
+     * that emit it (``GET /variants/{urn}`` and the bulk ``GET /score-sets/{urn}/variant-details`` NDJSON
+     * stream): the shape is a stable, self-describing envelope, so every record carries the same key set
+     * and an unmapped variant reads ``preMapped``/``postMapped``/``molecularRepresentation`` as ``null``
+     * rather than dropping them. The two routes are kept in lockstep — the same object, one shape.
+     */
+    VariantDetail: {
+      /** Urn */
+      urn: string;
+      /** Scores */
+      scores?: Record<string, never> | null;
+      /** Counts */
+      counts?: Record<string, never> | null;
+      /**
+       * Classifications
+       * @default []
+       */
+      classifications?: components["schemas"]["VariantClassification"][];
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      /** Targethgvs */
+      targetHgvs?: string | null;
+      /** Referencehgvs */
+      referenceHgvs?: string | null;
+      /** Assayleveldigest */
+      assayLevelDigest?: string | null;
       /** Clingenalleleid */
-      clingenAlleleId: string;
-      /** Varianteffectmeasurements */
-      variantEffectMeasurements: components["schemas"]["VariantEffectMeasurementWithShortScoreSet"][];
+      clingenAlleleId?: string | null;
+      /** Premapped */
+      preMapped?: Record<string, never> | null;
+      /** Postmapped */
+      postMapped?: Record<string, never> | null;
+      /** Molecularrepresentation */
+      molecularRepresentation?: Record<string, never> | null;
+      /** Mode */
+      mode?: string | null;
+      /**
+       * Alleles
+       * @default {}
+       */
+      alleles?: {
+        [key: string]: components["schemas"]["AlleleIdentity"];
+      };
+      /**
+       * Annotations
+       * @default {}
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["AlleleAnnotations"];
+      };
+      /** Iscurrent */
+      isCurrent: boolean;
+      /** Supersededbyscoreset */
+      supersededByScoreSet?: string | null;
     };
     /**
      * VariantDiagnosticProposition
@@ -5892,76 +6199,6 @@ export interface components {
       id: number;
       /** Recordtype */
       recordType?: string;
-    };
-    /**
-     * VariantEffectMeasurementWithScoreSet
-     * @description Variant effect measurement view model with mapped variants and score set
-     */
-    VariantEffectMeasurementWithScoreSet: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-      scoreSet: components["schemas"]["ScoreSet"];
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
-    };
-    /**
-     * VariantEffectMeasurementWithShortScoreSet
-     * @description Variant effect measurement view model with mapped variants and a limited set of score set details
-     */
-    VariantEffectMeasurementWithShortScoreSet: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-      scoreSet: components["schemas"]["ShortScoreSet"];
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
     };
     /**
      * VariantOncogenicityProposition
@@ -6303,10 +6540,38 @@ export interface components {
       conditionQualifier: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
     };
     /**
+     * VariantVrsMatch
+     * @description One variant whose mapping links an allele bearing the queried VRS identifier.
+     *
+     * The ``GET /variants/vrs/{identifier}`` lookup result. The ClinGen id + level ride from the matched
+     * (deduplicated) allele; the URN from the variant it is linked to. Replaces the legacy MappedVariant VRS
+     * lookup on the new Allele substrate (#743, item 3.5).
+     */
+    VariantVrsMatch: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Vrsid */
+      vrsId?: string | null;
+      /** Level */
+      level?: string | null;
+    };
+    /**
      * Variation
      * @description A representation of the state of one or more biomolecules.
      */
     Variation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
+    /**
+     * VepAnnotation
+     * @description VEP most-severe functional consequence and the Ensembl release it resolved under.
+     */
+    VepAnnotation: {
+      /** Consequence */
+      consequence?: string | null;
+      /** Sourceversion */
+      sourceVersion: string;
+    };
     /**
      * code
      * @description Indicates that the value is taken from a set of controlled strings defined elsewhere. Technically, a code is restricted to a string which has at least one character and no leading or  trailing whitespace, and where there is no whitespace other than single spaces in the contents.
@@ -6663,6 +6928,66 @@ export interface operations {
     };
   };
   /**
+   * Fetch allele detail by VRS digest, CAID, or PAID
+   * @description Fetch the detail envelope for a deduplicated allele, by any of its identifiers.
+   *
+   * The allele-grain counterpart of ``GET /variants/{urn}``. Flat anchor identity (digest, level, HGVS,
+   * ClinGen id, spec-pure VRS) plus the cross-layer equivalence class (each member labelled relative to
+   * the focus) and a digest-keyed annotation map. The ``identifier`` may be:
+   *
+   * - a **VRS digest** (``ga4gh:VA.…``) — focuses that one allele.
+   * - a **CAID** (``CA…``) — the nt-canonical change; The coding frame is the preferential focus,
+   *   falling back to the genomic frame if no coding frame exists.
+   * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
+   *   equivalents surface as reverse-translation candidates.
+   *
+   * This is a **public molecular resource**. It carries no score-set-level information. No scores,
+   * classifications, measurements, or version standing. Only the allele's own identity, its cross-layer
+   * equivalence class, and public reference annotations (VEP / gnomAD / ClinVar).
+   */
+  get_allele_api_v1_alleles__identifier__get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (equivalence-class membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant. ISO 8601, ideally timezone-aware. The focus allele's own identity is content-addressed and immutable, so it is unaffected. Defaults to current. */
+        as_of?: string | null;
+      };
+      path: {
+        /** @description A GA4GH VRS digest (one allele), or a ClinGen allele id: a nucleotide CAID (the nt-canonical change, its genomic + coding frames) or a protein PAID. */
+        identifier: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AlleleDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Show API version
    * @description Describe the API version and project.
    */
@@ -6677,6 +7002,60 @@ export interface operations {
       /** @description Resource not found. */
       404: {
         content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List measurements for a ClinGen allele's equivalence class
+   * @description List every measurement whose cross-layer equivalence class touches this ClinGen allele (a ``CA`` or
+   * ``PA``) — the direct measurements assayed at this change plus the reverse-translation-related ones,
+   * each labeled by its assayed level and relationship. This is the ClinGen-allele-centric variant page's
+   * entrypoint. A private score set's measurement is never included; its inline classification is withheld
+   * where the calibration is unreadable while the measurement still shows.
+   */
+  get_clingen_allele_measurements_api_v1_clingen_alleles__clingen_allele_id__measurements_get: {
+    parameters: {
+      query?: {
+        /** @description Include measurements from superseded score-set versions. Default false — superseded measurements are a deliberate power-user / citation path, never surfaced by discovery. */
+        include_superseded?: boolean;
+        /** @description Reconstruct the equivalence class (which mapping records / allele links are live) as it stood at this instant. ISO 8601, ideally timezone-aware. Scores and classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        clingen_allele_id: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AlleleMeasurement"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal server error. */
       500: {
@@ -8270,36 +8649,22 @@ export interface operations {
     };
   };
   /**
-   * Fetch mapped variant by URN
-   * @description Fetch a single mapped variant by URN.
+   * Moved to GET /variants/{urn}
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}`` instead.
    */
-  show_mapped_variant_api_v1_mapped_variants__urn__get: {
+  redirect_mapped_variant_api_v1_mapped_variants__urn__get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["MappedVariantWithMappingDetails"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8307,43 +8672,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Construct a VA-Spec StudyResult from a mapped variant
-   * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
+   * Moved to GET /variants/{urn}/va/study-result
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}/va/study-result`` instead.
    */
-  show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get: {
+  redirect_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8351,43 +8698,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Construct a VA-Spec Statement from a mapped variant
-   * @description Construct a single VA-Spec Statement from a mapped variant by URN.
+   * Moved to GET /variants/{urn}/va/functional-statement
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}/va/functional-statement`` instead.
    */
-  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
+  redirect_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["Statement"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8395,43 +8724,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Construct a VA-Spec EvidenceLine from a mapped variant
-   * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
+   * Moved to GET /variants/{urn}/va/pathogenicity-statement
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}/va/pathogenicity-statement`` instead.
    */
-  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
+  redirect_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["VariantPathogenicityStatement"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8439,24 +8750,19 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Fetch mapped variants by VRS identifier
-   * @description Fetch a single mapped variant by GA4GH identifier.
+   * Moved to GET /variants/vrs/{identifier}
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/vrs/{identifier}`` instead.
+   *
+   * Note that the replacement's ``only_current`` boolean query parameter has been superseded by
+   * ``as_of``; a caller relying on ``only_current=false`` should switch to passing an explicit
+   * ``as_of`` timestamp rather than expecting it to carry over through this redirect.
    */
-  show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get: {
+  redirect_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get: {
     parameters: {
-      query?: {
-        only_current?: boolean;
-      };
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         /** @description String, a valid GA4GH digest based identifier. */
         identifier: string;
@@ -8464,32 +8770,16 @@ export interface operations {
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["MappedVariant"][];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
       };
     };
   };
@@ -10276,6 +10566,10 @@ export interface operations {
    */
   get_score_set_csv_namespaces_api_v1_score_sets__urn__csv_namespaces_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the offered namespaces as they stood at this instant, so discovery matches an `as_of` download. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10301,6 +10595,161 @@ export interface operations {
       /** @description Resource not found. */
       404: {
         content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get the lean whole-set variant view for a score set
+   * @description Return the lean whole-set view for a score set: one pre-chewed record per variant carrying the
+   * selection key (variant URN), score, a representative consequence, the bridge identifiers into the
+   * annotation dimensions (ClinGen allele id, assay-level digest), and the DNA + protein parsed
+   * position/ref/alt blocks that drive the heatmap's level toggle.
+   *
+   * The full set is returned in one payload — the score-set page bins/sorts/filters across every
+   * variant client-side. as_of time-travels the annotation layer only (scores are immutable); the
+   * resolved value is echoed in the X-As-Of response header so the content-time is a visible fact.
+   */
+  get_score_set_lean_variants_api_v1_score_sets__urn__variants_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the annotation layer (mapping, allele links, VEP consequence) as it stood at this instant, over the score set's fixed scores. ISO 8601, ideally timezone-aware. This is content valid-time only — it never re-selects a score-set version. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["LeanVariant"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Download a score set's variant details (VRS + Cat-VRS + annotations)
+   * @description Download the score set's variant details — the whole-set streaming pair of the single-variant
+   * ``GET /variants/{urn}`` detail endpoint, and the substrate-faithful replacement for the retired
+   * ``/mapped-variants`` export.
+   *
+   * One record per *mapped* variant (unmapped variants carry no VRS and are omitted): the same
+   * VariantDetail envelope the single-variant route serves — the flat ``preMapped``/``postMapped`` VRS
+   * pair for VRS consumers, plus the spec-pure GA4GH CategoricalVariant and the digest-keyed
+   * VEP/gnomAD/ClinVar annotation map for the full molecular picture.
+   *
+   * Streamed as NDJSON (like the annotated-variant exports) so a large score set downloads without
+   * materializing every envelope server-side and a client can process it line by line. ``as_of``
+   * time-travels the molecular layer only (scores/classifications are immutable); the resolved value is
+   * echoed in ``X-As-Of`` and the variant count in ``X-Total-Count``.
+   */
+  get_score_set_variant_details_api_v1_score_sets__urn__variant_details_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (VRS, Cat-VRS membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the score set's fixed scores. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Newline-delimited JSON: one VariantDetail per mapped variant — the same envelope the single-variant GET /variants/{urn} route serves, carrying the flat preMapped/postMapped VRS pair, the spec-pure GA4GH CategoricalVariant, and the digest-keyed VEP/gnomAD/ClinVar annotation map. */
+      200: {
+        content: {
+          "application/json": unknown;
+          "application/x-ndjson": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Removed; see GET /score-sets/{urn}/variant-details
+   * @deprecated
+   * @description This endpoint has been permanently removed.
+   *
+   * Its JSON-array response has been replaced by a streaming NDJSON payload with a different
+   * field shape (flat ``preMapped``/``postMapped`` VRS pair rather than a ``MappedVariant``-keyed
+   * record), so the two are not wire-compatible and this route does not redirect. Use
+   * ``GET /score-sets/{urn}/variant-details`` instead.
+   */
+  get_score_set_mapped_variants_removed_api_v1_score_sets__urn__mapped_variants_get: {
+    parameters: {
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Gone. This resource has been permanently removed. */
+      410: {
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {
@@ -10379,6 +10828,8 @@ export interface operations {
          * @description Deprecated: request the `scores_custom` namespace instead. Passing true here is equivalent to appending that namespace, whose columns are emitted under the `scores` prefix as before. It will be removed in a future release.
          */
         include_custom_columns?: boolean | null;
+        /** @description Reconstruct the annotation layer (post-mapped HGVS, VEP, gnomAD, ClinVar) as it stood at this instant, over the variant's immutable submitted HGVS/scores/counts. ISO 8601, ideally timezone-aware. No effect on the scores/counts namespaces. Defaults to current. */
+        as_of?: string | null;
       };
       header?: {
         "x-active-roles"?: string | null;
@@ -10611,68 +11062,38 @@ export interface operations {
     };
   };
   /**
-   * Get mapped variants from score set by URN
-   * @description Return mapped variants from a score set, identified by URN.
-   */
-  get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["MappedVariant"][];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Get pathogenicity statement annotations for mapped variants within a score set
+   * Get pathogenicity statement annotations for variants within a score set
    * @description Retrieve annotated variants with pathogenicity statements for a given score set.
    *
-   * This endpoint streams pathogenicity evidence lines for all current mapped variants
+   * This endpoint streams pathogenicity evidence lines for all current annotated variants
    * associated with a specific score set. The response is returned as newline-delimited
    * JSON (NDJSON) format for efficient processing of large datasets.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to an annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Pathogenicity evidence line details
    *         }
    *     }
    *     ```
+   *
+   *     `annotation` is null where the variant has no mapping data to annotate, or no pathogenicity statements apply
+   *     to it. A variant whose annotation could not be built is reported in-band rather than by
+   *     truncating the stream, and carries an additional `error` object:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the annotated variant>",
+   *         "annotation": null,
+   *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+   *     }
+   *     ```
+   *
+   *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+   *     body is a truncated one.
    *
    * Args:
    *     urn (str): The Uniform Resource Name (URN) of the score set to retrieve
@@ -10683,21 +11104,28 @@ export interface operations {
    *
    * Returns:
    *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
-   *         evidence lines for each mapped variant. Response includes headers with
+   *         evidence lines for each annotated variant. Response includes headers with
    *         total count, processing start time, and stream type information.
+   *
+   * A score set that exists but has no annotatable variants (never mapped, or none live at ``as_of``)
+   * streams an empty body with ``X-Total-Count: 0`` — an empty collection, not a 404.
    *
    * Raises:
    *     HTTPException: 404 error if the score set with the given URN is not found.
-   *     HTTPException: 404 error if no mapped variants are associated with the score set.
    *     HTTPException: 403 error if the user lacks READ permissions for the score set.
    *
    * Note:
    *     This function logs the request context and validates user permissions before
-   *     processing. Only current (non-historical) mapped variants are included in
-   *     the response.
+   *     processing. Use the `as_of` parameter to reconstruct the molecular layer as it stood at a specific
+   *     instant, over the variant's fixed score. The response is streamed to allow for efficient handling
+   *     of large datasets, and progress updates are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10706,7 +11134,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream pathogenicity statement annotations for mapped variants. */
+      /** @description Stream pathogenicity statement annotations for variants. */
       200: {
         content: {
           "application/json": {
@@ -10740,24 +11168,38 @@ export interface operations {
     };
   };
   /**
-   * Get functional impact statement annotations for mapped variants within a score set
+   * Get functional impact statement annotations for annotated variants within a score set
    * @description Retrieve functional impact statements for annotated variants in a score set.
    *
-   * This endpoint streams functional impact statements for all current mapped variants
+   * This endpoint streams functional impact statements for all current annotated variants
    * associated with a specific score set. The response is delivered as newline-delimited
    * JSON (NDJSON) format.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to an annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Functional impact statement details
    *         }
    *     }
    *     ```
+   *
+   *     `annotation` is null where the variant has no mapping data to annotate, or no functional impact statements apply
+   *     to it. A variant whose annotation could not be built is reported in-band rather than by
+   *     truncating the stream, and carries an additional `error` object:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the annotated variant>",
+   *         "annotation": null,
+   *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+   *     }
+   *     ```
+   *
+   *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+   *     body is a truncated one.
    *
    * Args:
    *     urn (str): The unique resource name (URN) identifying the score set.
@@ -10766,21 +11208,27 @@ export interface operations {
    *
    * Returns:
    *     StreamingResponse: NDJSON stream containing functional impact statements for each
-   *         mapped variant. Response includes headers with total count, processing start time,
+   *         annotated variant. Response includes headers with total count, processing start time,
    *         and stream type information.
    *
    * Raises:
    *     HTTPException:
    *         - 404 if the score set with the given URN is not found
-   *         - 404 if no mapped variants are associated with the score set
+   *         - 404 if no annotated variants are associated with the score set
    *         - 403 if the user lacks READ permission for the score set
    *
    * Note:
-   *     Only current (non-historical) mapped variants are included in the response.
-   *     The function requires appropriate read permissions on the score set.
+   *     The function requires appropriate read permissions on the score set. Use the `as_of`
+   *     parameter to reconstruct the molecular layer as it stood at a specific instant, over
+   *     the variant's fixed score. The response is streamed to allow for efficient handling of
+   *     large datasets, and progress updates are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10789,7 +11237,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream functional impact statement annotations for mapped variants. */
+      /** @description Stream functional impact statement annotations for annotated variants. */
       200: {
         content: {
           "application/json": {
@@ -10823,24 +11271,38 @@ export interface operations {
     };
   };
   /**
-   * Get functional study result annotations for mapped variants within a score set
+   * Get functional study result annotations for annotated variants within a score set
    * @description Retrieve functional study results for annotated variants in a score set.
    *
-   * This endpoint streams functional study result annotations for all current mapped variants
+   * This endpoint streams functional study result annotations for all current annotated variants
    * associated with a specific score set. The results are returned as newline-delimited JSON
    * (NDJSON) format for efficient streaming of large datasets.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to a annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Functional study result details
    *         }
    *     }
    *     ```
+   *
+   *     `annotation` is null where the variant has no mapping data to annotate, or no study results apply
+   *     to it. A variant whose annotation could not be built is reported in-band rather than by
+   *     truncating the stream, and carries an additional `error` object:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the annotated variant>",
+   *         "annotation": null,
+   *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+   *     }
+   *     ```
+   *
+   *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+   *     body is a truncated one.
    *
    * Args:
    *     urn (str): The URN (Uniform Resource Name) of the score set to retrieve variants for.
@@ -10850,7 +11312,7 @@ export interface operations {
    * Returns:
    *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
    *         Headers include:
-   *         - X-Total-Count: Total number of mapped variants being streamed
+   *         - X-Total-Count: Total number of annotated variants being streamed
    *         - X-Processing-Started: ISO timestamp when processing began
    *         - X-Stream-Type: Set to "functional-study-result"
    *         - Access-Control-Expose-Headers: Exposed headers for CORS
@@ -10858,16 +11320,21 @@ export interface operations {
    * Raises:
    *     HTTPException:
    *         - 404 if the score set with the given URN is not found
-   *         - 404 if no mapped variants are associated with the score set
+   *         - 404 if no annotated variants are associated with the score set
    *         - 403 if the user lacks READ permission for the score set
    *
    * Notes:
-   *     - Only returns current mapped variants (MappedVariant.current == True)
-   *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
-   *     - Logs requests and errors for monitoring and debugging purposes
+   *     - The `as_of` parameter allows reconstruction of the molecular layer as it stood at a specific
+   *       instant, over the variant's fixed score. It is ISO 8601 formatted and ideally timezone-aware.
+   *     - The response is streamed to allow for efficient handling of large datasets, and progress updates
+   *       are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10876,7 +11343,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream functional study result annotations for mapped variants. */
+      /** @description Stream functional study result annotations for annotated variants. */
       200: {
         content: {
           "application/json": {
@@ -11018,6 +11485,8 @@ export interface operations {
   get_clinical_controls_for_score_set_api_v1_score_sets__urn__clinical_controls_get: {
     parameters: {
       query?: {
+        /** @description Reconstruct the allele → ClinVar link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
         db?: string | null;
         version?: string | null;
       };
@@ -11032,7 +11501,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ClinicalControlWithMappedVariants"][];
+          "application/json": components["schemas"]["ClinicalControlWithClinvarLinks"][];
         };
       };
       /** @description Authentication required. */
@@ -11062,9 +11531,19 @@ export interface operations {
   /**
    * Get clinical control options for a score set
    * @description Fetch clinical control options for a given score set.
+   *
+   * Each ``(db_name, db_version)`` pair returned here was live at the moment of this call, but
+   * liveness is re-evaluated independently per request. A pair fetched here can have its backing
+   * ``ClinvarAlleleLink`` retired before a later call to ``GET /score-sets/{urn}/clinical-controls``
+   * filters on it, in which case that call 404s. Pin an explicit ``as_of`` on both calls to avoid this
+   * possibility.
    */
   get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the allele → ClinVar link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -11105,11 +11584,14 @@ export interface operations {
   };
   /**
    * Get gnomad variants for a score set
-   * @description Fetch relevant gnomad variants for a given score set.
+   * @description Fetch relevant gnomad variants for a given score set, each paired with the score-set variants (and
+   * annotated allele digests) it links to over the allele substrate.
    */
   get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get: {
     parameters: {
       query?: {
+        /** @description Reconstruct the allele → gnomAD link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
         version?: string | null;
       };
       header?: {
@@ -11123,7 +11605,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["GnomADVariantWithMappedVariants"][];
+          "application/json": components["schemas"]["GnomADVariantWithVariantLinks"][];
         };
       };
       /** @description Authentication required. */
@@ -12591,30 +13073,35 @@ export interface operations {
     };
   };
   /**
-   * Lookup variants by ClinGen Allele IDs
-   * @description Lookup variants by ClinGen Allele IDs.
+   * Look up variants by VRS identifier
+   * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+   *
+   * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
+   * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+   * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
+   * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
+   * the response never reveals a private allele's existence.
    */
-  lookup_variants_api_v1_variants_clingen_allele_id_lookups_post: {
+  lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ClingenAlleleIdVariantLookupsRequest"];
+      path: {
+        /** @description A valid GA4GH digest-based identifier for the mapped allele. */
+        identifier: string;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ClingenAlleleIdVariantLookupResponse"][];
+          "application/json": components["schemas"]["VariantVrsMatch"][];
         };
-      };
-      /** @description Bad request. Check parameters and payload. */
-      400: {
-        content: never;
       };
       /** @description Authentication required. */
       401: {
@@ -12641,11 +13128,19 @@ export interface operations {
     };
   };
   /**
-   * Fetch variant by URN
-   * @description Fetch a single variant by URN.
+   * Fetch assayed variant detail by URN
+   * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
+   *
+   * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
+   * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
+   * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
    */
   get_variant_api_v1_variants__urn__get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12657,7 +13152,151 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["VariantEffectMeasurementWithScoreSet"];
+          "application/json": components["schemas"]["VariantDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec StudyResult for a variant
+   * @description Construct a single VA-Spec StudyResult for a variant by URN, from its mapping substrate.
+   */
+  get_variant_study_result_api_v1_variants__urn__va_study_result_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec functional-impact Statement for a variant
+   * @description Construct a single VA-Spec functional-impact Statement for a variant by URN.
+   */
+  get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Statement"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec pathogenicity Statement for a variant
+   * @description Construct a single VA-Spec pathogenicity Statement for a variant by URN.
+   */
+  get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["VariantPathogenicityStatement"];
         };
       };
       /** @description Authentication required. */
@@ -12707,6 +13346,10 @@ export interface operations {
    */
   get_variant_csv_namespaces_api_v1_variants__urn__csv_namespaces_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the offered namespaces as they stood at this instant, so discovery matches an `as_of` download. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12779,6 +13422,8 @@ export interface operations {
       query?: {
         /** @description One or more groups of columns to include. Naming any group replaces the default set rather than adding to it, so list every group you want. Fixed groups: "scores", "scores_custom", "counts", "mavedb", "vep", "gnomad", "clingen", "score_set", "relationship". Versioned groups: "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01") for one ClinVar release, and "calibration.<calibration urn>" for one score calibration's functional and ACMG interpretation. Several ClinVar and calibration namespaces may be requested at once; each carries its release or URN in the column header. To discover which namespaces are available for a record, query the `csv-namespaces` endpoint. */
         namespaces?: string[] | null;
+        /** @description Reconstruct the mapping-derived columns (reference HGVS, VEP, gnomAD, ClinVar) as they stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
       };
       header?: {
         "x-active-roles"?: string | null;

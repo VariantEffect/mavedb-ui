@@ -2,6 +2,7 @@
   <router-view :key="$route.path" />
   <ConfirmDialog></ConfirmDialog>
   <Toast position="bottom-right" />
+  <MvKeyDrawer />
 </template>
 
 <script>
@@ -9,8 +10,10 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 import {mapActions, mapState} from 'vuex'
 
+import MvKeyDrawer from '@/components/common/MvKeyDrawer.vue'
+
 export default {
-  components: {ConfirmDialog, Toast},
+  components: {ConfirmDialog, MvKeyDrawer, Toast},
 
   computed: mapState('toast', ['toasts']),
 

@@ -644,7 +644,9 @@
         <div>
           <div class="text-lg font-bold text-dark">MaveMD score sets</div>
           <div class="text-sm text-gray-500">
-            {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+            <template v-if="!maveMdScoreSetsLoading">
+              {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+            </template>
           </div>
         </div>
         <div
@@ -670,6 +672,10 @@
           Retry
         </button>
       </Message>
+
+      <div v-else-if="maveMdScoreSetsLoading" class="mt-5">
+        <MvLoader text="Loading score sets..." />
+      </div>
 
       <template v-else>
         <table aria-label="MaveMD score sets by gene" class="mt-5 w-full table-fixed border-collapse text-base">
@@ -934,6 +940,7 @@ export default defineComponent({
       maveMdScoreSetUrns: [] as string[],
       maveMdScoreSets: {} as {[urn: string]: ScoreSet | undefined},
       maveMdScoreSetsError: false,
+      maveMdScoreSetsLoading: true,
       howItWorksSteps: HOW_IT_WORKS_STEPS
     }
   },
@@ -1185,11 +1192,15 @@ export default defineComponent({
     },
     fetchMaveMdScoreSets: async function () {
       this.maveMdScoreSetsError = false
+      this.maveMdScoreSetsLoading = true
       try {
         if (this.maveMdScoreSetUrns.length === 0) {
           const collection = await getCollection(MAVEMD_COLLECTION_URN)
           this.maveMdScoreSetUrns = collection.scoreSetUrns
         }
+        // The URN list is what "loading" means to the user; per-score-set detail still streams in below and fills
+        // out each row progressively rather than blocking the whole table on the slowest one.
+        this.maveMdScoreSetsLoading = false
         for (const urn of this.maveMdScoreSetUrns) {
           if (!this.maveMdScoreSets[urn]) {
             const scoreSet = await this.getEntity('scoreSet', urn)
@@ -1199,6 +1210,7 @@ export default defineComponent({
       } catch (error) {
         console.error('Failed to load MaveMD score sets', error)
         this.maveMdScoreSetsError = true
+        this.maveMdScoreSetsLoading = false
       }
     },
     searchForText: async function (example: string, searchType: string) {

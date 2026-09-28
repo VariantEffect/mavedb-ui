@@ -15,5 +15,14 @@ export default defineConfigWithVueTs(
         'error', {argsIgnorePattern: '^_', varsIgnorePattern: '^_'}
       ]
     }
+  },
+  {
+    // marked passes raw HTML through, so markdown must render via the sanitizing helper.
+    ignores: ['src/lib/form-helpers.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error', {paths: [{name: 'marked', message: 'Use markdownToHtml from @/lib/form-helpers, which sanitizes the output.'}]}
+      ]
+    }
   }
 )

@@ -170,7 +170,6 @@
 
 <script lang="ts">
 import {defineComponent, toRef} from 'vue'
-import {marked} from 'marked'
 import PButton from 'primevue/button'
 import {useHead} from '@unhead/vue'
 
@@ -190,6 +189,7 @@ import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
+import {markdownToHtml} from '@/lib/form-helpers'
 import {components} from '@/schema/openapi'
 import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
@@ -321,9 +321,7 @@ export default defineComponent({
         this.scoreSetsLoading = false
       }
     },
-    markdownToHtml(markdown: string): string {
-      return marked(markdown) as string
-    }
+    markdownToHtml
   }
 })
 </script>

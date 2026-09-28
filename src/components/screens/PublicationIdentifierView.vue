@@ -76,7 +76,6 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
-import {marked} from 'marked'
 import {useHead} from '@unhead/vue'
 
 import {searchScoreSetsByPublication} from '@/api/mavedb'
@@ -87,6 +86,7 @@ import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
+import {markdownToHtml} from '@/lib/form-helpers'
 import MvLoader from '@/components/common/MvLoader.vue'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
@@ -132,9 +132,7 @@ export default defineComponent({
   },
 
   methods: {
-    markdownToHtml(markdown: string): string {
-      return marked(markdown) as string
-    },
+    markdownToHtml,
     async fetchLinkedScoreSets() {
       this.linkedScoreSetsLoading = true
       try {

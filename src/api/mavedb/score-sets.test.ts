@@ -35,9 +35,12 @@ describe('score set preview requests', () => {
     expect(requestedParams(0).has('limit')).toBe(false)
   })
 
-  it('still drops unused HGVS columns', async () => {
+  // Dropping columns that are empty in the first rows would hide columns the full download contains.
+  it('keeps unused HGVS columns so the preview matches the download', async () => {
     await getScoreSetScoresPreview('urn:mavedb:00000001-a-1', 5)
+    await getScoreSetCountsPreview('urn:mavedb:00000001-a-1', 5)
 
-    expect(requestedParams(0).get('drop_unused_hgvs_columns')).toBe('true')
+    expect(requestedParams(0).get('drop_unused_hgvs_columns')).toBe('false')
+    expect(requestedParams(1).get('drop_unused_hgvs_columns')).toBe('false')
   })
 })

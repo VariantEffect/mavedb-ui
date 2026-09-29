@@ -7,12 +7,12 @@ products:
     version: "2.0"
 pattern: variant-annotation
 implementer: MaveDB
-status: production
+status: pilot
 contributors:
   - bencap
   - afrubin
   - MaveDB team
-last_updated: 2026-08-03
+last_updated: 2026-09-29
 ---
 
 # Giving every MAVE variant a precise, computable identity with VRS
@@ -26,7 +26,7 @@ MaveDB now represents every variant it stores using a single shared standard tha
 - **Who:** MaveDB
 - **GKS products used:** VRS 2.0
 - **Tools:** [`dcd-mapping`](https://github.com/VariantEffect/dcd_mapping2), [`vrs-python`](https://github.com/ga4gh/vrs-python) (v2.0.0-a6), [`cool-seq-tool`](https://github.com/GenomicMedLab/cool-seq-tool) (v0.4.0.dev3), [`cdot`](https://github.com/SACGF/cdot), [`seqrepo`](https://github.com/biocommons/biocommons.seqrepo)
-- **Status:** production
+- **Status:** pilot — VRS objects are produced for all variants that are mapped to the human reference genome; VRS objects for unmapped variants (including those from non-human or synthetic sequences) are forthcoming
 
 ## Motivation
 

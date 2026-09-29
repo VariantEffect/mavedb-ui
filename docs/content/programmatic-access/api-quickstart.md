@@ -268,9 +268,53 @@ List and search endpoints support pagination using `limit` and `offset` query pa
 
 ## Rate Limits
 
-<!-- TODO: Document rate limits here once they are implemented (see GitHub issue https://github.com/VariantEffect/mavedb-api/issues/669). -->
+The API accepts up to 1,500 requests per IP address in any 5-minute window. Requests over the limit receive `429 Too Many Requests` with a `Retry-After` header giving the number of seconds to wait, and go through again once your request rate drops back under the limit. The limit applies per IP address, so requests from everyone behind a shared address, such as a campus network, count together.
 
-The MaveDB API does not currently enforce rate limits. However, please be considerate with API usage. For downloading many datasets at once, consider using the [bulk download archive](../finding-data/downloading.md#bulk-downloads-via-zenodo) instead.
+Scripts that make many requests should wait and retry when they receive a `429`:
+
+=== "Python"
+
+    ```python
+    import time
+    import requests
+
+    def get_with_backoff(url, retries=5, **kwargs):
+        for _ in range(retries):
+            response = requests.get(url, **kwargs)
+            if response.status_code != 429:
+                break
+            time.sleep(int(response.headers.get("Retry-After", 60)))
+        return response
+
+    response = get_with_backoff("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1")
+    ```
+
+=== "R"
+
+    ```r
+    library(httr)
+
+    get_with_backoff <- function(url, retries = 5, ...) {
+      for (i in seq_len(retries)) {
+        response <- GET(url, ...)
+        if (status_code(response) != 429) break
+        wait <- headers(response)[["retry-after"]]
+        Sys.sleep(if (is.null(wait)) 60 else as.numeric(wait))
+      }
+      response
+    }
+
+    response <- get_with_backoff("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1")
+    ```
+
+=== "curl"
+
+    ```bash
+    # --retry retries a 429 after its Retry-After delay; --fail keeps the 429 body out of the output.
+    curl --fail --retry 5 https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1
+    ```
+
+For downloading many datasets at once, use the [bulk download archive](../finding-data/downloading.md#bulk-downloads-via-zenodo) instead of looping over the API.
 
 ## Next Steps
 

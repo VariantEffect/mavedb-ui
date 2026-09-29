@@ -270,7 +270,11 @@ List and search endpoints support pagination using `limit` and `offset` query pa
 
 The API accepts up to 1,500 requests per IP address in any 5-minute window. Requests over the limit receive `429 Too Many Requests` with a `Retry-After` header giving the number of seconds to wait, and go through again once your request rate drops back under the limit. The limit applies per IP address, so requests from everyone behind a shared address, such as a campus network, count together.
 
-Scripts that make many requests should wait and retry when they receive a `429`:
+Score set data downloads (`/scores`, `/counts`, `/variants/data` and `/mapped-variants`) have a lower limit of 100 requests per IP address in any 5-minute window, because each one reads a whole score set. Requests over it receive the same `429` response and `Retry-After` header. When paging through a score set with `start` and `limit`, each page counts as one request, so use large pages.
+
+The API can also return `503 Service Unavailable` while it is busy, for example when other large score set downloads are being built. These responses usually include a `Retry-After` header; when one does not, wait a minute before retrying.
+
+Scripts that make many requests should wait and retry when they receive a `429` or `503`:
 
 === "Python"
 
@@ -281,7 +285,7 @@ Scripts that make many requests should wait and retry when they receive a `429`:
     def get_with_backoff(url, retries=5, **kwargs):
         for _ in range(retries):
             response = requests.get(url, **kwargs)
-            if response.status_code != 429:
+            if response.status_code not in (429, 503):
                 break
             time.sleep(int(response.headers.get("Retry-After", 60)))
         return response
@@ -297,7 +301,7 @@ Scripts that make many requests should wait and retry when they receive a `429`:
     get_with_backoff <- function(url, retries = 5, ...) {
       for (i in seq_len(retries)) {
         response <- GET(url, ...)
-        if (status_code(response) != 429) break
+        if (!(status_code(response) %in% c(429, 503))) break
         wait <- headers(response)[["retry-after"]]
         Sys.sleep(if (is.null(wait)) 60 else as.numeric(wait))
       }
@@ -310,7 +314,7 @@ Scripts that make many requests should wait and retry when they receive a `429`:
 === "curl"
 
     ```bash
-    # --retry retries a 429 after its Retry-After delay; --fail keeps the 429 body out of the output.
+    # --retry retries a 429 or 503 after its Retry-After delay; --fail keeps the error body out of the output.
     curl --fail --retry 5 https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1
     ```
 

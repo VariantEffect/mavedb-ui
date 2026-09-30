@@ -3,6 +3,7 @@ import {computed, ref, type Ref} from 'vue'
 import {downloadScoreSetFile, downloadScoreSetVariantData} from '@/api/mavedb'
 import type {CsvExtraOption} from '@/composables/use-csv-namespaces'
 import config from '@/config'
+import {authHeader} from '@/lib/auth'
 import {triggerDownload} from '@/lib/downloads'
 import type {components} from '@/schema/openapi'
 
@@ -150,9 +151,15 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     streamController.value = new AbortController()
 
     try {
+      // fetch bypasses the axios interceptor that authenticates API calls, so send the credentials here.
+      // The API splits X-Active-Roles on bare commas.
+      const {Authorization, 'X-Active-Roles': activeRoles} = authHeader()
       const response = await fetch(`${config.apiBaseUrl}/score-sets/${urn}/${subPath}`, {
         signal: streamController.value.signal,
-        headers: {Accept: 'application/x-ndjson'}
+        headers: {
+          Accept: 'application/x-ndjson',
+          ...(Authorization ? {Authorization, 'X-Active-Roles': (activeRoles ?? []).join(',')} : {})
+        }
       })
 
       if (!response.ok) {

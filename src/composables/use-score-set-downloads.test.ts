@@ -14,6 +14,9 @@ vi.mock('@/api/mavedb', () => ({
 // The real one reaches for `document`; these tests run in the node environment.
 vi.mock('@/lib/downloads', () => ({triggerDownload: vi.fn()}))
 
+const authHeader = vi.fn((): Record<string, unknown> => ({}))
+vi.mock('@/lib/auth', () => ({authHeader: () => authHeader()}))
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SCORE_SET = ref({urn: 'urn:mavedb:00000001-a-1'} as any)
 
@@ -306,6 +309,28 @@ describe('useScoreSetDownloads variant-details streaming', () => {
     const url = fetchMock.mock.calls[0][0] as string
     expect(url).toContain('/score-sets/urn:mavedb:00000001-a-1/variant-details')
     expect(url).not.toContain('mapped-variants')
+  })
+
+  it('sends the signed-in user\'s credentials, which fetch does not get from the axios interceptor', async () => {
+    authHeader.mockReturnValueOnce({Authorization: 'Bearer token', 'X-Active-Roles': ['admin', 'mapper']})
+    const fetchMock = mockStream()
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    await downloads.streamVariantDetails()
+
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      Authorization: 'Bearer token',
+      'X-Active-Roles': 'admin,mapper'
+    })
+  })
+
+  it('sends no credentials when signed out', async () => {
+    const fetchMock = mockStream()
+    const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    await downloads.streamVariantDetails()
+
+    expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Authorization')
   })
 
   it('shares the one download indicator', async () => {

@@ -71,7 +71,7 @@ export interface ConfidenceBadge {
 // display order.
 export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   measured: {
-    label: 'This measurement',
+    label: 'Measured',
     class: 'bg-measured-light text-measured',
     definition: 'Directly measured in this assay.'
   },

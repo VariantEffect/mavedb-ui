@@ -12,7 +12,7 @@
     <!-- Nucleotide subject with no frequency of its own but related variants carry frequencies: be explicit
          rather than borrow related variants' frequencies. Related frequencies, if any, show below as context. -->
     <span v-else-if="headlineState === 'absent'" class="stat-value text-sm italic text-text-muted">
-      No gnomAD record for this variant
+      No gnomAD record for this allele
     </span>
     <span v-else class="stat-value">—</span>
 
@@ -81,7 +81,7 @@ type SequenceLevel = components['schemas']['SequenceLevel']
  *  - the subject allele's own frequency wins as the headline, with its link;
  *  - at *protein* level, a subject with no frequency of its own enumerates its encoding variants' distinct
  *    frequencies (max-AF headline + popover), noting it isn't established which underlies the measurement;
- *  - at *nucleotide* level, a subject with no frequency stays explicit ('No gnomAD record for this variant') —
+ *  - at *nucleotide* level, a subject with no frequency stays explicit ('No gnomAD record for this allele') —
  *    we don't borrow a related variant's frequency — and any related frequencies show below as context.
  * The subject is the measured allele on the score-set panel, or the page's own allele on the variant page.
  */

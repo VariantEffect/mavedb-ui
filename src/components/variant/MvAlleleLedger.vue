@@ -21,7 +21,7 @@
       >
         <div class="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span
-            v-key-term="entry.role === 'page' ? 'this-variant' : 'confidence'"
+            v-key-term="entry.role === 'page' ? 'your-variant' : 'confidence'"
             class="rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px]"
             :class="roleBadge(entry).class"
             >{{ roleBadge(entry).label }}</span
@@ -181,7 +181,7 @@ export default defineComponent({
     // The ordered render list: page variant, then the measured allele, then the rest (collapsed). Roles
     // drive badge + emphasis, and are assigned from what a group *is* — a group is never given the `page`
     // role as a stand-in. When the page variant is absent the list simply leads with the measured allele
-    // under its own badge, rather than labelling it "This variant" and asserting an identity it lacks.
+    // under its own badge, rather than labelling it "Your variant" and asserting an identity it lacks.
     entries(): LedgerEntry[] {
       const list: LedgerEntry[] = []
       if (this.pageGroup) list.push({group: this.pageGroup, role: 'page'})
@@ -218,11 +218,11 @@ export default defineComponent({
       return group.members.map((m) => `${this.levelLabel(m.level)}: ${m.hgvs || '—'}`).join('  ·  ')
     },
     // "page" gets its own fixed subject badge — deliberately distinct from the confidence-axis colors used
-    // everywhere else, so "This variant" (the page's subject) and "This measurement" (what was assayed) are
+    // everywhere else, so "Your variant" (the page's subject) and "Measured" (what was assayed) are
     // never confused. Every other role reads its label/class off the shared confidence axis, so those
     // badges match the same Key entry used throughout the app.
     roleBadge(entry: LedgerEntry): {label: string; class: string} {
-      if (entry.role === 'page') return {label: 'This variant', class: 'bg-subject/15 text-subject'}
+      if (entry.role === 'page') return {label: 'Your variant', class: 'bg-subject/15 text-subject'}
       const badge = confidenceBadge(entry.group)
       // No derivation and not measured: the API recorded no relationship (pre-reverse-translation data, or
       // a classification gap). "Unclassified" says so, rather than the old "Related" asserting one that wasn't.

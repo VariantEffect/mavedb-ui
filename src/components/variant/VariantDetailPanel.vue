@@ -85,10 +85,10 @@
       <p v-else-if="candidateFanoutCount > 0" class="px-4 py-3 text-xs text-text-muted tablet:px-5">
         This amino-acid change reverse-translates to {{ candidateFanoutCount }} candidate nucleotide allele{{
           candidateFanoutCount === 1 ? '' : 's'
-        }}; no population or clinical evidence was found for this variant or the candidate nucleotide alleles.
+        }}; no population or clinical evidence was found for this allele or the candidate nucleotide alleles.
       </p>
       <p v-else class="px-4 py-3 text-xs text-text-muted tablet:px-5">
-        No reference annotations were found for this variant.
+        No reference annotations were found for this allele.
       </p>
 
       <!-- Status and links — the superseded badge and full-details link, shown below either the facts

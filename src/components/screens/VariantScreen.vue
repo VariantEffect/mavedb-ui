@@ -3,32 +3,7 @@
     <template #header>
       <MvPageHeader eyebrow="Variant" max-width="1000px" :title="pageTitle">
         <template v-if="lookup.variants.value.length > 0" #actions>
-          <div class="hidden tablet:flex tablet:items-center tablet:gap-2">
-            <SplitButton
-              :disabled="downloadInProgress"
-              :model="tableDownloadMenu"
-              severity="secondary"
-              size="small"
-              @click="primaryTableDownload.command()"
-            >
-              <template #default>
-                <i class="pi pi-table mr-1.5 text-xs" />
-                Download variant CSV
-              </template>
-            </SplitButton>
-            <SplitButton
-              v-if="annotationDownloadOptions.length > 0"
-              :disabled="downloadInProgress"
-              :model="annotationDownloadOptions"
-              severity="secondary"
-              size="small"
-              @click="primaryAnnotationDownload?.command()"
-            >
-              <template #default>
-                <i class="pi pi-download mr-1.5 text-xs" />
-                Download VA-Spec annotations
-              </template>
-            </SplitButton>
+          <div class="flex items-center gap-2">
             <!-- Indeterminate: a gzipped download exposes no measurable total. -->
             <span
               v-if="downloadInProgress"
@@ -38,8 +13,8 @@
               <i class="pi pi-spin pi-spinner text-xs" />
               Preparing {{ lookup.downloadInProgressLabel.value }}…
             </span>
+            <MvRowActionMenu :actions="downloadActions" />
           </div>
-          <MvRowActionMenu :actions="downloadActions" class="tablet:hidden" />
         </template>
 
         <template v-if="lookup.variants.value.length > 0" #subtitle>
@@ -165,7 +140,7 @@
           <!-- Anchor heading: names the frame of reference so the per-card relationship badges read as
                self-explaining without needing a per-badge tooltip. -->
           <div class="px-4 tablet:px-5 pt-3.5 text-xs-minus text-text-muted">
-            What each result assayed, relative to this variant:
+            What each result assayed, relative to your variant:
           </div>
           <div class="measurement-switcher hidden tablet:flex gap-3 overflow-x-auto px-5 py-4">
             <MvMeasurementCard
@@ -208,7 +183,7 @@
             v-if="lookup.selectedVariantDetail.value"
             class="border-t border-border-light bg-sage/[0.06] px-4 tablet:px-5 py-3 text-sm text-text-secondary"
           >
-            {{ relationshipPrefix }} <span class="font-semibold text-text-primary">this variant</span
+            {{ relationshipPrefix }} <span class="font-semibold text-text-primary">your variant</span
             >{{ isDirectMeasurement ? ' directly' : '' }}.
           </div>
         </div>
@@ -384,7 +359,6 @@
 <script lang="ts">
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
-import SplitButton from 'primevue/splitbutton'
 import {defineComponent, toRef, type PropType} from 'vue'
 import {useRoute} from 'vue-router'
 import {useHead} from '@unhead/vue'
@@ -451,8 +425,7 @@ export default defineComponent({
     MvPageLoading,
     MvCsvColumnDialog,
     PSelect: Select,
-    ScoreSetHistogram,
-    SplitButton
+    ScoreSetHistogram
   },
 
   props: {
@@ -543,7 +516,7 @@ export default defineComponent({
     isDirectMeasurement(): boolean {
       return this.lookup.selectedVariant.value?.relationship === 'direct'
     },
-    // Leading half of the relationship line — everything up to the bold "this variant".
+    // Leading half of the relationship line — everything up to the bold "your variant".
     relationshipPrefix(): string {
       const rel = this.lookup.selectedVariant.value?.relationship
       if (rel === 'protein_consequence') return 'The selected measurement measured the protein consequence of'
@@ -605,23 +578,12 @@ export default defineComponent({
       ]
     },
 
-    /** What clicking the table button itself does: download with the default column set. */
-    primaryTableDownload(): DownloadOption {
-      return this.tableDownloadOptions[0]
-    },
-
-    /** What its caret offers: everything beyond the one-click default. */
-    tableDownloadMenu(): DownloadOption[] {
-      return this.tableDownloadOptions.slice(1)
-    },
-
     /**
      * The VA-Spec downloads: nested, standards-compliant annotation objects.
      *
      * A different product from the table — machine-readable GA4GH structures rather than something to
-     * open in a spreadsheet — so they get their own control rather than sharing a menu. Each requires
-     * progressively more of the variant to exist, so the list is empty for an unmapped variant and the
-     * button is hidden entirely.
+     * open in a spreadsheet — so the menu sets them apart under a separator. Each requires progressively
+     * more of the variant to exist, so the list is empty for an unmapped variant and the group is omitted.
      */
     annotationDownloadOptions(): DownloadOption[] {
       const options: DownloadOption[] = []
@@ -654,18 +616,21 @@ export default defineComponent({
       return options
     },
 
-    /** What clicking the annotations button itself does: the highest-level statement available. */
-    primaryAnnotationDownload(): DownloadOption | undefined {
-      return this.annotationDownloadOptions[0]
-    },
-
-    /** The narrow-screen equivalent: both groups in one menu, separated so they stay distinguishable. */
+    /** The header's single "…" menu: table downloads, then VA-Spec annotations, disabled while one is in flight. */
     downloadActions(): RowAction[] {
-      const asAction = (option: DownloadOption): RowAction => ({label: option.label, handler: option.command})
+      const disabled = this.downloadInProgress
+      const asAction = (option: DownloadOption, description?: string): RowAction => ({
+        label: option.label,
+        description,
+        disabled,
+        handler: option.command
+      })
       const annotations = this.annotationDownloadOptions
       return [
-        ...this.tableDownloadOptions.map(asAction),
-        ...(annotations.length > 0 ? [{separator: true} as RowAction, ...annotations.map(asAction)] : [])
+        ...this.tableDownloadOptions.map((o) => asAction(o)),
+        ...(annotations.length > 0
+          ? [{separator: true} as RowAction, ...annotations.map((o) => asAction(o, 'VA-Spec annotation'))]
+          : [])
       ]
     }
   },

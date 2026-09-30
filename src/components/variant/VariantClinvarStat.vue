@@ -32,7 +32,7 @@
     <!-- Nucleotide measurement with no ClinVar record of its own: be explicit rather than borrow a related
          allele's call. Related records (if any) are offered below as context, not promoted to a call. -->
     <span v-else-if="headline.kind === 'absent'" class="stat-value text-sm italic text-text-muted">
-      No ClinVar record for this variant
+      No ClinVar record for this allele
     </span>
     <span v-else class="stat-value">—</span>
 
@@ -179,7 +179,7 @@ export default defineComponent({
     },
     underlyingClinvarNote(): string {
       return this.isProjectedHeadline
-        ? 'This variant has no ClinVar record. The classification above is inferred from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this variant.'
+        ? 'This allele has no ClinVar record. The classification above is inferred from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this allele.'
         : 'Other variants with the same protein consequence that also carry ClinVar records.'
     }
   },

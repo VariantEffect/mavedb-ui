@@ -1,18 +1,15 @@
 import type {KeySection} from '@/composables/use-key-drawer'
 
-// Single source for the "Your variant" concept — the page's own subject allele — wherever it's badged:
-// the allele ledger's page-role entry (MvAlleleLedger) and a measurement's direct-relationship badge
-// (MvMeasurementCard) are the same fact from two objects, so they share this one definition rather than
-// each carrying their own. Leads GLOSSARY_SECTIONS (glossary.ts): establishing the subject first lets
-// "Relationship to your variant" read naturally right after it — how other results relate to the thing
-// this section just defined.
+// Single source for the "Your variant" concept — the page's own subject variant — as badged on the allele
+// ledger's page-role entry (MvAlleleLedger). Leads GLOSSARY_SECTIONS (glossary.ts): establishing the subject
+// first lets "Direct and indirect measurements" read naturally right after it.
 export const THIS_VARIANT_KEY_SECTION: KeySection = {
   id: 'your-variant',
   title: 'Your variant',
   terms: [
     {
       label: 'Your variant',
-      definition: 'The allele this page is about.',
+      definition: 'The variant this page is about.',
       class: 'bg-subject/15 text-subject'
     }
   ]
@@ -25,6 +22,34 @@ export const CONSEQUENCE_KEY_SECTION: KeySection = {
     {
       label: 'Molecular consequence',
       definition: 'The predicted effect on the transcript or protein (e.g. missense), from VEP.'
+    }
+  ]
+}
+
+export const CALIBRATION_KEY_SECTION: KeySection = {
+  id: 'calibration',
+  title: 'Calibration',
+  terms: [
+    {
+      label: 'Calibration',
+      definition:
+        "A score set's score ranges, each tied to a functional impact and, where available, a strength of clinical evidence. This is how a functional score becomes a functional impact and an ACMG code."
+    },
+    {
+      label: 'Calibration control',
+      definition: 'A variant with an established clinical classification, used to derive the calibration.'
+    }
+  ]
+}
+
+export const NMD_KEY_SECTION: KeySection = {
+  id: 'nmd',
+  title: 'NMD',
+  terms: [
+    {
+      label: 'NMD',
+      definition:
+        'Nonsense-mediated decay: a cellular process that destroys transcripts carrying premature stop codons. Assays built on a synthetic cDNA copy of the gene cannot detect variants that act this way.'
     }
   ]
 }

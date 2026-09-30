@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {assayLevelBucket, dominantAssayLevel} from '@/lib/measurement-types'
+import {assayLevelBucket, dominantAssayLevel, RELATIONSHIPS, RELATIONSHIP_KEY_SECTION} from '@/lib/measurement-types'
 
 describe('assayLevelBucket', () => {
   it('returns "amino acid" for protein', () => {
@@ -51,5 +51,21 @@ describe('dominantAssayLevel', () => {
 
   it('ignores null and undefined levels', () => {
     expect(dominantAssayLevel(['cdna', null, 'protein', undefined, 'cdna'])).toBe('cdna')
+  })
+})
+
+describe('RELATIONSHIPS', () => {
+  it('flags a direct measurement as Direct', () => {
+    expect(RELATIONSHIPS.direct.label).toBe('Direct')
+  })
+
+  it('flags both related-variant relationships with the same Indirect badge', () => {
+    expect(RELATIONSHIPS.protein_consequence).toEqual(RELATIONSHIPS.nucleotide_encoding)
+    expect(RELATIONSHIPS.protein_consequence.label).toBe('Indirect')
+  })
+
+  it('defines exactly the labels its badges can show in the Key drawer', () => {
+    const badgeLabels = new Set(Object.values(RELATIONSHIPS).map((r) => r.label))
+    expect(new Set(RELATIONSHIP_KEY_SECTION.terms.map((t) => t.label))).toEqual(badgeLabels)
   })
 })

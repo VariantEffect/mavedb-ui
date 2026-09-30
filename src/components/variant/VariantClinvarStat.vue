@@ -12,13 +12,13 @@
     <template v-else-if="headline.kind === 'call'">
       <MvClinvarSummary :clinvar="headline.clinvar" :show-provenance="showHeadlineProvenance" />
       <span v-if="headline.note === 'soft-conflicting'" class="text-xs italic text-text-muted">
-        ClinVar marks a record with the same protein consequence as conflicting.
+        ClinVar marks a record with the same protein change as conflicting.
       </span>
       <span v-else-if="headline.note === 'soft-vus'" class="text-xs italic text-text-muted">
-        ClinVar marks a record with the same protein consequence as uncertain.
+        ClinVar marks a record with the same protein change as uncertain.
       </span>
       <span v-else-if="headline.note === 'concordant'" class="text-xs italic text-text-muted">
-        Representative of concordant records with the same protein consequence.
+        Representative of concordant records with the same protein change.
       </span>
     </template>
     <!-- No usable call, but a ClinVar record exists on an allele (a `-`, e.g. a somatic/oncogenicity-only
@@ -32,7 +32,7 @@
     <!-- Nucleotide measurement with no ClinVar record of its own: be explicit rather than borrow a related
          allele's call. Related records (if any) are offered below as context, not promoted to a call. -->
     <span v-else-if="headline.kind === 'absent'" class="stat-value text-sm italic text-text-muted">
-      No ClinVar record for this allele
+      No ClinVar record for this variant
     </span>
     <span v-else class="stat-value">—</span>
 
@@ -179,8 +179,8 @@ export default defineComponent({
     },
     underlyingClinvarNote(): string {
       return this.isProjectedHeadline
-        ? 'This allele has no ClinVar record. The classification above is inferred from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this allele.'
-        : 'Other variants with the same protein consequence that also carry ClinVar records.'
+        ? 'This variant has no ClinVar record. The classification above is inferred from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this variant.'
+        : 'Other variants with the same protein change that also carry ClinVar records.'
     }
   },
 

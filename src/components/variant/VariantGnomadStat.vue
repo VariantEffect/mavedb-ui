@@ -143,7 +143,7 @@ export default defineComponent({
           ? 'The frequency of any variants in gnomAD which can encode this protein change. This assay does not establish which one underlies the measurement.'
           : 'Frequencies of any variants in gnomAD which can encode this protein change. This assay does not establish which of them underlie the measurement.'
       }
-      return 'Other variants with the same protein consequence that also have gnomAD frequencies.'
+      return 'Other variants with the same protein change that also have gnomAD frequencies.'
     }
   },
 

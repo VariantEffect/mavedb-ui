@@ -14,34 +14,34 @@ export function assayLevelBucket(level: string | null | undefined): LevelBucket 
 }
 
 /**
- * Single source of truth for the measurement-to-query relationship vocabulary (the RT asymmetry): the
- * card label, an optional chip class, and the Key-drawer gloss. Phrased relative to the page's own variant
- * so the labels self-explain under the "relative to your variant" anchor. Insertion order is display order.
+ * Single source of truth for the measurement-to-query relationship badge (the RT asymmetry). The badge only
+ * flags whether the measurement assayed the page's own variant: `direct`, or `indirect` for both
+ * related-variant relationships. The detail (which related variant, and its HGVS) is stated once, in the
+ * Functional evidence notice, so the vocabulary here stays two words.
  */
-export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class?: string; definition?: string}> = {
-  // No `definition`: a direct result is the page's own subject allele — the same concept as the Key
-  // drawer's "Your variant" section (glossary-prose.ts), defined once there rather than twice.
-  direct: {
-    label: 'Your variant',
-    class: 'bg-subject/15 text-subject'
-  },
-  protein_consequence: {
-    label: 'Its protein consequence',
-    definition: 'The result assayed the protein change your variant produces.'
-  },
-  nucleotide_encoding: {
-    label: 'Encodes the protein consequence',
-    definition: 'The result assayed a nucleotide allele that encodes the same protein change as your variant.'
-  }
+export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class: string}> = {
+  direct: {label: 'Direct', class: 'bg-subject/15 text-subject'},
+  protein_consequence: {label: 'Indirect', class: 'bg-convergent-light text-convergent'},
+  nucleotide_encoding: {label: 'Indirect', class: 'bg-convergent-light text-convergent'}
 }
 
 export const RELATIONSHIP_KEY_SECTION: KeySection = {
   id: 'relationship',
-  title: 'Relationship to your variant',
-  gloss: 'How each result relates to the allele you searched.',
-  terms: Object.values(RELATIONSHIPS)
-    .filter((r) => r.definition)
-    .map((r) => ({label: r.label, definition: r.definition!, class: r.class}))
+  title: 'Direct and indirect measurements',
+  gloss: 'Whether a measurement assayed your variant itself.',
+  terms: [
+    {
+      label: RELATIONSHIPS.direct.label,
+      definition: 'The measurement assayed your variant itself.',
+      class: RELATIONSHIPS.direct.class
+    },
+    {
+      label: RELATIONSHIPS.protein_consequence.label,
+      definition:
+        'The measurement assayed a related variant instead: the protein change your variant produces, or a nucleotide variant that encodes the same protein change. Its score stands in for your variant rather than measuring it directly.',
+      class: RELATIONSHIPS.protein_consequence.class
+    }
+  ]
 }
 
 /**

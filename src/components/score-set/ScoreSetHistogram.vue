@@ -1118,10 +1118,10 @@ export default defineComponent({
               CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(c.significance)
             )
             ? tooltipFootnote(
-                'A related variant with the same protein consequence is conflicting — the directional call is shown.'
+                'A related variant with the same protein change is conflicting — the directional call is shown.'
               )
             : tooltipFootnote(
-                'A related variant with the same protein consequence is of uncertain significance — the directional call is shown.'
+                'A related variant with the same protein change is of uncertain significance — the directional call is shown.'
               )
           : null
       const reviewStatus = control[DEFAULT_CLNREVSTAT_FIELD]
@@ -1144,7 +1144,7 @@ export default defineComponent({
       // variants"), rather than a bare asterisk that needs its own legend to decode.
       const projectedNote = control.projected
         ? tooltipFootnote(
-            'This classification is inferred from a related variant with the same protein consequence. The measured variant has no ClinVar record of its own.'
+            'This classification is inferred from a related variant with the same protein change. The measured variant has no ClinVar record of its own.'
           )
         : null
 
@@ -1283,7 +1283,7 @@ export default defineComponent({
       return resolveControlSeries(variant.control, opts)
     },
     // A series's calls can be a mix of direct ClinVar records and ones inferred from a related allele at
-    // the same protein consequence — flag it right on the series that actually has them, rather than a
+    // the same protein change — flag it right on the series that actually has them, rather than a
     // single blanket note for the whole chart. Returned as two lines (the legend wraps a `string[]` title)
     // rather than one long line, which would widen the legend enough to cover plotted data.
     seriesTitle(baseTitle: string, classifier: (d: HistogramDatum) => boolean): string | string[] {

@@ -70,21 +70,28 @@ export interface ConfidenceBadge {
 // separate tokens so they can diverge without touching this file. Insertion order is the drawer's
 // display order.
 export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
+  // Solid where `measured` is tinted: the selection is a state of the page, `measured` a fact about a variant.
+  selected: {
+    label: 'Selected measurement',
+    class: 'bg-measured text-white',
+    definition: 'The variant assayed by the measurement you have selected.'
+  },
   measured: {
     label: 'Measured',
     class: 'bg-measured-light text-measured',
-    definition: 'Directly measured in this assay.'
+    definition: 'Has a measurement of its own on this page, whichever measurement is selected.'
   },
   projection: {
     label: 'Resolved',
     class: 'bg-resolved-light text-resolved',
-    definition: 'Derived from the measured allele. The same change expressed at an un-measured coordinate level.'
+    definition:
+      "Derived from the selected measurement's variant: the same change expressed at an un-measured coordinate level."
   },
   convergent: {
     label: 'Convergent',
     class: 'bg-convergent-light text-convergent',
     definition:
-      'A different nucleotide change than what was measured, which happens to produce the same protein change as the measured variant.'
+      "A different nucleotide change than the selected measurement's variant, which happens to produce the same protein change."
   },
   candidate: {
     label: 'Candidate',
@@ -96,14 +103,37 @@ export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
 
 export const CONFIDENCE_KEY_SECTION: KeySection = {
   id: 'confidence',
-  title: 'How a coordinate was established',
+  title: 'Measured and derived variants',
+  gloss: 'Whether a variant has a measurement of its own, or how it relates to the selected one.',
   terms: Object.values(ALLELE_CONFIDENCE).map((c) => ({label: c.label, definition: c.definition, class: c.class}))
 }
 
-/** Confidence badge for a group: `measured` wins, else the derived state; null when neither applies. */
-export function confidenceBadge(group: Pick<AlleleGroup, 'measured' | 'derivation'>): ConfidenceBadge | null {
-  if (group.measured) return ALLELE_CONFIDENCE.measured
+/**
+ * Badge for a group, strongest claim first: the selected measurement's own variant, then any variant with a
+ * measurement of its own (`measuredDigests`, page-wide), else its derived state relative to the selected
+ * measurement; null when none applies. Measured-ness is a fact about the variant, so it never flips as the
+ * selection moves — only the derived labels are relative.
+ */
+export function confidenceBadge(
+  group: Pick<AlleleGroup, 'measured' | 'derivation' | 'members'>,
+  measuredDigests: ReadonlySet<string>
+): ConfidenceBadge | null {
+  if (group.measured) return ALLELE_CONFIDENCE.selected
+  if (group.members.some((m) => measuredDigests.has(m.digest))) return ALLELE_CONFIDENCE.measured
   return group.derivation ? (ALLELE_CONFIDENCE[group.derivation] ?? null) : null
+}
+
+/**
+ * The member whose HGVS titles a group. A projection pair holds one change in two coordinate frames
+ * (genomic + coding); lead with cDNA (community-preferred), then protein, then genomic.
+ */
+export function titleMember(group: Pick<AlleleGroup, 'members'>): AlleleMember | null {
+  return (
+    group.members.find((m) => m.level === 'cdna') ??
+    group.members.find((m) => m.level === 'protein') ??
+    group.members[0] ??
+    null
+  )
 }
 
 // ── GROUPING: collapse a variant's alleles into rendered groups ──

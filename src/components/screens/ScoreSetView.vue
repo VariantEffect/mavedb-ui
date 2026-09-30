@@ -351,7 +351,7 @@
           <hr class="mb-4 border-border" />
         </div>
 
-        <!-- Assay Facts -->
+        <!-- Assay facts -->
         <div class="mb-4 mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white p-5">
           <MvAssayFactsCard :assay-level="assayLevel" :link-title="false" :score-set="item" />
         </div>

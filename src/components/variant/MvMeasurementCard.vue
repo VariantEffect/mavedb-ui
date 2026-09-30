@@ -20,7 +20,7 @@
         {{ levelLabel }}
       </span>
       <span
-        v-key-term="relationship === 'direct' ? 'your-variant' : 'relationship'"
+        v-key-term="'relationship'"
         class="inline-block rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3px]"
         :class="relationshipClass"
       >
@@ -34,15 +34,15 @@
     <!-- Assay facts -->
     <div class="flex flex-col gap-[3px] text-xs-minus text-text-muted">
       <div class="flex items-baseline gap-1">
-        <span class="fact-label min-w-[80px] shrink-0 font-semibold text-[#aaa]">Assay type</span>
+        <span class="fact-label min-w-[125px] shrink-0 font-semibold text-[#aaa]">Assay type</span>
         <span class="text-text-secondary">{{ assayType || 'Not specified' }}</span>
       </div>
       <div class="flex items-baseline gap-1">
-        <span class="fact-label min-w-[80px] shrink-0 font-semibold text-[#aaa]">Mechanism</span>
+        <span class="fact-label min-w-[125px] shrink-0 font-semibold text-[#aaa]">Molecular mechanism</span>
         <span class="text-text-secondary">{{ mechanism || 'Not specified' }}</span>
       </div>
       <div class="flex items-baseline gap-1">
-        <span class="fact-label min-w-[80px] shrink-0 font-semibold text-[#aaa]">Model system</span>
+        <span class="fact-label min-w-[125px] shrink-0 font-semibold text-[#aaa]">Model system</span>
         <span class="text-text-secondary">{{ modelSystem || 'Not specified' }}</span>
       </div>
     </div>
@@ -53,7 +53,7 @@
         <strong class="font-mono font-bold text-text-secondary">{{ formatScore(score) }}</strong>
       </div>
       <div v-if="classification || evidenceCode" class="mt-1.5">
-        <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.3px] text-[#aaa]">Classified as</span>
+        <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.3px] text-[#aaa]">Functional impact</span>
         <div class="flex flex-wrap items-center gap-1.5">
           <MvClassificationTag v-if="classification" :classification="classification" />
           <MvEvidenceTag v-if="evidenceCode" :code="evidenceCode" />
@@ -94,7 +94,7 @@ export default defineComponent({
     loading: {type: Boolean, default: false},
     // The assayed level (AnnotationLayer: protein/cdna/genomic) — drives the level badge.
     assayLevel: {type: [String, null] as PropType<string | null>, default: null},
-    // How the measurement relates to the queried ClinGen allele (direct / RT-related).
+    // Whether the measurement assayed the queried ClinGen allele itself (direct) or a related one (indirect).
     relationship: {type: String as PropType<MeasurementRelationship>, required: true},
     // Score set attributes displayed on the card body.
     scoreSetTitle: {type: String, default: ''},

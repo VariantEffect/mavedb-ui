@@ -44,7 +44,7 @@
       >
         <VariantConsequenceStat :vep="consequence" />
         <div class="stat">
-          <span v-key-term="'functional-impact'" class="stat-label">Classification</span>
+          <span v-key-term="'functional-impact'" class="stat-label">Functional impact</span>
           <span v-if="selectedClassification" class="flex flex-wrap items-center gap-1.5">
             <span
               v-key-term="'functional-impact'"

@@ -42,6 +42,10 @@ export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
   // The selected measurement's own status as one of the active calibration's controls, if it was used as one.
   selectedVariantControlStatus: ComputedRef<CalibrationControlStatus | null>
 
+  // Digests of every allele that has a measurement of its own in the list — the page-wide notion of
+  // "measured", independent of which measurement is selected. Fills in as detail prefetches resolve.
+  measuredDigests: ComputedRef<Set<string>>
+
   // Per-measurement helpers (for measurement cards)
   getKeyword: (scoreSetUrn: string | null | undefined, key: string) => string | null
 
@@ -126,6 +130,19 @@ export function useVariantLookup(
   // ── Composed sub-domains ──────────────────────────────────
   const cache = useMeasurementCache(asOf)
   const selection = useMeasurementSelection(variants, filteredVariants, highlightUrn, cache)
+
+  // An allele is "measured" if any measurement's envelope flags it as that measurement's focus. Read from
+  // the prefetched details, so it is stable as the selection changes (unlike `isFocus` on one envelope).
+  const measuredDigests = computed(() => {
+    const digests = new Set<string>()
+    for (const m of variants.value) {
+      const alleles = cache.variantDetails.value[m.variantUrn]?.alleles ?? {}
+      for (const [digest, identity] of Object.entries(alleles)) {
+        if (identity.isFocus) digests.add(digest)
+      }
+    }
+    return digests
+  })
 
   // The selected variant's own status as one of the active calibration's controls, if it was used
   // as one — distinct from `calibrationResolution`, which classifies the variant by score.
@@ -285,6 +302,7 @@ export function useVariantLookup(
     proteinCount,
     filteredVariants,
     selectedVariantControlStatus,
+    measuredDigests,
     getKeyword,
     geneName,
     uniqueAssayCount,

@@ -20,6 +20,14 @@ This is important because different assays may measure different molecular prope
 
 You can also navigate to the full [score set page](../finding-data/visualizations.md) for the selected assay to view the complete dataset, including the heatmap, all variant scores, and detailed metadata.
 
+## Direct and indirect measurements
+
+Each measurement is flagged **Direct** or **Indirect**. A direct measurement assayed your variant itself. An indirect one assayed a related variant instead: the protein change your variant produces, or a different nucleotide variant that encodes the same protein change. When you select an indirect measurement, a notice at the top of the functional evidence section names the variant the score was measured on, because that score stands in for your variant rather than measuring it.
+
+## View options
+
+The **View options** button in the page header holds two settings that change which measurements are shown: **MaveDB as of**, which shows the molecular and annotation layer as MaveDB held it on a past date (scores never change), and **Show superseded score sets**. The button shows a count when either is set. The **Key** button beside it opens a glossary of the terms on this page.
+
 ## Assay facts
 
 Each dataset on the variant page includes an [assay fact](../reference/assay-facts.md) label that summarizes the key properties of the functional assay. These labels are designed to help you quickly assess whether an assay is relevant to your clinical context. Key properties include:
@@ -38,7 +46,7 @@ For the full list of assay fact properties and their definitions, see the [assay
 
 ## Annotations
 
-Beneath the assay details, an annotations card gathers evidence about the variant itself, independent of any one assay. **Classification** reports the selected measurement's functional score, ACMG code, and OddsPath ratio.
+Beneath the assay details, an annotations card gathers evidence about the variant itself, independent of any one assay. **Functional impact** reports the selected measurement's functional score, ACMG code, and OddsPath ratio.
 
 **Population frequency** reports the variant's frequency in [gnomAD](../finding-data/external-integrations.md#gnomad), where it is present:
 

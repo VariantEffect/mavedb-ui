@@ -28,7 +28,7 @@ export const INFERRED_CONTROL_KEY_SECTION: KeySection = {
     {
       label: 'Inferred call',
       definition:
-        'A ClinVar call inferred from a related allele with the same protein consequence — shown only when the assayed variant has no ClinVar record of its own.'
+        'A ClinVar call inferred from a related variant with the same protein change — shown only when the assayed variant has no ClinVar record of its own.'
     }
   ]
 }

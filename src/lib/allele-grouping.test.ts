@@ -1,6 +1,12 @@
 import {describe, expect, it} from 'vitest'
 
-import {ALLELE_CONFIDENCE, confidenceBadge, groupAlleles, type GroupAllelesInput} from '@/lib/allele-grouping'
+import {
+  ALLELE_CONFIDENCE,
+  confidenceBadge,
+  groupAlleles,
+  titleMember,
+  type GroupAllelesInput
+} from '@/lib/allele-grouping'
 import type {components} from '@/schema/openapi'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
@@ -18,6 +24,8 @@ function run(overrides: Partial<GroupAllelesInput>) {
     ...overrides
   })
 }
+
+const none: ReadonlySet<string> = new Set()
 
 describe('groupAlleles — projection pairing + confidence', () => {
   // Nucleotide (cdna) assay: the measured cdna folds into its pair's group with its genomic projection;
@@ -129,16 +137,24 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(groups[0].measured).toBe(false)
   })
 
-  it('badges measured over derivation, maps projection→Resolved / convergent→Convergent / candidate→Candidate, else null', () => {
-    // `measured` wins even if a derivation is also present (a stray measured member still reads "Measured").
-    expect(confidenceBadge({measured: true, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.measured)
-    expect(confidenceBadge({measured: false, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.projection)
+  it('badges selected over derivation, maps projection→Resolved / convergent→Convergent / candidate→Candidate, else null', () => {
+    // The selected measurement's variant wins even if a derivation is also present.
+    expect(confidenceBadge({measured: true, derivation: 'projection', members: []}, none)).toBe(
+      ALLELE_CONFIDENCE.selected
+    )
+    expect(confidenceBadge({measured: false, derivation: 'projection', members: []}, none)).toBe(
+      ALLELE_CONFIDENCE.projection
+    )
     // A synonymous cousin under a nucleotide assay: a distinct change sharing the consequence, not ambiguous.
-    expect(confidenceBadge({measured: false, derivation: 'convergent'})).toBe(ALLELE_CONFIDENCE.convergent)
+    expect(confidenceBadge({measured: false, derivation: 'convergent', members: []}, none)).toBe(
+      ALLELE_CONFIDENCE.convergent
+    )
     // The protein-assay reverse-translation fan-out: genuinely ambiguous.
-    expect(confidenceBadge({measured: false, derivation: 'candidate'})).toBe(ALLELE_CONFIDENCE.candidate)
+    expect(confidenceBadge({measured: false, derivation: 'candidate', members: []}, none)).toBe(
+      ALLELE_CONFIDENCE.candidate
+    )
     // The focus/measured allele carries no derivation; on its own (measured false) it has no badge.
-    expect(confidenceBadge({measured: false, derivation: null})).toBeNull()
+    expect(confidenceBadge({measured: false, derivation: null, members: []}, none)).toBeNull()
     // The user-facing labels are decoupled from the enum keys.
     expect(ALLELE_CONFIDENCE.projection.label).toBe('Resolved')
     expect(ALLELE_CONFIDENCE.convergent.label).toBe('Convergent')
@@ -155,5 +171,40 @@ describe('groupAlleles — projection pairing + confidence', () => {
     // The shared CAID is the page anchor, so no outward link and the group is flagged page-root.
     expect(groups[0].pageRoot).toBe(true)
     expect(groups[0].clingenLinks).toEqual([])
+  })
+})
+
+describe('titleMember', () => {
+  it('leads a projection pair with its cDNA member', () => {
+    const [pair] = run({
+      alleles: {
+        c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, isFocus: true, projectionOf: 'g'},
+        g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: null, isFocus: false, projectionOf: 'c'}
+      }
+    })
+    expect(titleMember(pair)?.hgvs).toBe('NM_x:c.6C>T')
+  })
+
+  it('falls back to protein, then the first member', () => {
+    const [protein] = run({alleles: {p: {level: 'protein', hgvs: 'NP_x:p.Leu2Phe', relation: null, isFocus: true}}})
+    expect(titleMember(protein)?.hgvs).toBe('NP_x:p.Leu2Phe')
+    expect(titleMember({members: []})).toBeNull()
+  })
+})
+
+describe('confidenceBadge — page-wide measured', () => {
+  const [pair] = run({
+    alleles: {
+      c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, isFocus: false, derivation: 'convergent', projectionOf: 'g'},
+      g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: null, isFocus: false, derivation: 'convergent', projectionOf: 'c'}
+    }
+  })
+
+  it('reads Measured for a variant measured elsewhere, overriding its relative derivation', () => {
+    expect(confidenceBadge(pair, new Set(['g']))).toBe(ALLELE_CONFIDENCE.measured)
+  })
+
+  it('falls back to the relative derivation when no member is measured anywhere', () => {
+    expect(confidenceBadge(pair, new Set(['other']))).toBe(ALLELE_CONFIDENCE.convergent)
   })
 })

@@ -2,7 +2,7 @@
   <MvLayout>
     <template #header>
       <MvPageHeader eyebrow="Variant" max-width="1000px" :title="pageTitle">
-        <template v-if="lookup.variants.value.length > 0" #actions>
+        <template #actions>
           <div class="flex items-center gap-2">
             <!-- Indeterminate: a gzipped download exposes no measurable total. -->
             <span
@@ -13,7 +13,34 @@
               <i class="pi pi-spin pi-spinner text-xs" />
               Preparing {{ lookup.downloadInProgressLabel.value }}…
             </span>
-            <MvRowActionMenu :actions="downloadActions" />
+            <button
+              :aria-expanded="viewOptionsOpen"
+              class="flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors"
+              :class="
+                viewOptionsOpen || viewOptionCount > 0
+                  ? 'border-sage bg-sage text-white'
+                  : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage'
+              "
+              type="button"
+              @click="viewOptionsOpen = !viewOptionsOpen"
+            >
+              <i class="pi pi-sliders-h text-[11px]" />
+              View options<template v-if="viewOptionCount > 0"> ({{ viewOptionCount }})</template>
+            </button>
+            <button
+              class="flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors"
+              :class="
+                keyDrawer.isOpen.value
+                  ? 'border-sage bg-sage text-white'
+                  : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage'
+              "
+              type="button"
+              @click="keyDrawer.isOpen.value ? keyDrawer.close() : keyDrawer.open()"
+            >
+              <i class="pi pi-question-circle text-[11px]" />
+              Key
+            </button>
+            <MvRowActionMenu v-if="lookup.variants.value.length > 0" :actions="downloadActions" />
           </div>
         </template>
 
@@ -28,6 +55,7 @@
             <template v-if="lookup.uniqueAssayCount.value > 1">
               across {{ lookup.uniqueAssayCount.value }} score sets</template
             >
+            <template v-if="lookup.asOf.value"> &middot; MaveDB as of {{ lookup.asOf.value }}</template>
             <template v-if="clingenAlleleId">
               &middot;
               <a
@@ -43,11 +71,13 @@
     </template>
 
     <div class="mx-auto w-full px-4 tablet:px-6 py-6 tablet:py-8" style="max-width: 1000px">
-      <!-- ── CONTROL ROW (query axes) ── -->
+      <!-- ── VIEW OPTIONS (query axes) ── opened from the header; the button carries a count so a non-default
+           view (past date, superseded included) is never invisible while the panel is closed. -->
       <div
-        class="mave-gradient-bar relative overflow-hidden mb-4 flex flex-col gap-3 rounded-lg border border-border bg-surface px-4 py-3 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-5 tablet:gap-y-2 tablet:px-5 tablet:py-2.5"
+        v-if="viewOptionsOpen"
+        class="mave-gradient-bar relative overflow-hidden mb-4 flex flex-col gap-3 rounded-lg border border-border bg-surface px-4 py-3 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-6 tablet:gap-y-2 tablet:px-5 tablet:py-2.5"
       >
-        <div class="flex flex-1 items-center gap-2 text-xs text-text-secondary">
+        <div class="flex items-center gap-2 text-xs text-text-secondary">
           <span v-key-term="'as-of'" class="font-semibold uppercase tracking-[0.3px] text-[#aaa]">MaveDB as of</span>
           <DatePicker
             v-model="asOfDate"
@@ -81,20 +111,7 @@
           @click="lookup.includeSuperseded.value = !lookup.includeSuperseded.value"
         >
           <i class="pi text-[11px]" :class="lookup.includeSuperseded.value ? 'pi-check' : 'pi-plus'" />
-          {{ lookup.includeSuperseded.value ? 'Hide superseded variants' : 'Show superseded variants' }}
-        </button>
-        <button
-          class="flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors"
-          :class="
-            keyDrawer.isOpen.value
-              ? 'border-sage bg-sage text-white'
-              : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage'
-          "
-          type="button"
-          @click="keyDrawer.isOpen.value ? keyDrawer.close() : keyDrawer.open()"
-        >
-          <i class="pi pi-key text-[11px]" />
-          Key
+          {{ lookup.includeSuperseded.value ? 'Hide superseded score sets' : 'Show superseded score sets' }}
         </button>
       </div>
 
@@ -116,7 +133,13 @@
               >{{ lookup.variants.value.length }}
               {{ lookup.variants.value.length === 1 ? 'Measurement' : 'Measurements' }}</span
             >
-            <div class="ml-auto flex gap-1.5">
+            <div class="ml-auto flex items-center gap-1.5">
+              <span
+                v-if="lookup.nucleotideCount.value > 0 || lookup.proteinCount.value > 0"
+                v-key-term="'assay-level'"
+                class="mr-0.5 text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
+                >Assay level</span
+              >
               <MvBadgeToggle
                 v-if="lookup.nucleotideCount.value > 0"
                 v-model="lookup.showNucleotide.value"
@@ -137,10 +160,10 @@
               />
             </div>
           </div>
-          <!-- Anchor heading: names the frame of reference so the per-card relationship badges read as
+          <!-- Anchor heading: names the frame of reference so the per-card Direct/Indirect badges read as
                self-explaining without needing a per-badge tooltip. -->
           <div class="px-4 tablet:px-5 pt-3.5 text-xs-minus text-text-muted">
-            What each result assayed, relative to your variant:
+            Each measurement, relative to your variant:
           </div>
           <div class="measurement-switcher hidden tablet:flex gap-3 overflow-x-auto px-5 py-4">
             <MvMeasurementCard
@@ -176,16 +199,6 @@
               class="pi pi-spin pi-spinner text-sage"
             />
           </div>
-
-          <!-- ── RELATIONSHIP LINE ── a plain sentence relating the selected measurement (Y) to the page
-               subject (X). -->
-          <div
-            v-if="lookup.selectedVariantDetail.value"
-            class="border-t border-border-light bg-sage/[0.06] px-4 tablet:px-5 py-3 text-sm text-text-secondary"
-          >
-            {{ relationshipPrefix }} <span class="font-semibold text-text-primary">your variant</span
-            >{{ isDirectMeasurement ? ' directly' : '' }}.
-          </div>
         </div>
 
         <!-- ── FUNCTIONAL EVIDENCE ── MaveDB's own contribution, centered as the lead of the body. -->
@@ -193,20 +206,26 @@
           v-if="lookup.selectedVariantDetail.value"
           class="relative mt-4 rounded-lg border bg-surface px-[18px] py-3.5"
         >
+          <!-- The one place the indirect relationship is spelled out; the badges elsewhere only flag it. -->
+          <div
+            v-if="indirectNotice"
+            class="mb-3 flex items-start gap-2 rounded-md border border-convergent/30 bg-convergent-light px-3 py-2 text-sm text-text-secondary"
+          >
+            <i class="pi pi-info-circle mt-0.5 text-xs text-convergent" />
+            <div>
+              This score was measured on a different variant which has the same protein change as yours<template
+                v-if="indirectNotice.hgvs"
+                >: <span class="font-mono font-semibold text-text-primary">{{ indirectNotice.hgvs }}</span></template
+              >.
+            </div>
+          </div>
           <div class="mb-2.5 flex flex-wrap items-center gap-2">
             <h3 class="mave-section-title !mb-0">Functional evidence</h3>
             <span class="text-xs-minus text-text-muted">measured in this score set</span>
             <span
-              v-if="pageConfidenceBadge"
-              v-key-term="'confidence'"
-              class="ml-auto rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px]"
-              :class="pageConfidenceBadge.class"
-              >{{ pageConfidenceBadge.label }}</span
-            >
-            <span
               v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
               v-key-term="'superseded'"
-              class="rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px] bg-superseded-light text-superseded"
+              class="ml-auto rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px] bg-superseded-light text-superseded"
               >Superseded</span
             >
           </div>
@@ -240,7 +259,9 @@
               }}</span>
             </div>
             <div v-if="lookup.selectedVariantControlStatus.value" class="flex flex-col gap-0.5">
-              <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Calibration control</span>
+              <span v-key-term="'calibration'" class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
+                >Calibration control</span
+              >
               <span class="flex items-center">
                 <MvBadge :value="lookup.selectedVariantControlStatus.value" />
                 <span class="ml-1.5 text-xs text-text-muted">used to derive this calibration</span>
@@ -296,6 +317,7 @@
             :annotations="lookup.selectedVariantDetail.value.annotations"
             :clinvar-version="clinvarControls.controlVersion"
             :groups="alleleGroups"
+            :measured-digests="[...lookup.measuredDigests.value]"
             :variant-urn="lookup.selectedVariantDetail.value.urn"
           />
         </div>
@@ -336,8 +358,8 @@
               <!-- Shown only when the page variant is in this envelope but wasn't itself measured — otherwise
                    we can't say whether it was measured, so we say nothing rather than guess from a stand-in. -->
               <p v-if="pageGroup && !pageGroup.measured" class="mt-2 text-xs italic leading-tight text-text-muted">
-                This allele was not directly measured. The highlighted bin contains a measured allele that shares its
-                protein consequence.
+                Your variant was not directly measured. The highlighted bin contains a measured variant with the same
+                protein change.
               </p>
             </div>
             <div v-else class="flex min-h-[200px] items-center justify-center">
@@ -394,11 +416,8 @@ import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {assayLevelDisplay} from '@/lib/measurement-types'
 import {formatScore} from '@/lib/scores'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
-import {confidenceBadge, groupAlleles, type AlleleGroup, type ConfidenceBadge} from '@/lib/allele-grouping'
-import type {components} from '@/schema/openapi'
+import {groupAlleles, titleMember, type AlleleGroup} from '@/lib/allele-grouping'
 import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
-
-type SequenceLevel = components['schemas']['SequenceLevel']
 
 /** One entry in a download control: a label and the download it triggers. */
 interface DownloadOption {
@@ -471,7 +490,8 @@ export default defineComponent({
 
   data() {
     return {
-      csvDialogVisible: false
+      csvDialogVisible: false,
+      viewOptionsOpen: false
     }
   },
 
@@ -507,39 +527,21 @@ export default defineComponent({
     pageGroup(): AlleleGroup | null {
       return this.alleleGroups.find((g) => g.pageRoot) ?? null
     },
-    // The page variant's own sequence level, read off its page-root member.
-    pageLevel(): SequenceLevel | null {
-      const root = this.pageGroup?.members.find((m) => m.pageRoot)
-      return (root?.level ?? null) as SequenceLevel | null
-    },
-    // True when the page itself is anchored on the protein-level entity (a PA id) — the page variant *is*
-    // the protein change, not a nucleotide variant that separately produces one.
-    pageIsProteinRooted(): boolean {
-      return this.pageLevel === 'protein'
-    },
     // ClinGen Allele Registry deep link for the page variant.
     clingenRegistryUrl(): string {
       return clingenAlleleUrlFromCanonicalId(this.clingenAlleleId)
     },
-    // True when the selected measurement assayed the page allele itself (X == Y).
-    isDirectMeasurement(): boolean {
-      return this.lookup.selectedVariant.value?.relationship === 'direct'
-    },
-    // Leading half of the relationship line — everything up to the bold "your variant".
-    relationshipPrefix(): string {
+    // The one-time explanation of an indirect measurement, naming the measured variant by its HGVS when the
+    // envelope carries it. Null for a direct measurement — the badge alone says everything there is to say.
+    indirectNotice(): {hgvs: string | null} | null {
       const rel = this.lookup.selectedVariant.value?.relationship
-      if (rel === 'protein_consequence') return 'The selected measurement measured the protein consequence of'
-      if (rel === 'nucleotide_encoding') {
-        return this.pageIsProteinRooted
-          ? 'The selected measurement measured a variant that encodes'
-          : 'The selected measurement measured a variant that encodes the same protein consequence as'
-      }
-      return 'The selected measurement measured'
+      if (!rel || rel === 'direct') return null
+      const measuredGroup = this.alleleGroups.find((g) => g.measured)
+      return {hgvs: (measuredGroup && titleMember(measuredGroup)?.hgvs) || null}
     },
-    // How the page variant relates to what this result measured. Null (badge hidden) when the page
-    // variant is absent from this result's envelope — there is nothing to state a relationship about.
-    pageConfidenceBadge(): ConfidenceBadge | null {
-      return this.pageGroup ? confidenceBadge(this.pageGroup) : null
+    // Non-default view settings, surfaced on the closed View options button.
+    viewOptionCount(): number {
+      return (this.lookup.asOf.value ? 1 : 0) + (this.lookup.includeSuperseded.value ? 1 : 0)
     },
     today(): Date {
       return new Date()
@@ -548,12 +550,12 @@ export default defineComponent({
       if (this.lookup.asOf.value) {
         return this.lookup.includeSuperseded.value
           ? `No measurements found as of ${this.lookup.asOf.value}. Try a more recent date.`
-          : `No measurements found as of ${this.lookup.asOf.value}. Try a more recent date, or include superseded versions.`
+          : `No measurements found as of ${this.lookup.asOf.value}. Try a more recent date, or include superseded score sets.`
       }
       if (!this.lookup.includeSuperseded.value) {
-        return 'No current measurements were found for this allele. Try including superseded versions.'
+        return 'No current measurements were found for this variant. Try including superseded score sets.'
       }
-      return 'No measurements were found for this allele.'
+      return 'No measurements were found for this variant.'
     },
     asOfDate: {
       get(): Date | null {
@@ -565,7 +567,7 @@ export default defineComponent({
     },
     measurementOptions(): {label: string; urn: string}[] {
       return this.lookup.filteredVariants.value.map((m) => ({
-        label: `${m.scoreSetTitle || 'Untitled score set'} (${assayLevelDisplay(m.assayLevel).label})`,
+        label: `${m.scoreSetTitle || 'Untitled score set'} (${assayLevelDisplay(m.assayLevel).label}${m.relationship === 'direct' ? '' : ', indirect'})`,
         urn: m.variantUrn
       }))
     },

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3 class="mave-section-title">Assay Facts</h3>
+    <h3 class="mave-section-title">Assay facts</h3>
     <div v-if="scoreSet" class="mb-2.5 pb-2.5 border-b border-border">
       <div class="text-base font-semibold text-text-primary leading-[1.3] mb-0.5">
         <router-link
@@ -34,7 +34,7 @@
       />
       <MvDetailRow fallback="Not specified" label="Model system" :value="getKeyword('Phenotypic Assay Model System')" />
       <MvDetailRow fallback="Not mapped" label="Assay level" term="assay-level" :value="assayLevelLabel" />
-      <MvDetailRow fallback="Not specified" label="Detects splicing?">
+      <MvDetailRow fallback="Not specified" label="Detects splicing variants">
         <span
           v-if="detectsSplicing != null"
           :class="{'flex-1 bg-badge-alert px-1.5 py-px rounded': detectsSplicing === false}"
@@ -42,7 +42,7 @@
           {{ detectsSplicing ? 'Yes' : 'No' }}
         </span>
       </MvDetailRow>
-      <MvDetailRow fallback="Not specified" label="Detects NMD?">
+      <MvDetailRow fallback="Not specified" label="Detects NMD variants" term="nmd">
         <span v-if="detectsNmd != null" :class="{'flex-1 bg-badge-alert px-1.5 py-px rounded': detectsNmd === false}">
           {{ detectsNmd ? 'Yes' : 'No' }}
         </span>

@@ -154,6 +154,7 @@
                   :classification="lookup.calibrationResolution.classification.value"
                   :clingen-allele-id="lookup.selectedClingenAlleleId.value"
                   :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
+                  :control-status="lookup.selectedVariantControlStatus.value"
                   :genomic-locations="lookup.clingenAllele.genomicLocations.value"
                 />
               </div>

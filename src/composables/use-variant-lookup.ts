@@ -10,6 +10,7 @@ import {
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
 import {useClingenAllele, type UseClingenAlleleReturn} from '@/composables/use-clingen-allele'
 
+import type {CalibrationControlStatus} from '@/lib/calibration-controls'
 import {
   formatEvidenceCode,
   functionalClassificationContainsVariant,
@@ -73,6 +74,7 @@ export interface UseVariantLookupReturn {
   selectedCalibration: Ref<string | null>
   selectedCalibrationObject: ComputedRef<ScoreCalibration | null>
   calibrationResolution: UseCalibrationResolutionReturn
+  selectedVariantControlStatus: ComputedRef<CalibrationControlStatus | null>
 
   // Per-variant helpers
   getAbnormalOddsPath: (urn: string | null | undefined) => string | null
@@ -195,6 +197,14 @@ export function useVariantLookup(
     selectedVariantUrn,
     selectedVariantScoreAsNumber
   )
+
+  // The selected variant's own status as one of the active calibration's controls, if it was used
+  // as one — distinct from `calibrationResolution`, which classifies the variant by score.
+  const selectedVariantControlStatus = computed<CalibrationControlStatus | null>(() => {
+    const urn = selectedVariantUrn.value
+    if (!urn) return null
+    return selectedCalibrationObject.value?.controls?.find((c) => c.variantUrn === urn)?.clinicalStatus ?? null
+  })
 
   // ── Page-level ────────────────────────────────────────────
   const geneName = computed(() => {
@@ -433,6 +443,7 @@ export function useVariantLookup(
     selectedVariantGnomad,
     selectedCalibration,
     selectedCalibrationObject,
+    selectedVariantControlStatus,
     calibrationResolution,
     getAbnormalOddsPath,
     getNormalOddsPath,

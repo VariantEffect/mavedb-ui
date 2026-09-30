@@ -1,11 +1,14 @@
 import axios from 'axios'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
+import type {CalibrationControlStatus} from '@/lib/calibration-controls'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
 
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
+type FunctionalClassification =
+  components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 
 export const NORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-normal)'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-abnormal)'
@@ -222,6 +225,117 @@ export function functionalClassificationContainsVariant(
   return lowerOk && upperOk
 }
 
+/** Per-range tally of the controls the calibration files under that range. */
+export interface RangeControlTally {
+  pathogenic: number
+  benign: number
+}
+
+/**
+ * A calibration's controls placed into its own ranges, plus the totals that summarize how well those
+ * placements agree with each control's clinical status.
+ *
+ * Placement is per range rather than per abnormal/normal band: a calibration commonly carries several
+ * ranges of the same classification (PS3_strong, PS3_moderate, ...), and which one a control lands in
+ * is still informative. Concordance re-aggregates across them for the headline figure.
+ */
+export interface ControlPlacements {
+  /**
+   * Tally per range, keyed by the range object itself so callers may sort or chunk their ranges
+   * freely. Every range passed in is present, so lookups never miss.
+   */
+  byRange: Map<FunctionalClassification, RangeControlTally>
+  pathogenicTotal: number
+  benignTotal: number
+  /** Controls landing in a range whose classification matches their clinical status. */
+  concordant: number
+  /** Controls landing in a range whose classification contradicts their clinical status. */
+  discordant: number
+  /** Controls landing in a range that carries no abnormal/normal classification. */
+  unclassified: number
+  /** Controls the calibration files under none of its ranges. */
+  unplaced: number
+  /** Controls that landed in some range — the sum of every per-range tally. */
+  placedTotal: number
+}
+
+/**
+ * Places a calibration's controls into its ranges from each control's server-resolved placement, and
+ * tallies how well those placements agree with the controls' clinical status.
+ *
+ * `functionalClassificationId` is the range the calibration files a control's variant under, resolved
+ * server-side from stored bin membership (see `SavedCalibrationControl`). It covers class-based
+ * calibrations too, where a range is a named class from the author's uploaded file with no numeric
+ * interval to test a score against.
+ *
+ * Controls whose `functionalClassificationId` is null, or names a range this calibration does not
+ * carry, are counted as `unplaced` — the calibration files them under none of its ranges.
+ *
+ * Performance: O(controls), plus one pass over the ranges to index them by id.
+ */
+export function buildControlPlacements(
+  controls:
+    | {clinicalStatus: CalibrationControlStatus; functionalClassificationId?: number | null}[]
+    | null
+    | undefined,
+  functionalClassifications: FunctionalClassification[] | null | undefined
+): ControlPlacements {
+  const ranges = functionalClassifications ?? []
+  const byRange = new Map<FunctionalClassification, RangeControlTally>()
+  const rangeById = new Map<number, FunctionalClassification>()
+  for (const range of ranges) {
+    byRange.set(range, {pathogenic: 0, benign: 0})
+    if (range.id != null) {
+      rangeById.set(range.id, range)
+    }
+  }
+
+  const placements: ControlPlacements = {
+    byRange,
+    pathogenicTotal: 0,
+    benignTotal: 0,
+    concordant: 0,
+    discordant: 0,
+    unclassified: 0,
+    unplaced: 0,
+    placedTotal: 0
+  }
+
+  for (const control of controls ?? []) {
+    if (control.clinicalStatus === 'pathogenic') {
+      placements.pathogenicTotal++
+    } else if (control.clinicalStatus === 'benign') {
+      placements.benignTotal++
+    } else {
+      continue
+    }
+
+    const classificationId = control.functionalClassificationId
+    const range = classificationId == null ? undefined : rangeById.get(classificationId)
+    if (!range) {
+      placements.unplaced++
+      continue
+    }
+
+    byRange.get(range)![control.clinicalStatus]++
+    placements.placedTotal++
+
+    const classification = range.functionalClassification
+    if (classification === 'abnormal' || classification === 'normal') {
+      // Pathogenic agrees with abnormal, benign with normal; the other two pairings contradict.
+      if ((control.clinicalStatus === 'pathogenic') === (classification === 'abnormal')) {
+        placements.concordant++
+      } else {
+        placements.discordant++
+      }
+    } else {
+      placements.unclassified++
+    }
+  }
+
+  return placements
+}
+
 /**
  * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
  * This is used to determine if pathogenicity annotations are available for variants in the score set.
@@ -343,20 +457,48 @@ export type CalibrationSaveResult =
  *
  * @param params.draft - The calibration draft object to serialize as JSON.
  * @param params.classesFile - Optional CSV file for class-based calibrations.
+ * @param params.controlsFile - Optional controls CSV; when present it replaces the calibration's
+ *                              controls, so the inline `controls` field is omitted to avoid the
+ *                              backend's inline-and-file conflict (422).
+ * @param params.controlsCleared - When true (and no controls file is supplied), sends an empty
+ *                                 controls list to clear all controls.
  * @param params.existingUrn - When provided the request becomes a PUT (update);
  *                             omit for a new calibration (POST).
  */
 export async function saveCalibration(params: {
   draft: any
   classesFile?: File | null
+  controlsFile?: File | null
+  controlsCleared?: boolean
   existingUrn?: string
 }): Promise<CalibrationSaveResult> {
-  const {draft, classesFile, existingUrn} = params
+  const {draft, classesFile, controlsFile, controlsCleared, existingUrn} = params
+
+  // Strip read-only/internal fields, then decide how controls are conveyed: via file, cleared to an
+  // empty list, or left unchanged (omitted). The loaded `controls` are SavedCalibrationControl rows,
+  // never a write payload, so they are never sent inline.
+  const payload = {...draft}
+  delete payload.__original
+  delete payload.controlsCount
+
+  // Disease is sent as the bare MONDO code (the server resolves the canonical term); the editor holds
+  // it as a {code, label} selection for display only. Null defaults to the generic disease server-side.
+  payload.disease = draft.disease?.code ?? null
+  if (controlsFile) {
+    delete payload.controls
+  } else if (controlsCleared) {
+    payload.controls = []
+  } else {
+    delete payload.controls
+  }
 
   const formData = new FormData()
-  formData.append('calibration_json', JSON.stringify(draft))
+  formData.append('calibration_json', JSON.stringify(payload))
   if (classesFile) {
     formData.append('classes_file', classesFile)
+  }
+  if (controlsFile) {
+    formData.append('controls_file', controlsFile)
   }
 
   try {

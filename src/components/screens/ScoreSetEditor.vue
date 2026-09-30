@@ -179,8 +179,8 @@
           </span>
         </div>
 
-        <!-- Variant scores -->
-        <div class="editor-card">
+        <!-- Variant scores (only editable when private) -->
+        <div v-if="item.private" class="editor-card">
           <h3 class="mb-4 text-[15px] font-bold text-text-primary">Variant scores</h3>
           <VariantScoreFields
             ref="variantScoreFields"

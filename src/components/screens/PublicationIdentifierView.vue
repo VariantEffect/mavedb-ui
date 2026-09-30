@@ -39,17 +39,14 @@
       style="max-width: 850px"
     >
       <!-- Reference -->
-      <div v-if="item.referenceHtml" class="mb-6 rounded-lg border border-border bg-white p-5">
+      <div v-if="item.referenceHtml" class="mave-gradient-bar mb-6 rounded-lg border border-border bg-white p-5">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-dark">Citation</h3>
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="text-sm leading-relaxed text-text-secondary" v-html="item.referenceHtml"></div>
       </div>
 
       <!-- Abstract -->
-      <div
-        v-if="item.abstract"
-        class="mave-gradient-bar relative mb-6 overflow-hidden rounded-lg border border-border bg-white p-6"
-      >
+      <div v-if="item.abstract" class="relative mb-6 overflow-hidden rounded-lg border border-border bg-white p-6">
         <h3 class="mb-3 text-[15px] font-bold text-text-dark">Abstract</h3>
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="pl-4 text-sm leading-relaxed text-text-secondary" v-html="markdownToHtml(item.abstract)"></div>

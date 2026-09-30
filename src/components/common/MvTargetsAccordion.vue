@@ -1,5 +1,5 @@
 <template>
-  <div class="mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white">
+  <div class="relative overflow-hidden rounded-lg border border-border bg-white">
     <div class="border-b border-border-light px-5 py-3.5">
       <span class="text-xs font-bold uppercase tracking-wider text-text-dark">Targets</span>
     </div>

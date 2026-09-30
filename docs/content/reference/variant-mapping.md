@@ -77,7 +77,7 @@ These integrations also enable the [MaveMD](../mavemd/index.md) clinical interfa
 
 ## Programmatic access
 
-Mapped variants are available through the [MaveDB API](../programmatic-access/api-quickstart.md) via the `/mapped-variants` endpoint, which returns pre-mapped and post-mapped VRS objects as JSON. Mapped variant files are also downloadable from individual score set pages in [VRS JSON format](data-standards.md#vrs-variant-representation).
+Mapped variants are available through the [MaveDB API](../programmatic-access/api-quickstart.md) via the `/variant-details` endpoint, which streams one NDJSON record per mapped variant, each carrying the pre-mapped and post-mapped VRS pair alongside its categorical variant and annotations. (This replaces the removed `/mapped-variants` endpoint, which now returns `410 Gone`.) The same records are downloadable from individual score set pages in [VRS JSON format](data-standards.md#vrs-variant-representation).
 
 ## See also
 

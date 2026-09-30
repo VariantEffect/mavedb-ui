@@ -30,10 +30,10 @@
       <PButton
         :disabled="fileDownloadInProgress"
         icon="pi pi-download"
-        label="Mapped Variants"
+        label="Variant Details"
         severity="secondary"
         size="small"
-        @click="reportingFailure('mapped variants', downloadMappedVariantsFile)"
+        @click="reportingFailure('variant details', () => streamVariantDetails())"
       />
 
       <SplitButton
@@ -81,7 +81,7 @@
       <div class="mt-1.5 flex flex-wrap gap-2">
         <PButton label="Scores" severity="secondary" size="small" @click="sendToGalaxy('scores')" />
         <PButton v-if="hasCounts" label="Counts" severity="secondary" size="small" @click="sendToGalaxy('counts')" />
-        <PButton label="Mapped Variants" severity="secondary" size="small" @click="sendToGalaxy('mappedVariants')" />
+        <PButton label="Variant Details" severity="secondary" size="small" @click="sendToGalaxy('variantDetails')" />
       </div>
     </div>
 
@@ -228,8 +228,10 @@ export default defineComponent({
             endpoint = 'scores'
             outputType = 'table'
             break
-          case 'mappedVariants':
-            endpoint = 'mapped-variants'
+          case 'variantDetails':
+            // /mapped-variants was retired in #743; /variant-details is the replacement (VRS pair +
+            // Cat-VRS + annotations), streamed as NDJSON.
+            endpoint = 'variant-details'
             outputType = 'json'
             break
           default:

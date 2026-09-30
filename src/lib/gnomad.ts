@@ -2,35 +2,100 @@
  * @fileoverview
  * gnomAD population frequency annotations and related utilities.
  *
- * gnomAD is a population-scale variant frequency database. MaveDB links each mapped variant to the
- * single gnomAD record sharing its ClinGen allele ID, so a variant's frequency is a direct assertion
- * about that variant — there is no projection or pooling to reason about.
+ * gnomAD is a population-scale variant frequency database. This module covers three concerns:
  *
- * Frequencies reach the client as the `gnomad` namespace of the score-set variant data CSV, where
- * every field arrives as a number or the string `'NA'`. {@link gnomadFromVariantRow} is the seam that
- * turns one of those rows into the shape the display components consume.
+ * - The population-frequency glossary and the enumeration of the distinct frequencies across a variant
+ *   record's alleles ({@link collectGnomadFrequencies}), used by the variant page.
+ * - Translation of gnomAD variant IDs (e.g. 1-11796321-G-A) into genomic HGVS, so an ID can be resolved
+ *   against the ClinGen Allele Registry.
+ *
+ * A single gnomAD record is linked to a mapped variant by shared ClinGen allele ID, so each individual
+ * record is a direct assertion about that allele. A variant *record* may still span several alleles (the
+ * c/g members of one genomic change, and its projections), which is why the enumeration above exists.
+ *
+ * A gnomAD release is a property of a record, never of a page or a download: one variant record may sit
+ * at a different release from the next, so every display of a version is per record.
  */
-import {gnomadIdRegex} from './mavemd'
+
+import type {KeySection} from '@/composables/use-key-drawer'
+import {hgvsLabelRank} from '@/lib/formats'
 import type {components} from '@/schema/openapi'
-import type {RawVariant} from '@/lib/variants'
+import {gnomadIdRegex} from './mavemd'
+
+type GnomadAnnotation = components['schemas']['GnomadAnnotation']
+
+/** Key-drawer glossary for the gnomAD population-frequency terms this module surfaces. */
+export const POPULATION_KEY_SECTION: KeySection = {
+  id: 'population',
+  title: 'Population frequency (gnomAD)',
+  gloss: 'How often the allele is seen in reference populations — high frequency argues against pathogenicity.',
+  terms: [
+    {
+      label: 'Allele frequency (AF)',
+      definition:
+        "The fraction of gnomAD's sampled reference-population chromosomes that carry this allele (allele count ÷ allele number)."
+    },
+    {
+      label: 'AC / AN',
+      definition:
+        'Allele count and allele number: the observed carriers and the total chromosomes sampled. The two inputs behind the frequency above.'
+    },
+    {
+      label: 'FAF95',
+      definition:
+        "Filtering allele frequency at 95% confidence: a sampling-adjusted, conservative estimate of the population frequency. When it exceeds a disease's maximum credible allele frequency, the variant is too common to be pathogenic (ACMG BA1/BS1)."
+    }
+  ]
+}
+
+/** One underlying gnomAD measurement, tagged with the reference-frame HGVS of the allele it annotates. */
+export interface UnderlyingGnomad {
+  hgvs: string | null
+  gnomad: GnomadAnnotation
+}
 
 /**
- * One gnomAD frequency record, as consumed by the display components.
+ * Collect the distinct gnomAD measurements across a variant record's alleles — the *related* frequencies
+ * shown as context.
  *
- * Picked from the generated schema rather than restated, so renaming or retyping a field on the API's
- * model breaks compilation here.
+ * A protein change is encoded by several genomic variants, each with its own gnomAD frequency. Enumerate
+ * this set of distinct frequencies, deduplicating by gnomAD variant id and preferring a coding HGVS for
+ * the label. Sort by descending allele frequency.
  *
- * Caveat: the CSV columns come from the API's namespace specs, a different code path from the view
- * model. Both project the same `GnomADVariant` ORM columns, so this tracks names and types but is not
- * a guarantee that the two stay column-for-column aligned.
+ * `subjectDigests` names the subject allele (the measured/page allele, including its projection); its own
+ * frequency is the headline, so it — and any other frame carrying the same gnomAD record — is excluded here,
+ * mirroring the ClinVar underlying-record enumeration.
  */
-export type GnomadFrequency = Pick<
-  components['schemas']['GnomADVariantWithMappedVariants'],
-  'alleleFrequency' | 'alleleCount' | 'alleleNumber' | 'faf95Max' | 'faf95MaxAncestry' | 'dbIdentifier' | 'dbVersion'
->
+export function collectGnomadFrequencies(
+  annotations: Record<string, {gnomad?: GnomadAnnotation | null}> | null | undefined,
+  alleles: Record<string, {hgvs?: string | null}> | null | undefined,
+  subjectDigests?: Iterable<string>
+): UnderlyingGnomad[] {
+  if (!annotations) return []
+  const subjectSet = new Set(subjectDigests ?? [])
+  // The subject's own gnomAD id(s): exclude these so the subject's frequency (or its projection's) never
+  // reappears as a "related" one.
+  const subjectIds = new Set<string>()
+  for (const digest of subjectSet) {
+    const id = annotations[digest]?.gnomad?.dbIdentifier
+    if (id) subjectIds.add(id)
+  }
+  const byVariant = new Map<string, UnderlyingGnomad>()
+  for (const [digest, ann] of Object.entries(annotations)) {
+    const gnomad = ann.gnomad
+    if (!gnomad) continue
+    if (subjectSet.has(digest) || subjectIds.has(gnomad.dbIdentifier)) continue
 
-/** A CSV cell from the `gnomad` namespace: a number, the `'NA'` sentinel, or absent. */
-type GnomadCell = number | string | null | undefined
+    const hgvs = alleles?.[digest]?.hgvs ?? null
+    const existing = byVariant.get(gnomad.dbIdentifier)
+    if (!existing) {
+      byVariant.set(gnomad.dbIdentifier, {hgvs, gnomad})
+    } else if (hgvsLabelRank(hgvs) > hgvsLabelRank(existing.hgvs)) {
+      existing.hgvs = hgvs
+    }
+  }
+  return [...byVariant.values()].sort((a, b) => b.gnomad.alleleFrequency - a.gnomad.alleleFrequency)
+}
 
 /**
  * Translation of gnomAD variant IDs (e.g. 1-11796321-G-A) into genomic HGVS.
@@ -199,47 +264,6 @@ export function gnomadIdToHgvsCandidates(gnomadId: string): GnomadHgvsCandidate[
 /** The HGVS reading of a gnomAD ID under one assembly, or null if the ID cannot be translated. */
 export function gnomadIdToHgvs(gnomadId: string, assembly: GenomeAssembly): string | null {
   return gnomadIdToHgvsCandidates(gnomadId).find((candidate) => candidate.assembly === assembly)?.hgvs ?? null
-}
-
-function numberOrNull(value: GnomadCell): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-function stringOrNull(value: GnomadCell): string | null {
-  if (typeof value === 'number') return String(value)
-  return value && value.toUpperCase() !== 'NA' ? value : null
-}
-
-/**
- * Read a variant's gnomAD frequency out of its score-set data row.
- *
- * Returns null unless the row carries the fields the display depends on — the frequency itself, the
- * AC/AN behind it, and the gnomAD variant id used to link out. Variants with no gnomAD record report
- * `'NA'` across the namespace and yield null here.
- *
- * Requires the `gnomad` namespace to have been requested; see `variantPageVariantDataUrl`.
- */
-export function gnomadFromVariantRow(variant: RawVariant | null | undefined): GnomadFrequency | null {
-  const gnomad = variant?.gnomad
-  if (!gnomad) return null
-
-  const alleleFrequency = numberOrNull(gnomad.gnomad_af)
-  const alleleCount = numberOrNull(gnomad.gnomad_ac)
-  const alleleNumber = numberOrNull(gnomad.gnomad_an)
-  const dbIdentifier = stringOrNull(gnomad.gnomad_id)
-  if (alleleFrequency == null || alleleCount == null || alleleNumber == null || dbIdentifier == null) {
-    return null
-  }
-
-  return {
-    alleleFrequency,
-    alleleCount,
-    alleleNumber,
-    faf95Max: numberOrNull(gnomad.gnomad_faf95_max),
-    faf95MaxAncestry: stringOrNull(gnomad.gnomad_faf95_max_ancestry),
-    dbIdentifier,
-    dbVersion: stringOrNull(gnomad.gnomad_version) ?? 'unknown'
-  }
 }
 
 /** Deep link to a gnomAD variant page, choosing the dataset that matches the record's version. */

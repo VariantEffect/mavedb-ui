@@ -85,6 +85,11 @@ nav:
       - Targets: submitting-data/targets.md
       - Upload Guide: submitting-data/upload-guide.md
       - Publishing: submitting-data/publishing.md
+  - Interpreting Annotated Variants: interpreting-annotated-variants.md
+  - Variant Mapping & Annotation:
+      - Overview: mapping/index.md
+      - Reverse Translation & Projection: mapping/reverse-translation.md
+      - Annotation: mapping/annotation.md
   - MaveMD:
       - mavemd/index.md
       - Variant Search: mavemd/variant-search.md

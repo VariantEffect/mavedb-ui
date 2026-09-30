@@ -140,7 +140,7 @@ export default defineComponent({
       if (target.targetAccession) return 'Nucleotide'
       const type = target.targetSequence?.sequenceType
       if (type === 'dna') return 'Nucleotide'
-      if (type === 'protein') return 'Protein'
+      if (type === 'protein') return 'Amino acid'
       return null
     },
     isMultiTarget(): boolean {

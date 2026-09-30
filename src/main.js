@@ -16,6 +16,7 @@ import {installAxiosAuthHeaderInterceptor, installAxiosUnauthorizedResponseInter
 import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/orcid'
 import router from '@/router'
 import store from '@/store'
+import {vKeyTerm} from '@/directives/key-term'
 
 import 'primeicons/primeicons.css'
 
@@ -224,7 +225,26 @@ const MaveDbTheme = definePreset(Aura, {
               }
             },
           },
-        }
+        },
+        tooltip: {
+          root: {
+            borderRadius: '6px',
+            padding: '0.5rem 0.75rem',
+            maxWidth: '18rem',
+          },
+          colorScheme: {
+            // Solid brand sage (--color-sage-dark), white text, matching sage
+            // arrow (it follows the background token). Same in light and dark.
+            light: {root: {background: '#5a9375', color: '#ffffff'}},
+            dark: {root: {background: '#5a9375', color: '#ffffff'}},
+          },
+          // font-family isn't a token, so the brand body font rides along here.
+          css: () => `
+            .p-tooltip-text {
+              font-family: var(--font-body);
+            }
+          `,
+        },
     },
 })
 
@@ -246,6 +266,7 @@ createApp(App)
   .use(ConfirmationService)
   .use(ToastService)
   .directive('tooltip', Tooltip)
+  .directive('key-term', vKeyTerm)
   .mount('#app')
 
 // Add the FontAwesome icons to the library so that they can be used in components.

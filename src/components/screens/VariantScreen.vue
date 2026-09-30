@@ -239,6 +239,13 @@
                 lookup.calibrationResolution.scoreRange.value?.oddspathsRatio ?? '—'
               }}</span>
             </div>
+            <div v-if="lookup.selectedVariantControlStatus.value" class="flex flex-col gap-0.5">
+              <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Calibration control</span>
+              <span class="flex items-center">
+                <MvBadge :value="lookup.selectedVariantControlStatus.value" />
+                <span class="ml-1.5 text-xs text-text-muted">used to derive this calibration</span>
+              </span>
+            </div>
           </div>
           <p v-else class="text-xs-plus italic text-text-muted">No score available</p>
         </div>
@@ -374,6 +381,7 @@ import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
 import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
+import MvBadge from '@/components/common/MvBadge.vue'
 import MvBadgeToggle from '@/components/common/MvBadgeToggle.vue'
 import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
 import {useClinvarControls} from '@/composables/use-clinvar-controls'
@@ -413,6 +421,7 @@ export default defineComponent({
     MvAlleleLedger,
     MvClassificationTag,
     MvAssayFactsCard,
+    MvBadge,
     MvBadgeToggle,
     MvEmptyState,
     MvErrorState,

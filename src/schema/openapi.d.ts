@@ -177,6 +177,13 @@ export interface paths {
      */
     post: operations["search_keyword_by_key_and_value_api_v1_controlled_keywords_search__key___value__post"];
   };
+  "/api/v1/diseases/search": {
+    /**
+     * Search MONDO disease terms
+     * @description Typeahead search for MONDO disease terms, returned as GA4GH ``MappableConcept`` suggestions.
+     */
+    get: operations["search_diseases_api_v1_diseases_search_get"];
+  };
   "/api/v1/doi-identifiers/search": {
     /**
      * Search DOI identifiers
@@ -256,6 +263,10 @@ export interface paths {
     /**
      * Validate a provided variant
      * @description Validate the provided HGVS variant string.
+     *
+     * Parsing and validation failures both stem from caller-supplied input, so any ``HGVSError`` — a syntactic
+     * parse failure, an inconsistent variant, an unknown accession — is surfaced as a 400 rather than escaping
+     * to the catch-all 500 handler.
      */
     post: operations["hgvs_validate_api_v1_hgvs_validate_post"];
   };
@@ -529,7 +540,10 @@ export interface paths {
   "/api/v1/score-calibrations/me": {
     /**
      * List my calibrations
-     * @description List all score calibrations created by the current user.
+     * @description List the score calibrations created by the current user that the user may still read.
+     *
+     * Calibrations on score sets the user can no longer read, for example after being removed as a
+     * contributor, are omitted.
      */
     get: operations["list_my_calibrations_api_v1_score_calibrations_me_get"];
   };
@@ -570,6 +584,7 @@ export interface paths {
      * **Form Fields**:
      * - `calibration_json` (string, required): JSON string containing the calibration update data
      * - `classes_file` (file, optional): CSV file containing updated variant classifications
+     * - `controls_file` (file, optional): CSV file containing calibration controls (replaces existing)
      *
      * **Example**:
      * ```bash
@@ -590,6 +605,12 @@ export interface paths {
      * If provided, this will replace the existing classification data for the calibration.
      * The file should have appropriate headers and follow the expected format for variant
      * classifications within the associated score set.
+     *
+     * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+     * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+     * `benign`, case-insensitive). If provided, it replaces the calibration's existing controls.
+     * Controls may be supplied either via this file or inline in `calibration_json`, but not both;
+     * omitting both leaves existing controls unchanged.
      *
      * ## Response
      * Returns the updated score calibration with all modifications applied and any new
@@ -648,6 +669,7 @@ export interface paths {
      * **Form Fields**:
      * - `calibration_json` (string, required): JSON string containing the calibration data
      * - `classes_file` (file, optional): CSV file containing variant classifications
+     * - `controls_file` (file, optional): CSV file containing calibration controls
      *
      * **Example**:
      * ```bash
@@ -667,6 +689,11 @@ export interface paths {
      * ## File Upload Details
      * The `classes_file` parameter accepts CSV files containing variant classification data.
      * The file should have appropriate headers and contain columns for variant urns and class names.
+     *
+     * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+     * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+     * `benign`, case-insensitive). Controls may be supplied either via this file or inline in
+     * `calibration_json`, but not both.
      *
      * ## Response
      * Returns the created score calibration with its generated URN and associated score set information.
@@ -691,6 +718,8 @@ export interface paths {
     /**
      * Publish Score Calibration Route
      * @description Publish a score calibration, making it publicly visible.
+     *
+     * The calibration's score set must already be published.
      */
     post: operations["publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post"];
   };
@@ -1368,14 +1397,14 @@ export interface paths {
   "/api/v1/target-genes/names": {
     /**
      * List target gene names
-     * @description List distinct target gene names, in alphabetical order.
+     * @description List distinct target gene names from published score sets, in alphabetical order.
      */
     get: operations["list_target_gene_names_api_v1_target_genes_names_get"];
   };
   "/api/v1/target-genes/categories": {
     /**
      * List target gene categories
-     * @description List distinct target genes categories, in alphabetical order.
+     * @description List distinct target gene categories from published score sets, in alphabetical order.
      */
     get: operations["list_target_gene_categories_api_v1_target_genes_categories_get"];
   };
@@ -2018,6 +2047,11 @@ export interface components {
        */
       classes_file?: string | null;
       /**
+       * Controls File
+       * @description CSV file containing calibration controls. This file must contain a variant column (one of 'variant_urn', 'hgvs_nt', 'hgvs_pro') and a 'clinical_status' column.
+       */
+      controls_file?: string | null;
+      /**
        * Item
        * @description JSON data for the request
        */
@@ -2030,6 +2064,11 @@ export interface components {
        * @description CSV file containing variant classifications. This file must contain two columns: 'variant_urn' and 'class_name'.
        */
       classes_file?: string | null;
+      /**
+       * Controls File
+       * @description CSV file containing calibration controls. This file must contain a variant column (one of 'variant_urn', 'hgvs_nt', 'hgvs_pro') and a 'clinical_status' column. Replaces existing controls.
+       */
+      controls_file?: string | null;
       /**
        * Item
        * @description JSON data for the request
@@ -2050,6 +2089,28 @@ export interface components {
       /** Scores File */
       scores_file?: string | null;
     };
+    /**
+     * CalibrationControlCreate
+     * @description Model used to create a calibration control.
+     *
+     * Carries no additional fields — only the modifiable fields are required for creation.
+     */
+    CalibrationControlCreate: {
+      /** Varianturn */
+      variantUrn: string;
+      clinicalStatus: components["schemas"]["CalibrationControlStatus"];
+    };
+    /**
+     * CalibrationControlStatus
+     * @description Clinical significance of a calibration control variant.
+     *
+     * Deliberately restricted to the two-tier ACMG poles used to anchor a calibration's
+     * thresholds. Intermediate tiers (VUS, likely pathogenic, likely benign) are excluded
+     * by design: a control's value as empirical ground truth comes from a confident, binary
+     * clinical call, not from a graded one.
+     * @enum {string}
+     */
+    CalibrationControlStatus: "pathogenic" | "benign";
     /**
      * CategoricalVariant
      * @description A representation of a categorically-defined domain for variation, in which
@@ -3797,6 +3858,11 @@ export interface components {
       /** Alt */
       alt?: string | null;
     };
+    /** HgvsValidationRequest */
+    HgvsValidationRequest: {
+      /** Variant */
+      variant: string;
+    };
     /**
      * JobRunDetail
      * @description Single-job-run detail response including the error traceback.
@@ -4638,6 +4704,33 @@ export interface components {
        */
       modificationDate: string;
     };
+    /**
+     * SavedCalibrationControl
+     * @description Persisted calibration control, including identifier and audit metadata.
+     */
+    SavedCalibrationControl: {
+      /** Varianturn */
+      variantUrn: string;
+      clinicalStatus: components["schemas"]["CalibrationControlStatus"];
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /** Functionalclassificationid */
+      functionalClassificationId?: number | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      createdBy: components["schemas"]["SavedUser"];
+      modifiedBy: components["schemas"]["SavedUser"];
+    };
     /** SavedDoiIdentifier */
     SavedDoiIdentifier: {
       /** Identifier */
@@ -4899,6 +4992,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["mavedb__view_models__score_calibration__FunctionalClassification"][] | null;
       /** Thresholdsources */
@@ -4929,6 +5024,12 @@ export interface components {
        * @default true
        */
       private?: boolean;
+      /**
+       * Controlscount
+       * @default 0
+       */
+      controlsCount?: number;
+      disease: components["schemas"]["MappableConcept"];
       createdBy?: components["schemas"]["User"] | null;
       modifiedBy?: components["schemas"]["User"] | null;
       /**
@@ -4941,6 +5042,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Controls
+       * @default []
+       */
+      controls?: components["schemas"]["SavedCalibrationControl"][];
     };
     /**
      * ScoreCalibrationCreate
@@ -4960,6 +5066,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["FunctionalClassificationCreate"][] | null;
       /** Thresholdsources */
@@ -4972,12 +5080,19 @@ export interface components {
       calibrationMetadata?: Record<string, never> | null;
       /** Scoreseturn */
       scoreSetUrn?: string | null;
+      /** Controls */
+      controls?: components["schemas"]["CalibrationControlCreate"][] | null;
+      /**
+       * Disease
+       * @description The MONDO code (e.g. "MONDO:0015263") for this calibration's disease context; validated against OLS. Omitted or null resolves to the generic "disease or disorder" term.
+       */
+      disease?: string | null;
     };
     /**
-     * ScoreCalibrationWithScoreSetUrn
-     * @description Complete score calibration model returned by the API, with score_set_urn.
+     * ScoreCalibrationDetailWithScoreSetUrn
+     * @description Single-calibration detail response: adds the full controls list to the list model.
      */
-    ScoreCalibrationWithScoreSetUrn: {
+    ScoreCalibrationDetailWithScoreSetUrn: {
       /** Title */
       title: string;
       /**
@@ -4991,6 +5106,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
       /** Thresholdsources */
@@ -5021,6 +5138,91 @@ export interface components {
        * @default true
        */
       private?: boolean;
+      /**
+       * Controlscount
+       * @default 0
+       */
+      controlsCount?: number;
+      disease: components["schemas"]["MappableConcept"];
+      createdBy?: components["schemas"]["SavedUser"] | null;
+      modifiedBy?: components["schemas"]["SavedUser"] | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Scoreseturn */
+      scoreSetUrn: string;
+      /**
+       * Controls
+       * @default []
+       */
+      controls?: components["schemas"]["SavedCalibrationControl"][];
+    };
+    /**
+     * ScoreCalibrationWithScoreSetUrn
+     * @description Score calibration model with score_set_urn, used for list/collection responses.
+     *
+     * Carries ``controls_count`` (from the base) but not the full controls list — see
+     * ``ScoreCalibrationDetailWithScoreSetUrn`` for the single-item detail representation.
+     */
+    ScoreCalibrationWithScoreSetUrn: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /** Baselinescore */
+      baselineScore?: number | null;
+      /** Baselinescoredescription */
+      baselineScoreDescription?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
+      /** Functionalclassifications */
+      functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
+      /** Thresholdsources */
+      thresholdSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Methodsources */
+      methodSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Calibrationmetadata */
+      calibrationMetadata?: Record<string, never> | null;
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /** Urn */
+      urn: string;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Investigatorprovided */
+      investigatorProvided: boolean;
+      /**
+       * Primary
+       * @default false
+       */
+      primary?: boolean;
+      /**
+       * Private
+       * @default true
+       */
+      private?: boolean;
+      /**
+       * Controlscount
+       * @default 0
+       */
+      controlsCount?: number;
+      disease: components["schemas"]["MappableConcept"];
       createdBy?: components["schemas"]["SavedUser"] | null;
       modifiedBy?: components["schemas"]["SavedUser"] | null;
       /**
@@ -5201,11 +5403,6 @@ export interface components {
       keywords?: components["schemas"]["ControlledKeywordSearch"][] | null;
       /** Text */
       text?: string | null;
-      /**
-       * Includeexperimentscoreseturnsandcount
-       * @default true
-       */
-      includeExperimentScoreSetUrnsAndCount?: boolean | null;
       /** Offset */
       offset?: number | null;
       /** Limit */
@@ -6564,7 +6761,7 @@ export interface components {
     Variation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
     /**
      * VepAnnotation
-     * @description VEP most-severe functional consequence and the Ensembl release it resolved under.
+     * @description VEP molecular consequence for an allele and the Ensembl release it resolved under.
      */
     VepAnnotation: {
       /** Consequence */
@@ -6722,6 +6919,11 @@ export interface components {
        */
       notes?: string | null;
       /**
+       * Controlsnotphi
+       * @default null
+       */
+      controlsNotPhi?: boolean | null;
+      /**
        * Functionalclassifications
        * @default null
        */
@@ -6742,6 +6944,17 @@ export interface components {
        * @default null
        */
       scoreSetUrn?: string | null;
+      /**
+       * Controls
+       * @default null
+       */
+      controls?: components["schemas"]["CalibrationControlCreate"][] | null;
+      /**
+       * Disease
+       * @description The MONDO code (e.g. "MONDO:0015263") for this calibration's disease context; validated against OLS. Omitted or null resolves to the generic "disease or disorder" term.
+       * @default null
+       */
+      disease?: string | null;
     };
   };
   responses: never;
@@ -7685,6 +7898,54 @@ export interface operations {
     };
   };
   /**
+   * Search MONDO disease terms
+   * @description Typeahead search for MONDO disease terms, returned as GA4GH ``MappableConcept`` suggestions.
+   */
+  search_diseases_api_v1_diseases_search_get: {
+    parameters: {
+      query: {
+        /** @description Free-text query for a MONDO disease term. */
+        q: string;
+        /** @description Maximum number of results. */
+        limit?: number;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["MappableConcept"][];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Search DOI identifiers
    * @description Search DOI identifiers based on the provided text.
    */
@@ -8223,13 +8484,15 @@ export interface operations {
   /**
    * Validate a provided variant
    * @description Validate the provided HGVS variant string.
+   *
+   * Parsing and validation failures both stem from caller-supplied input, so any ``HGVSError`` — a syntactic
+   * parse failure, an inconsistent variant, an unknown accession — is surfaced as a 400 rather than escaping
+   * to the catch-all 500 handler.
    */
   hgvs_validate_api_v1_hgvs_validate_post: {
     requestBody: {
       content: {
-        "application/json": {
-          [key: string]: string;
-        };
+        "application/json": components["schemas"]["HgvsValidationRequest"];
       };
     };
     responses: {
@@ -8247,11 +8510,9 @@ export interface operations {
       404: {
         content: never;
       };
-      /** @description Validation Error */
+      /** @description Unprocessable entity. Validation failed. */
       422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content: never;
       };
       /** @description Internal server error. */
       500: {
@@ -9508,7 +9769,10 @@ export interface operations {
   };
   /**
    * List my calibrations
-   * @description List all score calibrations created by the current user.
+   * @description List the score calibrations created by the current user that the user may still read.
+   *
+   * Calibrations on score sets the user can no longer read, for example after being removed as a
+   * contributor, are omitted.
    */
   list_my_calibrations_api_v1_score_calibrations_me_get: {
     parameters: {
@@ -9564,7 +9828,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9614,6 +9878,7 @@ export interface operations {
    * **Form Fields**:
    * - `calibration_json` (string, required): JSON string containing the calibration update data
    * - `classes_file` (file, optional): CSV file containing updated variant classifications
+   * - `controls_file` (file, optional): CSV file containing calibration controls (replaces existing)
    *
    * **Example**:
    * ```bash
@@ -9634,6 +9899,12 @@ export interface operations {
    * If provided, this will replace the existing classification data for the calibration.
    * The file should have appropriate headers and follow the expected format for variant
    * classifications within the associated score set.
+   *
+   * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+   * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+   * `benign`, case-insensitive). If provided, it replaces the calibration's existing controls.
+   * Controls may be supplied either via this file or inline in `calibration_json`, but not both;
+   * omitting both leaves existing controls unchanged.
    *
    * ## Response
    * Returns the updated score calibration with all modifications applied and any new
@@ -9659,7 +9930,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9763,7 +10034,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9813,6 +10084,7 @@ export interface operations {
    * **Form Fields**:
    * - `calibration_json` (string, required): JSON string containing the calibration data
    * - `classes_file` (file, optional): CSV file containing variant classifications
+   * - `controls_file` (file, optional): CSV file containing calibration controls
    *
    * **Example**:
    * ```bash
@@ -9832,6 +10104,11 @@ export interface operations {
    * ## File Upload Details
    * The `classes_file` parameter accepts CSV files containing variant classification data.
    * The file should have appropriate headers and contain columns for variant urns and class names.
+   *
+   * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+   * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+   * `benign`, case-insensitive). Controls may be supplied either via this file or inline in
+   * `calibration_json`, but not both.
    *
    * ## Response
    * Returns the created score calibration with its generated URN and associated score set information.
@@ -9853,7 +10130,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9891,7 +10168,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9927,7 +10204,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9949,6 +10226,8 @@ export interface operations {
   /**
    * Publish Score Calibration Route
    * @description Publish a score calibration, making it publicly visible.
+   *
+   * The calibration's score set must already be published.
    */
   publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post: {
     parameters: {
@@ -9963,7 +10242,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -12476,7 +12755,7 @@ export interface operations {
   };
   /**
    * List target gene names
-   * @description List distinct target gene names, in alphabetical order.
+   * @description List distinct target gene names from published score sets, in alphabetical order.
    */
   list_target_gene_names_api_v1_target_genes_names_get: {
     responses: {
@@ -12498,7 +12777,7 @@ export interface operations {
   };
   /**
    * List target gene categories
-   * @description List distinct target genes categories, in alphabetical order.
+   * @description List distinct target gene categories from published score sets, in alphabetical order.
    */
   list_target_gene_categories_api_v1_target_genes_categories_get: {
     responses: {

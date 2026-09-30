@@ -10,7 +10,7 @@
     <!-- Scores file -->
     <div :class="wizardMode && 'wizard-row'">
       <div v-if="wizardMode" class="wizard-help">
-        <label>{{ desc.scoresFile.help }}</label>
+        <label>{{ desc.scoresFile.help }} <MvRequiredMarker v-if="scoresFileRequired" /></label>
         <!-- eslint-disable-next-line vue/no-v-html -->
         <p v-if="desc.scoresFile.detail" class="wizard-help-detail" v-html="desc.scoresFile.detail" />
       </div>
@@ -27,6 +27,7 @@
           empty-text="Drop a scores CSV file here"
           :error="validationErrors.scoresFile"
           label="Scores file"
+          :required="scoresFileRequired"
           :show-label="!wizardMode"
           @remove="clearFile('scoresFile')"
           @select="onFileSelected('scoresFile', $event)"
@@ -132,6 +133,7 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import MvFileStatus from '@/components/forms/MvFileStatus.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import MvUploadField from '@/components/forms/MvUploadField.vue'
 
 import {variantScoreDescriptions} from '@/data/field-descriptions'
@@ -146,7 +148,7 @@ export interface VariantScoreFieldsRef {
 export default defineComponent({
   name: 'VariantScoreFields',
 
-  components: {MvFileStatus, MvUploadField},
+  components: {MvFileStatus, MvRequiredMarker, MvUploadField},
 
   props: {
     scoreColumnsMetadata: {type: Object as PropType<Record<string, unknown> | null>, default: null},
@@ -163,6 +165,13 @@ export default defineComponent({
       desc: variantScoreDescriptions(),
       scoresFile: null as File | null,
       countsFile: null as File | null
+    }
+  },
+
+  computed: {
+    /** Editing an existing score set keeps its variants when no new file is chosen. */
+    scoresFileRequired(): boolean {
+      return this.existingVariantCount == null
     }
   },
 

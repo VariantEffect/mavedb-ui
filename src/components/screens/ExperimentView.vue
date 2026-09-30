@@ -170,7 +170,6 @@
 
 <script lang="ts">
 import {defineComponent, toRef} from 'vue'
-import {marked} from 'marked'
 import PButton from 'primevue/button'
 import {useHead} from '@unhead/vue'
 
@@ -189,7 +188,9 @@ import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
+import {markdownToHtml} from '@/lib/form-helpers'
 import {components} from '@/schema/openapi'
 import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
@@ -229,9 +230,12 @@ export default defineComponent({
     const urnRef = toRef(props, 'itemId')
     const {permissions} = useDatasetPermissions('experiment', urnRef, ACTIONS)
 
+    const experiment = useItem<Experiment>({itemTypeName: 'experiment'})
+    useCanonicalUrn(experiment.item, urnRef)
+
     return {
       head,
-      ...useItem<Experiment>({itemTypeName: 'experiment'}),
+      ...experiment,
       permissions
     }
   },
@@ -321,9 +325,7 @@ export default defineComponent({
         this.scoreSetsLoading = false
       }
     },
-    markdownToHtml(markdown: string): string {
-      return marked(markdown) as string
-    }
+    markdownToHtml
   }
 })
 </script>

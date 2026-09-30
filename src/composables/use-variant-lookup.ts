@@ -6,6 +6,7 @@ import {useClingenAllele, type UseClingenAlleleReturn} from '@/composables/use-c
 import {scoreSetUrnOf, useMeasurementCache} from '@/composables/use-measurement-cache'
 import {useMeasurementSelection, type UseMeasurementSelectionReturn} from '@/composables/use-measurement-selection'
 
+import type {CalibrationControlStatus} from '@/lib/calibration-controls'
 import {triggerDownload} from '@/lib/downloads'
 import {describeRequestError} from '@/lib/errors'
 import {getExperimentKeyword} from '@/lib/experiments'
@@ -37,6 +38,9 @@ export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
   nucleotideCount: ComputedRef<number>
   proteinCount: ComputedRef<number>
   filteredVariants: ComputedRef<AlleleMeasurement[]>
+
+  // The selected measurement's own status as one of the active calibration's controls, if it was used as one.
+  selectedVariantControlStatus: ComputedRef<CalibrationControlStatus | null>
 
   // Per-measurement helpers (for measurement cards)
   getKeyword: (scoreSetUrn: string | null | undefined, key: string) => string | null
@@ -122,6 +126,14 @@ export function useVariantLookup(
   // ── Composed sub-domains ──────────────────────────────────
   const cache = useMeasurementCache(asOf)
   const selection = useMeasurementSelection(variants, filteredVariants, highlightUrn, cache)
+
+  // The selected variant's own status as one of the active calibration's controls, if it was used
+  // as one — distinct from `calibrationResolution`, which classifies the variant by score.
+  const selectedVariantControlStatus = computed<CalibrationControlStatus | null>(() => {
+    const urn = selection.selectedVariantUrn.value
+    if (!urn) return null
+    return selection.selectedCalibrationObject.value?.controls?.find((c) => c.variantUrn === urn)?.clinicalStatus ?? null
+  })
 
   // ── Page-level ────────────────────────────────────────────
   const geneName = computed(() => {
@@ -272,6 +284,7 @@ export function useVariantLookup(
     nucleotideCount,
     proteinCount,
     filteredVariants,
+    selectedVariantControlStatus,
     getKeyword,
     geneName,
     uniqueAssayCount,

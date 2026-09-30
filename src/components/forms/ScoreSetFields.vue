@@ -8,7 +8,12 @@
         <p v-if="desc.title.detail" class="wizard-help-detail" v-html="desc.title.detail" />
       </div>
       <div :class="wizardMode && 'wizard-field'">
-        <MvFloatField :error="validationErrors.title" :hint="wizardMode ? undefined : desc.title.hint" label="Title">
+        <MvFloatField
+          :error="validationErrors.title"
+          :hint="wizardMode ? undefined : desc.title.hint"
+          label="Title"
+          required
+        >
           <template #default="{id, invalid}">
             <PInputText
               :id="id"
@@ -35,6 +40,7 @@
           :error="validationErrors.shortDescription"
           :hint="wizardMode ? undefined : desc.shortDescription.hint"
           label="Short description"
+          required
         >
           <template #default="{id, invalid}">
             <PTextarea
@@ -64,6 +70,7 @@
           :hint="wizardMode ? undefined : desc.abstractText.hint"
           label="Abstract"
           :model-value="abstractText"
+          required
           :rows="wizardMode ? 10 : 4"
           @update:model-value="$emit('update:abstractText', $event)"
         />
@@ -89,6 +96,7 @@
           :hint="wizardMode ? undefined : desc.methodText.hint"
           label="Methods"
           :model-value="methodText"
+          required
           :rows="wizardMode ? 10 : 4"
           @update:model-value="$emit('update:methodText', $event)"
         />
@@ -107,6 +115,7 @@
           :error="validationErrors.licenseId"
           :hint="wizardMode ? undefined : desc.license.hint"
           label="License"
+          required
         >
           <template #default="{id, invalid}">
             <PSelect

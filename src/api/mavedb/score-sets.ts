@@ -146,11 +146,9 @@ export async function downloadScoreSetVariantData(urn: string, params: URLSearch
 }
 
 // The preview table renders only a handful of rows, so it passes `limit` to fetch just those rather
-// than the whole dataset. Note: `drop_unused_hgvs_columns` is evaluated over the returned rows, so with
-// a limit the shown column set reflects the sampled rows (fine for a preview; the download buttons fetch
-// the full, unlimited file).
+// than the whole dataset.
 export async function getScoreSetScoresPreview(urn: string, limit?: number): Promise<string> {
-  const params = new URLSearchParams({drop_unused_hgvs_columns: 'true'})
+  const params = new URLSearchParams({drop_unused_hgvs_columns: 'false'})
   if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
     `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?${params.toString()}`
@@ -159,7 +157,7 @@ export async function getScoreSetScoresPreview(urn: string, limit?: number): Pro
 }
 
 export async function getScoreSetCountsPreview(urn: string, limit?: number): Promise<string> {
-  const params = new URLSearchParams({drop_unused_hgvs_columns: 'true'})
+  const params = new URLSearchParams({drop_unused_hgvs_columns: 'false'})
   if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
     `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?${params.toString()}`

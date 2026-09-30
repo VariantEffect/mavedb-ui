@@ -499,6 +499,7 @@ import ScoreSetVisualizer from '@/components/score-set/ScoreSetVisualizer.vue'
 import useScopedId from '@/composables/scoped-id'
 import useItem from '@/composition/item.ts'
 import useRemoteData from '@/composition/remote-data'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import {useClinvarControls} from '@/composables/use-clinvar-controls'
@@ -572,7 +573,7 @@ export default {
     const head = useHead()
     const variantsRemoteData = useRemoteData()
     const selectedCalibrations = ref<(string | null)[]>([null, null])
-    const urnRef = ref(props.itemId)
+    const urnRef = toRef(props, 'itemId')
 
     // The score set's variants. Held in setup (not data) so the shared clinical-controls store can watch
     // them and associate `variant.control` in one place for every consumer (both histograms + the search).
@@ -588,6 +589,9 @@ export default {
     const clinicalHistogramChart = useChartExport(clinicalHistogramExportFn)
     const heatmapChart = useChartExport(heatmapExportFn)
 
+    const scoreSet = useItem<ScoreSet>({itemTypeName: 'scoreSet'})
+    useCanonicalUrn(scoreSet.item, urnRef)
+
     return {
       head,
       config,
@@ -597,7 +601,7 @@ export default {
       clinvarControls,
 
       ...useCalibrationDialog(),
-      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
+      ...scoreSet,
       ...useScopedId(),
       ...useVariantCoordinates(),
       variantsData: variantsRemoteData.data,

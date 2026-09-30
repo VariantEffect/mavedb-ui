@@ -44,21 +44,25 @@
       </Popover>
     </div>
   </div>
+  <div v-if="showControlSourceSelector" class="mavedb-histogram-source-select">
+    <label class="mavedb-histogram-source-select-label" for="mavedb-histogram-source-select"
+      >Clinical control source</label
+    >
+    <PSelect
+      v-model="selectedControlSource"
+      input-id="mavedb-histogram-source-select"
+      option-label="label"
+      :options="controlSourceOptions"
+      style="align-items: center; height: 1.75rem"
+    />
+  </div>
   <div v-if="showControls" class="mavedb-histogram-custom-controls">
-    <fieldset class="mavedb-histogram-controls-panel">
+    <fieldset
+      v-if="effectiveControlSource === 'clinvar' || proteinEffectOptionsAvailable"
+      class="mavedb-histogram-controls-panel"
+    >
       <legend>Clinical Series Options</legend>
-      <div v-if="clinical.showOptions" class="mavedb-histogram-control">
-        <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
-          >Clinical control database:
-        </label>
-        <PSelect
-          v-model="clinical.controlDb"
-          :disabled="!clinical.refreshed"
-          input-id="mavedb-histogram-db-select"
-          option-label="dbName"
-          :options="clinical.options"
-          style="align-items: center; height: 1.5rem"
-        />
+      <div v-if="showClinicalControlVersionOption" class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
           >Clinical control version:
         </label>
@@ -70,7 +74,7 @@
           style="align-items: center; height: 1.5rem"
         />
       </div>
-      <div class="mavedb-histogram-control">
+      <div v-if="effectiveControlSource === 'clinvar'" class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-star-select">
           Minimum ClinVar review status 'gold stars':
         </label>
@@ -96,7 +100,7 @@
           </div>
         </div>
       </div>
-      <div class="mavedb-histogram-control">
+      <div v-if="effectiveControlSource === 'clinvar'" class="mavedb-histogram-control">
         <div class="flex gap-1 align-items-center">
           <Checkbox
             v-model="customSoftConflictsEnabled"
@@ -113,7 +117,7 @@
           to view uncertain and conflicting records as their own series.
         </span>
       </div>
-      <div class="mavedb-histogram-control">
+      <div v-if="effectiveControlSource === 'clinvar'" class="mavedb-histogram-control">
         <span class="mavedb-histogram-control-label">Include variants with classification: </span>
         <div class="flex flex-wrap gap-3">
           <div
@@ -162,7 +166,11 @@
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
   <span
-    v-if="vizOptions[activeViz]?.clinvarControlLegendNoteEnabled && clinical.refreshed"
+    v-if="
+      vizOptions[activeViz]?.clinvarControlLegendNoteEnabled &&
+      clinical.refreshed &&
+      effectiveControlSource === 'clinvar'
+    "
     class="mt-1 block text-center text-xs italic leading-tight"
   >
     Note: The ClinVar annotations shown above are matched to variants in this score set and may not correspond to the
@@ -222,6 +230,7 @@ import {
   type ControlSeriesOptions
 } from '@/lib/clinvar-control-series'
 import type {ClinvarControlsStore} from '@/composables/use-clinvar-controls'
+import type {ClinvarControlOption} from '@/lib/clinvar-controls'
 import makeHistogram, {
   DEFAULT_SERIES_COLOR,
   Histogram,
@@ -279,6 +288,14 @@ interface VizOption {
   label: string
   view: 'distribution' | 'clinical' | 'effect' | 'custom' | 'calibration-classes'
   clinvarControlLegendNoteEnabled: boolean
+}
+
+// A selectable clinical-control source: either the score set's own calibration controls or a clinical
+// database (e.g. ClinVar). `db` is populated only for database sources and drives the version/query.
+interface ControlSourceOption {
+  label: string
+  kind: 'calibration' | 'clinvar'
+  db: ClinvarControlOption | null
 }
 
 export default defineComponent({
@@ -359,6 +376,9 @@ export default defineComponent({
       config: config,
 
       activeViz: 0,
+      // null = follow the default (calibration controls when the active calibration has them, else ClinVar);
+      // set explicitly by the source toggle. See effectiveControlSource for how a stale choice is resolved.
+      controlSource: null as 'calibration' | 'clinvar' | null,
       showCalibrations: scoreSetHasCalibrations,
       activeCalibration: {label: 'None', value: null} as {
         label: string
@@ -437,14 +457,101 @@ export default defineComponent({
       const calibrationUrn = this.activeCalibration.value?.urn
       return calibrationUrn != null && this.calibrationClassVariantsLoadingByUrn[calibrationUrn] === true
     },
-    series: function () {
-      if (!this.clinical.refreshed) {
-        return null
+    // URN -> clinical status for the active calibration's controls. Small (one entry per control) and
+    // memoized, so the series classifiers and tooltip do O(1) lookups without an extra pass over variants.
+    calibrationControlStatusByUrn: function (): Record<string, 'pathogenic' | 'benign'> {
+      const statusByUrn: Record<string, 'pathogenic' | 'benign'> = {}
+      for (const control of this.activeCalibration.value?.controls ?? []) {
+        statusByUrn[control.variantUrn] = control.clinicalStatus
       }
-
+      return statusByUrn
+    },
+    activeCalibrationHasControls: function (): boolean {
+      return (this.activeCalibration.value?.controls?.length ?? 0) > 0
+    },
+    // Which control set the Controls view overlays. Honor an explicit ClinVar choice; honor an explicit
+    // calibration choice only while controls exist; otherwise default to calibration controls when
+    // available, falling back to ClinVar. This keeps a stale toggle choice from drawing an empty overlay
+    // after the active calibration changes, so no reset watcher is needed.
+    effectiveControlSource: function (): 'calibration' | 'clinvar' {
+      if (this.controlSource === 'clinvar') {
+        return 'clinvar'
+      }
+      if (this.controlSource === 'calibration' && this.activeCalibrationHasControls) {
+        return 'calibration'
+      }
+      return this.activeCalibrationHasControls ? 'calibration' : 'clinvar'
+    },
+    // Every clinical-control source available for this score set: its own calibration controls (when the
+    // active calibration has them) plus each clinical database that matched variants (e.g. ClinVar).
+    controlSourceOptions: function (): ControlSourceOption[] {
+      const options: ControlSourceOption[] = []
+      if (this.activeCalibrationHasControls) {
+        options.push({label: 'Calibration controls', kind: 'calibration', db: null})
+      }
+      if (this.clinical.someVariantsHaveClinicalSignificance) {
+        for (const db of this.clinical.options) {
+          options.push({label: db.dbName, kind: 'clinvar', db})
+        }
+      }
+      return options
+    },
+    // Two-way binding for the source dropdown. Reads back the option matching the effective source (and the
+    // active database for ClinVar); writing one flips controlSource and, for a database, its db + version
+    // in the shared clinical-control store.
+    selectedControlSource: {
+      get: function (): ControlSourceOption | null {
+        if (this.effectiveControlSource === 'calibration') {
+          return this.controlSourceOptions.find((option) => option.kind === 'calibration') ?? null
+        }
+        return (
+          this.controlSourceOptions.find(
+            (option) => option.kind === 'clinvar' && option.db?.dbName === this.clinical.controlDb?.dbName
+          ) ??
+          this.controlSourceOptions.find((option) => option.kind === 'clinvar') ??
+          null
+        )
+      },
+      set: function (option: ControlSourceOption | null): void {
+        if (!option) {
+          return
+        }
+        if (option.kind === 'calibration') {
+          this.controlSource = 'calibration'
+          return
+        }
+        this.controlSource = 'clinvar'
+        if (option.db) {
+          this.clinical.controlDb = option.db
+          // Reset to the database's first version when the current one does not belong to the new database.
+          if (!option.db.availableVersions.includes(this.clinical.controlVersion ?? '')) {
+            this.clinical.controlVersion = option.db.availableVersions[0] ?? null
+          }
+        }
+      }
+    },
+    // The source dropdown is only meaningful on the control-backed views and when more than one source exists.
+    showControlSourceSelector: function (): boolean {
+      const view = this.vizOptions[this.activeViz]?.view
+      return (view === 'clinical' || view === 'custom') && this.controlSourceOptions.length > 1
+    },
+    // The version dropdown only applies to a ClinVar-style database source that publishes multiple versions.
+    showClinicalControlVersionOption: function (): boolean {
+      return this.effectiveControlSource === 'clinvar' && (this.clinical.controlDb?.availableVersions.length ?? 0) > 1
+    },
+    series: function () {
       // NOTE: keep this getter pure — clamping `activeViz` (a side effect) lives in the `vizOptions` watcher.
       // An out-of-range index simply yields `undefined` here, which we treat as "no series".
       if (!this.vizOptions[this.activeViz]) {
+        return null
+      }
+
+      // The calibration-controls overlay is driven by the score set's own calibration and does not depend
+      // on the background ClinVar control fetch; every ClinVar-sourced view still waits for it.
+      const view = this.vizOptions[this.activeViz].view
+      const usingCalibrationControls =
+        (view === 'clinical' || view === 'custom') && this.effectiveControlSource === 'calibration'
+      if (!this.clinical.refreshed && !usingCalibrationControls) {
         return null
       }
 
@@ -471,6 +578,21 @@ export default defineComponent({
           }))
         }
         case 'clinical': {
+          // Calibration controls: the score set's own pathogenic/benign ground truth, matched by URN.
+          if (this.effectiveControlSource === 'calibration') {
+            const statusByUrn = this.calibrationControlStatusByUrn
+            return [
+              {
+                classifier: (d: HistogramDatum) => !!d.variantUrn && statusByUrn[d.variantUrn] === 'pathogenic',
+                options: {color: '#e41a1c', title: 'Pathogenic'}
+              },
+              {
+                classifier: (d: HistogramDatum) => !!d.variantUrn && statusByUrn[d.variantUrn] === 'benign',
+                options: {color: '#377eb8', title: 'Benign'}
+              }
+            ]
+          }
+
           // The fixed clinical view: all directional classes, no star gate, soft conflicts folded into their
           // directional lean (there are no uncertain series in the default).
           const opts = {
@@ -534,10 +656,29 @@ export default defineComponent({
             }
           ]
 
+          if (this.effectiveControlSource === 'calibration') {
+            // Calibration controls carry only pathogenic/benign ground truth — no review stars or ClinVar
+            // sub-classes — so the significance filters do not apply, but the protein-effect filter still does.
+            const statusByUrn = this.calibrationControlStatusByUrn
+            series.length = 0
+            series.push(
+              {
+                classifier: (d: HistogramDatum) =>
+                  !!d.variantUrn && statusByUrn[d.variantUrn] === 'pathogenic' && this.filterControlVariantByEffect(d),
+                options: {color: '#e41a1c', title: 'Pathogenic'}
+              },
+              {
+                classifier: (d: HistogramDatum) =>
+                  !!d.variantUrn && statusByUrn[d.variantUrn] === 'benign' && this.filterControlVariantByEffect(d),
+                options: {color: '#377eb8', title: 'Benign'}
+              }
+            )
+          }
+
           // Uncertain series exist only when the soft-conflict fold is off (the two modes are mutually
           // exclusive) — and then only for the uncertain classes the user has selected. controlSeries already
           // returns null for uncertain records while the fold is on, so this gate keeps the empty series hidden.
-          if (!this.customSoftConflictsEnabled) {
+          if (this.effectiveControlSource === 'clinvar' && !this.customSoftConflictsEnabled) {
             if (
               this.customSelectedClinicalSignificanceClassifications.some((c) =>
                 UNCERTAIN_SIGNIFICANCE_CLASSIFICATIONS.includes(c)
@@ -592,8 +733,8 @@ export default defineComponent({
         {label: 'Overall Distribution', view: 'distribution', clinvarControlLegendNoteEnabled: false}
       ]
 
-      if (this.clinical.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Clinical View', view: 'clinical', clinvarControlLegendNoteEnabled: true})
+      if (this.clinical.someVariantsHaveClinicalSignificance || this.activeCalibrationHasControls) {
+        options.push({label: 'Controls', view: 'clinical', clinvarControlLegendNoteEnabled: true})
       }
 
       if (this.selectedCalibrationIsClassBased) {
@@ -923,6 +1064,20 @@ export default defineComponent({
         }
       }
 
+      // Calibration control membership in the active calibration — a fact about the variant, shown
+      // regardless of which control source the chart is currently overlaying.
+      const calibrationControlStatus = variant.variantUrn
+        ? this.calibrationControlStatusByUrn[variant.variantUrn]
+        : undefined
+      if (calibrationControlStatus) {
+        identity.push(
+          tooltipBadgeBlock(
+            calibrationControlStatus === 'pathogenic' ? '#e41a1c' : '#377eb8',
+            `Calibration control: ${calibrationControlStatus === 'pathogenic' ? 'Pathogenic' : 'Benign'}`
+          )
+        )
+      }
+
       if (variant.clingenAlleleId) {
         identity.push(tooltipVariantDetailsLink(variant.clingenAlleleId, variant.variantUrn))
       }
@@ -1216,8 +1371,14 @@ export default defineComponent({
         .seriesClassifier(seriesClassifier)
         .title('Distribution of Functional Scores')
         .legendNote(
-          this.vizOptions[this.activeViz]?.clinvarControlLegendNoteEnabled && this.clinical.refreshed
-            ? `${this.clinical.controlDb?.dbName} data from version ${this.clinical.controlVersion}`
+          // The version note describes a ClinVar-style database source only; calibration controls have no such
+          // provenance, and an unloaded database would otherwise render "undefined data from version null".
+          this.vizOptions[this.activeViz]?.clinvarControlLegendNoteEnabled &&
+            this.clinical.refreshed &&
+            this.effectiveControlSource === 'clinvar' &&
+            this.clinical.controlDb?.dbName &&
+            this.clinical.controlVersion
+            ? `${this.clinical.controlDb.dbName} data from version ${this.clinical.controlVersion}`
             : null
         )
         .shaders(this.histogramShaders)
@@ -1435,6 +1596,20 @@ export default defineComponent({
 .mavedb-threshold-trigger-icon {
   font-size: 10px;
   color: #6c757d;
+}
+
+.mavedb-histogram-source-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.mavedb-histogram-source-select-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6c757d;
+  white-space: nowrap;
 }
 
 .mavedb-histogram-controls {

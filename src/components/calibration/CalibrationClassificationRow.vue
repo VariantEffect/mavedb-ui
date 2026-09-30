@@ -33,6 +33,7 @@
         <MvFloatField
           :error="validationErrors[`functionalClassifications.${index}.label`]"
           label="Functional range label"
+          required
         >
           <template #default="{id, invalid}">
             <InputText
@@ -79,7 +80,9 @@
     <!-- Classification (normal/abnormal/not_specified) -->
     <div class="wizard-row">
       <div class="wizard-help">
-        <label :id="scopedId(`input-rangeClassification-${index}`)">{{ desc.rangeClassification.help }}</label>
+        <label :id="scopedId(`input-rangeClassification-${index}`)">
+          {{ desc.rangeClassification.help }} <MvRequiredMarker />
+        </label>
         <!-- eslint-disable vue/no-v-html -->
         <div
           v-if="desc.rangeClassification.detail"
@@ -105,7 +108,9 @@
     <template v-if="!classBased">
       <div class="wizard-row">
         <div class="wizard-help">
-          <label :id="scopedId(`input-rangeBoundaries-${index}`)">{{ desc.rangeBoundaries.help }}</label>
+          <label :id="scopedId(`input-rangeBoundaries-${index}`)">
+            {{ desc.rangeBoundaries.help }} <MvRequiredMarker />
+          </label>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <div v-if="desc.rangeBoundaries.detail" class="wizard-help-detail" v-html="desc.rangeBoundaries.detail" />
         </div>
@@ -201,7 +206,11 @@
           <div v-if="desc.className.detail" class="wizard-help-detail" v-html="desc.className.detail" />
         </div>
         <div class="wizard-field">
-          <MvFloatField :error="validationErrors[`functionalClassifications.${index}.class`]" label="Class name">
+          <MvFloatField
+            :error="validationErrors[`functionalClassifications.${index}.class`]"
+            label="Class name"
+            required
+          >
             <template #default="{id, invalid}">
               <InputText
                 :id="id"
@@ -354,6 +363,7 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 
 import MvFieldError from '@/components/forms/MvFieldError.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import useScopedId from '@/composables/scoped-id'
 import {calibrationDescriptions} from '@/data/field-descriptions'
 import type {DraftFunctionalClassification, FunctionalClassificationHelper} from '@/lib/calibration-types'
@@ -368,6 +378,7 @@ export default defineComponent({
     InputText,
     MvFieldError,
     MvFloatField,
+    MvRequiredMarker,
     PMessage: Message,
     PButton: Button,
     PTextarea: Textarea,

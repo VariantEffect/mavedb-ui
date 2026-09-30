@@ -9,9 +9,16 @@
           <a class="text-link" :href="`${appBaseUrl}/publication-identifiers/${pub.dbName}/${encodeURIComponent(pub.identifier)}`">{{
             pub.identifier
           }}</a>
-          <template v-if="pub.url">
+          <template v-if="getPublicationUrl(pub)">
             <span class="text-border">&middot;</span>
-            <a class="text-link" :href="pub.url" rel="noopener noreferrer" target="_blank">View article on the web</a>
+            <a
+              class="text-link"
+              :href="getPublicationUrl(pub)!"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              View article on the web
+            </a>
           </template>
         </div>
       </div>
@@ -25,6 +32,7 @@ import {defineComponent, type PropType} from 'vue'
 
 import config from '@/config'
 import {components} from '@/schema/openapi'
+import {getPublicationUrl} from '@/lib/publication'
 
 type PublicationIdentifier = components['schemas']['PublicationIdentifier']
 
@@ -40,6 +48,10 @@ export default defineComponent({
     appBaseUrl(): string {
       return config.appBaseUrl
     }
+  },
+
+  methods: {
+    getPublicationUrl
   }
 })
 </script>

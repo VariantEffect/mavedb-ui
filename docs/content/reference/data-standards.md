@@ -93,6 +93,9 @@ The table below summarizes the **highest** layer a variant qualifies for. Higher
 
     Unlike the `type` field, `classification`, `direction`, and `evidenceOutcome` *code* values are lowercase — e.g. `pathogenic` / `benign` / `uncertain significance`, `normal` / `abnormal` / `indeterminate`, and `supports` / `disputes` / `neutral`. (ACMG criterion codes such as `PS3` / `BS3_supporting` keep their conventional casing.)
 
+!!! note "Proposition subjects"
+    A proposition's subject is the measured variant. When the measured variant has another representation (its genomic or transcript twin, or its protein consequence), the subject is a [Cat-VRS](https://cat-vrs.ga4gh.org/) `CategoricalVariant` over those representations; otherwise it is the bare VRS allele. A categorical subject's `mappings` cross-reference the ClinGen allele IDs, gnomAD variant IDs and ClinVar variation IDs of its members — `exactMatch` for records of the measured variant itself, `relatedMatch` for records of its protein consequence. Other nucleotide changes that encode the same protein change are left out of the subject and its mappings.
+
 ### Functional Impact Study Result
 
 A Functional Impact Study Result captures the raw output of a MAVE experiment for a single variant. It is the foundational VA-Spec object and does not require score calibrations.
@@ -299,7 +302,7 @@ VRS and VA-Spec objects exported from MaveDB are self-contained but reference ot
 
 ### Downloading variant details
 
-Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the `preMapped`/`postMapped` VRS pair, the GA4GH categorical variant, and the annotation map. Only mapped variants appear; a variant with no VRS is omitted.
+Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the `preMapped`/`postMapped` VRS pair, the GA4GH categorical variant, and the annotation map. The categorical variant's `mappings` cross-reference its members' ClinGen, gnomAD and ClinVar identifiers; frequencies and classifications are in the annotation map. Only mapped variants appear; a variant with no VRS is omitted.
 
 !!! note "Replaces `/mapped-variants`"
 

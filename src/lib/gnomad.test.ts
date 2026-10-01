@@ -305,7 +305,7 @@ describe('gnomadVariantUrl — dataset matches the record version', () => {
     expect(url).toContain('/variant/1-55051215-G-A')
   })
 
-  test('an unrecognisable version falls back to the current dataset', () => {
-    expect(gnomadVariantUrl({dbIdentifier: 'x', dbVersion: 'unknown'})).toContain('dataset=gnomad_r4')
+  test.each(['unknown', 'v5.0'])('an unrecognised version %s gets no dataset', (dbVersion) => {
+    expect(gnomadVariantUrl({dbIdentifier: 'x', dbVersion})).toBe('https://gnomad.broadinstitute.org/variant/x')
   })
 })

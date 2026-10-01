@@ -266,12 +266,18 @@ export function gnomadIdToHgvs(gnomadId: string, assembly: GenomeAssembly): stri
   return gnomadIdToHgvsCandidates(gnomadId).find((candidate) => candidate.assembly === assembly)?.hgvs ?? null
 }
 
-/** Deep link to a gnomAD variant page, choosing the dataset that matches the record's version. */
+const GNOMAD_BROWSER_DATASETS: Record<number, string> = {2: 'gnomad_r2_1', 3: 'gnomad_r3', 4: 'gnomad_r4'}
+
+/**
+ * Deep link to a gnomAD variant page, choosing the dataset that matches the record's version. An unrecognised
+ * version gets no dataset, so the browser opens its default rather than a guessed release. Mirrors the API's
+ * `gnomad_variant_url`.
+ */
 export function gnomadVariantUrl(gnomad: {dbIdentifier: string; dbVersion: string}): string {
   // Versions are stored with a leading "v" (e.g. "v4.1"), so strip non-digits before reading the major.
-  const major = parseInt(gnomad.dbVersion.replace(/^\D+/, ''), 10)
-  const dataset = major === 3 ? 'gnomad_r3' : major === 2 ? 'gnomad_r2_1' : 'gnomad_r4'
-  return `https://gnomad.broadinstitute.org/variant/${encodeURIComponent(gnomad.dbIdentifier)}?dataset=${dataset}`
+  const dataset = GNOMAD_BROWSER_DATASETS[parseInt(gnomad.dbVersion.replace(/^\D+/, ''), 10)]
+  const url = `https://gnomad.broadinstitute.org/variant/${encodeURIComponent(gnomad.dbIdentifier)}`
+  return dataset ? `${url}?dataset=${dataset}` : url
 }
 
 /** A frequency (e.g. gnomAD AF): scientific notation for the very rare, else 3 significant figures. */

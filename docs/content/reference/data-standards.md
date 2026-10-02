@@ -54,6 +54,9 @@ VRS objects are available for download as JSON from any score set that has been 
 
 The [GA4GH Variant Annotation Specification (VA-Spec)](https://va-spec.ga4gh.org/) extends VRS with a framework for attaching annotations, classifications, and evidence to variants. MaveDB uses VA-Spec to export functional and clinical annotations derived from MAVE data and [score calibrations](score-calibrations.md).
 
+!!! note "Specification versions"
+    MaveDB emits VA-Spec 1.1, with Cat-VRS 1.1 categorical variants and VRS 2 alleles. It follows each specification's minor releases, and a minor release can rename fields: VA-Spec 1.1 renamed `focusVariant` to `focus`, `subjectVariant` to `subject`, and `objectCondition` and `objectSequenceFeature` to `object`. Check the version when parsing objects saved from an earlier MaveDB release.
+
 MaveDB produces three types of VA-Spec objects, each building on the previous:
 
 ```mermaid
@@ -114,7 +117,7 @@ Each Study Result contains:
     {
       "type": "ExperimentalVariantFunctionalImpactStudyResult",
       "description": "Variant effect study result for urn:mavedb:00000050-a-1#12345.",
-      "focusVariant": {
+      "focus": {
         "type": "Allele",
         "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK",
         "...": "..."
@@ -154,13 +157,13 @@ Each Functional Impact Statement contains:
       "proposition": {
         "type": "ExperimentalVariantFunctionalImpactProposition",
         "predicate": "impactsFunctionOf",
-        "subjectVariant": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
-        "objectGene": { "label": "MSH2" }
+        "subject": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
+        "object": { "primaryCoding": { "code": "MSH2", "system": "https://www.genenames.org/" } }
       },
       "classification": {
         "primaryCoding": {
           "code": "abnormal",
-          "system": "ga4gh-gks-term:experimental-var-func-impact-classification"
+          "system": "ga4gh-gkm-term:experimental-var-func-impact-classification"
         }
       },
       "hasEvidenceLines": [
@@ -170,7 +173,7 @@ Each Functional Impact Statement contains:
           "evidenceOutcome": {
             "primaryCoding": {
               "code": "abnormal",
-              "system": "ga4gh-gks-term:experimental-var-func-impact-classification"
+              "system": "ga4gh-gkm-term:experimental-var-func-impact-classification"
             }
           },
           "specifiedBy": {
@@ -217,8 +220,8 @@ Each Variant Pathogenicity Statement contains:
       "proposition": {
         "type": "VariantPathogenicityProposition",
         "predicate": "isCausalFor",
-        "subjectVariant": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
-        "objectCondition": { "label": "disease" }
+        "subject": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
+        "object": { "conceptType": "Disease", "name": "disease or disorder", "...": "..." }
       },
       "classification": {
         "primaryCoding": {

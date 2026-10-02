@@ -11,7 +11,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     coverage: {
-      all: true,
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['src/**/*.{js,ts}'],

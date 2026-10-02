@@ -1,49 +1,21 @@
+/**
+ * @fileoverview
+ * Calibration utilities for score interpretation and histogram visualization.
+ */
+
 import axios from 'axios'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
+import type {CalibrationControlStatus} from '@/lib/calibration-controls'
+import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
 
+export type ScoreCalibration = components['schemas']['ScoreCalibration']
+export type ScoreCalibrationFunctionalClassification =
+  components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
-
-export const NORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-normal)'
-export const ABNORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-abnormal)'
-export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = 'var(--color-cal-unspecified)'
-
-export const BENIGN_CRITERION = 'BS3'
-export const PATHOGENIC_CRITERION = 'PS3'
-
-export const EVIDENCE_STRENGTH_AS_POINTS = {
-  VERY_STRONG: 8,
-  STRONG: 4,
-  MODERATE_PLUS: 3,
-  MODERATE: 2,
-  SUPPORTING: 1
-}
-
-export const INDETERMINATE_CALIBRATION_EVIDENCE = ['INDETERMINATE'] as const
-export const EVIDENCE_STRENGTH = EVIDENCE_STRENGTH_AS_POINTS ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS) : []
-export const NORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${BENIGN_CRITERION}_${key}`)
-  : []
-export const ABNORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${PATHOGENIC_CRITERION}_${key}`)
-  : []
-
-export const EVIDENCE_STRENGTHS = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.fromEntries(
-      Object.entries(EVIDENCE_STRENGTH_AS_POINTS)
-        .map(([key, value]) => [`${BENIGN_CRITERION}_${key}`, value * -1])
-        .concat(
-          Object.entries(EVIDENCE_STRENGTH_AS_POINTS).map(([key, value]) => [`${PATHOGENIC_CRITERION}_${key}`, value])
-        )
-    )
-  : {}
-
-export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
-  Object.entries(EVIDENCE_STRENGTHS).map(([key, value]) => [value, key])
-)
 
 /**
  * Prepares a list of histogram shader configuration objects from persisted score calibration data.
@@ -51,8 +23,7 @@ export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
  * Each functional range in the provided calibration is converted into a HistogramShader descriptor
  * containing:
  * - min / max: numeric bounds either taken directly from the `range` tuple or calculated from variant scores.
- * - title: resolved from the ACMG classification evidence strength (via `EVIDENCE_STRENGTHS_REVERSED`)
- *   when available; otherwise falls back to the range's `label`.
+ * - title: the range's `label`.
  * - color / thresholdColor: both derived from `getRangeColor(range)` to ensure visual consistency.
  * - align: fixed to `'center'` for consistent label placement.
  * - startOpacity / stopOpacity: fixed opacity values (0.15 → 0.05) establishing a subtle gradient.
@@ -79,9 +50,7 @@ export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
  * - This function assumes that variant scores are numeric and filters out any non-numeric or NaN values.
  * - The color derivation logic is centralized in `getRangeColor` to maintain consistency across the application.
  */
-export function prepareCalibrationsForHistogram(
-  scoreCalibrations: components['schemas']['ScoreCalibration']
-): HistogramShader[] {
+export function prepareCalibrationsForHistogram(scoreCalibrations: ScoreCalibration): HistogramShader[] {
   const preparedCalibrations: HistogramShader[] = []
 
   if (!scoreCalibrations.functionalClassifications || scoreCalibrations.functionalClassifications.length === 0) {
@@ -111,36 +80,11 @@ export function prepareCalibrationsForHistogram(
 }
 
 /**
- * Derives the display color associated with a functional range classification.
- *
- * The color returned depends on the `classification` property of the supplied
- * `functionalClassification` object:
- * - `'normal'`        => NORMAL_RANGE_DEFAULT_COLOR
- * - `'abnormal'`      => ABNORMAL_RANGE_DEFAULT_COLOR
- * - `'not_specified'` => NOT_SPECIFIED_RANGE_DEFAULT_COLOR
- * - any other value   => `'#000000'` (fallback)
- *
- * This utility centralizes the mapping logic so UI components can remain
- * agnostic of the underlying color constants.
- *
- * @param range The functional range whose `classification` determines the color.
- * @returns A hex color string representing the classification.
- * @example
- * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
- * @remarks If new classifications are introduced, extend this function to handle them explicitly.
+ * Derives the histogram range-fill color for a functional range from the shared functional-impact
+ * vocabulary (keyed by its `functionalClassification`). Falls back to black for an unknown value.
  */
-export function getClassificationColor(
-  range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-): string {
-  if (range.functionalClassification === 'normal') {
-    return NORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.functionalClassification === 'abnormal') {
-    return ABNORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.functionalClassification === 'not_specified') {
-    return NOT_SPECIFIED_RANGE_DEFAULT_COLOR
-  } else {
-    return '#000000'
-  }
+export function getClassificationColor(range: ScoreCalibrationFunctionalClassification): string {
+  return FUNCTIONAL_CLASSIFICATIONS[range.functionalClassification as FunctionalClassification]?.rangeColor ?? '#000000'
 }
 
 /**
@@ -201,7 +145,7 @@ export function shaderOverlapsBin(range: HistogramShader, bin: HistogramBin): bo
  * - Upper bound check uses <= if inclusive, < if exclusive
  */
 export function functionalClassificationContainsVariant(
-  functionalClassification: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'],
+  functionalClassification: ScoreCalibrationFunctionalClassification,
   variantScore: number | null
 ): boolean {
   if (variantScore === null) {
@@ -222,6 +166,117 @@ export function functionalClassificationContainsVariant(
   return lowerOk && upperOk
 }
 
+/** Per-range tally of the controls the calibration files under that range. */
+export interface RangeControlTally {
+  pathogenic: number
+  benign: number
+}
+
+/**
+ * A calibration's controls placed into its own ranges, plus the totals that summarize how well those
+ * placements agree with each control's clinical status.
+ *
+ * Placement is per range rather than per abnormal/normal band: a calibration commonly carries several
+ * ranges of the same classification (PS3_strong, PS3_moderate, ...), and which one a control lands in
+ * is still informative. Concordance re-aggregates across them for the headline figure.
+ */
+export interface ControlPlacements {
+  /**
+   * Tally per range, keyed by the range object itself so callers may sort or chunk their ranges
+   * freely. Every range passed in is present, so lookups never miss.
+   */
+  byRange: Map<ScoreCalibrationFunctionalClassification, RangeControlTally>
+  pathogenicTotal: number
+  benignTotal: number
+  /** Controls landing in a range whose classification matches their clinical status. */
+  concordant: number
+  /** Controls landing in a range whose classification contradicts their clinical status. */
+  discordant: number
+  /** Controls landing in a range that carries no abnormal/normal classification. */
+  unclassified: number
+  /** Controls the calibration files under none of its ranges. */
+  unplaced: number
+  /** Controls that landed in some range — the sum of every per-range tally. */
+  placedTotal: number
+}
+
+/**
+ * Places a calibration's controls into its ranges from each control's server-resolved placement, and
+ * tallies how well those placements agree with the controls' clinical status.
+ *
+ * `functionalClassificationId` is the range the calibration files a control's variant under, resolved
+ * server-side from stored bin membership (see `SavedCalibrationControl`). It covers class-based
+ * calibrations too, where a range is a named class from the author's uploaded file with no numeric
+ * interval to test a score against.
+ *
+ * Controls whose `functionalClassificationId` is null, or names a range this calibration does not
+ * carry, are counted as `unplaced` — the calibration files them under none of its ranges.
+ *
+ * Performance: O(controls), plus one pass over the ranges to index them by id.
+ */
+export function buildControlPlacements(
+  controls:
+    | {clinicalStatus: CalibrationControlStatus; functionalClassificationId?: number | null}[]
+    | null
+    | undefined,
+  functionalClassifications: ScoreCalibrationFunctionalClassification[] | null | undefined
+): ControlPlacements {
+  const ranges = functionalClassifications ?? []
+  const byRange = new Map<ScoreCalibrationFunctionalClassification, RangeControlTally>()
+  const rangeById = new Map<number, ScoreCalibrationFunctionalClassification>()
+  for (const range of ranges) {
+    byRange.set(range, {pathogenic: 0, benign: 0})
+    if (range.id != null) {
+      rangeById.set(range.id, range)
+    }
+  }
+
+  const placements: ControlPlacements = {
+    byRange,
+    pathogenicTotal: 0,
+    benignTotal: 0,
+    concordant: 0,
+    discordant: 0,
+    unclassified: 0,
+    unplaced: 0,
+    placedTotal: 0
+  }
+
+  for (const control of controls ?? []) {
+    if (control.clinicalStatus === 'pathogenic') {
+      placements.pathogenicTotal++
+    } else if (control.clinicalStatus === 'benign') {
+      placements.benignTotal++
+    } else {
+      continue
+    }
+
+    const classificationId = control.functionalClassificationId
+    const range = classificationId == null ? undefined : rangeById.get(classificationId)
+    if (!range) {
+      placements.unplaced++
+      continue
+    }
+
+    byRange.get(range)![control.clinicalStatus]++
+    placements.placedTotal++
+
+    const classification = range.functionalClassification
+    if (classification === 'abnormal' || classification === 'normal') {
+      // Pathogenic agrees with abnormal, benign with normal; the other two pairings contradict.
+      if ((control.clinicalStatus === 'pathogenic') === (classification === 'abnormal')) {
+        placements.concordant++
+      } else {
+        placements.discordant++
+      }
+    } else {
+      placements.unclassified++
+    }
+  }
+
+  return placements
+}
+
 /**
  * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
  * This is used to determine if pathogenicity annotations are available for variants in the score set.
@@ -230,7 +285,7 @@ export function functionalClassificationContainsVariant(
  * @returns True if any calibration has at least one functional classification with an evidence strength
  */
 export function hasPathogenicityCalibrations(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined,
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
   {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
 ): boolean {
   const scoreCalibrations = scoreSet?.scoreCalibrations
@@ -255,7 +310,7 @@ export function hasPathogenicityCalibrations(
  * @returns True if any calibration has at least one functional classification
  */
 export function hasFunctionalCalibrations(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined,
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
   {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
 ): boolean {
   const scoreCalibrations = scoreSet?.scoreCalibrations
@@ -277,11 +332,30 @@ export function hasFunctionalCalibrations(
  * failing that, the one marked `investigatorProvided`. Returns null if neither exists.
  */
 export function getPrimaryCalibration(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
-): components['schemas']['ScoreCalibration'] | null {
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined
+): ScoreCalibration | null {
   const calibrations = scoreSet?.scoreCalibrations
   if (!calibrations || calibrations.length === 0) return null
   return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
+}
+
+/**
+ * Picks the calibration to show by default: primary, else investigator-provided, else the first
+ * non-research-use-only, else any with functional classifications, else the first. Depends only on the
+ * score set's calibrations (not on variant scores), so it can resolve on the fast path.
+ */
+export function chooseDefaultCalibration(
+  scoreCalibrations: ScoreCalibration[] | null | undefined
+): ScoreCalibration | null {
+  if (!scoreCalibrations || scoreCalibrations.length === 0) return null
+  return (
+    scoreCalibrations.find((c) => c.primary === true) ||
+    scoreCalibrations.find((c) => c.investigatorProvided === true) ||
+    scoreCalibrations.find((c) => c.researchUseOnly !== true) ||
+    scoreCalibrations.find((c) => (c.functionalClassifications?.length ?? 0) > 0) ||
+    scoreCalibrations[0] ||
+    null
+  )
 }
 
 /**
@@ -289,9 +363,9 @@ export function getPrimaryCalibration(
  * classifications list. Returns null if not found.
  */
 export function findClassificationByType(
-  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  calibration: ScoreCalibration | null | undefined,
   type: string
-): components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'] | null {
+): ScoreCalibrationFunctionalClassification | null {
   return calibration?.functionalClassifications?.find((r) => r.functionalClassification === type) || null
 }
 
@@ -300,31 +374,12 @@ export function findClassificationByType(
  * or null if not available. Uses the specified precision (default 2).
  */
 export function getClassificationOddsPath(
-  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  calibration: ScoreCalibration | null | undefined,
   type: string,
   precision: number = 2
 ): string | null {
   const range = findClassificationByType(calibration, type)
   return range?.oddspathsRatio != null ? range.oddspathsRatio.toFixed(precision) : null
-}
-
-/**
- * Formats the ACMG evidence code from a functional classification's ACMG classification data.
- *
- * @param classification - A functional classification that may contain an `acmgClassification`
- *   with `criterion` (e.g. "PS3", "BS3") and `evidenceStrength` (e.g. "Strong", "Moderate").
- * @returns A formatted code like "PS3_STRONG", or an empty string if evidence data is missing.
- */
-export function formatEvidenceCode(
-  classification:
-    | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-    | null
-    | undefined
-): string {
-  if (!classification?.acmgClassification?.evidenceStrength) return ''
-  const criterion = classification.acmgClassification.criterion
-  const strength = classification.acmgClassification.evidenceStrength.toUpperCase()
-  return `${criterion}_${strength}`
 }
 
 export type CalibrationSaveResult =
@@ -343,20 +398,48 @@ export type CalibrationSaveResult =
  *
  * @param params.draft - The calibration draft object to serialize as JSON.
  * @param params.classesFile - Optional CSV file for class-based calibrations.
+ * @param params.controlsFile - Optional controls CSV; when present it replaces the calibration's
+ *                              controls, so the inline `controls` field is omitted to avoid the
+ *                              backend's inline-and-file conflict (422).
+ * @param params.controlsCleared - When true (and no controls file is supplied), sends an empty
+ *                                 controls list to clear all controls.
  * @param params.existingUrn - When provided the request becomes a PUT (update);
  *                             omit for a new calibration (POST).
  */
 export async function saveCalibration(params: {
   draft: any
   classesFile?: File | null
+  controlsFile?: File | null
+  controlsCleared?: boolean
   existingUrn?: string
 }): Promise<CalibrationSaveResult> {
-  const {draft, classesFile, existingUrn} = params
+  const {draft, classesFile, controlsFile, controlsCleared, existingUrn} = params
+
+  // Strip read-only/internal fields, then decide how controls are conveyed: via file, cleared to an
+  // empty list, or left unchanged (omitted). The loaded `controls` are SavedCalibrationControl rows,
+  // never a write payload, so they are never sent inline.
+  const payload = {...draft}
+  delete payload.__original
+  delete payload.controlsCount
+
+  // Disease is sent as the bare MONDO code (the server resolves the canonical term); the editor holds
+  // it as a {code, label} selection for display only. Null defaults to the generic disease server-side.
+  payload.disease = draft.disease?.code ?? null
+  if (controlsFile) {
+    delete payload.controls
+  } else if (controlsCleared) {
+    payload.controls = []
+  } else {
+    delete payload.controls
+  }
 
   const formData = new FormData()
-  formData.append('calibration_json', JSON.stringify(draft))
+  formData.append('calibration_json', JSON.stringify(payload))
   if (classesFile) {
     formData.append('classes_file', classesFile)
+  }
+  if (controlsFile) {
+    formData.append('controls_file', controlsFile)
   }
 
   try {

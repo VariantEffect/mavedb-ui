@@ -10,10 +10,10 @@
 
       <div
         v-if="$slots.actions"
-        class="flex flex-row justify-between gap-4 tablet:gap-5"
+        class="flex flex-row flex-wrap justify-between gap-x-4 gap-y-3 tablet:gap-x-5"
         :class="variant === 'toolbar' ? 'items-center' : 'items-start'"
       >
-        <div class="min-w-0 flex-1">
+        <div class="min-w-min flex-1">
           <h1 :class="titleClasses">{{ title }}</h1>
           <slot name="subtitle" />
           <slot />

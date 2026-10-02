@@ -54,6 +54,9 @@ VRS objects are available for download as JSON from any score set that has been 
 
 The [GA4GH Variant Annotation Specification (VA-Spec)](https://va-spec.ga4gh.org/) extends VRS with a framework for attaching annotations, classifications, and evidence to variants. MaveDB uses VA-Spec to export functional and clinical annotations derived from MAVE data and [score calibrations](score-calibrations.md).
 
+!!! note "Specification versions"
+    MaveDB emits VA-Spec 1.1, with Cat-VRS 1.1 categorical variants and VRS 2 alleles. It follows each specification's minor releases, and a minor release can rename fields: VA-Spec 1.1 renamed `focusVariant` to `focus`, `subjectVariant` to `subject`, and `objectCondition` and `objectSequenceFeature` to `object`. Check the version when parsing objects saved from an earlier MaveDB release.
+
 MaveDB produces three types of VA-Spec objects, each building on the previous:
 
 ```mermaid
@@ -93,6 +96,9 @@ The table below summarizes the **highest** layer a variant qualifies for. Higher
 
     Unlike the `type` field, `classification`, `direction`, and `evidenceOutcome` *code* values are lowercase — e.g. `pathogenic` / `benign` / `uncertain significance`, `normal` / `abnormal` / `indeterminate`, and `supports` / `disputes` / `neutral`. (ACMG criterion codes such as `PS3` / `BS3_supporting` keep their conventional casing.)
 
+!!! note "Proposition subjects"
+    A proposition's subject is the measured variant. When the measured variant has another representation (its genomic or transcript twin, or its protein consequence), the subject is a [Cat-VRS](https://cat-vrs.ga4gh.org/) `CategoricalVariant` over those representations; otherwise it is the bare VRS allele. A categorical subject's `mappings` cross-reference the ClinGen allele IDs, gnomAD variant IDs and ClinVar variation IDs of its members — `exactMatch` for records of the measured variant itself, `relatedMatch` for records of its protein consequence. Other nucleotide changes that encode the same protein change are left out of the subject and its mappings.
+
 ### Functional Impact Study Result
 
 A Functional Impact Study Result captures the raw output of a MAVE experiment for a single variant. It is the foundational VA-Spec object and does not require score calibrations.
@@ -111,7 +117,7 @@ Each Study Result contains:
     {
       "type": "ExperimentalVariantFunctionalImpactStudyResult",
       "description": "Variant effect study result for urn:mavedb:00000050-a-1#12345.",
-      "focusVariant": {
+      "focus": {
         "type": "Allele",
         "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK",
         "...": "..."
@@ -151,13 +157,13 @@ Each Functional Impact Statement contains:
       "proposition": {
         "type": "ExperimentalVariantFunctionalImpactProposition",
         "predicate": "impactsFunctionOf",
-        "subjectVariant": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
-        "objectGene": { "label": "MSH2" }
+        "subject": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
+        "object": { "primaryCoding": { "code": "MSH2", "system": "https://www.genenames.org/" } }
       },
       "classification": {
         "primaryCoding": {
           "code": "abnormal",
-          "system": "ga4gh-gks-term:experimental-var-func-impact-classification"
+          "system": "ga4gh-gkm-term:experimental-var-func-impact-classification"
         }
       },
       "hasEvidenceLines": [
@@ -167,7 +173,7 @@ Each Functional Impact Statement contains:
           "evidenceOutcome": {
             "primaryCoding": {
               "code": "abnormal",
-              "system": "ga4gh-gks-term:experimental-var-func-impact-classification"
+              "system": "ga4gh-gkm-term:experimental-var-func-impact-classification"
             }
           },
           "specifiedBy": {
@@ -214,8 +220,8 @@ Each Variant Pathogenicity Statement contains:
       "proposition": {
         "type": "VariantPathogenicityProposition",
         "predicate": "isCausalFor",
-        "subjectVariant": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
-        "objectCondition": { "label": "disease" }
+        "subject": { "id": "ga4gh:VA.2JOqpLMF9g5JoGRYoFLz5EMqCfFj1TxK", "...": "..." },
+        "object": { "conceptType": "Disease", "name": "disease or disorder", "...": "..." }
       },
       "classification": {
         "primaryCoding": {
@@ -297,28 +303,40 @@ Additionally, variants with a null score value cannot be exported as Functional 
 
 VRS and VA-Spec objects exported from MaveDB are self-contained but reference other data — sequences, score sets, and variant identifiers — that you can resolve through the MaveDB API. This section walks through the end-to-end workflow of downloading these objects and extracting the information they contain.
 
-### Downloading mapped variants
+### Downloading variant details
 
-Start by fetching the mapped variants for a score set. The response is a JSON array of VRS objects, each paired with its MaveDB scores.
+Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the `preMapped`/`postMapped` VRS pair, the GA4GH categorical variant, and the annotation map. The categorical variant's `mappings` cross-reference its members' ClinGen, gnomAD and ClinVar identifiers; frequencies and classifications are in the annotation map. Only mapped variants appear; a variant with no VRS is omitted.
+
+!!! note "Replaces `/mapped-variants`"
+
+    The older `GET /score-sets/{urn}/mapped-variants` endpoint has been removed and now returns `410 Gone`. Use `/variant-details` instead — it carries everything that export did, plus categorical-variant membership and annotations.
 
 === "Python"
 
     ```python
+    import json
+
     import requests
 
     BASE_URL = "https://api.mavedb.org/api/v1"
     urn = "urn:mavedb:00000003-a-1"
 
-    response = requests.get(f"{BASE_URL}/score-sets/{urn}/mapped-variants")
-    mapped_variants = response.json()
-
-    # Each entry contains a VRS object and associated scores
-    for mv in mapped_variants[:3]:
-        variant = mv["post_mapped"]
-        print(variant["id"], variant["expressions"][0]["value"])
+    # stream=True keeps the whole file out of memory; records arrive one per line.
+    with requests.get(f"{BASE_URL}/score-sets/{urn}/variant-details", stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
+            if not line:
+                continue
+            detail = json.loads(line)
+            variant = detail["postMapped"]
+            expressions = variant.get("expressions") or []
+            hgvs = expressions[0]["value"] if expressions else None
+            print(detail["urn"], variant.get("id"), hgvs)
     ```
 
 === "R"
+
+    This buffers the whole response; see the Python tab for line-at-a-time processing.
 
     ```r
     library(httr)
@@ -327,20 +345,22 @@ Start by fetching the mapped variants for a score set. The response is a JSON ar
     base_url <- "https://api.mavedb.org/api/v1"
     urn <- "urn:mavedb:00000003-a-1"
 
-    response <- GET(paste0(base_url, "/score-sets/", urn, "/mapped-variants"))
-    mapped_variants <- content(response, as = "parsed")
+    response <- GET(paste0(base_url, "/score-sets/", urn, "/variant-details"))
+    lines <- strsplit(content(response, as = "text", encoding = "UTF-8"), "\n")[[1]]
 
-    for (mv in mapped_variants[1:3]) {
-      variant <- mv$post_mapped
-      cat(variant$id, variant$expressions[[1]]$value, "\n")
+    for (line in head(Filter(nzchar, lines), 3)) {
+      detail <- fromJSON(line, simplifyVector = FALSE)
+      variant <- detail$postMapped
+      hgvs <- if (length(variant$expressions)) variant$expressions[[1]]$value else NA
+      cat(detail$urn, variant$id, hgvs, "\n")
     }
     ```
 
 === "curl"
 
     ```bash
-    curl -o mapped_variants.json \
-      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants
+    curl -o variant_details.ndjson \
+      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details
     ```
 
 ### Retrieving reference sequences (refget)

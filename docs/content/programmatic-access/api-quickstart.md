@@ -164,21 +164,22 @@ The search endpoint uses POST with a JSON body:
       -d '{"text": "BRCA1"}'
     ```
 
-### Download mapped variants (VRS format)
+### Download variant details (VRS format)
 
-For datasets with human targets, [mapped variants](../reference/variant-mapping.md) are available in [GA4GH VRS](https://vrs.ga4gh.org/) format:
+For datasets with human targets, the mapped [variant details](../reference/variant-mapping.md) are available in [GA4GH VRS](https://vrs.ga4gh.org/) format. The `/variant-details` endpoint is the bulk pair of `GET /variants/{urn}`: it streams [newline-delimited JSON](https://jsonlines.org/) (NDJSON), one `VariantDetail` per mapped variant, each carrying the flat `preMapped`/`postMapped` VRS pair, the full [GA4GH Cat-VRS](https://vrs.ga4gh.org/) categorical variant (its equivalence class of related alleles), and the VEP, gnomAD, and ClinVar annotations:
 
 === "Python"
 
     ```python
+    import json
     import requests
 
     response = requests.get(
-        "https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants"
+        "https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details"
     )
 
-    with open("mapped_variants.json", "w") as f:
-        f.write(response.text)
+    # NDJSON: one VariantDetail object per line.
+    variants = [json.loads(line) for line in response.text.splitlines() if line]
     ```
 
 === "R"
@@ -186,15 +187,15 @@ For datasets with human targets, [mapped variants](../reference/variant-mapping.
     ```r
     library(httr)
 
-    response <- GET("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants")
-    writeLines(content(response, as = "text"), "mapped_variants.json")
+    response <- GET("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details")
+    writeLines(content(response, as = "text"), "variant_details.ndjson")
     ```
 
 === "curl"
 
     ```bash
-    curl -o mapped_variants.json \
-      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/mapped-variants
+    curl -o variant_details.ndjson \
+      https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1/variant-details
     ```
 
 ### List score sets in an experiment
@@ -268,9 +269,57 @@ List and search endpoints support pagination using `limit` and `offset` query pa
 
 ## Rate Limits
 
-<!-- TODO: Document rate limits here once they are implemented (see GitHub issue https://github.com/VariantEffect/mavedb-api/issues/669). -->
+The API accepts up to 1,500 requests per IP address in any 5-minute window. Requests over the limit receive `429 Too Many Requests` with a `Retry-After` header giving the number of seconds to wait, and go through again once your request rate drops back under the limit. The limit applies per IP address, so requests from everyone behind a shared address, such as a campus network, count together.
 
-The MaveDB API does not currently enforce rate limits. However, please be considerate with API usage. For downloading many datasets at once, consider using the [bulk download archive](../finding-data/downloading.md#bulk-downloads-via-zenodo) instead.
+Score set data downloads (`/scores`, `/counts`, `/variants/data` and `/mapped-variants`) have a lower limit of 100 requests per IP address in any 5-minute window, because each one reads a whole score set. Requests over it receive the same `429` response and `Retry-After` header. When paging through a score set with `start` and `limit`, each page counts as one request, so use large pages.
+
+The API can also return `503 Service Unavailable` while it is busy, for example when other large score set downloads are being built. These responses usually include a `Retry-After` header; when one does not, wait a minute before retrying.
+
+Scripts that make many requests should wait and retry when they receive a `429` or `503`:
+
+=== "Python"
+
+    ```python
+    import time
+    import requests
+
+    def get_with_backoff(url, retries=5, **kwargs):
+        for _ in range(retries):
+            response = requests.get(url, **kwargs)
+            if response.status_code not in (429, 503):
+                break
+            time.sleep(int(response.headers.get("Retry-After", 60)))
+        return response
+
+    response = get_with_backoff("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1")
+    ```
+
+=== "R"
+
+    ```r
+    library(httr)
+
+    get_with_backoff <- function(url, retries = 5, ...) {
+      for (i in seq_len(retries)) {
+        response <- GET(url, ...)
+        if (!(status_code(response) %in% c(429, 503))) break
+        wait <- headers(response)[["retry-after"]]
+        Sys.sleep(if (is.null(wait)) 60 else as.numeric(wait))
+      }
+      response
+    }
+
+    response <- get_with_backoff("https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1")
+    ```
+
+=== "curl"
+
+    ```bash
+    # --retry retries a 429 or 503 after its Retry-After delay; --fail keeps the error body out of the output.
+    curl --fail --retry 5 https://api.mavedb.org/api/v1/score-sets/urn:mavedb:00000003-a-1
+    ```
+
+For downloading many datasets at once, use the [bulk download archive](../finding-data/downloading.md#bulk-downloads-via-zenodo) instead of looping over the API.
 
 ## Next Steps
 

@@ -39,7 +39,7 @@
           <p v-if="desc.supersededScoreSet.detail" class="wizard-help-detail">{{ desc.supersededScoreSet.detail }}</p>
         </div>
         <div :class="wizardMode && 'wizard-field'">
-          <MvFloatField :error="validationErrors.supersededScoreSetUrn" label="Supersedes">
+          <MvFloatField :error="validationErrors.supersededScoreSetUrn" label="Supersedes" required>
             <template #default="{id, invalid}">
               <AutoComplete
                 :id="id"
@@ -99,6 +99,7 @@
             :loading="metaAnalyzesLoading"
             :model-value="metaAnalyzesScoreSets"
             option-label="title"
+            required
             :suggestions="metaAnalyzesSuggestions"
             :typeahead="true"
             @complete="$emit('search-meta-analyzes', $event)"
@@ -121,7 +122,7 @@
           <div v-if="desc.experiment.detail" class="wizard-help-detail" v-html="desc.experiment.detail" />
         </div>
         <div :class="wizardMode && 'wizard-field'">
-          <MvFloatField :error="validationErrors.experiment" label="Experiment">
+          <MvFloatField :error="validationErrors.experiment" label="Experiment" required>
             <template #default="{id, invalid}">
               <PSelect
                 :id="id"

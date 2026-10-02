@@ -1,5 +1,6 @@
 <template>
   <span
+    v-key-term="'acmg'"
     class="inline-block rounded px-2 py-0.5 text-[11px] font-bold tracking-wide"
     :class="`mave-evidence-code-${normalizedCode}`"
   >

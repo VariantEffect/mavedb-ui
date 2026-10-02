@@ -59,7 +59,7 @@
         <div class="flex items-center justify-between border-b border-border-light bg-bg px-4 py-2 tablet:px-5">
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Scores</span>
           <span class="text-xs text-text-muted">
-            Showing {{ scoresRows.length }} of {{ scoresData.length.toLocaleString() }}
+            Showing {{ scoresRows.length }} of {{ totalLabel }}
           </span>
         </div>
         <div class="overflow-x-auto">
@@ -89,7 +89,7 @@
           class="flex items-center justify-between border-b border-border-light border-t bg-bg px-4 py-2 tablet:px-5">
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Counts</span>
           <span class="text-xs text-text-muted">
-            Showing {{ countsRows.length }} of {{ countsData.length.toLocaleString() }}
+            Showing {{ countsRows.length }} of {{ totalLabel }}
           </span>
         </div>
         <div class="overflow-x-auto">
@@ -187,6 +187,11 @@ export default defineComponent({
     },
     countsRows(): ScoresOrCountsRow[] {
       return this.hasCountData ? this.countsData.slice(0, MAX_ROWS) : []
+    },
+    // The preview fetches only MAX_ROWS, so the true total comes from the score set's variant count
+    // rather than the (truncated) fetched rows.
+    totalLabel(): string {
+      return (this.scoreSet.numVariants ?? this.scoresData.length).toLocaleString()
     }
   },
 
@@ -216,8 +221,8 @@ export default defineComponent({
       this.loading = true
       try {
         const [scoresRaw, countsRaw] = await Promise.all([
-          getScoreSetScoresPreview(this.scoreSet.urn),
-          getScoreSetCountsPreview(this.scoreSet.urn).catch(() => null)
+          getScoreSetScoresPreview(this.scoreSet.urn, MAX_ROWS),
+          getScoreSetCountsPreview(this.scoreSet.urn, MAX_ROWS).catch(() => null)
         ])
         this.scoresData = scoresRaw ? parseScoresOrCounts(scoresRaw, false) : []
         this.countsData = countsRaw ? parseScoresOrCounts(countsRaw, false) : []

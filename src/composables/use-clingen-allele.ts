@@ -12,7 +12,7 @@ export interface GenomicLocation {
 export interface UseClingenAlleleReturn {
   allele: Ref<ClinGenAllele | undefined>
   alleleName: ComputedRef<string | undefined>
-  genomicLocationText: ComputedRef<string | null>
+  allGenomicLocationsText: ComputedRef<string | null>
   genomicLocations: ComputedRef<GenomicLocation[]>
   clinvarAlleleIds: ComputedRef<string[]>
   fetchAllele: () => Promise<void>
@@ -54,21 +54,21 @@ export function useClingenAllele(clingenAlleleId: Ref<string>): UseClingenAllele
       }))
   )
 
-  const genomicLocationText = computed(() => {
+  // Every mapped reference-genome build a variant mapped to.
+  const allGenomicLocationsText = computed(() => {
     const locs = genomicLocations.value
     if (locs.length === 0) return null
-    const loc = locs[0]
-    return `chr${loc.chromosome}:${Number(loc.start).toLocaleString()} (${loc.referenceGenome})`
+    return locs
+      .map((loc) => `chr${loc.chromosome}:${Number(loc.start).toLocaleString()} (${loc.referenceGenome})`)
+      .join(', ')
   })
 
-  const clinvarAlleleIds = computed(() =>
-    (allele.value?.externalRecords?.ClinVarAlleles || []).map((a) => a.alleleId)
-  )
+  const clinvarAlleleIds = computed(() => (allele.value?.externalRecords?.ClinVarAlleles || []).map((a) => a.alleleId))
 
   return {
     allele,
     alleleName,
-    genomicLocationText,
+    allGenomicLocationsText,
     genomicLocations,
     clinvarAlleleIds,
     fetchAllele

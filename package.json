@@ -1,8 +1,10 @@
 {
   "name": "mavedb-ui",
-  "version": "2026.2.4.2",
+  "version": "2026.3.0",
   "private": true,
   "type": "module",
+  "os": ["darwin", "linux", "win32"],
+  "cpu": ["x64", "arm64"],
   "scripts": {
     "build": "./scripts/build-docs.sh && vite build --mode=${MODE=live}",
     "dev": "./scripts/build-docs.sh && vite --mode=${MODE=dev}",
@@ -22,7 +24,7 @@
     "@primevue/themes": "^4.4.1",
     "@tailwindcss/vite": "^4.1.16",
     "@unhead/vue": "^2.0.17",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "chart.js": "^4.4.1",
     "d3": "^7.9.0",
     "datatables.net": "1.11.5",
@@ -39,7 +41,8 @@
     "datatables.net-scroller-dt": "2.0.7",
     "datatables.net-select": "1.4.0",
     "datatables.net-select-dt": "1.4.0",
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.16",
+    "expiry-map": "^2.0.0",
     "fasta-js": "^1.0.1",
     "indefinite": "^2.4.3",
     "jquery": "^3.7.1",
@@ -51,7 +54,9 @@
     "linkifyjs": "^4.3.2",
     "lodash": "^4.18.1",
     "marked": "^11.1.0",
-    "moment": "^2.29.4",
+    "moment": "^2.31.0",
+    "p-limit": "^7.3.0",
+    "p-memoize": "^8.0.0",
     "papaparse": "^5.4.1",
     "pdbe-molstar": "^3.4.0",
     "pdfmake": "^0.2.8",
@@ -63,7 +68,7 @@
     "rest-client-vue": "^1.2.0-b2",
     "tailwindcss": "^4.1.16",
     "universal-base64url": "~1.1.0",
-    "uuid": "^9.0.1",
+    "uuid": "^11.1.1",
     "vee-validate": "^4.12.2",
     "vue": "^3.4.0",
     "vue-debounce": "^4.0.1",
@@ -78,10 +83,9 @@
     "@types/lodash": "^4.17.0",
     "@types/papaparse": "^5.3.14",
     "@types/pluralize": "^0.0.33",
-    "@types/uuid": "^9.0.8",
-    "@vitejs/plugin-basic-ssl": "^1.0.2",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-vue": "^6.0.1",
-    "@vitest/coverage-v8": "2.1.9",
+    "@vitest/coverage-v8": "^4.1.11",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.8.1",
@@ -90,8 +94,8 @@
     "openapi-typescript": "^6.7.5",
     "prettier": "^3.6.2",
     "sass-embedded": "^1.97.3",
-    "vite": "^5.4.21",
-    "vitest": "^2.1.9",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.11",
     "vue-tsc": "^3.0.7"
   },
   "optionalDependencies": {
@@ -101,5 +105,10 @@
     "> 1%",
     "last 2 versions",
     "not dead"
-  ]
+  ],
+  "overrides": {
+    "rest-client-vue": {
+      "uuid": "$uuid"
+    }
+  }
 }

@@ -10,12 +10,13 @@
     </div>
     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       <span v-if="gnomad.faf95Max !== null" class="text-text-primary"
-        >FAF95: <span class="font-mono text-text-muted">{{ formatFrequency(gnomad.faf95Max) }}</span>
-      </span>
+        >FAF95: <span class="font-mono text-text-muted">{{ formatFrequency(gnomad.faf95Max) }}</span></span
+      >
       <span v-else class="text-text-muted">FAF95 —</span>
     </div>
     <!-- Provenance sits at the bottom of the cell, so it lines up across the annotations card's columns
-         however tall the frequencies above it run. -->
+         however tall the frequencies above it run. The release is per record: one page (and one download)
+         can mix gnomAD releases, so this is never a global label. -->
     <div class="mt-auto text-[10px] text-text-muted">
       As of gnomAD {{ gnomad.dbVersion }} ·
       <a
@@ -32,14 +33,17 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
-import {gnomadVariantUrl, formatFrequency, type GnomadFrequency} from '@/lib/gnomad'
+import {gnomadVariantUrl, formatFrequency} from '@/lib/gnomad'
+import type {components} from '@/schema/openapi'
 
-/** Rich display of one gnomAD record: allele frequency, the AC/AN behind it, FAF95, and a deep link. */
+type GnomadAnnotation = components['schemas']['GnomadAnnotation']
+
+/** Rich display of one gnomAD annotation: allele frequency, the AC/AN behind it, FAF95, and a deep link. */
 export default defineComponent({
   name: 'MvGnomadSummary',
 
   props: {
-    gnomad: {type: Object as PropType<GnomadFrequency>, required: true}
+    gnomad: {type: Object as PropType<GnomadAnnotation>, required: true}
   },
 
   computed: {

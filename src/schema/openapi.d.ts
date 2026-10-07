@@ -46,9 +46,13 @@ export interface paths {
      * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
      *   equivalents surface as reverse-translation candidates.
      *
-     * This is a **public molecular resource**. It carries no score-set-level information. No scores,
-     * classifications, measurements, or version standing. Only the allele's own identity, its cross-layer
-     * equivalence class, and public reference annotations (VEP / gnomAD / ClinVar).
+     * The envelope carries no score-set-level information. No scores, classifications, measurements, or
+     * version standing. Only the allele's own identity, its cross-layer equivalence class, and public
+     * reference annotations (VEP / gnomAD / ClinVar).
+     *
+     * An allele is in MaveDB only because a score set's mapping produced it, so it is served only to
+     * callers who may read at least one such score set; otherwise the response is a 404, indistinguishable
+     * from an unknown identifier. The equivalence class is likewise limited to readable score sets.
      */
     get: operations["get_allele_api_v1_alleles__identifier__get"];
   };
@@ -7162,9 +7166,13 @@ export interface operations {
    * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
    *   equivalents surface as reverse-translation candidates.
    *
-   * This is a **public molecular resource**. It carries no score-set-level information. No scores,
-   * classifications, measurements, or version standing. Only the allele's own identity, its cross-layer
-   * equivalence class, and public reference annotations (VEP / gnomAD / ClinVar).
+   * The envelope carries no score-set-level information. No scores, classifications, measurements, or
+   * version standing. Only the allele's own identity, its cross-layer equivalence class, and public
+   * reference annotations (VEP / gnomAD / ClinVar).
+   *
+   * An allele is in MaveDB only because a score set's mapping produced it, so it is served only to
+   * callers who may read at least one such score set; otherwise the response is a 404, indistinguishable
+   * from an unknown identifier. The equivalence class is likewise limited to readable score sets.
    */
   get_allele_api_v1_alleles__identifier__get: {
     parameters: {

@@ -15,10 +15,11 @@
                 class="flex-1 !rounded-none !border-none !shadow-none"
                 placeholder="Search genes, titles, keywords..."
                 type="search"
+                @keydown.enter="search({explicit: true})"
               />
               <button
-                class="cursor-pointer whitespace-nowrap border-none bg-sage px-4.5 text-sm font-semibold text-dark hover:bg-sage-dark"
-                @click="search"
+                class="cursor-pointer whitespace-nowrap border-none bg-sage px-4.5 text-sm font-semibold text-text-dark hover:bg-sage-dark"
+                @click="search({explicit: true})"
               >
                 Search
               </button>
@@ -28,13 +29,19 @@
               score sets match the supplied filters
             </span>
           </div>
+          <p v-if="variantSearchRoute" class="text-sm text-text-secondary">
+            This looks like a variant identifier.
+            <router-link class="font-semibold text-sage-strong underline" :to="variantSearchRoute"
+              >Look it up in MaveMD &rarr;</router-link
+            >
+          </p>
           <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-1.5">
             <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Filters:</span>
             <button
               v-for="filter in activeFilters"
               :key="filter.key + ':' + filter.value"
               :aria-label="'Remove filter: ' + filter.label"
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-mint bg-sage-light px-3 py-0.5 text-xs font-semibold text-sage hover:bg-sage-light"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-mint bg-sage-light px-3 py-0.5 text-xs font-semibold text-sage-strong hover:bg-sage-light"
               @click="removeFilter(filter.key, filter.value)"
             >
               {{ filter.label }}
@@ -201,6 +208,13 @@
 
         <MvLoader v-if="loading" text="Loading score sets..." />
 
+        <MvErrorState
+          v-else-if="searchFailed"
+          description="Check your connection and try again. If the problem continues, the search service may be down."
+          title="Search failed"
+          @retry="search()"
+        />
+
         <div v-else class="flex flex-col gap-2.5">
           <div v-for="group in visibleGroups" :key="group.experimentUrn" class="mave-card overflow-hidden">
             <div class="px-5 pt-3 text-xs font-semibold text-gray-500">
@@ -216,18 +230,27 @@
           </div>
         </div>
 
-        <div v-if="!loading && visibleCount < groupedScoreSets.length" class="pt-5 text-center">
+        <div v-if="!loading && !searchFailed && visibleCount < groupedScoreSets.length" class="pt-5 text-center">
           <button
-            class="inline-block cursor-pointer rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage hover:bg-sage-light"
+            class="inline-block cursor-pointer rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage-strong hover:bg-sage-light"
             @click="visibleCount += 25"
           >
             Load more results ({{ groupedScoreSets.length - visibleCount }} remaining)
           </button>
         </div>
 
-        <div v-if="!loading && scoreSets.length === 0" class="py-16 text-center text-sm text-gray-500">
-          Type in the search box above or use the filters to find a data set.
-        </div>
+        <template v-if="!loading && !searchFailed && scoreSets.length === 0">
+          <MvEmptyState
+            v-if="searchText || hasActiveFilters"
+            action-label="Clear search and filters"
+            description="Try different words, or remove some filters."
+            title="No score sets match your search"
+            @action="clear"
+          />
+          <div v-else class="py-16 text-center text-sm text-text-muted">
+            Type in the search box above or use the filters to find a data set.
+          </div>
+        </template>
       </div>
     </div>
   </MvLayout>
@@ -241,7 +264,7 @@ import {useHead} from '@unhead/vue'
 import {textForTargetGeneCategory, type TargetGeneCategory} from '@/lib/target-genes'
 import {extractQueryParam} from '@/lib/router'
 import {
-  routeToVariantSearchIfVariantIsSearchable,
+  variantSearchRouteFor,
   buildSearchParams,
   SEARCH_RESULT_LIMIT,
   SORT_OPTIONS
@@ -255,6 +278,8 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import PSelect from 'primevue/select'
 import MvLayout from '@/components/layout/MvLayout.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
+import MvErrorState from '@/components/common/MvErrorState.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
 import MvSearchFilters from '@/components/common/MvSearchFilters.vue'
@@ -264,7 +289,7 @@ import type {ScoreSetsSearchFilterOptionsResponse} from '@/api/mavedb'
 export default defineComponent({
   name: 'SearchView',
 
-  components: {InputText, Message, MvLayout, MvLoader, MvScoreSetRow, MvSearchFilters, PSelect},
+  components: {InputText, Message, MvEmptyState, MvErrorState, MvLayout, MvLoader, MvScoreSetRow, MvSearchFilters, PSelect},
 
   setup: () => {
     useHead({title: 'Search data sets'})
@@ -281,6 +306,7 @@ export default defineComponent({
       filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']) as Array<string>,
       filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']) as Array<string>,
       loading: false,
+      searchFailed: false,
       filtersLoading: false,
       mobileFiltersOpen: false,
       searchText: this.$route.query.search as string | null,
@@ -309,6 +335,11 @@ export default defineComponent({
   computed: {
     hasActiveFilters(): boolean {
       return this.activeFilters.length > 0
+    },
+
+    /** Set when the text is a variant identifier; offered as a link rather than redirecting mid-typing. */
+    variantSearchRoute() {
+      return variantSearchRouteFor(this.searchText)
     },
 
     activeFilters(): ActiveFilter[] {
@@ -529,16 +560,20 @@ export default defineComponent({
   },
 
   mounted: async function () {
-    await this.search()
+    await this.search({explicit: true})
   },
 
   methods: {
-    search: async function () {
-      if (routeToVariantSearchIfVariantIsSearchable(this.searchText)) {
+    search: async function (options: {explicit?: boolean} = {}) {
+      // Only an explicit submit (or arriving with ?search=) leaves for MaveMD; a debounced pause on "rs12" must not.
+      const variantRoute = options.explicit ? variantSearchRouteFor(this.searchText) : null
+      if (variantRoute) {
+        this.$router.push(variantRoute)
         return
       }
 
-      this.$router.push({
+      // Replace, not push: debounced typing and filter clicks would otherwise add a history entry per change.
+      this.$router.replace({
         query: {
           ...(this.searchText && this.searchText.length > 0 ? {search: this.searchText} : {}),
           ...(this.filterControlledKeywords.length > 0 ? {'controlled-keyword': this.filterControlledKeywords} : {}),
@@ -565,6 +600,7 @@ export default defineComponent({
       this.searchAbortController?.abort()
       const controller = new AbortController()
       this.searchAbortController = controller
+      this.searchFailed = false
       try {
         const requestParams = {
           ...buildSearchParams(this),
@@ -581,6 +617,7 @@ export default defineComponent({
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
         console.error('Error while loading search results', err)
+        this.searchFailed = true
       }
     },
 

@@ -20,13 +20,13 @@
         </template>
         <template v-if="item" #actions>
           <PButton size="small" @click="validateAndSave">Save changes</PButton>
-          <PButton severity="secondary" size="small" @click="resetForm">Reset</PButton>
+          <PButton severity="secondary" size="small" @click="confirmReset">Reset</PButton>
           <PButton severity="warn" size="small" @click="viewItem">Cancel</PButton>
         </template>
       </MvPageHeader>
     </template>
 
-    <div class="py-7">
+    <div class="py-7" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
       <div class="space-y-5 max-w-screen-lg mx-auto">
         <!-- Experiment Information Card -->
         <div class="editor-card">
@@ -52,7 +52,7 @@
                 size="small"
                 @click="resetKeywords(item?.keywords)"
               />
-              <PButton icon="pi pi-times" label="Clear all" severity="danger" size="small" @click="clearKeywords" />
+              <PButton icon="pi pi-times" label="Clear all" severity="danger" size="small" @click="unsavedChanges.markDirty(); clearKeywords()" />
             </div>
           </div>
           <KeywordFields
@@ -119,6 +119,7 @@ import {getErrorResponse} from '@/lib/errors'
 import useItem from '@/composition/item.ts'
 import {useKeywordOptions} from '@/composables/use-keyword-options'
 import {normalizeDoiArray, normalizeRawReadArray, normalizeContributorArray} from '@/lib/form-helpers'
+import {useUnsavedChangesGuard} from '@/composables/use-unsaved-changes-guard'
 import {useValidationErrors} from '@/composables/use-validation-errors'
 import {parseApiValidationErrors} from '@/lib/form-validation'
 import type {components} from '@/schema/openapi'
@@ -169,7 +170,10 @@ export default defineComponent({
     // Extra metadata
     const extraMetadataField = useJsonFileField('extraMetadata')
 
+    const unsavedChanges = useUnsavedChangesGuard()
+
     return {
+      unsavedChanges,
       userProfile,
       ...useItem<Experiment>({itemTypeName: 'experiment'}),
       ...validation,
@@ -254,6 +258,8 @@ export default defineComponent({
 
   methods: {
     fileCleared(inputName: string) {
+      // File drops and dialog edits never reach the form root as input/change events.
+      this.unsavedChanges.markDirty()
       if (inputName === 'extraMetadataFile') {
         this.extraMetadataField.onClear()
         this.clearClientError('extraMetadata')
@@ -261,6 +267,7 @@ export default defineComponent({
     },
 
     async fileSelected(inputName: string, event: FileUploadSelectEvent) {
+      this.unsavedChanges.markDirty()
       if (inputName === 'extraMetadataFile') {
         await this.extraMetadataField.onSelect(event)
         if (this.extraMetadataField.error.value) {
@@ -269,6 +276,10 @@ export default defineComponent({
           this.clearClientError('extraMetadata')
         }
       }
+    },
+
+    async confirmReset() {
+      if (await this.unsavedChanges.confirmDiscard()) this.resetForm()
     },
 
     resetForm() {
@@ -285,6 +296,7 @@ export default defineComponent({
       }
       this.resetKeywords(this.item?.keywords as Parameters<typeof this.resetKeywords>[0])
       this.clearValidationState()
+      this.unsavedChanges.markClean()
     },
 
     async save() {
@@ -324,6 +336,7 @@ export default defineComponent({
       if (response.status === 200) {
         const savedItem = response.data
         this.clearValidationState()
+        this.unsavedChanges.markClean()
         this.$router.replace({path: `/experiments/${savedItem.urn}`})
         this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
       } else if (response.data?.detail) {

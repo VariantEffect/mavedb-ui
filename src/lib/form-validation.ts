@@ -49,6 +49,24 @@ export function parseApiValidationErrors(detail: any): Record<string, string> | 
 }
 
 /**
+ * Client-side errors for required fields that are still empty, keyed like server validation errors so the field
+ * components display them inline. A value counts as empty when it is null/undefined, a blank string, or an empty
+ * array.
+ */
+export function missingRequiredFieldErrors(
+  fields: Record<string, unknown>,
+  message = 'This field is required.'
+): ValidationErrors {
+  const errors: ValidationErrors = {}
+  for (const [key, value] of Object.entries(fields)) {
+    const empty =
+      value == null || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0)
+    if (empty) errors[key] = message
+  }
+  return errors
+}
+
+/**
  * Scroll to and focus the first element with an error indicator.
  * Looks for our error classes, PrimeVue's invalid class, or PrimeVue error messages.
  */

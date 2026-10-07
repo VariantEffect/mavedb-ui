@@ -138,6 +138,7 @@ Key composables:
 - `use-calibration-editor.ts` — draft calibration state, dirty tracking, validation, and save logic
 - `use-calibration-dialog.ts` — calibration editor dialog open/close state
 - `use-json-file-field.ts` — JSON file upload field with parsing and validation
+- `use-unsaved-changes-guard.ts` — confirms before a route change, reload or reset discards form input (creators and editors). An exception to the no-lifecycle-coupling rule: it registers a route-leave guard and a `beforeunload` listener
 - `entity-cache.ts` — shared reactive cache for entity lookups (score sets, experiments) with TTL and deduplication
 - `scoped-id.ts` — generates unique IDs for form accessibility
 

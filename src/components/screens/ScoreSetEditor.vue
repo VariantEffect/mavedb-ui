@@ -20,13 +20,13 @@
         </template>
         <template v-if="item" #actions>
           <PButton size="small" @click="validateAndSave()">Save changes</PButton>
-          <PButton severity="secondary" size="small" @click="resetForm">Reset</PButton>
+          <PButton severity="secondary" size="small" @click="confirmReset">Reset</PButton>
           <PButton severity="warn" size="small" @click="viewItem">Cancel</PButton>
         </template>
       </MvPageHeader>
     </template>
 
-    <div v-if="itemId && itemStatus === 'Loaded' && item" class="mx-auto max-w-[1000px] py-7">
+    <div v-if="itemId && itemStatus === 'Loaded' && item" class="mx-auto max-w-[1000px] py-7" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
       <div class="space-y-5">
         <!-- Parent experiment and context -->
         <div class="editor-card">
@@ -274,6 +274,7 @@ import {useAutocomplete} from '@/composables/use-autocomplete'
 import {useJsonFileField, type JsonFileInputName} from '@/composables/use-json-file-field'
 import {usePublicationIdentifiers} from '@/composables/use-publication-identifiers'
 import {type TargetEditorRef} from '@/composables/use-target-gene'
+import {useUnsavedChangesGuard} from '@/composables/use-unsaved-changes-guard'
 import {useValidationErrors} from '@/composables/use-validation-errors'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item.ts'
@@ -326,7 +327,10 @@ export default defineComponent({
     const scoreColumnsMetadataField = useJsonFileField('scoreColumnsMetadata')
     const countColumnsMetadataField = useJsonFileField('countColumnsMetadata')
 
+    const unsavedChanges = useUnsavedChangesGuard()
+
     return {
+      unsavedChanges,
       ...useFormatters(),
       ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
       ...publications,
@@ -483,15 +487,18 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     onTargetAdded(target: TargetGene) {
+      this.unsavedChanges.markDirty()
       this.targetGenes.push(_.clone(target))
       this.targetEditorVisible = false
     },
 
     targetDeleted(idx: number) {
+      this.unsavedChanges.markDirty()
       this.targetGenes.splice(idx, 1)
     },
 
     targetsCleared() {
+      this.unsavedChanges.markDirty()
       this.targetGenes = []
     },
 
@@ -509,6 +516,8 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     fileCleared(inputName: JsonFileInputName) {
+      // File drops and dialog edits never reach the form root as input/change events.
+      this.unsavedChanges.markDirty()
       this.jsonToDisplay = null
       const fieldMap = {
         extraMetadataFile: this.extraMetadataField,
@@ -524,6 +533,7 @@ export default defineComponent({
     },
 
     async fileSelected(inputName: JsonFileInputName, event: FileUploadSelectEvent) {
+      this.unsavedChanges.markDirty()
       const fieldMap = {
         extraMetadataFile: {field: this.extraMetadataField, key: 'extraMetadata'},
         scoreColumnsMetadataFile: {field: this.scoreColumnsMetadataField, key: 'scoreColumnsMetadata'},
@@ -544,6 +554,10 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form management
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    async confirmReset() {
+      if (await this.unsavedChanges.confirmDiscard()) this.resetForm()
+    },
 
     resetForm() {
       if (!this.item) return
@@ -572,6 +586,7 @@ export default defineComponent({
         this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
       }
       this.clearValidationState()
+      this.unsavedChanges.markClean()
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -650,6 +665,7 @@ export default defineComponent({
 
       if (response.status === 200) {
         this.clearValidationState()
+        this.unsavedChanges.markClean()
         this.$router.replace({path: `/score-sets/${this.item.urn}`})
         this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
       } else if (response.data?.detail) {

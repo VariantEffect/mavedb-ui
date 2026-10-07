@@ -24,11 +24,11 @@
         <span class="hidden" :data-cb="storeChoose(chooseCallback)" />
       </template>
       <template #empty>
-        <div class="file-drop-prompt" @click="triggerChoose">
-          <i class="pi pi-upload file-drop-icon" />
-          <p class="file-drop-text">{{ emptyText }}</p>
-          <p class="file-drop-browse">or click to browse</p>
-        </div>
+        <button :aria-label="`Choose file: ${label}`" class="file-drop-prompt" type="button" @click="triggerChoose">
+          <i aria-hidden="true" class="pi pi-upload file-drop-icon" />
+          <span class="file-drop-text">{{ emptyText }}</span>
+          <span class="file-drop-browse">or click to browse</span>
+        </button>
       </template>
     </FileUpload>
     <MvFieldError :id="errorId" :error="error" />
@@ -172,24 +172,37 @@ export default defineComponent({
 }
 
 .file-drop-prompt {
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   padding: 8px 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.file-drop-prompt:focus-visible {
+  outline: 2px solid var(--color-sage-strong);
+  outline-offset: 2px;
 }
 
 .file-drop-icon {
   font-size: 1.5rem;
-  color: #ccc;
+  color: var(--color-text-muted);
   margin-bottom: 6px;
 }
 
 .file-drop-text {
   font-size: 13px;
   font-weight: 600;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .file-drop-browse {
   font-size: 12px;
-  color: #bbb;
+  color: var(--color-text-muted);
 }
 </style>

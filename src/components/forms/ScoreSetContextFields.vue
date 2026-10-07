@@ -137,7 +137,13 @@
               >
                 <template #option="slotProps"> {{ slotProps.option.urn }}: {{ slotProps.option.title }} </template>
                 <template #empty>
-                  <div class="p-2.5 text-center">No experiments found.</div>
+                  <div class="p-2.5 text-center">
+                    You don't have any experiments yet.
+                    <router-link class="font-semibold text-sage-strong underline" :to="{name: 'createExperiment'}"
+                      >Create an experiment</router-link
+                    >
+                    first, then add this score set to it.
+                  </div>
                 </template>
               </PSelect>
             </template>

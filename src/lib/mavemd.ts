@@ -129,7 +129,8 @@ export interface AlleleResult {
  * Fold one allele's spellings (transcript / genomic / MANE coordinates) into another. Used to collapse a
  * protein change's several registered transcript alleles onto ONE search result — the change is a single
  * finding, and its transcript spellings are representations to list, not separate hits. MANE coordinates
- * are deduplicated so shared entries aren't repeated.
+ * are deduplicated so shared entries aren't repeated. The genome-build HGVS headline stays the target's own:
+ * one transcript's genomic spelling is a single encoding, not the protein change's location.
  */
 export function mergeAlleleSpellings(target: AlleleResult, source: AlleleResult): void {
   const seen = new Set(target.maneCoordinates.map((c) => `${c.sequenceType}|${c.database}|${c.hgvs}`))
@@ -142,8 +143,6 @@ export function mergeAlleleSpellings(target: AlleleResult, source: AlleleResult)
   }
   target.transcriptAlleles.push(...source.transcriptAlleles)
   target.genomicAlleles.push(...source.genomicAlleles)
-  target.grch38Hgvs ??= source.grch38Hgvs
-  target.grch37Hgvs ??= source.grch37Hgvs
 }
 
 /** Extract the trailing path segment from a URL (e.g. ClinGen allele ID from its URL). */

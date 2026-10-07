@@ -78,11 +78,11 @@ describe('mergeAlleleSpellings', () => {
     expect(target.maneCoordinates).toHaveLength(1)
   })
 
-  it('fills a missing genome-build HGVS from the source without overwriting a present one', () => {
-    const target = result({grch38Hgvs: 'NC_x:g.100A>T', grch37Hgvs: null})
-    mergeAlleleSpellings(target, result({grch38Hgvs: 'other', grch37Hgvs: 'NC_y:g.200A>T'}))
-    expect(target.grch38Hgvs).toBe('NC_x:g.100A>T') // kept
-    expect(target.grch37Hgvs).toBe('NC_y:g.200A>T') // filled
+  it("keeps the target's genome-build HGVS rather than borrowing one encoding's", () => {
+    const target = result({grch38Hgvs: null, grch37Hgvs: null})
+    mergeAlleleSpellings(target, result({grch38Hgvs: 'NC_x:g.100A>T', grch37Hgvs: 'NC_y:g.200A>T'}))
+    expect(target.grch38Hgvs).toBeNull()
+    expect(target.grch37Hgvs).toBeNull()
   })
 })
 

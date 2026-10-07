@@ -45,7 +45,7 @@
 
     <div class="mx-auto w-full max-w-[800px] px-6 pb-10 pt-5">
       <!-- Profile -->
-      <div class="mb-3 overflow-hidden rounded-lg border border-border bg-surface">
+      <div class="mave-card mb-3 overflow-hidden">
         <div class="border-b border-border-light px-4 py-3 text-sm font-bold text-text-dark">Profile</div>
         <div class="px-4 py-3.5">
           <MvFloatField
@@ -77,7 +77,7 @@
       </div>
 
       <!-- User API Key -->
-      <div class="mb-3 overflow-hidden rounded-lg border border-border bg-surface">
+      <div class="mave-card mb-3 overflow-hidden">
         <div class="border-b border-border-light px-4 py-3 text-sm font-bold text-text-dark">User API Key</div>
         <div class="px-4 py-3.5">
           <MvAccessKeyRow
@@ -90,7 +90,7 @@
       </div>
 
       <!-- Acting Roles (only shown for users with elevated roles) -->
-      <div v-if="hasElevatedRoles" class="mb-3 overflow-hidden rounded-lg border border-border bg-surface">
+      <div v-if="hasElevatedRoles" class="mave-card mb-3 overflow-hidden">
         <div class="border-b border-border-light px-4 py-3 text-sm font-bold text-text-dark">Acting Roles</div>
         <div class="px-4 py-3.5">
           <div class="flex flex-col gap-2.5">
@@ -121,7 +121,7 @@
       </div>
 
       <!-- Role Based API Keys (only shown for users with elevated roles) -->
-      <div v-if="hasElevatedRoles" class="mb-3 overflow-hidden rounded-lg border border-border bg-surface">
+      <div v-if="hasElevatedRoles" class="mave-card mb-3 overflow-hidden">
         <div class="border-b border-border-light px-4 py-3 text-sm font-bold text-text-dark">Role Based API Keys</div>
         <div class="px-4 py-3.5">
           <div v-for="(role, index) in user?.roles" :key="role">

@@ -12,9 +12,7 @@
       role="complementary"
     >
       <!-- Header -->
-      <div
-        class="mave-gradient-bar relative flex items-center gap-2 overflow-hidden border-b border-border px-5 py-3.5"
-      >
+      <div class="relative flex items-center gap-2 overflow-hidden border-b border-border px-5 py-3.5">
         <i class="pi pi-key text-sm text-sage" />
         <span class="text-sm font-bold uppercase tracking-[0.5px] text-text-primary">{{ title }}</span>
         <button
@@ -34,18 +32,17 @@
           :id="`key-${section.id}`"
           :key="section.id"
           class="scroll-mt-4 border-b border-border-light py-3 first:pt-0 last:border-b-0"
-          :class="{'key-flash': highlighted === section.id}"
+          :class="{'mave-flash': highlighted === section.id}"
         >
           <h3 class="mb-1 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">{{ section.title }}</h3>
           <p v-if="section.gloss" class="mb-2 text-xs-plus leading-snug text-text-secondary">{{ section.gloss }}</p>
           <dl class="flex flex-col gap-1.5">
             <div v-for="term in section.terms" :key="term.label" class="flex flex-col gap-0.5">
+              <!-- Only terms that appear on the page as tags are drawn as one; the rest are words in labels and
+                   sentences, so a chip would send readers looking for a tag that doesn't exist. -->
               <dt>
-                <span
-                  class="inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3px]"
-                  :class="term.class ?? 'bg-border-light text-text-muted'"
-                  >{{ term.label }}</span
-                >
+                <span v-if="term.class" class="mave-tag" :class="term.class">{{ term.label }}</span>
+                <span v-else class="text-xs-plus font-semibold text-text-primary">{{ term.label }}</span>
               </dt>
               <dd class="text-xs-plus leading-snug text-text-secondary">{{ term.definition }}</dd>
             </div>
@@ -161,20 +158,6 @@ export default defineComponent({
   .key-drawer-leave-to {
     opacity: 1;
     transform: translateX(100%);
-  }
-}
-
-/* Transient highlight when a badge deep-links to a section. */
-.key-flash {
-  animation: key-flash 1.6s ease;
-}
-@keyframes key-flash {
-  0%,
-  40% {
-    background: var(--color-sage-light, rgba(122, 158, 126, 0.18));
-  }
-  100% {
-    background: transparent;
   }
 }
 </style>

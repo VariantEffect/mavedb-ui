@@ -144,10 +144,7 @@
       </Teleport>
 
       <!-- DESKTOP FILTER SIDEBAR -->
-      <aside
-        aria-label="Filter score sets"
-        class="sticky top-20 hidden overflow-hidden rounded-lg border border-gray-200 bg-white md:block"
-      >
+      <aside aria-label="Filter score sets" class="mave-card sticky top-20 hidden overflow-hidden md:block">
         <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <span class="text-xs font-bold uppercase tracking-wide text-gray-400">Filters</span>
           <button class="cursor-pointer text-[0.6875rem] font-semibold text-gray-400 hover:text-red-600" @click="clear">
@@ -205,11 +202,7 @@
         <MvLoader v-if="loading" text="Loading score sets..." />
 
         <div v-else class="flex flex-col gap-2.5">
-          <div
-            v-for="group in visibleGroups"
-            :key="group.experimentUrn"
-            class="overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
-          >
+          <div v-for="group in visibleGroups" :key="group.experimentUrn" class="mave-card overflow-hidden">
             <div class="px-5 pt-3 text-xs font-semibold text-gray-500">
               Experiment:
               <router-link class="text-link" :to="{name: 'experiment', params: {urn: group.experimentUrn}}">

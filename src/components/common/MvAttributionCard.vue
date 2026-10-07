@@ -1,5 +1,5 @@
 <template>
-  <div class="mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white p-5">
+  <div class="mave-card relative overflow-hidden p-5">
     <h3 v-if="title" class="mave-section-title">{{ title }}</h3>
     <div class="flex flex-col">
       <MvDetailRow v-if="creationDate" label="Created">

@@ -9,11 +9,7 @@
     <div class="mx-auto flex max-w-[800px] flex-col gap-7 py-9">
       <!-- Project cards -->
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div
-          v-for="project in projects"
-          :key="project.title"
-          class="flex flex-col gap-2 rounded-lg border border-border bg-white px-5 pb-4.5 pt-5.5"
-        >
+        <div v-for="project in projects" :key="project.title" class="mave-card flex flex-col gap-2 px-5 pb-4.5 pt-5.5">
           <div class="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" :class="project.iconBg">
             <FontAwesomeIcon class="text-lg" :icon="project.icon" :style="{color: project.iconColor}" />
           </div>
@@ -50,7 +46,7 @@
       </div>
 
       <!-- API docs callout -->
-      <div class="rounded-lg border border-border bg-white px-8 py-7">
+      <div class="mave-card px-8 py-7">
         <h2 class="mb-4 text-lg font-bold text-sage">REST API</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           MaveDB provides a REST API for programmatic access to score sets, experiments, and variants. Interactive

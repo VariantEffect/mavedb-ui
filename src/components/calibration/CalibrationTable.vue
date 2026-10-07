@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden rounded-lg border border-border bg-surface">
+  <div class="mave-card overflow-hidden">
     <!-- Title bar -->
     <div class="flex items-center gap-3 border-b border-border bg-bg px-3.5 py-3 text-lg font-bold text-sage">
       {{ calibrationNameToDisplay }}
@@ -123,11 +123,7 @@
                 :classification="range.functionalClassification"
                 :compact="true"
               />
-              <span
-                v-else
-                class="inline-block rounded px-2.5 py-0.5 text-xs font-bold tracking-wide mave-classification-not_specified"
-                >Not Provided</span
-              >
+              <span v-else class="mave-tag mave-classification-not_specified">Not Provided</span>
             </td>
             <td
               v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"

@@ -39,7 +39,7 @@
       <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="$emit('update:experimentFilter', ['all']); $emit('update:experimentSearch', '')" />
     </MvEmptyState>
 
-    <div v-else class="overflow-hidden rounded-lg border border-border bg-white">
+    <div v-else class="mave-card overflow-hidden">
       <!-- Desktop table (md+) -->
       <table class="hidden w-full table-fixed border-collapse text-sm tablet:table">
         <thead>

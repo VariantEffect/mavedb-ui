@@ -1,7 +1,7 @@
 <template>
   <MvLayout>
     <div v-if="userIsAuthenticated && item" class="mx-auto max-w-[640px] px-6 py-[60px]">
-      <div class="mave-gradient-bar relative overflow-hidden rounded-xl border border-border bg-white px-9 py-10 text-center">
+      <div class="mave-card relative overflow-hidden px-9 py-10 text-center">
         <MvDecorativeBars variant="leading" />
 
         <h2 class="mb-2 mt-6 text-[22px] font-bold text-text-dark">Your score set has been saved!</h2>

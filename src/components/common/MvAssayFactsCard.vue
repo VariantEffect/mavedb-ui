@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h3 class="mave-section-title">Assay facts</h3>
-    <div v-if="scoreSet" class="mb-2.5 pb-2.5 border-b border-border">
+    <h3 v-if="showTitle" class="mave-section-title">Assay facts</h3>
+    <div v-if="scoreSet" class="mb-2.5 pb-2.5 border-b border-border-light">
       <div class="text-base font-semibold text-text-primary leading-[1.3] mb-0.5">
         <router-link
           v-if="linkTitle"
@@ -48,8 +48,8 @@
         </span>
       </MvDetailRow>
     </div>
-    <div class="mt-2 border-t border-border pt-2">
-      <div class="text-[11px] font-bold uppercase tracking-[0.4px] text-[#999] mb-1">Assay OddsPath</div>
+    <div class="mt-2 border-t border-border-light pt-2">
+      <div class="mave-label mb-1">Assay OddsPath</div>
       <template v-if="hasOddsPath">
         <div :class="gridClass">
           <MvDetailRow fallback="Not provided" label="OddsPath Normal">
@@ -101,6 +101,8 @@ export default defineComponent({
     assayLevel: {type: String as PropType<string | null>, default: null},
     columns: {type: Number as PropType<1 | 2>, default: 2},
     linkTitle: {type: Boolean, default: true},
+    // False when an enclosing panel already titles the card.
+    showTitle: {type: Boolean, default: true},
     showUrn: {type: Boolean, default: false},
     scoreSet: {type: Object as PropType<ScoreSet>, default: null},
     variantUrn: {type: String, default: null}
@@ -112,7 +114,7 @@ export default defineComponent({
     },
     gridClass(): string {
       return this.columns === 2
-        ? 'assay-facts-grid assay-facts-grid--2col grid grid-cols-1 gap-x-8 tablet:grid-cols-2'
+        ? 'assay-facts-grid assay-facts-grid--2col grid grid-cols-1 tablet:grid-cols-2'
         : 'assay-facts-grid grid grid-cols-1 gap-x-8'
     },
     geneName(): string | null {
@@ -187,11 +189,16 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* In 2-col grid, the 2nd item is first in the right column — remove its inherited top border. Scoped to
-   the 2-col variant so the 1-col layout keeps its divider between every stacked row. */
+/* In the 2-col grid, a row's rule must run unbroken across both columns, so the columns sit flush (no column gap)
+   and the right column insets its content instead. The 2nd item heads the right column, so it drops the rule the
+   1-col layout gives every stacked row. */
 @media (min-width: 56rem) {
   .assay-facts-grid--2col > :nth-child(2) {
     border-top: none;
+  }
+
+  .assay-facts-grid--2col > :nth-child(even) {
+    padding-left: 2rem;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden rounded-lg border border-border bg-surface">
+  <div class="mave-card overflow-hidden">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5">
       <h3 class="mave-section-title">
         Variants preview

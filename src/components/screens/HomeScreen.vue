@@ -95,7 +95,7 @@
     <!-- Paths: Explore + Contribute -->
     <div class="mt-9 grid md:grid-cols-1 lg:grid-cols-2 gap-5">
       <!-- Explore -->
-      <div class="flex flex-col rounded-lg border border-border bg-white px-8 py-7">
+      <div class="mave-card flex flex-col px-8 py-7">
         <h2 class="mb-1.5 text-xl font-bold text-sage">Explore datasets</h2>
         <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
           Browse published datasets by gene, organism, or keyword. Over 2,700 datasets covering 700+ human genes from
@@ -121,7 +121,7 @@
       </div>
 
       <!-- Contribute -->
-      <div class="flex flex-col rounded-lg border border-border bg-white px-8 py-7">
+      <div class="mave-card flex flex-col px-8 py-7">
         <h2 class="mb-1.5 text-xl font-bold text-sage">Contribute data</h2>
         <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
           Upload your MAVE assay results to make functional variant data available to the community.
@@ -152,11 +152,7 @@
     <section aria-label="Featured collections" class="mb-9">
       <div class="mb-3.5 text-lg font-bold text-text-primary">Featured collections</div>
       <div class="grid grid-cols-2 gap-4">
-        <div
-          v-for="coll in FEATURED_COLLECTIONS"
-          :key="coll.title"
-          class="rounded-lg border border-border bg-white p-5"
-        >
+        <div v-for="coll in FEATURED_COLLECTIONS" :key="coll.title" class="mave-card p-5">
           <img
             :alt="coll.title"
             class="mb-3 block h-8 w-auto max-w-[120px] object-contain object-left"
@@ -172,7 +168,7 @@
     <!-- What's new -->
     <section aria-label="What's new" class="mb-9">
       <div class="mb-3.5 text-lg font-bold text-text-primary">What's new</div>
-      <div class="overflow-hidden rounded-lg border border-border bg-white">
+      <div class="mave-card overflow-hidden">
         <div
           v-for="(item, idx) in newsItems"
           :key="idx"
@@ -202,7 +198,7 @@
         <div class="text-lg font-bold text-text-primary">Recently published</div>
         <router-link class="text-sm text-link" to="/search">View all</router-link>
       </div>
-      <div class="overflow-hidden rounded-lg border border-border bg-white divide-y divide-border-light">
+      <div class="mave-card overflow-hidden divide-y divide-border-light">
         <MvScoreSetRow
           v-for="scoreSet in recentlyPublished"
           :key="scoreSet.urn"

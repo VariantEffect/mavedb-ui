@@ -30,10 +30,7 @@
       style="max-width: 900px"
     >
       <!-- Experiments list -->
-      <div
-        v-if="item.experiments && item.experiments.length > 0"
-        class="mt-6 overflow-hidden rounded-lg border border-border bg-white"
-      >
+      <div v-if="item.experiments && item.experiments.length > 0" class="mave-card mt-6 overflow-hidden">
         <div class="border-b border-border-light px-5 py-3.5">
           <span class="text-sm font-bold text-text-dark">Experiments ({{ item.experiments.length }})</span>
         </div>

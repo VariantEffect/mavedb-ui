@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-lg border border-border bg-white p-5">
+  <div class="mave-card p-5">
     <h3 class="mave-section-title">Download files</h3>
     <div class="flex flex-wrap gap-2">
       <PButton

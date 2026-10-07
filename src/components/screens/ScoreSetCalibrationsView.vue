@@ -38,7 +38,7 @@
             />
           </div>
           <!-- Mobile: collapsed menu -->
-          <MvRowActionMenu class="tablet:hidden" :actions="headerActions" />
+          <MvRowActionMenu :actions="headerActions" class="tablet:hidden" />
         </template>
       </MvPageHeader>
     </template>
@@ -54,11 +54,7 @@
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
         <div class="flex flex-col gap-4 tablet:hidden">
-          <div
-            v-for="cal in sortedCalibrations"
-            :key="cal.id"
-            class="relative overflow-hidden rounded-lg border border-border bg-white mave-gradient-bar"
-          >
+          <div v-for="cal in sortedCalibrations" :key="cal.id" class="mave-card relative overflow-hidden">
             <div class="px-4 py-4">
               <div class="mb-2 flex items-start gap-2">
                 <div class="min-w-0 flex-1">
@@ -102,7 +98,7 @@
         </div>
 
         <!-- ── DESKTOP: DataTable layout ─────────────────── -->
-        <div class="cal-card mave-gradient-bar hidden tablet:block">
+        <div class="cal-card hidden tablet:block">
           <DataTable
             v-model:expanded-rows="expandedRows"
             class="cal-datatable"

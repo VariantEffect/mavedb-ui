@@ -12,7 +12,7 @@
 
     <div class="mx-auto flex max-w-[800px] flex-col gap-7 py-9">
       <!-- What is a MAVE? -->
-      <div class="rounded-lg border border-border bg-white px-8 py-7">
+      <div class="mave-card px-8 py-7">
         <h2 class="mb-3 text-lg font-bold text-sage">What is a MAVE?</h2>
         <p class="mb-3 text-sm leading-relaxed text-text-secondary">
           Multiplexed Assays of Variant Effect (MAVEs) are experimental techniques — such as deep mutational scanning
@@ -29,7 +29,7 @@
       <!-- How data is organised -->
       <div>
         <h2 class="-ml-0.5 mb-3 text-sm font-bold text-text-primary">How data is organised</h2>
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 overflow-hidden rounded-lg border border-border bg-white">
+        <div class="mave-card grid md:grid-cols-2 lg:grid-cols-4 overflow-hidden">
           <div
             v-for="(step, idx) in DATA_MODEL_STEPS"
             :key="step.title"
@@ -49,11 +49,7 @@
       <div>
         <h2 class="-ml-0.5 mb-3 text-sm font-bold text-text-primary">Partners &amp; collaborators</h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div
-            v-for="partner in PARTNERS"
-            :key="partner.name"
-            class="flex flex-col gap-2 rounded-lg border border-border bg-white p-5"
-          >
+          <div v-for="partner in PARTNERS" :key="partner.name" class="mave-card flex flex-col gap-2 p-5">
             <img
               v-if="partner.logoSrc"
               :alt="partner.name"
@@ -79,7 +75,7 @@
       <!-- Sponsors -->
       <div>
         <h2 class="-ml-0.5 mb-3 text-sm font-bold text-text-primary">Sponsors</h2>
-        <div class="relative flex overflow-hidden rounded-lg border border-border bg-white">
+        <div class="mave-card relative flex overflow-hidden">
           <a
             aria-label="Zulip (opens in new tab)"
             class="relative ml-4 w-24 shrink-0"
@@ -109,7 +105,7 @@
       <!-- Team -->
       <div>
         <h2 class="-ml-0.5 mb-3 text-sm font-bold text-text-primary">Team</h2>
-        <div class="rounded-lg border border-border bg-white px-8 py-7">
+        <div class="mave-card px-8 py-7">
           <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
             MaveDB is developed and maintained by the
             <a class="text-link" href="https://faculty.washington.edu/dfowler/index.html">Variant Effects Lab</a> and
@@ -128,7 +124,7 @@
       <!-- Publications -->
       <div>
         <h2 class="-ml-0.5 mb-3 text-sm font-bold text-text-primary">Publications</h2>
-        <div class="overflow-hidden rounded-lg border border-border bg-white">
+        <div class="mave-card overflow-hidden">
           <div
             v-for="(pub, idx) in PUBLICATIONS"
             :key="idx"
@@ -153,7 +149,7 @@
       <!-- License & source code -->
       <div>
         <h2 class="-ml-0.5 mb-3 text-sm font-bold text-text-primary">License &amp; source code</h2>
-        <div class="rounded-lg border border-border bg-white px-8 py-7">
+        <div class="mave-card px-8 py-7">
           <p class="mb-3 text-sm leading-relaxed text-text-secondary">
             MaveDB is open source, released under the
             <a

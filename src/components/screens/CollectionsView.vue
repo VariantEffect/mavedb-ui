@@ -9,7 +9,7 @@
     </template>
 
     <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1200px">
-      <div class="flex flex-col items-center rounded-lg border border-border bg-white px-6 py-16 text-center">
+      <div class="mave-card flex flex-col items-center px-6 py-16 text-center">
         <MvDecorativeBars class="mb-5" variant="trailing" />
         <h2 class="mb-2 text-lg font-bold text-text-secondary">This page has moved</h2>
         <p class="mb-6 max-w-md text-sm leading-relaxed text-text-muted">

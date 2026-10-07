@@ -1,7 +1,7 @@
 <template>
   <div :class="plain ? 'flex h-full flex-col gap-0.5' : 'stat'">
     <!-- Label defaults to the score-set stat label; callers (e.g. the variant screen) may inject their own. -->
-    <slot name="label"><span v-key-term="'clinical'" class="stat-label">ClinVar</span></slot>
+    <slot name="label"><span v-key-term="'clinical'" class="mave-label w-fit">ClinVar</span></slot>
     <!-- Hard discordance: related variants carry both pathogenic and benign calls — no single call to show. -->
     <span v-if="headline.kind === 'conflicting'" class="stat-value text-sm font-semibold">
       Conflicting classifications
@@ -10,15 +10,19 @@
          lean but flags a co-occurring uncertain record (differentiating a plain VUS from ClinVar's own
          Conflicting verdict); a concordant call gets a quiet aside. Show the lean rather than hide it. -->
     <template v-else-if="headline.kind === 'call'">
-      <MvClinvarSummary :clinvar="headline.clinvar" :show-provenance="showHeadlineProvenance" />
+      <MvClinvarSummary
+        :clinvar="headline.clinvar"
+        :show-provenance="showHeadlineProvenance"
+        :show-release="showRelease"
+      />
       <span v-if="headline.note === 'soft-conflicting'" class="text-xs italic text-text-muted">
-        ClinVar marks a record with the same protein change as conflicting.
+        ClinVar marks a variant that encodes the same protein change as conflicting.
       </span>
       <span v-else-if="headline.note === 'soft-vus'" class="text-xs italic text-text-muted">
-        ClinVar marks a record with the same protein change as uncertain.
+        ClinVar marks a variant that encodes the same protein change as uncertain.
       </span>
       <span v-else-if="headline.note === 'concordant'" class="text-xs italic text-text-muted">
-        Representative of concordant records with the same protein change.
+        Representative of concordant records for variants that encode the same protein change.
       </span>
     </template>
     <!-- No usable call, but a ClinVar record exists on an allele (a `-`, e.g. a somatic/oncogenicity-only
@@ -28,11 +32,12 @@
       v-else-if="headline.kind === 'presence'"
       :clinvar="headline.record.clinvar"
       :show-provenance="showHeadlineProvenance"
+      :show-release="showRelease"
     />
     <!-- Nucleotide measurement with no ClinVar record of its own: be explicit rather than borrow a related
          allele's call. Related records (if any) are offered below as context, not promoted to a call. -->
     <span v-else-if="headline.kind === 'absent'" class="stat-value text-sm italic text-text-muted">
-      No ClinVar record for this variant
+      No ClinVar record
     </span>
     <span v-else class="stat-value">—</span>
 
@@ -54,8 +59,8 @@
       >
         <template v-if="isProjectedHeadline">
           <i class="pi pi-info-circle shrink-0 !text-xs not-italic" />
-          <span class="underline decoration-dotted"
-            >inferred from {{ underlyingClinvar.length }} related
+          <span class="whitespace-nowrap underline decoration-dotted"
+            >inferred from {{ underlyingClinvar.length }}
             {{ underlyingClinvar.length === 1 ? 'variant' : 'variants' }}</span
           >
         </template>
@@ -109,8 +114,8 @@ type SequenceLevel = components['schemas']['SequenceLevel']
  *  - the measured allele's own call wins as the headline, with its link inline;
  *  - at *protein* level, an unannotated measured allele projects a representative from its encodings
  *    (flagged for soft/hard discordance); the popover lists the encodings it folded over;
- *  - at *nucleotide* level, an unannotated measured allele stays explicit ('No ClinVar record for this
- *    variant') — we don't borrow a related allele's call — and any related records show as context;
+ *  - at *nucleotide* level, an unannotated measured allele stays explicit ('No ClinVar record') — we don't
+ *    borrow a related allele's call — and any related records show as context;
  *  - a germline-less `-` record on the measured allele shows 'No germline classification' and links out.
  */
 export default defineComponent({
@@ -136,10 +141,12 @@ export default defineComponent({
     // `null` (store not ready / no controls) → fall back to the latest release per allele.
     clinvarVersion: {type: String as PropType<string | null>, default: null},
     // Hide the "N related record(s)" popover for a *direct* (non-projected) headline — for callers (e.g.
-    // MvAlleleLedger) that already lay those alleles out as their own cards, where the popover would just
+    // MvAlleleLedger) that already lay those alleles out as their own rows, where the popover would just
     // restate what's one click away. No effect on projected/pooled headlines, where the popover is
     // essential provenance and always shows.
-    showUnderlyingPopover: {type: Boolean, default: true}
+    showUnderlyingPopover: {type: Boolean, default: true},
+    // False when a surrounding table states the ClinVar release once in its column header.
+    showRelease: {type: Boolean, default: true}
   },
 
   computed: {
@@ -180,7 +187,7 @@ export default defineComponent({
     underlyingClinvarNote(): string {
       return this.isProjectedHeadline
         ? 'This variant has no ClinVar record. The classification above is inferred from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this variant.'
-        : 'Other variants with the same protein change that also carry ClinVar records.'
+        : 'Other variants that encode the same protein change and also carry ClinVar records.'
     }
   },
 
@@ -201,14 +208,6 @@ export default defineComponent({
   gap: 3px;
   background: var(--color-surface);
   padding: 10px 14px;
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-muted);
 }
 
 .stat-value {

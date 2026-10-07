@@ -7,13 +7,14 @@
 
 import _ from 'lodash'
 
+import {selectClinvar} from '@/lib/clinvar-controls'
 import type {components} from '@/schema/openapi'
-import type {KeySection} from '@/composables/use-key-drawer'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
+type VariantDetail = components['schemas']['VariantDetail']
 
-// ── CONFIDENCE BADGES: how a group's coordinate was established ──
+// ── DERIVATION: how a group's coordinate was established ──
 
 /**
  * Confidence/provenance axis (orthogonal to Cat-VRS's `relation`); strongest confidence first. The
@@ -54,73 +55,6 @@ export interface AlleleGroup {
   coalescedAnnotations: AlleleAnnotations | null
   // Distinct linked CAIDs to surface.
   clingenLinks: string[]
-}
-
-/** A provenance badge + its Key-drawer gloss: how a group's coordinate was established. */
-export interface ConfidenceBadge {
-  label: string
-  class: string
-  definition: string
-}
-
-// Single source for the confidence axis (badges + the Key drawer's "confidence" section), keyed by outcome
-// rather than raw `Derivation`. Each value paints from its own same-named CSS token (see the "Allele
-// relationship axis" block in assets/app.css) so a token can never drift from the label it styles.
-// `convergent` and `candidate` share a hex — both say "not the change that was measured" — but hold
-// separate tokens so they can diverge without touching this file. Insertion order is the drawer's
-// display order.
-export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
-  // Solid where `measured` is tinted: the selection is a state of the page, `measured` a fact about a variant.
-  selected: {
-    label: 'Selected measurement',
-    class: 'bg-measured text-white',
-    definition: 'The variant assayed by the measurement you have selected.'
-  },
-  measured: {
-    label: 'Measured',
-    class: 'bg-measured-light text-measured',
-    definition: 'Has a measurement of its own on this page, whichever measurement is selected.'
-  },
-  projection: {
-    label: 'Resolved',
-    class: 'bg-resolved-light text-resolved',
-    definition:
-      "Derived from the selected measurement's variant: the same change expressed at an un-measured coordinate level."
-  },
-  convergent: {
-    label: 'Convergent',
-    class: 'bg-convergent-light text-convergent',
-    definition:
-      "A different nucleotide change than the selected measurement's variant, which happens to produce the same protein change."
-  },
-  candidate: {
-    label: 'Candidate',
-    class: 'bg-candidate-light text-candidate',
-    definition:
-      'A possible nucleotide change encoding a protein-level measurement. This variant is one of several synonymous codons. The assay did not report which one was measured.'
-  }
-}
-
-export const CONFIDENCE_KEY_SECTION: KeySection = {
-  id: 'confidence',
-  title: 'Measured and derived variants',
-  gloss: 'Whether a variant has a measurement of its own, or how it relates to the selected one.',
-  terms: Object.values(ALLELE_CONFIDENCE).map((c) => ({label: c.label, definition: c.definition, class: c.class}))
-}
-
-/**
- * Badge for a group, strongest claim first: the selected measurement's own variant, then any variant with a
- * measurement of its own (`measuredDigests`, page-wide), else its derived state relative to the selected
- * measurement; null when none applies. Measured-ness is a fact about the variant, so it never flips as the
- * selection moves — only the derived labels are relative.
- */
-export function confidenceBadge(
-  group: Pick<AlleleGroup, 'measured' | 'derivation' | 'members'>,
-  measuredDigests: ReadonlySet<string>
-): ConfidenceBadge | null {
-  if (group.measured) return ALLELE_CONFIDENCE.selected
-  if (group.members.some((m) => measuredDigests.has(m.digest))) return ALLELE_CONFIDENCE.measured
-  return group.derivation ? (ALLELE_CONFIDENCE[group.derivation] ?? null) : null
 }
 
 /**
@@ -264,4 +198,48 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
     if (a.measured !== b.measured) return a.measured ? -1 : 1
     return (LEVEL_ORDER[a.members[0].level ?? ''] ?? 99) - (LEVEL_ORDER[b.members[0].level ?? ''] ?? 99)
   })
+}
+
+/**
+ * Every allele across a page's loaded variant details, so page-wide tables don't change with the selection.
+ *
+ * An identity's `derivation`, `relation` and `projectionOf` are relative to its own envelope's focus, so an allele
+ * the selected detail carries takes the selected detail's identity; others keep the first-seen one. Focus comes
+ * from the selected detail alone.
+ */
+export function mergeDetailAlleles(
+  details: VariantDetail[],
+  selected: VariantDetail | null
+): {alleles: Record<string, AlleleIdentity>; annotations: Record<string, AlleleAnnotations>} {
+  const alleles: Record<string, AlleleIdentity> = {}
+  const annotations: Record<string, AlleleAnnotations> = {}
+  for (const detail of [...(selected ? [selected] : []), ...details]) {
+    for (const [digest, identity] of Object.entries(detail.alleles ?? {})) {
+      alleles[digest] ??= {...identity, isFocus: selected?.alleles?.[digest]?.isFocus ?? false}
+    }
+    for (const [digest, annotation] of Object.entries(detail.annotations ?? {})) {
+      annotations[digest] ??= annotation
+    }
+  }
+  return {alleles, annotations}
+}
+
+/**
+ * Each source's release when every group with a record agrees on one, else null (groups then show their own
+ * release). ClinVar compares the release each group displays: `clinvarVersion` when pinned, else its latest.
+ */
+export function sharedReleases(
+  groups: AlleleGroup[],
+  clinvarVersion: string | null
+): {vep: string | null; gnomad: string | null; clinvar: string | null} {
+  const annotations = groups.map((group) => group.coalescedAnnotations)
+  const single = (values: (string | null | undefined)[]) => {
+    const distinct = new Set(values.filter((v): v is string => v != null))
+    return distinct.size === 1 ? [...distinct][0] : null
+  }
+  return {
+    vep: single(annotations.map((a) => a?.vep?.sourceVersion)),
+    gnomad: single(annotations.map((a) => a?.gnomad?.dbVersion)),
+    clinvar: single(annotations.map((a) => selectClinvar(a?.clinvar, clinvarVersion)?.dbVersion))
+  }
 }

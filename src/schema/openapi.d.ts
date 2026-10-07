@@ -1985,7 +1985,9 @@ export interface components {
      * this allele), ``protein_consequence`` (a protein measurement of a nt query's consequence), or
      * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``preferredClassification`` is the
      * readable functional classification the UI defaults to (primary-first cascade, RUO excluded), omitted
-     * when absent or gated. ``isCurrent`` /
+     * when absent or gated; ranking uses it alone. ``researchUseOnlyClassification`` is a display-only
+     * fallback from research-use-only calibrations, present only when ``preferredClassification`` is absent;
+     * it must not be treated as clinical evidence. ``isCurrent`` /
      * ``supersededByScoreSet`` let a superseded measurement (surfaced only under ``include_superseded``)
      * self-describe; ``supersededByScoreSet`` is the superseding *score set*'s URN.
      */
@@ -2005,6 +2007,7 @@ export interface components {
       /** Scoresettitle */
       scoreSetTitle: string;
       preferredClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      researchUseOnlyClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
       /** Iscurrent */
       isCurrent: boolean;
       /** Supersededbyscoreset */

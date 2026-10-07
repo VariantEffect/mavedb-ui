@@ -1,6 +1,7 @@
 import {ref} from 'vue'
 
-/** One defined term shown in the Key drawer. `class` styles the term chip (e.g. to match its badge). */
+/** One defined term shown in the Key drawer. `class` is set only for terms that appear on the page as a tag, and
+ * styles the drawer's chip to match it; other terms render as plain text. */
 export interface KeyTerm {
   label: string
   definition: string
@@ -27,7 +28,7 @@ export interface KeySection {
  * scrolls to and briefly highlights on open; passing nothing opens it at the top.
  *
  * Deliberately global rather than provide/inject: the trigger (control header) and the deep-linking
- * badges (measurement cards, per-level annotations) live in unrelated subtrees, and there is only ever
+ * badges (measurement table, per-level annotations) live in unrelated subtrees, and there is only ever
  * one Key drawer on screen.
  */
 const isOpen = ref(false)

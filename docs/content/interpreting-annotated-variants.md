@@ -19,20 +19,20 @@ A variant can be described at three molecular levels:
 - **Coding** (`c.`) — position within a transcript's coding sequence.
 - **Protein** (`p.`) — the amino-acid change.
 
-MaveDB shows a variant at whichever of these levels apply. The important point is that **these levels are not all equally direct.** An assay measures a variant at one of these levels. We must *derive* all other levels from that measurement. How faithfully a level can be derived and interpreted depends on the underlying biology, which the labels below seek to capture.
+MaveDB shows a variant at whichever of these levels apply. The important point is that **these levels are not all equally direct.** An assay measures a variant at one of these levels. We must *derive* all other levels from that measurement. How faithfully a level can be derived and interpreted depends on the underlying biology, which the four relationships below capture.
 
 ## Measured, resolved, convergent, and candidate
 
-Every representation of an annotated variant carries one of four labels describing how it relates to the variant the assay explicitly measured:
+MaveDB records how each representation of an annotated variant relates to the variant the assay explicitly measured. The variant page doesn't tag each representation with these terms; it groups measurements by what they assayed and words that relationship in each group's header, but the distinctions below are what those groups and the downloadable data rest on:
 
-| Label | What it means | How much to trust it |
+| Relationship | What it means | How much to trust it |
 |---|---|---|
 | **Measured** | The level at which the variant was assayed. This is the observed experimental result. | Highest — this is the evidence itself. |
 | **Resolved** | The measured change expressed at another coordinate level: its exact coordinate partner across the coding and genomic levels, or the single protein consequence of a measured DNA change. Deterministic and precise. | High — one measured change maps to exactly one resolved representation, with no guesswork. |
 | **Convergent** | A *distinct*, real nucleotide change that produces the *same* protein change as the measured variant — a separate variant that converges on the same consequence, not the one assayed here. | Moderate — a precise variant, but a different one from what was measured. |
 | **Candidate** | One of *several possible* nucleotide spellings behind a protein-level measurement, when the DNA change that was actually assayed is unknown. | Interpret with care — MaveDB surfaces all of them and privileges none. |
 
-These four labels form a confidence ladder. **Measured** is the experimental result itself; **Resolved** is a faithful, one-to-one translation of it to another coordinate level. **Convergent** and **Candidate** are both *other* nucleotide changes that share the measured protein change — the difference is precision: a **convergent** variant is a distinct, real change that happens to encode the same amino acid, whereas a **candidate** is one of several possible spellings of a protein-level measurement whose true DNA change is unknown.
+These four relationships form a confidence ladder. **Measured** is the experimental result itself; **Resolved** is a faithful, one-to-one translation of it to another coordinate level. **Convergent** and **Candidate** are both *other* nucleotide changes that share the measured protein change — the difference is precision: a **convergent** variant is a distinct, real change that happens to encode the same amino acid, whereas a **candidate** is one of several possible spellings of a protein-level measurement whose true DNA change is unknown.
 
 ## Why one protein change can produce several candidates
 
@@ -60,7 +60,7 @@ For the mechanism behind candidate generation — codon enumeration, synonymous 
 
 *Where* you look changes *what* you see:
 
-- **Detail surfaces** — the MaveMD [variant page](mavemd/variant-page.md) and the score set detail panel — show the full set of representations, each with its Measured / Resolved / Convergent / Candidate label.
+- **Detail surfaces** show the full set of representations. The MaveMD [variant page](mavemd/variant-page.md) lists every nucleotide change in your variant's family across its measurements in its clinical and population table: your variant first, then the other nucleotide changes that encode the same protein change, where candidates appear. Protein changes have no gnomAD or ClinVar records of their own, so they are linked rather than listed. The score set detail panel notes how many candidate nucleotide alleles a protein change reverse-translates to.
 - **Overview surfaces** — search results and the score set table — show only the primary representation. For a protein-only assay, the coding and genomic slots may simply be **empty** rather than showing a candidate. MaveDB does not fabricate a single DNA coordinate where only an ambiguous set exists.
 
 So a variant that appears to have no coding or genomic coordinate in a search result may still have a full set of candidates on its detail page.

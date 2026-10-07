@@ -1,216 +1,249 @@
 <template>
   <div>
-    <div class="mb-1 flex flex-wrap items-baseline gap-x-2">
-      <h3 class="mave-section-title !mb-0">Clinical &amp; population data</h3>
-    </div>
-    <!-- Frame heading: "Measured" is a page-wide fact about a variant; only the derived labels (Resolved,
-         Convergent, Candidate) are relative, and they are relative to the *selected* measurement — not the
-         page variant. Saying so once keeps the per-row badges short. -->
-    <p class="mb-3 text-xs-minus text-text-muted">
-      Measured variants are marked. The rest are labeled relative to the selected measurement:
-    </p>
-
-    <!-- One card per allele group, uniform except for role badge and emphasis: your variant (X) leads, the
-         selected measurement's variant (Y) follows, everything else collapses underneath. -->
-    <div class="flex flex-col gap-2">
-      <div
-        v-for="entry in entries"
-        v-show="entry.role !== 'other' || expanded || !hasPinnedEntry"
-        :key="entry.group.key"
-        class="rounded-md px-3.5 py-3"
-        :class="cardClass(entry.role)"
-      >
-        <div class="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span
-            v-for="badge in roleBadges(entry)"
-            :key="badge.label"
-            v-key-term="badge.term"
-            class="rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px]"
-            :class="badge.class"
-            >{{ badge.label }}</span
-          >
-          <span
-            v-key-term="'assay-level'"
-            class="inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3px]"
-            :class="levelClass(titleMember(entry.group)?.level)"
-            >{{ levelLabel(titleMember(entry.group)?.level) }}</span
-          >
-          <span class="font-mono text-xs-plus font-semibold text-text-primary" :title="allHgvsTitle(entry.group)">{{
-            titleMember(entry.group)?.hgvs || '—'
-          }}</span>
-          <!-- Your variant (X) is the page you're already on — no link out. Related variants link to their
-               own variant page. -->
-          <router-link
-            v-for="caid in entry.role === 'page' ? [] : entry.group.clingenLinks"
-            :key="caid"
-            class="ml-auto inline-flex items-center gap-0.5 font-mono text-xs font-semibold text-link hover:underline"
-            :to="{name: 'variant', params: {clingenAlleleId: caid}, query: variantUrn ? {variant: variantUrn} : {}}"
-          >
-            {{ caid }}<i class="pi pi-arrow-up-right text-xs" />
-          </router-link>
-        </div>
-
-        <div class="grid grid-cols-1 gap-x-8 gap-y-4 tablet:grid-cols-3">
-          <VariantConsequenceStat plain :vep="entry.group.coalescedAnnotations?.vep ?? null">
-            <template #label>
-              <span
-                v-key-term="'consequence'"
-                class="w-fit text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                >Molecular consequence</span
-              >
-            </template>
-          </VariantConsequenceStat>
-          <VariantGnomadStat
-            :alleles="alleles"
-            :annotations="annotations"
-            :assay-gnomad="entry.group.coalescedAnnotations?.gnomad ?? null"
-            :assay-level="groupLevel(entry.group)"
-            :assay-level-digest="digestsOf(entry.group)"
-            plain
-            :show-underlying-popover="false"
-          >
-            <template #label>
-              <span
-                v-key-term="'population'"
-                class="w-fit text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                >Population frequency</span
-              >
-            </template>
-          </VariantGnomadStat>
-          <VariantClinvarStat
-            :alleles="alleles"
-            :annotations="annotations"
-            :assay-level="groupLevel(entry.group)"
-            :assay-level-digest="digestsOf(entry.group)"
-            :clinvar-version="clinvarVersion"
-            plain
-            :show-underlying-popover="false"
-          >
-            <template #label>
-              <span
-                v-key-term="'clinical'"
-                class="w-fit text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                >Clinical significance</span
-              >
-            </template>
-          </VariantClinvarStat>
-        </div>
-      </div>
+    <!-- Column headers (tablet+). A source release is stated here once when every row shares it; otherwise
+         each cell keeps its own, since one page can mix releases. -->
+    <div class="ledger-grid mave-label hidden tablet:grid border-b border-border-light px-5 py-2">
+      <span>Variant</span>
+      <span>
+        <span v-key-term="'consequence'">Molecular consequence</span>
+        <span v-if="sharedReleases.vep" class="block font-normal normal-case tracking-normal"
+          >VEP {{ sharedReleases.vep }}</span
+        >
+      </span>
+      <span>
+        <span v-key-term="'population'">Population frequency</span>
+        <span v-if="sharedReleases.gnomad" class="block font-normal normal-case tracking-normal"
+          >gnomAD {{ sharedReleases.gnomad }}</span
+        >
+      </span>
+      <span>
+        <span v-key-term="'clinical'">Clinical significance</span>
+        <span v-if="sharedReleases.clinvar" class="block font-normal normal-case tracking-normal"
+          >ClinVar {{ formatClinvarVersion(sharedReleases.clinvar) }}</span
+        >
+      </span>
     </div>
 
-    <button
-      v-if="otherGroups.length"
-      class="mt-2 cursor-pointer border-none bg-transparent text-xs font-semibold text-link hover:underline"
-      type="button"
-      @click="expanded = !expanded"
+    <!-- A protein-level selection assayed none of these rows but the protein change they all encode, so the
+         selection's highlight and tag sit on a band above them rather than on any one row. -->
+    <div
+      v-if="proteinSelected"
+      class="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border-light bg-sage-light/60 px-4 py-2 text-xs-plus text-text-secondary shadow-[inset_3px_0_0_var(--color-sage)] tablet:px-5"
     >
-      {{
-        expanded
-          ? 'Hide other related variants'
-          : `Show ${otherGroups.length} other related ${otherGroups.length === 1 ? 'variant' : 'variants'}`
-      }}
-    </button>
+      <span v-key-term="'relationship'" class="mave-tag" :class="selectedMeasurement.class">{{
+        selectedMeasurement.label
+      }}</span>
+      <span v-if="anchorIsProtein" v-key-term="'relationship'"
+        >This protein change, encoded by every variant below</span
+      >
+      <span v-else
+        ><span class="font-mono text-xs text-text-primary">{{ protein?.hgvs ?? 'The protein change' }}</span
+        >, <span v-key-term="'relationship'">the protein change every variant below encodes</span></span
+      >
+    </div>
+
+    <!-- Nucleotide-level rows only: gnomAD, ClinVar and VEP never annotate protein alleles, so a protein row could
+         only repeat the rows below it. Your variant first; the row the selected measurement assayed is highlighted. -->
+    <template v-for="group in rows" :key="group.key">
+      <h4
+        v-if="group === firstSibling && subject"
+        class="border-b border-border-light bg-bg px-4 py-2 text-xs-plus text-text-secondary tablet:px-5"
+      >
+        <span v-key-term="'relationship'" class="font-semibold text-text-primary"
+          >Other nucleotide changes that encode the same protein change</span
+        ><template v-if="protein"
+          >,
+          <router-link
+            v-if="protein.clingenAlleleId"
+            class="font-mono text-xs text-link hover:underline"
+            :to="variantRoute(protein.clingenAlleleId)"
+            >{{ protein.hgvs }}</router-link
+          ><span v-else class="font-mono text-xs text-text-primary">{{ protein.hgvs }}</span></template
+        >
+      </h4>
+      <div
+        class="ledger-grid block border-b border-border-light px-4 py-3 last:border-b-0 tablet:grid tablet:px-5"
+        :class="group.measured ? 'bg-sage-light/60 shadow-[inset_3px_0_0_var(--color-sage)]' : ''"
+      >
+        <div class="min-w-0">
+          <!-- Your variant (X) is the page you're already on; a related variant's HGVS links to its own page. -->
+          <router-link
+            v-if="group !== subject && group.clingenLinks.length > 0"
+            class="break-all font-mono text-xs-plus font-semibold text-link hover:underline"
+            :title="allHgvsTitle(group)"
+            :to="variantRoute(group.clingenLinks[0])"
+            >{{ titleMember(group)?.hgvs || group.clingenLinks[0] }}</router-link
+          >
+          <div
+            v-else
+            class="break-all font-mono text-xs-plus font-semibold text-text-primary"
+            :title="allHgvsTitle(group)"
+          >
+            {{ titleMember(group)?.hgvs || '—' }}
+          </div>
+          <div v-if="group === subject || group.measured" class="mt-1 flex flex-wrap items-center gap-1">
+            <span v-if="group === subject" v-key-term="'relationship'" class="mave-tag" :class="yourVariant.class">{{
+              yourVariant.label
+            }}</span>
+            <span
+              v-if="group.measured"
+              v-key-term="'relationship'"
+              class="mave-tag"
+              :class="selectedMeasurement.class"
+              >{{ selectedMeasurement.label }}</span
+            >
+          </div>
+        </div>
+        <VariantConsequenceStat
+          class="mt-2 tablet:mt-0"
+          plain
+          :show-release="!sharedReleases.vep"
+          :vep="group.coalescedAnnotations?.vep ?? null"
+        >
+          <template #label
+            ><span :class="mobileLabelClass"
+              >Molecular consequence<template v-if="sharedReleases.vep">
+                · <span class="normal-case tracking-normal">VEP {{ sharedReleases.vep }}</span></template
+              ></span
+            ></template
+          >
+        </VariantConsequenceStat>
+        <MvGnomadCell
+          class="mt-2 tablet:mt-0"
+          :gnomad="group.coalescedAnnotations?.gnomad ?? null"
+          :show-release="!sharedReleases.gnomad"
+        >
+          <template #label
+            ><span :class="mobileLabelClass"
+              >Population frequency<template v-if="sharedReleases.gnomad">
+                · <span class="normal-case tracking-normal">gnomAD {{ sharedReleases.gnomad }}</span></template
+              ></span
+            ></template
+          >
+        </MvGnomadCell>
+        <VariantClinvarStat
+          :alleles="alleles"
+          :annotations="annotations"
+          :assay-level="groupLevel(group)"
+          :assay-level-digest="digestsOf(group)"
+          class="mt-2 tablet:mt-0"
+          :clinvar-version="clinvarVersion"
+          plain
+          :show-release="!sharedReleases.clinvar"
+          :show-underlying-popover="false"
+        >
+          <template #label
+            ><span :class="mobileLabelClass"
+              >Clinical significance<template v-if="sharedReleases.clinvar">
+                ·
+                <span class="normal-case tracking-normal"
+                  >ClinVar {{ formatClinvarVersion(sharedReleases.clinvar) }}</span
+                ></template
+              ></span
+            ></template
+          >
+        </VariantClinvarStat>
+      </div>
+    </template>
   </div>
 </template>
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
+import MvGnomadCell from '@/components/variant/MvGnomadCell.vue'
 import VariantConsequenceStat from '@/components/variant/VariantConsequenceStat.vue'
-import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
-import {type AlleleGroup, confidenceBadge, titleMember} from '@/lib/allele-grouping'
-import {assayLevelDisplay} from '@/lib/measurement-types'
+import {type AlleleGroup, sharedReleases, titleMember} from '@/lib/allele-grouping'
+import {formatClinvarVersion} from '@/lib/clinvar-controls'
+import {shortHgvs} from '@/lib/measurement-groups'
+import {assayLevelDisplay, SELECTED_MEASUREMENT_TAG, YOUR_VARIANT_TAG} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type SequenceLevel = components['schemas']['SequenceLevel']
 
-type LedgerRole = 'page' | 'selected' | 'other'
-type LedgerEntry = {group: AlleleGroup; role: LedgerRole}
-
 /**
- * Combined clinical/population + related-alleles ledger. Presents the whole equivalence class in one
- * place, at every level, with a *uniform* card per allele group: your variant (X) leads, the selected
- * measurement's variant (Y) follows when it differs, and the rest collapse underneath. Badges keep two
- * axes apart: "Measured" is a page-wide fact about a variant; only the derived labels are relative to the
- * selection.
- * Every card renders the same three-cell facts grid — molecular consequence, then
- * {@link VariantGnomadStat}/{@link VariantClinvarStat} keyed to that group's own digests — mirroring
- * {@link VariantDetailPanel}'s facts grid on the score-set page, so the only thing split out elsewhere on
- * this page is the functional evidence itself.
+ * Clinical/population table over the page variant's nucleotide-level family across all of its measurements: your
+ * variant's row, then other nucleotide changes that encode the same protein change (or, on a protein-change page, every
+ * nucleotide change that encodes it). Rows never change with the selection; the one the selected measurement assayed
+ * takes the measurement table's sage accent and a Selected measurement tag. Cells are molecular consequence, then
+ * {@link MvGnomadCell}/{@link VariantClinvarStat} keyed to that group's own digests.
  */
 export default defineComponent({
   name: 'MvAlleleLedger',
 
   components: {
+    MvGnomadCell,
     VariantConsequenceStat,
-    VariantGnomadStat,
     VariantClinvarStat
   },
 
   props: {
-    // Every allele group in the selected measurement's equivalence class.
+    // Every allele group across the page's loaded measurements.
     groups: {type: Array as PropType<AlleleGroup[]>, default: () => []},
-    // Digests of every allele that has a measurement of its own on the page (see useVariantLookup).
-    measuredDigests: {type: Array as PropType<string[]>, default: () => []},
-    // Raw alleles/annotations from the selected measurement detail — the stat components resolve each
-    // group's subject out of these maps by digest.
+    // Raw alleles/annotations merged across the page's loaded measurement details — the stat components resolve
+    // each group's subject out of these maps by digest.
     alleles: {type: Object as PropType<Record<string, AlleleIdentity>>, default: () => ({})},
     annotations: {type: Object as PropType<Record<string, AlleleAnnotations>>, default: () => ({})},
     clinvarVersion: {type: [String, null] as PropType<string | null>, default: null},
+    // Whether the page's variant is a protein change (a `PA` anchor), in which case every row encodes it.
+    anchorIsProtein: {type: Boolean, default: false},
     // The selected measurement's URN. Carried as the `?variant=` highlight on each allele's link-out.
     variantUrn: {type: [String, null] as PropType<string | null>, default: null}
   },
 
   data() {
-    return {expanded: false}
+    return {
+      yourVariant: YOUR_VARIANT_TAG,
+      selectedMeasurement: SELECTED_MEASUREMENT_TAG,
+      // Per-cell labels (with any shared release) for the stacked mobile layout; tablet+ column headers carry
+      // them instead.
+      mobileLabelClass: 'mave-label w-fit tablet:hidden'
+    }
   },
 
   computed: {
-    // The page variant's own group, when the selected result's envelope carries it at all. Null is a real
-    // state, not a defect: a result reached through the page's ClinGen id may not include that exact allele
-    // among its own alleles.
-    pageGroup(): AlleleGroup | null {
-      return this.groups.find((g) => g.pageRoot) ?? null
+    // Rows in a fixed order that never depends on the selection: your variant, then the other nucleotide changes.
+    // Never collapsed: the genetic code caps a protein change at six codons, so the list stays short.
+    rows(): AlleleGroup[] {
+      return this.groups
+        .filter((group) => !this.isProtein(group))
+        .sort((a, b) => Number(b.pageRoot) - Number(a.pageRoot))
     },
-    // Digests measured anywhere on the page, as a Set for lookup.
-    measuredSet(): ReadonlySet<string> {
-      return new Set(this.measuredDigests)
+    // The selected measurement assayed the protein change, which has no row of its own here.
+    proteinSelected(): boolean {
+      return this.groups.some((group) => this.isProtein(group) && group.measured)
     },
-    // The selected measurement's variant, pinned only when it differs from the page variant (otherwise the
-    // lead card already is it).
-    pinnedSelected(): AlleleGroup | null {
-      const selected = this.groups.find((g) => g.measured) ?? null
-      return selected && selected !== this.pageGroup ? selected : null
+    subject(): AlleleGroup | null {
+      return this.rows.find((group) => group.pageRoot) ?? null
     },
-    // Everything that is neither the page variant nor the selected measurement's variant. Variants with a
-    // measurement of their own sort first (stable), so the collapsed remainder leads with what has a card above.
-    otherGroups(): AlleleGroup[] {
-      const others = this.groups.filter((g) => g !== this.pageGroup && g !== this.pinnedSelected)
-      const isMeasured = (g: AlleleGroup) => g.members.some((m) => this.measuredSet.has(m.digest))
-      return [...others.filter(isMeasured), ...others.filter((g) => !isMeasured(g))]
+    firstSibling(): AlleleGroup | null {
+      return this.rows.find((group) => group !== this.subject) ?? null
     },
-    // The ordered render list: page variant, then the selected measurement's variant, then the rest
-    // (collapsed). Roles drive emphasis, and are assigned from what a group *is* — a group is never given the
-    // `page` role as a stand-in. When the page variant is absent the list simply leads with the selected
-    // variant under its own badge, rather than labelling it "Your variant" and asserting an identity it lacks.
-    entries(): LedgerEntry[] {
-      const list: LedgerEntry[] = []
-      if (this.pageGroup) list.push({group: this.pageGroup, role: 'page'})
-      if (this.pinnedSelected) list.push({group: this.pinnedSelected, role: 'selected'})
-      for (const g of this.otherGroups) list.push({group: g, role: 'other'})
-      return list
+    // The protein change shared by every row, linked to its own page.
+    protein(): {hgvs: string; clingenAlleleId: string | null} | null {
+      const member = this.groups.find((group) => this.isProtein(group))?.members[0]
+      if (!member?.hgvs) return null
+      return {hgvs: shortHgvs(member.hgvs), clingenAlleleId: member.clingenAlleleId ?? null}
     },
-    // Whether any entry is pinned. When nothing is (no page variant and no selected variant in this
-    // envelope), the collapsed rows are all there is, so they must not start hidden behind the toggle.
-    hasPinnedEntry(): boolean {
-      return this.pageGroup != null || this.pinnedSelected != null
+    // Each source's release, when every row that has a record agrees on one; null when rows differ (or none
+    // has a record), in which case cells keep their own "As of" lines.
+    sharedReleases(): ReturnType<typeof sharedReleases> {
+      return sharedReleases(this.rows, this.clinvarVersion)
     }
   },
 
   methods: {
+    formatClinvarVersion,
+    variantRoute(clingenAlleleId: string) {
+      return {
+        name: 'variant',
+        params: {clingenAlleleId},
+        query: this.variantUrn ? {variant: this.variantUrn} : {}
+      }
+    },
     digestsOf(group: AlleleGroup): string[] {
       return group.members.map((m) => m.digest)
     },
@@ -222,33 +255,21 @@ export default defineComponent({
     allHgvsTitle(group: AlleleGroup): string {
       return group.members.map((m) => `${this.levelLabel(m.level)}: ${m.hgvs || '—'}`).join('  ·  ')
     },
-    // The page variant leads with its fixed subject badge — deliberately distinct from the confidence-axis
-    // colors, so "Your variant" (the page's subject) and "Measured" (what was assayed) are never confused —
-    // followed by its standing on the measurement axis: Selected measurement, Measured (has a card of its own
-    // above), or derived relative to the selection. Every other role gets that badge alone.
-    roleBadges(entry: LedgerEntry): {label: string; class: string; term: string}[] {
-      const confidence = confidenceBadge(entry.group, this.measuredSet)
-      const confidenceEntry = confidence && {label: confidence.label, class: confidence.class, term: 'confidence'}
-      if (entry.role === 'page') {
-        const subject = {label: 'Your variant', class: 'bg-subject/15 text-subject', term: 'your-variant'}
-        return confidenceEntry ? [subject, confidenceEntry] : [subject]
-      }
-      // No derivation and not measured: the API recorded no relationship (pre-reverse-translation data, or
-      // a classification gap). "Unclassified" says so, rather than the old "Related" asserting one that wasn't.
-      return [confidenceEntry ?? {label: 'Unclassified', class: 'bg-border-light text-text-muted', term: 'confidence'}]
-    },
-    cardClass(role: LedgerRole): string {
-      if (role === 'page') return 'border-2 border-subject/40 bg-subject/[0.05]'
-      // Echoes the selected measurement card's sage border above, tying the two together.
-      if (role === 'selected') return 'border-2 border-sage/60 bg-sage/[0.04]'
-      return 'border border-border-light bg-surface'
+    // Protein alleles carry no gnomAD, ClinVar or VEP records of their own; see the worker's annotation jobs.
+    isProtein(group: AlleleGroup): boolean {
+      return group.members.every((m) => m.level === 'protein')
     },
     levelLabel(level: string | null | undefined): string {
       return level ? assayLevelDisplay(level).label : '—'
-    },
-    levelClass(level: string | null | undefined): string {
-      return level ? assayLevelDisplay(level).class : ''
     }
   }
 })
 </script>
+
+<style>
+/* Unscoped so the header and every row share one grid. Tablet+ only; rows stack below that. */
+.ledger-grid {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr);
+  column-gap: 1.25rem;
+}
+</style>

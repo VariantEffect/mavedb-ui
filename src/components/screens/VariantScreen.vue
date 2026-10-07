@@ -44,27 +44,22 @@
           </div>
         </template>
 
-        <template v-if="lookup.variants.value.length > 0" #subtitle>
-          <p class="mt-2 text-sm text-text-muted">
-            <template v-if="lookup.geneName.value">{{ lookup.geneName.value }} &middot; </template>
-            <template v-if="lookup.clingenAllele.allGenomicLocationsText.value"
-              >{{ lookup.clingenAllele.allGenomicLocationsText.value }} &middot;
-            </template>
-            {{ lookup.variants.value.length }}
-            {{ lookup.variants.value.length === 1 ? 'measurement' : 'measurements' }}
-            <template v-if="lookup.uniqueAssayCount.value > 1">
-              across {{ lookup.uniqueAssayCount.value }} score sets</template
-            >
-            <template v-if="lookup.asOf.value"> &middot; MaveDB as of {{ lookup.asOf.value }}</template>
-            <template v-if="clingenAlleleId">
-              &middot;
-              <a
-                class="inline-flex items-center gap-0.5 text-link hover:underline"
-                :href="clingenRegistryUrl"
-                target="_blank"
-                >View in ClinGen Allele Registry&nbsp;<i class="pi pi-external-link !text-[11px]"
-              /></a>
-            </template>
+        <template #subtitle>
+          <p v-if="subtitleFacts.length > 0" class="mt-2 text-sm text-text-muted">{{ subtitleFacts.join(' · ') }}</p>
+          <p v-if="clingenAlleleId" class="mt-1 text-sm">
+            <template v-if="proteinPage"
+              ><router-link
+                class="text-link hover:underline"
+                :to="{name: 'variant', params: {clingenAlleleId: proteinPage.clingenAlleleId}}"
+                >View protein change <span class="font-mono">{{ proteinPage.hgvs }}</span></router-link
+              >
+              &middot;&#32;</template
+            ><a
+              class="inline-flex items-center gap-0.5 text-link hover:underline"
+              :href="clingenRegistryUrl"
+              target="_blank"
+              >View in ClinGen Allele Registry&nbsp;<i class="pi pi-external-link !text-[11px]"
+            /></a>
           </p>
         </template>
       </MvPageHeader>
@@ -75,10 +70,10 @@
            view (past date, superseded included) is never invisible while the panel is closed. -->
       <div
         v-if="viewOptionsOpen"
-        class="mave-gradient-bar relative overflow-hidden mb-4 flex flex-col gap-3 rounded-lg border border-border bg-surface px-4 py-3 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-6 tablet:gap-y-2 tablet:px-5 tablet:py-2.5"
+        class="mave-card mb-4 flex flex-col gap-3 px-4 py-3 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-6 tablet:gap-y-2 tablet:px-5"
       >
         <div class="flex items-center gap-2 text-xs text-text-secondary">
-          <span v-key-term="'as-of'" class="font-semibold uppercase tracking-[0.3px] text-[#aaa]">MaveDB as of</span>
+          <span v-key-term="'as-of'" class="mave-label">MaveDB as of</span>
           <DatePicker
             v-model="asOfDate"
             class="min-w-0 flex-1 tablet:w-72 tablet:flex-none"
@@ -126,160 +121,210 @@
 
       <template v-else>
         <!-- ── MEASUREMENTS — the body, following the measured variant (Y) ── -->
-        <!-- Switcher -->
-        <div class="rounded-lg border border-border bg-surface">
-          <div class="flex flex-wrap items-center gap-2.5 border-b border-border-light px-4 tablet:px-5 py-3.5">
-            <span class="text-sm font-bold text-text-primary"
-              >{{ lookup.variants.value.length }}
-              {{ lookup.variants.value.length === 1 ? 'Measurement' : 'Measurements' }}</span
-            >
-            <div class="ml-auto flex items-center gap-1.5">
-              <span
-                v-if="lookup.nucleotideCount.value > 0 || lookup.proteinCount.value > 0"
-                v-key-term="'assay-level'"
-                class="mr-0.5 text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                >Assay level</span
-              >
-              <MvBadgeToggle
-                v-if="lookup.nucleotideCount.value > 0"
-                v-model="lookup.showNucleotide.value"
-                active-background="var(--color-nucleotide-light)"
-                active-border="var(--color-nucleotide-border)"
-                color="var(--color-nucleotide)"
-                :count="lookup.nucleotideCount.value"
-                label="Nucleotide"
-              />
-              <MvBadgeToggle
-                v-if="lookup.proteinCount.value > 0"
-                v-model="lookup.showProtein.value"
-                active-background="var(--color-amino-acid-light)"
-                active-border="var(--color-amino-acid-border)"
-                color="var(--color-amino-acid)"
-                :count="lookup.proteinCount.value"
-                label="Amino acid"
-              />
-            </div>
-          </div>
-          <!-- Anchor heading: names the frame of reference so the per-card Direct/Indirect badges read as
-               self-explaining without needing a per-badge tooltip. -->
-          <div class="px-4 tablet:px-5 pt-3.5 text-xs-minus text-text-muted">
-            Each measurement, relative to your variant:
-          </div>
-          <div class="measurement-switcher hidden tablet:flex gap-3 overflow-x-auto px-5 py-4">
-            <MvMeasurementCard
-              v-for="m in lookup.filteredVariants.value"
-              :key="'desktop-' + m.variantUrn"
-              :active="lookup.selectedVariantUrn.value === m.variantUrn"
-              :assay-level="m.assayLevel"
-              :assay-type="lookup.getKeyword(m.scoreSetUrn, 'Phenotypic Assay Method')"
-              :loading="lookup.selectedVariantUrn.value === m.variantUrn && lookup.selectedLoading.value"
-              :mechanism="lookup.getKeyword(m.scoreSetUrn, 'Molecular Mechanism Assessed')"
-              :model-system="lookup.getKeyword(m.scoreSetUrn, 'Phenotypic Assay Model System')"
-              :preferred-classification="m.preferredClassification ?? null"
-              :relationship="m.relationship"
-              :score="m.score ?? null"
-              :score-set-title="m.scoreSetTitle || 'Untitled score set'"
-              :score-set-urn="m.scoreSetUrn"
-              @select="lookup.selectVariant(m.variantUrn)"
+        <MvPanel :padded="false" title="Measurements">
+          <template #meta>{{ lookup.variants.value.length }}</template>
+          <!-- A single assay level has nothing to filter, so the toggles only render for mixed levels. -->
+          <template v-if="lookup.nucleotideCount.value > 0 && lookup.proteinCount.value > 0" #actions>
+            <span v-key-term="'assay-level'" class="mave-label mr-0.5">Assay level</span>
+            <MvBadgeToggle
+              v-model="lookup.showNucleotide.value"
+              active-background="var(--color-nucleotide-light)"
+              active-border="var(--color-nucleotide-border)"
+              color="var(--color-nucleotide)"
+              :count="lookup.nucleotideCount.value"
+              label="Nucleotide"
             />
-          </div>
-          <!-- Mobile: dropdown selector -->
-          <div class="tablet:hidden flex items-center gap-2 px-4 py-3">
-            <PSelect
-              class="min-w-0 flex-1"
-              :model-value="lookup.selectedVariantUrn.value"
-              option-label="label"
-              option-value="urn"
-              :options="measurementOptions"
-              @update:model-value="lookup.selectVariant($event)"
+            <MvBadgeToggle
+              v-model="lookup.showProtein.value"
+              active-background="var(--color-amino-acid-light)"
+              active-border="var(--color-amino-acid-border)"
+              color="var(--color-amino-acid)"
+              :count="lookup.proteinCount.value"
+              label="Amino acid"
             />
-            <i
-              v-if="lookup.selectedLoading.value"
-              aria-label="Loading variant details"
-              class="pi pi-spin pi-spinner text-sage"
-            />
-          </div>
-        </div>
+          </template>
+          <!-- The page's most important caveat when it applies: nothing listed measured the variant itself. -->
+          <template v-if="!lookup.variants.value.some((m) => m.relationship === 'direct')" #notice>
+            <span v-key-term="'relationship'" class="font-semibold text-text-primary">{{
+              clingenAlleleId.startsWith('PA')
+                ? 'This protein change has not been measured directly.'
+                : 'Your variant has not been measured directly.'
+            }}</span>
+            Each measurement below assayed a related variant.
+          </template>
+          <MvMeasurementTable
+            :anchor-is-protein="clingenAlleleId.startsWith('PA')"
+            :get-citation="lookup.getCitation"
+            :get-keyword="lookup.getKeyword"
+            :is-score-set-loaded="lookup.isScoreSetLoaded"
+            :loading="lookup.selectedLoading.value"
+            :measurements="lookup.filteredVariants.value"
+            :selected-urn="lookup.selectedVariantUrn.value"
+            @select="selectMeasurement"
+          />
+        </MvPanel>
 
         <!-- ── FUNCTIONAL EVIDENCE ── MaveDB's own contribution, centered as the lead of the body. -->
-        <div
+        <!-- scroll-mt clears the sticky nav when a measurement row jumps here. -->
+        <MvPanel
           v-if="lookup.selectedVariantDetail.value"
-          class="relative mt-4 rounded-lg border bg-surface px-[18px] py-3.5"
+          ref="functionalEvidence"
+          class="mt-4 scroll-mt-20"
+          title="Functional evidence"
         >
-          <!-- The one place the indirect relationship is spelled out; the badges elsewhere only flag it. -->
-          <div
-            v-if="indirectNotice"
-            class="mb-3 flex items-start gap-2 rounded-md border border-convergent/30 bg-convergent-light px-3 py-2 text-sm text-text-secondary"
-          >
-            <i class="pi pi-info-circle mt-0.5 text-xs text-convergent" />
-            <div>
-              This score was measured on a different variant which has the same protein change as yours<template
-                v-if="indirectNotice.hgvs"
-                >: <span class="font-mono font-semibold text-text-primary">{{ indirectNotice.hgvs }}</span></template
-              >.
-            </div>
-          </div>
-          <div class="mb-2.5 flex flex-wrap items-center gap-2">
-            <h3 class="mave-section-title !mb-0">Functional evidence</h3>
-            <span class="text-xs-minus text-text-muted">measured in this score set</span>
+          <template #meta>measured in this score set</template>
+          <template #actions>
             <span
-              v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
+              v-if="!lookup.selectedVariantDetail.value.isCurrent"
               v-key-term="'superseded'"
-              class="ml-auto rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px] bg-superseded-light text-superseded"
+              class="mave-tag bg-superseded-light text-superseded"
               >Superseded</span
             >
-          </div>
-          <div v-if="lookup.selectedVariantScore.value != null" class="flex flex-wrap gap-x-10 gap-y-3">
-            <div class="flex flex-col gap-0.5">
-              <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Functional impact</span>
-              <MvClassificationTag
-                v-if="lookup.calibrationResolution.classification.value"
-                :classification="lookup.calibrationResolution.classification.value"
-              />
-              <span v-else class="text-sm text-text-muted">—</span>
-            </div>
-            <div class="flex flex-col gap-0.5">
-              <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Functional score</span>
+            <!-- Opens on this measurement and calibration, so the score set page arrives in the same state. -->
+            <router-link
+              v-if="lookup.selectedScoreSet.value"
+              class="text-xs font-semibold whitespace-nowrap text-link hover:underline"
+              :to="{
+                name: 'scoreSet',
+                params: {urn: lookup.selectedScoreSet.value.urn},
+                query: {
+                  variant: lookup.selectedVariantDetail.value.urn,
+                  ...(lookup.selectedCalibration.value ? {calibration: lookup.selectedCalibration.value} : {})
+                }
+              }"
+            >
+              View score set &rarr;
+            </router-link>
+          </template>
+          <!-- The one place the indirect relationship's caveat is spelled out; the table headers only name it. -->
+          <template v-if="indirectNotice" #notice>
+            <span v-key-term="'relationship'" class="font-semibold text-text-primary">{{ indirectNotice.lead }}</span>
+            {{ indirectNotice.caveat }}
+          </template>
+          <!-- The score stands alone; everything to its right is read off the calibration that heads that group. -->
+          <div
+            v-if="lookup.selectedVariantScore.value != null"
+            class="flex flex-col gap-4 tablet:flex-row tablet:items-start tablet:gap-6"
+          >
+            <div class="flex shrink-0 flex-col gap-0.5">
+              <span class="mave-label">Functional score</span>
               <span class="text-sm font-semibold text-text-primary">{{
                 formatScore(lookup.selectedVariantScore.value)
               }}</span>
             </div>
-            <div class="flex flex-col gap-0.5">
-              <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">ACMG code</span>
-              <MvEvidenceTag
-                v-if="lookup.calibrationResolution.formattedEvidenceCode.value"
-                :code="lookup.calibrationResolution.formattedEvidenceCode.value"
-              />
-              <span v-else class="text-sm text-text-muted">—</span>
-            </div>
-            <div class="flex flex-col gap-0.5">
-              <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">OddsPath ratio</span>
-              <span class="text-sm font-semibold text-text-primary">{{
-                lookup.calibrationResolution.scoreRange.value?.oddspathsRatio ?? '—'
-              }}</span>
-            </div>
-            <div v-if="lookup.selectedVariantControlStatus.value" class="flex flex-col gap-0.5">
-              <span v-key-term="'calibration'" class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]"
-                >Calibration control</span
-              >
-              <span class="flex items-center">
-                <MvBadge :value="lookup.selectedVariantControlStatus.value" />
-                <span class="ml-1.5 text-xs text-text-muted">used to derive this calibration</span>
-              </span>
+            <div
+              class="flex min-w-0 flex-1 flex-col gap-3 border-t border-border-light pt-3 tablet:border-t-0 tablet:border-l tablet:pt-0 tablet:pl-6"
+            >
+              <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
+                <span v-key-term="'calibration'" class="mave-label shrink-0">Calibration</span>
+                <template v-if="lookup.selectedCalibrationObject.value">
+                  <!-- Switching here re-derives the call below and the histogram's shading; one shared selection. Fixed width so
+                       the trigger doesn't resize with each title. -->
+                  <PSelect
+                    v-if="calibrationOptions.length > 1"
+                    aria-label="Calibration"
+                    class="w-full min-w-0 tablet:w-80"
+                    :model-value="lookup.selectedCalibration.value"
+                    option-label="title"
+                    option-value="urn"
+                    :options="calibrationOptions"
+                    size="small"
+                    @update:model-value="lookup.selectedCalibration.value = $event"
+                  >
+                    <template #value>
+                      <span class="flex min-w-0 items-center gap-1.5 text-xs">
+                        <span class="truncate">{{ lookup.selectedCalibrationObject.value.title }}</span>
+                        <span v-if="lookup.selectedCalibrationObject.value.primary" class="mave-tag mave-tag-primary"
+                          >Primary</span
+                        >
+                        <span
+                          v-if="lookup.selectedCalibrationObject.value.researchUseOnly"
+                          class="mave-tag mave-tag-ruo"
+                          >Research use only</span
+                        >
+                      </span>
+                    </template>
+                    <template #option="{option}">
+                      <span class="flex items-center gap-1.5 text-xs">
+                        <span>{{ option.title }}</span>
+                        <span v-if="option.primary" class="mave-tag mave-tag-primary">Primary</span>
+                        <span v-if="option.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
+                      </span>
+                    </template>
+                  </PSelect>
+                  <span v-else class="flex min-w-0 items-center gap-1.5">
+                    <span class="truncate">{{ lookup.selectedCalibrationObject.value.title }}</span>
+                    <span
+                      v-if="lookup.selectedCalibrationObject.value.primary"
+                      v-key-term="'calibration'"
+                      class="mave-tag mave-tag-primary"
+                      >Primary</span
+                    >
+                    <span
+                      v-if="lookup.selectedCalibrationObject.value.researchUseOnly"
+                      v-key-term="'calibration'"
+                      class="mave-tag mave-tag-ruo"
+                      >Research use only</span
+                    >
+                  </span>
+                  <button
+                    class="ml-auto flex shrink-0 cursor-pointer items-center gap-1 font-semibold whitespace-nowrap text-link hover:underline"
+                    type="button"
+                    @click="scrollToDistribution"
+                  >
+                    See full calibration <i class="pi pi-arrow-down !text-[10px]" />
+                  </button>
+                </template>
+                <!-- Otherwise the empty call cells read as missing data rather than as nothing to calibrate against. -->
+                <span v-else class="text-text-muted">
+                  None provided, so this score has no functional impact or evidence code.
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-x-10 gap-y-3">
+                <div class="flex flex-col gap-0.5">
+                  <span v-key-term="'functional-impact'" class="mave-label w-fit">Functional impact</span>
+                  <span
+                    v-if="lookup.calibrationResolution.classification.value"
+                    class="flex flex-wrap items-center gap-1"
+                  >
+                    <MvClassificationTag :classification="lookup.calibrationResolution.classification.value" />
+                  </span>
+                  <span v-else class="text-sm text-text-muted">—</span>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span v-key-term="'acmg'" class="mave-label w-fit">ACMG code</span>
+                  <MvEvidenceTag
+                    v-if="lookup.calibrationResolution.formattedEvidenceCode.value"
+                    :code="lookup.calibrationResolution.formattedEvidenceCode.value"
+                  />
+                  <span v-else class="text-sm text-text-muted">—</span>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span v-key-term="'acmg'" class="mave-label w-fit">OddsPath ratio</span>
+                  <span class="text-sm font-semibold text-text-primary">{{
+                    lookup.calibrationResolution.scoreRange.value?.oddspathsRatio ?? '—'
+                  }}</span>
+                </div>
+                <div v-if="lookup.selectedVariantControlStatus.value" class="flex flex-col gap-0.5">
+                  <span v-key-term="'calibration'" class="mave-label">Calibration control</span>
+                  <span class="flex items-center">
+                    <MvBadge :value="lookup.selectedVariantControlStatus.value" />
+                    <span class="ml-1.5 text-xs text-text-muted">used to derive this calibration</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
           <p v-else class="text-xs-plus italic text-text-muted">No score available</p>
-        </div>
+        </MvPanel>
 
         <!-- Assay facts (about the selected measurement) -->
-        <div
-          v-if="lookup.selectedVariantDetail.value"
-          class="relative mt-4 rounded-lg border border-border bg-surface px-[18px] py-3.5"
-        >
+        <MvPanel v-if="lookup.selectedVariantDetail.value" ref="assayFacts" class="mt-4" title="Assay facts">
           <MvAssayFactsCard
             :assay-level="lookup.selectedVariantDetail.value?.assayLevel ?? null"
             :columns="2"
             :score-set="lookup.selectedScoreSet.value ?? undefined"
+            :show-title="false"
             show-urn
             :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
           />
@@ -302,45 +347,42 @@
               </template>
             </div>
           </div>
-        </div>
+        </MvPanel>
 
-        <!-- ── CLINICAL, POPULATION & RELATED VARIATION ──
-             X (this variant) is always pinned — its clinical/population data belongs to this exact allele, so
-             it never follows the selection. Y (the measured allele) is pinned too when the selection assayed a
-             different allele. Everything else collapses underneath, each carrying its own per-level reference. -->
-        <div
-          v-if="lookup.selectedVariantDetail.value && alleleGroups.length > 0"
-          class="relative mt-4 rounded-lg border border-border bg-surface px-[18px] py-3.5"
+        <!-- ── CLINICAL & POPULATION DATA ── your variant (X) and the other nucleotide changes in its family, across all
+             measurements; the highlight marks the form the selected measurement (Y) assayed. -->
+        <MvPanel
+          v-if="
+            lookup.selectedVariantDetail.value &&
+            pageAlleleGroups.some((g) => g.members.some((m) => m.level !== 'protein'))
+          "
+          ref="clinical"
+          class="mt-4"
+          :padded="false"
+          title="Clinical & population data"
         >
+          <template v-if="clingenAlleleId.startsWith('PA')" #meta
+            >Nucleotide changes that encode this protein change</template
+          >
           <MvAlleleLedger
-            :alleles="lookup.selectedVariantDetail.value.alleles"
-            :annotations="lookup.selectedVariantDetail.value.annotations"
+            :alleles="pageAlleles.alleles"
+            :anchor-is-protein="clingenAlleleId.startsWith('PA')"
+            :annotations="pageAlleles.annotations"
             :clinvar-version="clinvarControls.controlVersion"
-            :groups="alleleGroups"
-            :measured-digests="[...lookup.measuredDigests.value]"
+            :groups="pageAlleleGroups"
             :variant-urn="lookup.selectedVariantDetail.value.urn"
           />
-        </div>
+        </MvPanel>
 
         <!-- ── SCORE DISTRIBUTION ── -->
-        <div v-if="lookup.selectedScoreSet.value" class="mt-4 rounded-lg border border-border bg-surface">
-          <div
-            class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 tablet:px-5 py-3.5"
-          >
-            <div class="min-w-0">
-              <router-link
-                class="text-base tablet:text-lg font-bold text-link"
-                :to="{
-                  name: 'scoreSet',
-                  params: {urn: lookup.selectedScoreSet.value.urn},
-                  query: {variant: lookup.selectedVariantDetail.value?.urn}
-                }"
-              >
-                {{ lookup.selectedScoreSet.value.title }}
-              </router-link>
-            </div>
-          </div>
-          <div class="p-3 tablet:p-5">
+        <MvPanel
+          v-if="lookup.selectedScoreSet.value"
+          ref="scoreDistribution"
+          class="mt-4 scroll-mt-20"
+          :padded="false"
+          title="Score distribution"
+        >
+          <div class="px-4 py-3 tablet:px-5">
             <div v-if="lookup.scores.value && lookup.scores.value.length > 0" class="min-h-[200px]">
               <ScoreSetHistogram
                 :key="lookup.selectedScoreSetUrn.value || ''"
@@ -355,24 +397,18 @@
                 @calibration-changed="lookup.selectedCalibration.value = $event"
                 @selection-changed="() => {}"
               />
-              <!-- Shown only when the page variant is in this envelope but wasn't itself measured — otherwise
-                   we can't say whether it was measured, so we say nothing rather than guess from a stand-in. -->
-              <p v-if="pageGroup && !pageGroup.measured" class="mt-2 text-xs italic leading-tight text-text-muted">
-                Your variant was not directly measured. The highlighted bin contains a measured variant with the same
-                protein change.
-              </p>
             </div>
             <div v-else class="flex min-h-[200px] items-center justify-center">
               <MvLoader text="Loading variant information..." />
             </div>
           </div>
-          <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light p-5">
+          <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light px-4 py-3 tablet:px-5">
             <CalibrationTable
               :highlighted-range-label="lookup.calibrationResolution.scoreRange.value?.label || null"
               :score-calibration="lookup.selectedCalibrationObject.value"
             />
           </div>
-        </div>
+        </MvPanel>
       </template>
     </div>
     <MvCsvColumnDialog
@@ -387,7 +423,7 @@
 
 <script lang="ts">
 import DatePicker from 'primevue/datepicker'
-import Select from 'primevue/select'
+import PSelect from 'primevue/select'
 import {defineComponent, toRef, type PropType} from 'vue'
 import {useRoute} from 'vue-router'
 import {useHead} from '@unhead/vue'
@@ -396,6 +432,7 @@ import {useToast} from 'primevue/usetoast'
 import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import MvErrorState from '@/components/common/MvErrorState.vue'
+import MvPanel from '@/components/common/MvPanel.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
@@ -410,14 +447,17 @@ import {useClinvarControls} from '@/composables/use-clinvar-controls'
 import {useKeyDrawer} from '@/composables/use-key-drawer'
 import MvAlleleLedger from '@/components/variant/MvAlleleLedger.vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
-import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
+import MvMeasurementTable from '@/components/variant/MvMeasurementTable.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
-import {assayLevelDisplay} from '@/lib/measurement-types'
 import {formatScore} from '@/lib/scores'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
-import {groupAlleles, titleMember, type AlleleGroup} from '@/lib/allele-grouping'
+import {groupAlleles, mergeDetailAlleles, titleMember, type AlleleGroup} from '@/lib/allele-grouping'
+import {indirectMeasurementNotice, shortHgvs} from '@/lib/measurement-groups'
 import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
+import type {components} from '@/schema/openapi'
+
+type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 /** One entry in a download control: a label and the download it triggers. */
 interface DownloadOption {
@@ -437,6 +477,7 @@ export default defineComponent({
   components: {
     CalibrationTable,
     DatePicker,
+    PSelect,
     MvAlleleLedger,
     MvClassificationTag,
     MvAssayFactsCard,
@@ -447,12 +488,12 @@ export default defineComponent({
     MvEvidenceTag,
     MvLayout,
     MvLoader,
-    MvMeasurementCard,
+    MvMeasurementTable,
     MvPageHeader,
+    MvPanel,
     MvRowActionMenu,
     MvPageLoading,
     MvCsvColumnDialog,
-    PSelect: Select,
     ScoreSetHistogram
   },
 
@@ -461,7 +502,7 @@ export default defineComponent({
       type: String,
       required: true
     },
-    // The `?variant=` highlight URN — pre-selects a measurement card.
+    // The `?variant=` highlight URN — pre-selects a measurement.
     highlightVariantUrn: {
       type: [String, null] as PropType<string | null>,
       default: null
@@ -491,11 +532,29 @@ export default defineComponent({
   data() {
     return {
       csvDialogVisible: false,
-      viewOptionsOpen: false
+      viewOptionsOpen: false,
+      // Set by a row click; cleared once the Functional evidence box has rendered and been scrolled to.
+      scrollToEvidencePending: false,
+      // The clinical table's highlighted row when a row click began, to tell whether the highlight moved.
+      highlightedRowBeforeSelection: null as string | null
     }
   },
 
   computed: {
+    // The clinical table row the selected measurement assayed; null for a protein-level measurement (no row).
+    highlightedRowKey(): string | null {
+      return this.pageAlleleGroups.find((g) => g.measured && g.members.some((m) => m.level !== 'protein'))?.key ?? null
+    },
+    // The selected score set's calibrations as the histogram's picker orders them: primary, then clinical-grade, then
+    // research-use-only, alphabetical within each.
+    calibrationOptions(): ScoreCalibration[] {
+      const calibrations = [...(this.lookup.selectedScoreSet.value?.scoreCalibrations ?? [])] as ScoreCalibration[]
+      const tier = (c: ScoreCalibration) => (c.primary ? 0 : c.researchUseOnly ? 2 : 1)
+      return calibrations.sort((a, b) => tier(a) - tier(b) || (a.title ?? '').localeCompare(b.title ?? ''))
+    },
+    calibrationChoice(): {scoreSet: string | null; calibration: string | null} {
+      return {scoreSet: this.lookup.selectedScoreSetUrn.value, calibration: this.lookup.selectedCalibration.value}
+    },
     queryAxisState(): {includeSuperseded: boolean; asOf: string | null; selectedVariantUrn: string | null} {
       return {
         includeSuperseded: this.lookup.includeSuperseded.value,
@@ -521,23 +580,42 @@ export default defineComponent({
         pageClingenAlleleId: this.clingenAlleleId
       })
     },
-    // The page variant's own allele group — never a stand-in group, or claims keyed off this (the
-    // Functional-evidence badge, the histogram caption) get attributed to the wrong allele. Null is a
-    // real state (envelope doesn't carry the page variant); consumers render nothing, not a guess.
-    pageGroup(): AlleleGroup | null {
-      return this.alleleGroups.find((g) => g.pageRoot) ?? null
+    // Every allele across all loaded measurements, so the clinical table's rows don't change with the selection.
+    pageAlleles(): ReturnType<typeof mergeDetailAlleles> {
+      return mergeDetailAlleles(this.lookup.loadedVariantDetails.value, this.lookup.selectedVariantDetail.value)
+    },
+    pageAlleleGroups(): AlleleGroup[] {
+      return groupAlleles({...this.pageAlleles, pageClingenAlleleId: this.clingenAlleleId})
+    },
+    // The protein change a nucleotide page's variant encodes. The clinical table has no protein row (protein alleles
+    // carry no external records), so the header is the route to its page.
+    proteinPage(): {clingenAlleleId: string; hgvs: string} | null {
+      if (this.clingenAlleleId.startsWith('PA')) return null
+      const protein = this.pageAlleleGroups
+        .flatMap((g) => g.members)
+        .find((m) => m.level === 'protein' && m.clingenAlleleId)
+      if (!protein?.clingenAlleleId) return null
+      return {clingenAlleleId: protein.clingenAlleleId, hgvs: shortHgvs(protein.hgvs ?? '')}
+    },
+    subtitleFacts(): string[] {
+      return [
+        this.lookup.geneName.value,
+        this.lookup.clingenAllele.grch38LocationText.value,
+        this.lookup.asOf.value ? `MaveDB as of ${this.lookup.asOf.value}` : null
+      ].filter((fact): fact is string => fact != null)
     },
     // ClinGen Allele Registry deep link for the page variant.
     clingenRegistryUrl(): string {
       return clingenAlleleUrlFromCanonicalId(this.clingenAlleleId)
     },
-    // The one-time explanation of an indirect measurement, naming the measured variant by its HGVS when the
-    // envelope carries it. Null for a direct measurement — the badge alone says everything there is to say.
-    indirectNotice(): {hgvs: string | null} | null {
-      const rel = this.lookup.selectedVariant.value?.relationship
-      if (!rel || rel === 'direct') return null
+    // The table headers only name an indirect relationship; this notice spells out its caveat.
+    indirectNotice(): ReturnType<typeof indirectMeasurementNotice> {
       const measuredGroup = this.alleleGroups.find((g) => g.measured)
-      return {hgvs: (measuredGroup && titleMember(measuredGroup)?.hgvs) || null}
+      return indirectMeasurementNotice(
+        this.lookup.selectedVariant.value?.relationship,
+        this.clingenAlleleId.startsWith('PA'),
+        (measuredGroup && titleMember(measuredGroup)?.hgvs) || null
+      )
     },
     // Non-default view settings, surfaced on the closed View options button.
     viewOptionCount(): number {
@@ -564,12 +642,6 @@ export default defineComponent({
       set(value: Date | null) {
         this.lookup.asOf.value = value ? this.toIsoDate(value) : null
       }
-    },
-    measurementOptions(): {label: string; urn: string}[] {
-      return this.lookup.filteredVariants.value.map((m) => ({
-        label: `${m.scoreSetTitle || 'Untitled score set'} (${assayLevelDisplay(m.assayLevel).label}${m.relationship === 'direct' ? '' : ', indirect'})`,
-        urn: m.variantUrn
-      }))
     },
     /**
      * The flat table download: one CSV of this allele's measurements.
@@ -672,6 +744,20 @@ export default defineComponent({
         this.lookup.includeSuperseded.value = includeSuperseded
       if ((this.lookup.asOf.value ?? null) !== asOf) this.lookup.asOf.value = asOf
     },
+    'lookup.selectedVariantDetail.value'() {
+      if (this.scrollToEvidencePending) this.scrollToEvidence()
+    },
+    // A new calibration pick re-derives the Functional evidence call and the histogram's shading; ring both, since the
+    // pick may come from either panel.
+    // Defaults filled in on load or by a score-set switch aren't picks, so only a change within one score set counts.
+    calibrationChoice(
+      next: {scoreSet: string | null; calibration: string | null},
+      previous: {scoreSet: string | null; calibration: string | null}
+    ) {
+      if (next.scoreSet === previous.scoreSet && previous.calibration && next.calibration !== previous.calibration) {
+        this.$nextTick(() => this.flashPanels(['functionalEvidence', 'scoreDistribution']))
+      }
+    },
     'lookup.clingenAllele.alleleName.value'(name: string | undefined) {
       this.head!.patch({title: name ? `Variant ${name}` : 'Variant'})
     }
@@ -679,6 +765,53 @@ export default defineComponent({
 
   methods: {
     formatScore,
+
+    // Choosing a measurement is a request to read its evidence, so jump there. A first-time selection may
+    // still be loading, in which case the detail watcher finishes the scroll once the box renders.
+    selectMeasurement(variantUrn: string) {
+      this.highlightedRowBeforeSelection = this.highlightedRowKey
+      this.lookup.selectVariant(variantUrn)
+      this.scrollToEvidencePending = true
+      this.scrollToEvidence()
+    },
+
+    scrollToEvidence() {
+      this.$nextTick(() => {
+        const box = (this.$refs.functionalEvidence as InstanceType<typeof MvPanel> | undefined)?.$el as
+          | HTMLElement
+          | undefined
+        // Wait for the box to show the new selection; the previous one may still be rendered.
+        const showsSelection = this.lookup.selectedVariantDetail.value?.urn === this.lookup.selectedVariantUrn.value
+        if (!box || !showsSelection) return
+        box.scrollIntoView({behavior: 'smooth', block: 'start'})
+        // Ring every panel the new selection changed. The clinical table's rows never change, only its highlight,
+        // so it counts only when the highlight moved.
+        const changed = ['functionalEvidence', 'assayFacts', 'scoreDistribution']
+        if (this.highlightedRowKey !== this.highlightedRowBeforeSelection) changed.push('clinical')
+        this.flashPanels(changed)
+        this.scrollToEvidencePending = false
+      })
+    },
+
+    // Ring panels whose contents just changed, so it's clear what an action affected. Dropping the class and
+    // forcing a reflow lets re-adding it replay an in-progress ring.
+    flashPanels(refs: string[]) {
+      for (const ref of refs) {
+        const panel = (this.$refs[ref] as InstanceType<typeof MvPanel> | undefined)?.$el as HTMLElement | undefined
+        if (!panel) continue
+        panel.classList.remove('mave-flash-outline')
+        void panel.offsetWidth
+        panel.classList.add('mave-flash-outline')
+        panel.addEventListener('animationend', () => panel.classList.remove('mave-flash-outline'), {once: true})
+      }
+    },
+
+    scrollToDistribution() {
+      const panel = (this.$refs.scoreDistribution as InstanceType<typeof MvPanel> | undefined)?.$el as
+        | HTMLElement
+        | undefined
+      panel?.scrollIntoView({behavior: 'smooth', block: 'start'})
+    },
 
     downloadSelectedCsv({namespaces}: {namespaces: string[]}) {
       this.lookup.downloadVariantCsvFile(namespaces)
@@ -693,24 +826,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style scoped>
-/* Thin scrollbar for horizontal measurement card scroller */
-.measurement-switcher {
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
-}
-
-.measurement-switcher::-webkit-scrollbar {
-  height: 6px;
-}
-
-.measurement-switcher::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.measurement-switcher::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 3px;
-}
-</style>

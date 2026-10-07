@@ -3,6 +3,47 @@ import type {KeySection} from '@/composables/use-key-drawer'
 import type {SequenceLevel} from '@/composables/use-variant-coordinates'
 
 export type MeasurementRelationship = components['schemas']['MeasurementRelationship']
+type AlleleMeasurement = components['schemas']['AlleleMeasurement']
+type SavedFunctionalClassification = components['schemas']['SavedFunctionalClassification']
+
+/**
+ * The call a measurement row shows: its preferred (clinical-grade) classification, else the API's display-only
+ * research-use-only fallback, flagged so the row can tag it. Ranking never uses the fallback; the API orders
+ * rows on `preferredClassification` alone.
+ */
+export function displayedClassification(
+  measurement: AlleleMeasurement
+): {classification: SavedFunctionalClassification; researchUseOnly: boolean} | null {
+  if (measurement.preferredClassification) {
+    return {classification: measurement.preferredClassification, researchUseOnly: false}
+  }
+  if (measurement.researchUseOnlyClassification) {
+    return {classification: measurement.researchUseOnlyClassification, researchUseOnly: true}
+  }
+  return null
+}
+
+/**
+ * A classification's ACMG evidence code, e.g. "PS3_MODERATE", or null when it carries no evidence strength. A
+ * research-use-only call still follows the clinical rules, so its code is shown beside its RUO tag.
+ */
+export function evidenceCode(classification: SavedFunctionalClassification | null | undefined): string | null {
+  const acmg = classification?.acmgClassification
+  if (!acmg?.evidenceStrength) return null
+  return `${acmg.criterion}_${acmg.evidenceStrength.toUpperCase()}`
+}
+
+/** "PS3_MODERATE_PLUS" reads as "PS3 Moderate+": criterion as written, strength in title case. */
+export function formatEvidenceCode(code: string): string {
+  const [first, ...rest] = code.toUpperCase().split('_')
+  const titleCase = (word: string) => word.charAt(0) + word.slice(1).toLowerCase()
+  if (!/^[PB]S\d/.test(first)) return [first, ...rest].map(titleCase).join(' ')
+  const strength = rest
+    .map(titleCase)
+    .join(' ')
+    .replace(/ Plus$/, '+')
+  return strength ? `${first} ${strength}` : first
+}
 
 // The interface collapses the three sequence levels ('genomic' | 'cdna' | 'protein') to two assay-level
 // buckets: the nucleotide levels (genomic + coding) share one; protein is 'amino acid'. The finer
@@ -13,33 +54,46 @@ export function assayLevelBucket(level: string | null | undefined): LevelBucket 
   return level === 'protein' ? 'amino acid' : 'nucleotide'
 }
 
-/**
- * Single source of truth for the measurement-to-query relationship badge (the RT asymmetry). The badge only
- * flags whether the measurement assayed the page's own variant: `direct`, or `indirect` for both
- * related-variant relationships. The detail (which related variant, and its HGVS) is stated once, in the
- * Functional evidence notice, so the vocabulary here stays two words.
- */
-export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class: string}> = {
-  direct: {label: 'Direct', class: 'bg-subject/15 text-subject'},
-  protein_consequence: {label: 'Indirect', class: 'bg-convergent-light text-convergent'},
-  nucleotide_encoding: {label: 'Indirect', class: 'bg-convergent-light text-convergent'}
-}
+/** The tag marking the page's own variant in the clinical table. */
+export const YOUR_VARIANT_TAG = {label: 'Your variant', class: 'bg-subject/15 text-subject-strong'}
 
+/** The tag marking the clinical-table row the selected measurement assayed; follows the selection, as its sage does. */
+export const SELECTED_MEASUREMENT_TAG = {label: 'Selected measurement', class: 'bg-sage/25 text-sage-strong'}
+
+/**
+ * How a measured or listed variant relates to the page's variant, in the words of the measurement table's group
+ * headers and the clinical table's separator. Covers both a nucleotide-change page and a protein-change page.
+ */
 export const RELATIONSHIP_KEY_SECTION: KeySection = {
   id: 'relationship',
-  title: 'Direct and indirect measurements',
-  gloss: 'Whether a measurement assayed your variant itself.',
+  title: 'Relationship to your variant',
+  gloss: 'How a measured or listed variant relates to the variant this page is about.',
   terms: [
     {
-      label: RELATIONSHIPS.direct.label,
-      definition: 'The measurement assayed your variant itself.',
-      class: RELATIONSHIPS.direct.class
+      label: YOUR_VARIANT_TAG.label,
+      definition: 'The variant this page is about. A measurement of this exact change measured your variant directly.',
+      class: YOUR_VARIANT_TAG.class
     },
     {
-      label: RELATIONSHIPS.protein_consequence.label,
+      label: SELECTED_MEASUREMENT_TAG.label,
       definition:
-        'The measurement assayed a related variant instead: the protein change your variant produces, or a nucleotide variant that encodes the same protein change. Its score stands in for your variant rather than measuring it directly.',
-      class: RELATIONSHIPS.protein_consequence.class
+        'In the clinical table: the variant the measurement selected above actually assayed, or, for a protein-level measurement, the protein change every listed variant encodes. It moves as you select different measurements.',
+      class: SELECTED_MEASUREMENT_TAG.class
+    },
+    {
+      label: 'The protein change it encodes',
+      definition:
+        'A measurement of the protein change your nucleotide change encodes. It reflects the protein change, so nucleotide-level effects such as splicing may not be captured.'
+    },
+    {
+      label: 'Encodes the same protein change',
+      definition:
+        'A different nucleotide change that encodes the same protein change as yours. A measurement of it stands in for yours, but may differ where the nucleotide change itself matters.'
+    },
+    {
+      label: 'Encodes this protein change',
+      definition:
+        'On a protein-change page: a nucleotide change that encodes this protein change. A measurement of it can also include effects of the nucleotide change itself, such as splicing.'
     }
   ]
 }

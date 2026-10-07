@@ -11,9 +11,11 @@ import {triggerDownload} from '@/lib/downloads'
 import {describeRequestError} from '@/lib/errors'
 import {getExperimentKeyword} from '@/lib/experiments'
 import {assayLevelBucket} from '@/lib/measurement-types'
+import {getScoreSetShortName} from '@/lib/score-sets'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
+type VariantDetail = components['schemas']['VariantDetail']
 
 export type {AlleleMeasurement}
 
@@ -42,16 +44,17 @@ export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
   // The selected measurement's own status as one of the active calibration's controls, if it was used as one.
   selectedVariantControlStatus: ComputedRef<CalibrationControlStatus | null>
 
-  // Digests of every allele that has a measurement of its own in the list — the page-wide notion of
-  // "measured", independent of which measurement is selected. Fills in as detail prefetches resolve.
-  measuredDigests: ComputedRef<Set<string>>
-
-  // Per-measurement helpers (for measurement cards)
+  // Per-measurement helpers (for the measurement table)
   getKeyword: (scoreSetUrn: string | null | undefined, key: string) => string | null
+  // Whether the score set has been prefetched, so a null keyword means "not provided" rather than "not loaded".
+  isScoreSetLoaded: (scoreSetUrn: string) => boolean
+  // The score set's short citation name (as Assay facts heads it), or null until loaded or without a publication.
+  getCitation: (scoreSetUrn: string) => string | null
 
   // Page-level
   geneName: ComputedRef<string | null>
-  uniqueAssayCount: ComputedRef<number>
+  // Every measurement's detail loaded so far (fills in as prefetches resolve) — the page-wide allele set.
+  loadedVariantDetails: ComputedRef<VariantDetail[]>
 
   // Downloads
   // Names the file being prepared, or null when idle. One indicator for every download here, which also
@@ -77,7 +80,7 @@ export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
  * - The measurements list order is authoritative; the default selection is simply the first entry (or
  *   the `?variant=` highlight when present).
  * - Details, score sets, and score data are cached per-URN to avoid redundant fetches when switching
- *   between measurement cards.
+ *   between measurements.
  * - Any query-axis change (anchor, superseded scope, content valid-time) refetches and clears the caches.
  *
  * Used by: VariantScreen.vue
@@ -131,19 +134,6 @@ export function useVariantLookup(
   const cache = useMeasurementCache(asOf)
   const selection = useMeasurementSelection(variants, filteredVariants, highlightUrn, cache)
 
-  // An allele is "measured" if any measurement's envelope flags it as that measurement's focus. Read from
-  // the prefetched details, so it is stable as the selection changes (unlike `isFocus` on one envelope).
-  const measuredDigests = computed(() => {
-    const digests = new Set<string>()
-    for (const m of variants.value) {
-      const alleles = cache.variantDetails.value[m.variantUrn]?.alleles ?? {}
-      for (const [digest, identity] of Object.entries(alleles)) {
-        if (identity.isFocus) digests.add(digest)
-      }
-    }
-    return digests
-  })
-
   // The selected variant's own status as one of the active calibration's controls, if it was used
   // as one — distinct from `calibrationResolution`, which classifies the variant by score.
   const selectedVariantControlStatus = computed<CalibrationControlStatus | null>(() => {
@@ -159,7 +149,20 @@ export function useVariantLookup(
     const targets = cache.scoreSets.value[scoreSetUrnOf(firstUrn)]?.targetGenes
     return targets && targets.length > 0 ? targets[0].name || null : null
   })
-  const uniqueAssayCount = computed(() => new Set(variants.value.map((m) => m.scoreSetUrn)).size)
+
+  const loadedVariantDetails = computed(() =>
+    variants.value.map((m) => cache.variantDetails.value[m.variantUrn]).filter((d): d is VariantDetail => d != null)
+  )
+
+  function isScoreSetLoaded(scoreSetUrn: string): boolean {
+    return scoreSetUrn in cache.scoreSets.value
+  }
+
+  function getCitation(scoreSetUrn: string): string | null {
+    const scoreSet = cache.scoreSets.value[scoreSetUrn]
+    if (!scoreSet?.primaryPublicationIdentifiers?.length) return null
+    return getScoreSetShortName(scoreSet)
+  }
 
   function getKeyword(scoreSetUrn: string | null | undefined, key: string): string | null {
     if (!scoreSetUrn) return null
@@ -302,10 +305,11 @@ export function useVariantLookup(
     proteinCount,
     filteredVariants,
     selectedVariantControlStatus,
-    measuredDigests,
     getKeyword,
+    getCitation,
+    isScoreSetLoaded,
     geneName,
-    uniqueAssayCount,
+    loadedVariantDetails,
     downloadInProgressLabel,
     fetchVariantAnnotations,
     downloadVariantCsvFile

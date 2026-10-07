@@ -1114,10 +1114,10 @@ export default defineComponent({
               CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(c.significance)
             )
             ? tooltipFootnote(
-                'A related variant with the same protein change is conflicting — the directional call is shown.'
+                'A related variant that encodes the same protein change is conflicting — the directional call is shown.'
               )
             : tooltipFootnote(
-                'A related variant with the same protein change is of uncertain significance — the directional call is shown.'
+                'A related variant that encodes the same protein change is of uncertain significance — the directional call is shown.'
               )
           : null
       const reviewStatus = control[DEFAULT_CLNREVSTAT_FIELD]
@@ -1140,7 +1140,7 @@ export default defineComponent({
       // variants"), rather than a bare asterisk that needs its own legend to decode.
       const projectedNote = control.projected
         ? tooltipFootnote(
-            'This classification is inferred from a related variant with the same protein change. The measured variant has no ClinVar record of its own.'
+            'This classification is inferred from a related variant that encodes the same protein change. The measured variant has no ClinVar record of its own.'
           )
         : null
 

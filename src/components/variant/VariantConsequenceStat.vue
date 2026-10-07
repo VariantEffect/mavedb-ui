@@ -2,11 +2,11 @@
   <div :class="plain ? 'flex h-full flex-col gap-0.5' : 'stat'">
     <!-- Label defaults to the score-set stat label; callers (e.g. MvAlleleLedger) may inject their own,
          mirroring VariantGnomadStat/VariantClinvarStat. -->
-    <slot name="label"><span v-key-term="'consequence'" class="stat-label">Molecular consequence</span></slot>
+    <slot name="label"><span v-key-term="'consequence'" class="mave-label w-fit">Molecular consequence</span></slot>
     <template v-if="consequence">
       <span class="stat-value font-semibold">{{ formatConsequence(consequence) }}</span>
-      <span v-if="sourceVersion" class="mt-auto text-[10px] text-text-muted"
-        >As of VEP version {{ sourceVersion }}</span
+      <span v-if="sourceVersion && showRelease" class="mt-auto text-[10px] text-text-muted"
+        >As of VEP {{ sourceVersion }}</span
       >
     </template>
     <span v-else class="stat-value">—</span>
@@ -34,7 +34,9 @@ export default defineComponent({
     // ledger), where the caller supplies the wrapper and a `#label` slot.
     plain: {type: Boolean, default: false},
     // The subject's coalesced VEP annotation (consequence + sourceVersion), or null when absent.
-    vep: {type: Object as PropType<AlleleAnnotations['vep'] | null>, default: null}
+    vep: {type: Object as PropType<AlleleAnnotations['vep'] | null>, default: null},
+    // False when a surrounding table states the VEP release once in its column header.
+    showRelease: {type: Boolean, default: true}
   },
 
   computed: {
@@ -58,14 +60,6 @@ export default defineComponent({
   gap: 3px;
   background: var(--color-surface);
   padding: 10px 14px;
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-muted);
 }
 
 .stat-value {

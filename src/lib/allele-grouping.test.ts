@@ -1,9 +1,10 @@
 import {describe, expect, it} from 'vitest'
 
 import {
-  ALLELE_CONFIDENCE,
-  confidenceBadge,
+  type AlleleGroup,
   groupAlleles,
+  mergeDetailAlleles,
+  sharedReleases,
   titleMember,
   type GroupAllelesInput
 } from '@/lib/allele-grouping'
@@ -11,6 +12,7 @@ import type {components} from '@/schema/openapi'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
+type VariantDetail = components['schemas']['VariantDetail']
 
 function vep(consequence: string): AlleleAnnotations {
   return {vep: {consequence}} as AlleleAnnotations
@@ -25,14 +27,19 @@ function run(overrides: Partial<GroupAllelesInput>) {
   })
 }
 
-const none: ReadonlySet<string> = new Set()
-
 describe('groupAlleles — projection pairing + confidence', () => {
   // Nucleotide (cdna) assay: the measured cdna folds into its pair's group with its genomic projection;
   // the protein apex is a deterministic projection, unpaired.
   const nucleotide: Record<string, AlleleIdentity> = {
     c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, isFocus: true, projectionOf: 'g'},
-    g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'coordinate_representation_of', isFocus: false, derivation: 'projection', projectionOf: 'c'},
+    g: {
+      level: 'genomic',
+      hgvs: 'NC_x:g.100C>T',
+      relation: 'coordinate_representation_of',
+      isFocus: false,
+      derivation: 'projection',
+      projectionOf: 'c'
+    },
     p: {level: 'protein', hgvs: 'NP_x:p.Leu2Phe', relation: 'translation_of', isFocus: false, derivation: 'projection'}
   }
 
@@ -55,10 +62,38 @@ describe('groupAlleles — projection pairing + confidence', () => {
   // Protein assay: the protein apex is the focus/measured allele; the nucleotide fan-out is candidate pairs.
   const protein: Record<string, AlleleIdentity> = {
     p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, isFocus: true},
-    c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'g1'},
-    g1: {level: 'genomic', hgvs: 'NC_x:g.200C>G', relation: 'coordinate_representation_of', isFocus: false, derivation: 'candidate', projectionOf: 'c1'},
-    c2: {level: 'cdna', hgvs: 'NM_x:c.16C>A', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'g2'},
-    g2: {level: 'genomic', hgvs: 'NC_x:g.200C>A', relation: 'coordinate_representation_of', isFocus: false, derivation: 'candidate', projectionOf: 'c2'}
+    c1: {
+      level: 'cdna',
+      hgvs: 'NM_x:c.16C>G',
+      relation: 'encodes',
+      isFocus: false,
+      derivation: 'candidate',
+      projectionOf: 'g1'
+    },
+    g1: {
+      level: 'genomic',
+      hgvs: 'NC_x:g.200C>G',
+      relation: 'coordinate_representation_of',
+      isFocus: false,
+      derivation: 'candidate',
+      projectionOf: 'c1'
+    },
+    c2: {
+      level: 'cdna',
+      hgvs: 'NM_x:c.16C>A',
+      relation: 'encodes',
+      isFocus: false,
+      derivation: 'candidate',
+      projectionOf: 'g2'
+    },
+    g2: {
+      level: 'genomic',
+      hgvs: 'NC_x:g.200C>A',
+      relation: 'coordinate_representation_of',
+      isFocus: false,
+      derivation: 'candidate',
+      projectionOf: 'c2'
+    }
   }
 
   it('keeps the apex measured and collapses each candidate hypothesis into one group', () => {
@@ -118,7 +153,14 @@ describe('groupAlleles — projection pairing + confidence', () => {
     const groups = run({
       alleles: {
         p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, isFocus: true},
-        c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'missing'}
+        c1: {
+          level: 'cdna',
+          hgvs: 'NM_x:c.16C>G',
+          relation: 'encodes',
+          isFocus: false,
+          derivation: 'candidate',
+          projectionOf: 'missing'
+        }
       }
     })
     const candidate = groups.find((g) => g.derivation === 'candidate')!
@@ -137,34 +179,26 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(groups[0].measured).toBe(false)
   })
 
-  it('badges selected over derivation, maps projection→Resolved / convergent→Convergent / candidate→Candidate, else null', () => {
-    // The selected measurement's variant wins even if a derivation is also present.
-    expect(confidenceBadge({measured: true, derivation: 'projection', members: []}, none)).toBe(
-      ALLELE_CONFIDENCE.selected
-    )
-    expect(confidenceBadge({measured: false, derivation: 'projection', members: []}, none)).toBe(
-      ALLELE_CONFIDENCE.projection
-    )
-    // A synonymous cousin under a nucleotide assay: a distinct change sharing the consequence, not ambiguous.
-    expect(confidenceBadge({measured: false, derivation: 'convergent', members: []}, none)).toBe(
-      ALLELE_CONFIDENCE.convergent
-    )
-    // The protein-assay reverse-translation fan-out: genuinely ambiguous.
-    expect(confidenceBadge({measured: false, derivation: 'candidate', members: []}, none)).toBe(
-      ALLELE_CONFIDENCE.candidate
-    )
-    // The focus/measured allele carries no derivation; on its own (measured false) it has no badge.
-    expect(confidenceBadge({measured: false, derivation: null, members: []}, none)).toBeNull()
-    // The user-facing labels are decoupled from the enum keys.
-    expect(ALLELE_CONFIDENCE.projection.label).toBe('Resolved')
-    expect(ALLELE_CONFIDENCE.convergent.label).toBe('Convergent')
-  })
-
   it('surfaces distinct linked CAIDs, excluding the page anchor', () => {
     const groups = run({
       alleles: {
-        c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, clingenAlleleId: 'CA1', isFocus: true, projectionOf: 'g'},
-        g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'coordinate_representation_of', clingenAlleleId: 'CA1', isFocus: false, derivation: 'projection', projectionOf: 'c'}
+        c: {
+          level: 'cdna',
+          hgvs: 'NM_x:c.6C>T',
+          relation: null,
+          clingenAlleleId: 'CA1',
+          isFocus: true,
+          projectionOf: 'g'
+        },
+        g: {
+          level: 'genomic',
+          hgvs: 'NC_x:g.100C>T',
+          relation: 'coordinate_representation_of',
+          clingenAlleleId: 'CA1',
+          isFocus: false,
+          derivation: 'projection',
+          projectionOf: 'c'
+        }
       },
       pageClingenAlleleId: 'CA1'
     })
@@ -192,19 +226,58 @@ describe('titleMember', () => {
   })
 })
 
-describe('confidenceBadge — page-wide measured', () => {
-  const [pair] = run({
-    alleles: {
-      c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, isFocus: false, derivation: 'convergent', projectionOf: 'g'},
-      g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: null, isFocus: false, derivation: 'convergent', projectionOf: 'c'}
-    }
+describe('mergeDetailAlleles', () => {
+  const identity = (overrides: Partial<AlleleIdentity>): AlleleIdentity =>
+    ({level: 'cdna', hgvs: 'NM_x:c.1A>G', relation: null, isFocus: false, ...overrides}) as AlleleIdentity
+  const detail = (alleles: Record<string, AlleleIdentity>, annotations: Record<string, AlleleAnnotations> = {}) =>
+    ({alleles, annotations}) as unknown as VariantDetail
+
+  it('unions alleles and annotations across details', () => {
+    const merged = mergeDetailAlleles([detail({a: identity({})}, {a: vep('x')}), detail({b: identity({})})], null)
+    expect(Object.keys(merged.alleles).sort()).toEqual(['a', 'b'])
+    expect(merged.annotations).toEqual({a: vep('x')})
   })
 
-  it('reads Measured for a variant measured elsewhere, overriding its relative derivation', () => {
-    expect(confidenceBadge(pair, new Set(['g']))).toBe(ALLELE_CONFIDENCE.measured)
+  it("takes an allele's identity from the selected detail, whose focus it is relative to", () => {
+    const other = detail({a: identity({derivation: 'candidate'})})
+    const selected = detail({a: identity({derivation: 'projection', isFocus: true})})
+    expect(mergeDetailAlleles([other, selected], selected).alleles.a).toMatchObject({
+      derivation: 'projection',
+      isFocus: true
+    })
   })
 
-  it('falls back to the relative derivation when no member is measured anywhere', () => {
-    expect(confidenceBadge(pair, new Set(['other']))).toBe(ALLELE_CONFIDENCE.convergent)
+  it('takes focus from the selected detail alone', () => {
+    const other = detail({a: identity({isFocus: true})})
+    expect(mergeDetailAlleles([other], detail({})).alleles.a.isFocus).toBe(false)
+  })
+})
+
+describe('sharedReleases', () => {
+  const group = (coalescedAnnotations: AlleleAnnotations | null) => ({coalescedAnnotations}) as AlleleGroup
+  const annotations = (vepVersion: string, gnomad: string, clinvar: string[]) =>
+    ({
+      vep: {sourceVersion: vepVersion},
+      gnomad: {dbVersion: gnomad},
+      clinvar: clinvar.map((dbVersion) => ({dbVersion}))
+    }) as unknown as AlleleAnnotations
+
+  it('reports a release every group with a record agrees on, ignoring groups without one', () => {
+    const groups = [group(annotations('112', 'v4.1', ['01_2026'])), group(null)]
+    expect(sharedReleases(groups, null)).toEqual({vep: '112', gnomad: 'v4.1', clinvar: '01_2026'})
+  })
+
+  it('is null for a source whose groups disagree', () => {
+    const groups = [group(annotations('112', 'v4.1', [])), group(annotations('113', 'v4.1', []))]
+    expect(sharedReleases(groups, null)).toMatchObject({vep: null, gnomad: 'v4.1', clinvar: null})
+  })
+
+  it('compares the pinned ClinVar release rather than each latest', () => {
+    const groups = [
+      group(annotations('112', 'v4.1', ['01_2026', '03_2026'])),
+      group(annotations('112', 'v4.1', ['01_2026']))
+    ]
+    expect(sharedReleases(groups, null).clinvar).toBeNull()
+    expect(sharedReleases(groups, '01_2026').clinvar).toBe('01_2026')
   })
 })

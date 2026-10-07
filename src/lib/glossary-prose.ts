@@ -1,20 +1,5 @@
 import type {KeySection} from '@/composables/use-key-drawer'
 
-// Single source for the "Your variant" concept — the page's own subject variant — as badged on the allele
-// ledger's page-role entry (MvAlleleLedger). Leads GLOSSARY_SECTIONS (glossary.ts): establishing the subject
-// first lets "Direct and indirect measurements" read naturally right after it.
-export const THIS_VARIANT_KEY_SECTION: KeySection = {
-  id: 'your-variant',
-  title: 'Your variant',
-  terms: [
-    {
-      label: 'Your variant',
-      definition: 'The variant this page is about.',
-      class: 'bg-subject/15 text-subject'
-    }
-  ]
-}
-
 export const CONSEQUENCE_KEY_SECTION: KeySection = {
   id: 'consequence',
   title: 'Molecular consequence',

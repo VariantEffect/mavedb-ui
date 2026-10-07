@@ -7,6 +7,8 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
+import {formatEvidenceCode} from '@/lib/measurement-types'
+
 export default defineComponent({
   name: 'MvEvidenceTag',
 
@@ -37,8 +39,7 @@ export default defineComponent({
       return ''
     },
     displayCode(): string {
-      // Insert zero-width space after underscores for wrapping
-      return this.normalizedCode.replace(/_/g, '_\u200b')
+      return formatEvidenceCode(this.normalizedCode)
     }
   }
 })

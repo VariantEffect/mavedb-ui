@@ -12,7 +12,7 @@ export interface GenomicLocation {
 export interface UseClingenAlleleReturn {
   allele: Ref<ClinGenAllele | undefined>
   alleleName: ComputedRef<string | undefined>
-  allGenomicLocationsText: ComputedRef<string | null>
+  grch38LocationText: ComputedRef<string | null>
   genomicLocations: ComputedRef<GenomicLocation[]>
   clinvarAlleleIds: ComputedRef<string[]>
   fetchAllele: () => Promise<void>
@@ -42,7 +42,10 @@ export function useClingenAllele(clingenAlleleId: Ref<string>): UseClingenAllele
 
   watch(clingenAlleleId, fetchAllele, {immediate: true})
 
-  const alleleName = computed(() => allele.value?.communityStandardTitle?.[0] || undefined)
+  // Amino-acid (PA) records carry no communityStandardTitle; their protein HGVS is the name.
+  const alleleName = computed(
+    () => allele.value?.communityStandardTitle?.[0] || allele.value?.aminoAcidAlleles?.[0]?.hgvs?.[0] || undefined
+  )
 
   const genomicLocations = computed<GenomicLocation[]>(() =>
     (allele.value?.genomicAlleles || [])
@@ -54,13 +57,10 @@ export function useClingenAllele(clingenAlleleId: Ref<string>): UseClingenAllele
       }))
   )
 
-  // Every mapped reference-genome build a variant mapped to.
-  const allGenomicLocationsText = computed(() => {
-    const locs = genomicLocations.value
-    if (locs.length === 0) return null
-    return locs
-      .map((loc) => `chr${loc.chromosome}:${Number(loc.start).toLocaleString()} (${loc.referenceGenome})`)
-      .join(', ')
+  // GRCh38 only; the ClinGen Allele Registry link carries the other builds.
+  const grch38LocationText = computed(() => {
+    const loc = genomicLocations.value.find((l) => l.referenceGenome === 'GRCh38')
+    return loc ? `chr${loc.chromosome}:${Number(loc.start).toLocaleString()} (GRCh38)` : null
   })
 
   const clinvarAlleleIds = computed(() => (allele.value?.externalRecords?.ClinVarAlleles || []).map((a) => a.alleleId))
@@ -68,7 +68,7 @@ export function useClingenAllele(clingenAlleleId: Ref<string>): UseClingenAllele
   return {
     allele,
     alleleName,
-    allGenomicLocationsText,
+    grch38LocationText,
     genomicLocations,
     clinvarAlleleIds,
     fetchAllele

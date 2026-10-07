@@ -3,12 +3,14 @@ import {describe, expect, it, test} from 'vitest'
 import {
   CHROMOSOME_REFSEQ_IDS,
   collectGnomadFrequencies,
+  formatAlleleCount,
   formatFrequency,
   gnomadIdToHgvs,
   gnomadIdToHgvsCandidates,
   gnomadVariantUrl,
   otherAssembly,
   parseGnomadId,
+  resolveGnomadHeadline,
   type UnderlyingGnomad
 } from './gnomad'
 
@@ -99,7 +101,9 @@ describe('collectGnomadFrequencies — enumeration of encoding-variant frequenci
         'n-digest': {gnomad: gnomad({dbIdentifier: 'X'})},
         'g-digest': {gnomad: gnomad({dbIdentifier: 'X'})}
       }
-      expect(collectGnomadFrequencies(annotations, {'n-digest': {hgvs: 'n.5A>G'}, 'g-digest': {hgvs: 'g.100A>G'}})[0]?.hgvs).toBe('g.100A>G')
+      expect(
+        collectGnomadFrequencies(annotations, {'n-digest': {hgvs: 'n.5A>G'}, 'g-digest': {hgvs: 'g.100A>G'}})[0]?.hgvs
+      ).toBe('g.100A>G')
       expect(collectGnomadFrequencies(annotations, {'g-digest': {hgvs: 'g.100A>G'}})[0]?.hgvs).toBe('g.100A>G')
     })
   })
@@ -138,6 +142,51 @@ describe('collectGnomadFrequencies — enumeration of encoding-variant frequenci
 function grch38Hgvs(gnomadId: string): string | undefined {
   return gnomadIdToHgvsCandidates(gnomadId)[0]?.hgvs
 }
+
+describe('resolveGnomadHeadline — which frequency a cell shows', () => {
+  const own = gnomad({dbIdentifier: 'own', alleleFrequency: 0.003})
+  const related = {
+    'subject-digest': {gnomad: null},
+    'enc-a': {gnomad: gnomad({dbIdentifier: 'enc-a', alleleFrequency: 0.0002})},
+    'enc-b': {gnomad: gnomad({dbIdentifier: 'enc-b', alleleFrequency: 0.004})}
+  }
+
+  test("the subject's own record wins at any level", () => {
+    const headline = resolveGnomadHeadline(own, related, {}, ['subject-digest'], 'protein')
+    expect(headline.state).toBe('direct')
+    expect(headline.direct).toBe(own)
+    expect(headline.maxAf).toBeNull()
+  })
+
+  test('protein level with no record of its own pools related frequencies, max AF first', () => {
+    const headline = resolveGnomadHeadline(null, related, {}, ['subject-digest'], 'protein')
+    expect(headline.state).toBe('enumerated')
+    expect(headline.maxAf).toBe(0.004)
+    expect(ids(headline.underlying)).toEqual(['enc-b', 'enc-a'])
+  })
+
+  test('unknown level behaves like protein level', () => {
+    expect(resolveGnomadHeadline(null, related, {}, ['subject-digest'], null).state).toBe('enumerated')
+  })
+
+  test.each(['cdna', 'genomic'])('%s level never borrows related frequencies', (level) => {
+    const headline = resolveGnomadHeadline(null, related, {}, ['subject-digest'], level)
+    expect(headline.state).toBe('absent')
+    expect(headline.maxAf).toBeNull()
+  })
+
+  test('nothing anywhere → none', () => {
+    expect(resolveGnomadHeadline(null, {}, {}, [], 'protein').state).toBe('none')
+  })
+})
+
+describe('formatAlleleCount', () => {
+  test('compacts large counts and leaves small ones', () => {
+    expect(formatAlleleCount(1614062)).toBe('1.6M')
+    expect(formatAlleleCount(7)).toBe('7')
+    expect(formatAlleleCount(12500)).toBe('12.5K')
+  })
+})
 
 describe('parseGnomadId', () => {
   it('parses a substitution', () => {

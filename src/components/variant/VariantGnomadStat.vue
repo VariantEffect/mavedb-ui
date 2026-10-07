@@ -1,9 +1,8 @@
 <template>
-  <div :class="plain ? 'flex h-full flex-col gap-0.5' : 'stat'">
-    <!-- Label defaults to the score-set stat label; callers (e.g. the variant screen) inject their own. -->
-    <slot name="label"><span v-key-term="'population'" class="stat-label">gnomAD</span></slot>
+  <div class="stat">
+    <span v-key-term="'population'" class="mave-label w-fit">gnomAD</span>
     <!-- The subject allele's own frequency: the canonical statistic. -->
-    <MvGnomadSummary v-if="headlineState === 'direct'" :gnomad="assayGnomad!" />
+    <MvGnomadCell v-if="headlineState === 'direct'" :gnomad="assayGnomad" />
     <!-- No frequency on the subject itself, but its encoding variants carry frequencies (protein level assay):
          enumerate them as a max-AF headline + a popover of full allele-level frequencies. -->
     <span v-else-if="headlineState === 'enumerated'" class="stat-value font-semibold"
@@ -19,9 +18,8 @@
     <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projection's
          provenance: it states the headline is inferred, not a direct assertion on this variant, and opens the
          records it was pooled from. For a non-projected headline it's pure context (records that didn't drive
-         the call), and a caller can suppress it for a *direct* headline where those alleles are already laid
-         out elsewhere (e.g. MvAlleleLedger). -->
-    <template v-if="underlyingGnomad.length && (showUnderlyingPopover || headlineState === 'enumerated')">
+         the call). -->
+    <template v-if="underlyingGnomad.length">
       <button
         class="text-xs text-link"
         :class="
@@ -34,8 +32,8 @@
       >
         <template v-if="headlineState === 'enumerated'">
           <i class="pi pi-info-circle shrink-0 !text-xs not-italic" />
-          <span class="underline decoration-dotted"
-            >pooled from {{ underlyingGnomad.length }} related
+          <span class="whitespace-nowrap underline decoration-dotted"
+            >pooled from {{ underlyingGnomad.length }}
             {{ underlyingGnomad.length === 1 ? 'variant' : 'variants' }}</span
           >
         </template>
@@ -54,7 +52,7 @@
             class="flex flex-col gap-1 border-t border-border-light pt-2 first:border-t-0 first:pt-0"
           >
             <span v-if="item.hgvs" class="font-mono text-xs font-semibold text-text-primary">{{ item.hgvs }}</span>
-            <MvGnomadSummary :gnomad="item.gnomad" />
+            <MvGnomadCell :gnomad="item.gnomad" />
           </div>
         </div>
       </Popover>
@@ -66,9 +64,15 @@
 import {defineComponent, type PropType} from 'vue'
 import Popover from 'primevue/popover'
 
-import MvGnomadSummary from '@/components/variant/MvGnomadSummary.vue'
+import MvGnomadCell from '@/components/variant/MvGnomadCell.vue'
 import {type SubjectDigest, toSubjectDigestSet} from '@/lib/annotation-subject'
-import {collectGnomadFrequencies, formatFrequency, type UnderlyingGnomad} from '@/lib/gnomad'
+import {
+  formatFrequency,
+  type GnomadHeadline,
+  resolveGnomadHeadline,
+  type UnderlyingGnomad,
+  underlyingGnomadNote
+} from '@/lib/gnomad'
 import type {components} from '@/schema/openapi'
 
 type GnomadAnnotation = components['schemas']['GnomadAnnotation']
@@ -77,23 +81,16 @@ type AlleleIdentity = components['schemas']['AlleleIdentity']
 type SequenceLevel = components['schemas']['SequenceLevel']
 
 /**
- * The gnomAD stat cell. Placement rules mirror {@link VariantClinvarStat}:
- *  - the subject allele's own frequency wins as the headline, with its link;
- *  - at *protein* level, a subject with no frequency of its own enumerates its encoding variants' distinct
- *    frequencies (max-AF headline + popover), noting it isn't established which underlies the measurement;
- *  - at *nucleotide* level, a subject with no frequency stays explicit ('No gnomAD record for this allele') —
- *    we don't borrow a related variant's frequency — and any related frequencies show below as context.
- * The subject is the measured allele on the score-set panel, or the page's own allele on the variant page.
+ * The gnomAD stat cell for the score-set variant panel. Placement rules (own record, pooled at protein level,
+ * explicit absence at nucleotide level) come from {@link resolveGnomadHeadline}; this component adds the panel
+ * layout and the related-frequency popover.
  */
 export default defineComponent({
   name: 'VariantGnomadStat',
 
-  components: {Popover, MvGnomadSummary},
+  components: {MvGnomadCell, Popover},
 
   props: {
-    // Drop the score-set `.stat` chrome (bg/padding) so the cell can be embedded on its own (e.g. the
-    // variant screen's evidence panel), where the caller supplies the wrapper and a `#label` slot.
-    plain: {type: Boolean, default: false},
     // The subject allele's own gnomAD annotation, or null (e.g. a protein-level assay).
     assayGnomad: {type: Object as PropType<GnomadAnnotation | null>, default: null},
     // Digest-keyed annotations for the whole record. Source for the encoding-variant enumeration.
@@ -105,45 +102,34 @@ export default defineComponent({
     assayLevelDigest: {type: [String, Array] as PropType<SubjectDigest>, default: null},
     // The subject allele's sequence level. Gates the enumeration: at nucleotide level a missing frequency
     // stays explicit ('absent') rather than borrowing related variants'. `null` → enumerate (unknown).
-    assayLevel: {type: String as PropType<SequenceLevel | null>, default: null},
-    // Hide the "N related frequencies" popover for a direct/absent headline — for callers (e.g. MvAlleleLedger)
-    // that already lay those alleles out as their own cards. An enumerated (pooled) headline always shows
-    // its popover — essential provenance for the pooled number.
-    showUnderlyingPopover: {type: Boolean, default: true}
+    assayLevel: {type: String as PropType<SequenceLevel | null>, default: null}
   },
 
   computed: {
+    headline(): GnomadHeadline {
+      return resolveGnomadHeadline(
+        this.assayGnomad,
+        this.annotations,
+        this.alleles,
+        toSubjectDigestSet(this.assayLevelDigest),
+        this.assayLevel
+      )
+    },
+    headlineState(): GnomadHeadline['state'] {
+      return this.headline.state
+    },
     underlyingGnomad(): UnderlyingGnomad[] {
-      return collectGnomadFrequencies(this.annotations, this.alleles, toSubjectDigestSet(this.assayLevelDigest))
+      return this.headline.underlying
     },
-    // Only enumerate related frequencies as a headline at protein level (or unknown); at nucleotide level a
-    // missing direct frequency is final — mirrors the ClinVar projection gate.
-    canEnumerate(): boolean {
-      return this.assayLevel !== 'cdna' && this.assayLevel !== 'genomic'
-    },
-    // The headline: the subject's own frequency, an enumerated max-AF (protein), an explicit absence
-    // (nucleotide), or nothing.
-    headlineState(): 'direct' | 'enumerated' | 'absent' | 'none' {
-      if (this.assayGnomad) return 'direct'
-      if (this.canEnumerate && this.underlyingGnomad.length) return 'enumerated'
-      if (this.underlyingGnomad.length) return 'absent'
-      return 'none'
-    },
-    // Sorted highest-first, so the leading entry is the max — the enumerated headline stat.
     underlyingGnomadMaxAf(): number | null {
-      return this.underlyingGnomad[0]?.gnomad.alleleFrequency ?? null
+      return this.headline.maxAf
     },
     // Only the non-enumerated (context) trigger uses this — the enumerated trigger writes its own caveat copy.
     underlyingLabel(): string {
       return `related ${this.underlyingGnomad.length === 1 ? 'frequency' : 'frequencies'}`
     },
     underlyingGnomadNote(): string {
-      if (this.headlineState === 'enumerated') {
-        return this.underlyingGnomad.length === 1
-          ? 'The frequency of any variants in gnomAD which can encode this protein change. This assay does not establish which one underlies the measurement.'
-          : 'Frequencies of any variants in gnomAD which can encode this protein change. This assay does not establish which of them underlie the measurement.'
-      }
-      return 'Other variants with the same protein change that also have gnomAD frequencies.'
+      return underlyingGnomadNote(this.headlineState, this.underlyingGnomad.length)
     }
   },
 
@@ -164,14 +150,6 @@ export default defineComponent({
   gap: 3px;
   background: var(--color-surface);
   padding: 10px 14px;
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-muted);
 }
 
 .stat-value {

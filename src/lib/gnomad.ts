@@ -98,6 +98,57 @@ export function collectGnomadFrequencies(
 }
 
 /**
+ * Which frequency a gnomAD cell headlines for its subject allele:
+ *  - `direct`: the subject's own record;
+ *  - `enumerated`: protein (or unknown) level with no record of its own, so the max AF across the variants that
+ *    can encode it, pooled from `underlying`;
+ *  - `absent`: nucleotide level with no record of its own; related frequencies are never borrowed;
+ *  - `none`: nothing to show.
+ */
+export type GnomadHeadlineState = 'direct' | 'enumerated' | 'absent' | 'none'
+
+export interface GnomadHeadline {
+  state: GnomadHeadlineState
+  // The subject's own record (`direct` only).
+  direct: GnomadAnnotation | null
+  // Related frequencies, highest AF first (see {@link collectGnomadFrequencies}).
+  underlying: UnderlyingGnomad[]
+  // The pooled headline AF (`enumerated` only).
+  maxAf: number | null
+}
+
+/**
+ * Resolve a gnomAD cell's headline, shared by every surface that shows a frequency so the placement rules live
+ * and are tested in one place. Mirrors the ClinVar projection gate: only a protein (or unknown) level subject
+ * may headline related variants' frequencies.
+ */
+export function resolveGnomadHeadline(
+  assayGnomad: GnomadAnnotation | null | undefined,
+  annotations: Record<string, {gnomad?: GnomadAnnotation | null}> | null | undefined,
+  alleles: Record<string, {hgvs?: string | null}> | null | undefined,
+  subjectDigests: Iterable<string> | undefined,
+  assayLevel: string | null | undefined
+): GnomadHeadline {
+  const underlying = collectGnomadFrequencies(annotations, alleles, subjectDigests)
+  const canEnumerate = assayLevel !== 'cdna' && assayLevel !== 'genomic'
+  if (assayGnomad) return {state: 'direct', direct: assayGnomad, underlying, maxAf: null}
+  if (canEnumerate && underlying.length) {
+    return {state: 'enumerated', direct: null, underlying, maxAf: underlying[0].gnomad.alleleFrequency}
+  }
+  return {state: underlying.length ? 'absent' : 'none', direct: null, underlying, maxAf: null}
+}
+
+/** Popover note explaining a cell's related frequencies, worded for whether they were pooled into the headline. */
+export function underlyingGnomadNote(state: GnomadHeadlineState, count: number): string {
+  if (state === 'enumerated') {
+    return count === 1
+      ? 'The frequency of any variants in gnomAD which can encode this protein change. This assay does not establish which one underlies the measurement.'
+      : 'Frequencies of any variants in gnomAD which can encode this protein change. This assay does not establish which of them underlie the measurement.'
+  }
+  return 'Other variants that encode the same protein change and also have gnomAD frequencies.'
+}
+
+/**
  * Translation of gnomAD variant IDs (e.g. 1-11796321-G-A) into genomic HGVS.
  *
  * A gnomAD ID is a VCF-style chromosome-position-reference-alternate tuple that doesn't name the reference genome its
@@ -278,6 +329,11 @@ export function gnomadVariantUrl(gnomad: {dbIdentifier: string; dbVersion: strin
   const dataset = GNOMAD_BROWSER_DATASETS[parseInt(gnomad.dbVersion.replace(/^\D+/, ''), 10)]
   const url = `https://gnomad.broadinstitute.org/variant/${encodeURIComponent(gnomad.dbIdentifier)}`
   return dataset ? `${url}?dataset=${dataset}` : url
+}
+
+/** An allele count/number in compact form for tight cells, e.g. 1,614,062 → "1.6M". */
+export function formatAlleleCount(value: number): string {
+  return new Intl.NumberFormat('en-US', {notation: 'compact', maximumFractionDigits: 1}).format(value)
 }
 
 /** A frequency (e.g. gnomAD AF): scientific notation for the very rare, else 3 significant figures. */

@@ -1,6 +1,15 @@
 import {describe, expect, it} from 'vitest'
 
-import {assayLevelBucket, dominantAssayLevel, RELATIONSHIPS, RELATIONSHIP_KEY_SECTION} from '@/lib/measurement-types'
+import {
+  assayLevelBucket,
+  displayedClassification,
+  dominantAssayLevel,
+  evidenceCode,
+  formatEvidenceCode,
+  RELATIONSHIP_KEY_SECTION,
+  SELECTED_MEASUREMENT_TAG,
+  YOUR_VARIANT_TAG
+} from '@/lib/measurement-types'
 
 describe('assayLevelBucket', () => {
   it('returns "amino acid" for protein', () => {
@@ -54,18 +63,79 @@ describe('dominantAssayLevel', () => {
   })
 })
 
-describe('RELATIONSHIPS', () => {
-  it('flags a direct measurement as Direct', () => {
-    expect(RELATIONSHIPS.direct.label).toBe('Direct')
+describe('RELATIONSHIP_KEY_SECTION', () => {
+  it('defines the Your variant tag with its chip styling', () => {
+    expect(RELATIONSHIP_KEY_SECTION.terms[0]).toMatchObject(YOUR_VARIANT_TAG)
   })
 
-  it('flags both related-variant relationships with the same Indirect badge', () => {
-    expect(RELATIONSHIPS.protein_consequence).toEqual(RELATIONSHIPS.nucleotide_encoding)
-    expect(RELATIONSHIPS.protein_consequence.label).toBe('Indirect')
+  it('defines the Selected measurement tag the clinical table moves with the selection', () => {
+    expect(RELATIONSHIP_KEY_SECTION.terms).toContainEqual(expect.objectContaining(SELECTED_MEASUREMENT_TAG))
   })
 
-  it('defines exactly the labels its badges can show in the Key drawer', () => {
-    const badgeLabels = new Set(Object.values(RELATIONSHIPS).map((r) => r.label))
-    expect(new Set(RELATIONSHIP_KEY_SECTION.terms.map((t) => t.label))).toEqual(badgeLabels)
+  it('covers both page perspectives on a nucleotide change', () => {
+    const labels = RELATIONSHIP_KEY_SECTION.terms.map((t) => t.label)
+    expect(labels).toContain('Encodes the same protein change')
+    expect(labels).toContain('Encodes this protein change')
+  })
+})
+
+describe('displayedClassification', () => {
+  const base = {
+    variantUrn: 'urn:mavedb:00000001-a-1#1',
+    relationship: 'direct',
+    scoreSetUrn: 'urn:mavedb:00000001-a-1',
+    scoreSetTitle: 'Score set',
+    isCurrent: true
+  } as const
+  const call = (functionalClassification: string) => ({functionalClassification}) as never
+
+  it('prefers the clinical-grade call', () => {
+    expect(
+      displayedClassification({
+        ...base,
+        preferredClassification: call('normal'),
+        researchUseOnlyClassification: call('abnormal')
+      })
+    ).toEqual({classification: call('normal'), researchUseOnly: false})
+  })
+
+  it('falls back to the research-use-only call, flagged', () => {
+    expect(displayedClassification({...base, researchUseOnlyClassification: call('abnormal')})).toEqual({
+      classification: call('abnormal'),
+      researchUseOnly: true
+    })
+  })
+
+  it('returns null when neither call exists', () => {
+    expect(displayedClassification({...base})).toBeNull()
+  })
+})
+
+describe('evidenceCode', () => {
+  it('joins the criterion and upper-cased strength', () => {
+    expect(evidenceCode({acmgClassification: {criterion: 'PS3', evidenceStrength: 'moderate'}} as never)).toBe(
+      'PS3_MODERATE'
+    )
+  })
+
+  it('returns null without an evidence strength or classification', () => {
+    expect(evidenceCode({acmgClassification: {criterion: 'PS3', evidenceStrength: null}} as never)).toBeNull()
+    expect(evidenceCode({} as never)).toBeNull()
+    expect(evidenceCode(null)).toBeNull()
+  })
+})
+
+describe('formatEvidenceCode', () => {
+  it('title-cases the strength and abbreviates Plus', () => {
+    expect(formatEvidenceCode('PS3_MODERATE_PLUS')).toBe('PS3 Moderate+')
+    expect(formatEvidenceCode('bs3_strong')).toBe('BS3 Strong')
+  })
+
+  it('leaves a bare criterion alone', () => {
+    expect(formatEvidenceCode('PS3')).toBe('PS3')
+  })
+
+  it('title-cases every word of a non-ACMG code', () => {
+    expect(formatEvidenceCode('NOT_PROVIDED')).toBe('Not Provided')
   })
 })

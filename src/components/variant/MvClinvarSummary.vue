@@ -24,7 +24,7 @@
     </template>
     <template v-if="showProvenance">
       <span class="flex mt-auto text-[10px] text-text-muted">
-        <span>As of ClinVar {{ formatClinvarVersion(clinvar.dbVersion) }} ·&nbsp</span>
+        <span v-if="showRelease">As of ClinVar {{ formatClinvarVersion(clinvar.dbVersion) }} ·&nbsp;</span>
         <a
           v-if="url"
           class="text-link font-semibold hover:underline"
@@ -60,7 +60,9 @@ export default defineComponent({
 
   props: {
     clinvar: {type: Object as PropType<ClinvarAnnotation>, required: true},
-    showProvenance: {type: Boolean, default: true}
+    showProvenance: {type: Boolean, default: true},
+    // False when a surrounding table states the release once in its column header; the link-out stays.
+    showRelease: {type: Boolean, default: true}
   },
 
   computed: {

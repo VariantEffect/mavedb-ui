@@ -340,7 +340,8 @@ describe('useCsvNamespaces default selection', () => {
     }),
     entry({
       namespace: 'calibration.urn:mavedb:calibration-2',
-      label: 'Research Use Only: Provisional',
+      label: 'Provisional',
+      researchUseOnly: true,
       group: 'calibration',
       selectedByDefault: false
     })
@@ -363,7 +364,7 @@ describe('useCsvNamespaces default selection', () => {
 
     expect(namespaces.value).toHaveLength(3)
     const calibrationSection = sections.value.find((section) => section.group === 'calibration')
-    expect(calibrationSection?.namespaces.map((entry) => entry.label)).toContain('Research Use Only: Provisional')
+    expect(calibrationSection?.namespaces.map((entry) => entry.label)).toContain('Provisional')
   })
 
   it('is not fully selected on load when a group is excluded by default', async () => {

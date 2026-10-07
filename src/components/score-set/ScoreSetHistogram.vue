@@ -11,6 +11,10 @@
       <button class="mavedb-threshold-trigger" type="button" @click="toggleThresholdsPopover">
         <span class="mavedb-threshold-trigger-label">Active calibration</span>
         <span class="mavedb-threshold-trigger-value">{{ activeCalibration.label }}</span>
+        <span v-if="activeCalibration.value?.primary" class="mave-tag mave-tag-primary shrink-0">Primary</span>
+        <span v-if="activeCalibration.value?.researchUseOnly" class="mave-tag mave-tag-ruo shrink-0"
+          >Research use only</span
+        >
         <i class="pi pi-chevron-down mavedb-threshold-trigger-icon" />
       </button>
       <Popover ref="thresholdsPopoverRef" class="mavedb-thresholds-popover">
@@ -26,15 +30,8 @@
             @click="selectCalibration(option)"
           >
             <span class="mavedb-thresholds-option-label">{{ option.value?.title ?? 'None' }}</span>
-            <span
-              v-if="option.value?.researchUseOnly"
-              class="mavedb-thresholds-badge mavedb-thresholds-badge--research"
-            >
-              Research Use Only
-            </span>
-            <span v-if="option.value?.primary" class="mavedb-thresholds-badge mavedb-thresholds-badge--primary">
-              Primary
-            </span>
+            <span v-if="option.value?.researchUseOnly" class="mave-tag mave-tag-ruo shrink-0"> Research use only </span>
+            <span v-if="option.value?.primary" class="mave-tag mave-tag-primary shrink-0"> Primary </span>
             <i
               v-if="activeCalibration.value?.urn === option.value?.urn"
               class="pi pi-check mavedb-thresholds-option-check"
@@ -783,8 +780,8 @@ export default defineComponent({
       if (!this.scoreCalibrations) return []
 
       const calibrationOptions = Object.entries(this.scoreCalibrations).map(([, value]) => {
-        // Base label on title, prepend "Research Use Only" if classification is tagged as research use
-        let label = value.researchUseOnly ? `Research Use Only: ${value.title}` : value.title
+        // Research-use-only and primary status render as tags beside the title, not in it.
+        let label = value.title
         // Append asterisk if class-based
         label = value.functionalClassifications?.every((fc) => fc.class != null) ? `${label}*` : label
         return {
@@ -1700,26 +1697,6 @@ export default defineComponent({
   font-size: 12px;
   color: var(--p-primary-color, #3b82f6);
   flex-shrink: 0;
-}
-
-.mavedb-thresholds-badge {
-  flex-shrink: 0;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.mavedb-thresholds-badge--research {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.mavedb-thresholds-badge--primary {
-  background: #d1ecf1;
-  color: #0c5460;
 }
 
 .histogram-tooltip {

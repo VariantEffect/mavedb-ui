@@ -39,6 +39,7 @@
             :class="{'pl-3': subsection.label}">
             <Checkbox v-model="selected" :value="entry.namespace" />
             {{ entry.label }}
+            <span v-if="entry.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
           </label>
         </template>
       </div>

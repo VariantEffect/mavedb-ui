@@ -2034,6 +2034,11 @@ export interface components {
       group: components["schemas"]["CsvNamespaceGroup"];
       scoreSet?: components["schemas"]["ShorterScoreSet"] | null;
       /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /**
        * Selectedbydefault
        * @default true
        */

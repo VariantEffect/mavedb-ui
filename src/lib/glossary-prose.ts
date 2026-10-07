@@ -38,6 +38,18 @@ export const CALIBRATION_KEY_SECTION: KeySection = {
     {
       label: 'Calibration control',
       definition: 'A variant with an established clinical classification, used to derive the calibration.'
+    },
+    {
+      label: 'Primary',
+      definition:
+        "The score set's main calibration, shown by default and used to interpret its scores. A score set has at most one, and it cannot be research use only.",
+      class: 'mave-tag-primary'
+    },
+    {
+      label: 'Research use only',
+      definition:
+        'Not intended for clinical or diagnostic use, for example because its method is exploratory or not yet validated. Do not rely on it alone to classify a variant.',
+      class: 'mave-tag-ruo'
     }
   ]
 }

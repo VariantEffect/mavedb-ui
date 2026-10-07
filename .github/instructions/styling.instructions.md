@@ -15,8 +15,9 @@ Key tokens:
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--color-sage` | `#78b793` | Primary brand color (PrimeVue: `sagePalette`) |
-| `--color-sage-dark` | `#5a9375` | Hover state for sage |
+| `--color-sage` | `#78b793` | Primary brand color for fills, borders and icons; fails WCAG AA as text (PrimeVue: `sagePalette`) |
+| `--color-sage-dark` | `#5a9375` | Hover fills; as text only at 20px bold or larger |
+| `--color-sage-strong` | `#3a654e` | Sage-colored text and links (passes AA on white and sage tints) |
 | `--color-mint` | `#a1d8c8` | Accent backgrounds |
 | `--color-orange-cta` | `#f8971d` | Warn/CTA actions (PrimeVue: `orangePalette`) |
 | `--color-danger` | `#D05353` | Destructive actions (PrimeVue: `dangerPalette`) |
@@ -56,7 +57,7 @@ Located in `src/assets/`:
 
 ## Fonts
 
-- **Body**: Raleway (`@fontsource/raleway`)
+- **Body**: Raleway (`@fontsource/raleway`, weights 400/500/600/700 and 400 italic). Import each weight file explicitly in `MvLayout.vue`: the package index ships only 400, and any missing weight is browser-synthesized. Body text sets `font-feature-settings: 'lnum'` because Raleway defaults to old-style figures; use `tabular-nums` where digits align in columns.
 - **Display/Headings**: Exo 2 (`@fontsource/exo-2`, weights 700/800/900)
 
 ## Layout Patterns

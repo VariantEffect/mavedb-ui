@@ -17,7 +17,7 @@
       <div class="flex items-center justify-between border-b border-border-light pb-2">
         <span class="text-sm text-text-muted">{{ selectionSummary }}</span>
         <button
-          class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage hover:underline"
+          class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage-strong hover:underline"
           type="button"
           @click="toggleAll()">
           {{ allSelected ? 'Select none' : 'Select all' }}

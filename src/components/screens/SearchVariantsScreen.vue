@@ -4,7 +4,7 @@
       <!-- HERO -->
       <section class="bg-[#fafcfa] px-6 py-10 text-center">
         <img alt="MaveMD" class="mx-auto h-24" src="@/assets/mavemd-logo.png" />
-        <h1 class="mt-4 font-display text-2xl font-bold leading-tight text-dark md:text-3xl">
+        <h1 class="mt-4 font-display text-2xl font-bold leading-tight text-text-dark md:text-3xl">
           MAVE evidence for clinical variant interpretation
         </h1>
         <p class="mx-auto mt-2.5 max-w-[580px] text-sm leading-relaxed text-gray-500 md:text-base">
@@ -30,7 +30,7 @@
         class="border-b border-gray-200 bg-linear-to-br from-published-light via-[#fafcfa] to-unpublished-light px-6 py-9"
       >
         <div class="mx-auto mb-5 max-w-[800px] text-center">
-          <div class="text-lg font-bold text-dark">Find functional evidence for a variant</div>
+          <div class="text-lg font-bold text-text-dark">Find functional evidence for a variant</div>
           <div class="mt-1.5 text-sm text-gray-600">
             Enter a variant identifier to retrieve matching measurements and clinical evidence calibrations.
           </div>
@@ -208,7 +208,7 @@
               </div>
             </div>
             <button
-              class="w-full cursor-pointer whitespace-nowrap border-t border-gray-200 bg-sage px-7 py-3 text-sm font-semibold text-dark transition-colors hover:bg-sage-dark md:w-auto md:border-t-0 md:border-l md:border-l-gray-200"
+              class="w-full cursor-pointer whitespace-nowrap border-t border-gray-200 bg-sage px-7 py-3 text-sm font-semibold text-text-dark transition-colors hover:bg-sage-dark md:w-auto md:border-t-0 md:border-l md:border-l-gray-200"
               @click="guidedSearch"
             >
               Search
@@ -264,7 +264,7 @@
     <div v-if="searchResultsVisible" ref="searchResults" class="mx-auto w-full max-w-[800px] py-8">
       <div class="mb-5 flex items-center justify-between">
         <div aria-live="polite" role="status">
-          <div class="text-lg font-bold text-dark">
+          <div class="text-lg font-bold text-text-dark">
             {{ alleles.length }} allele{{ alleles.length !== 1 ? 's' : '' }} found
           </div>
           <!-- An "Any" search leaves the selected type as "Any", so report what the string was taken to be. -->
@@ -280,7 +280,7 @@
         </div>
         <button
           aria-label="Clear results and start a new search"
-          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-sage hover:text-sage-dark"
+          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-sage-strong hover:underline"
           @click="clearSearch"
         >
           <span aria-hidden="true">&larr;</span> New search
@@ -297,7 +297,7 @@
         <div class="min-w-0">
           <div class="text-sm text-gray-600">
             Read as
-            <span class="font-semibold text-dark">{{ gnomadInterpretation.name }}</span>
+            <span class="font-semibold text-text-dark">{{ gnomadInterpretation.name }}</span>
             coordinates
           </div>
           <code v-if="gnomadInterpretation.hgvs" class="mt-0.5 block truncate font-mono text-xs text-gray-500">
@@ -374,7 +374,7 @@
             <div class="min-w-0">
               <span
                 class="text-base font-bold leading-snug sm:text-lg"
-                :class="allele.clingenAlleleId ? 'text-link group-hover:underline' : 'text-dark'"
+                :class="allele.clingenAlleleId ? 'text-link group-hover:underline' : 'text-text-dark'"
               >
                 {{ allele.canonicalAlleleName }}
               </span>
@@ -516,7 +516,7 @@
     <!-- HOW IT WORKS (shown when no results) -->
     <section v-if="!searchResultsVisible" class="-mx-6 border-y border-gray-200 bg-white px-6 py-10">
       <div class="mx-auto max-w-[900px] text-center">
-        <div class="text-lg font-bold text-dark">How MaveMD works</div>
+        <div class="text-lg font-bold text-text-dark">How MaveMD works</div>
         <div class="mb-8 text-sm text-gray-500">From variant identifier to clinical evidence in three steps</div>
         <div
           aria-label="How MaveMD works"
@@ -527,11 +527,11 @@
             <div class="flex flex-col items-center gap-2.5 px-3" role="listitem">
               <div
                 aria-hidden="true"
-                class="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-sage text-base font-bold text-dark"
+                class="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-sage text-base font-bold text-text-dark"
               >
                 {{ step.number }}
               </div>
-              <div class="text-sm font-bold text-dark">{{ step.title }}</div>
+              <div class="text-sm font-bold text-text-dark">{{ step.title }}</div>
               <div class="text-sm leading-relaxed text-gray-500">{{ step.description }}</div>
             </div>
             <div
@@ -550,7 +550,7 @@
     <section v-if="!searchResultsVisible" class="mx-auto w-full max-w-[1000px] px-6 py-10">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div class="text-lg font-bold text-dark">MaveMD score sets</div>
+          <div class="text-lg font-bold text-text-dark">MaveMD score sets</div>
           <div class="text-sm text-gray-500">
             <template v-if="!maveMdScoreSetsLoading">
               {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
@@ -663,7 +663,7 @@
                   </template>
                 </td>
                 <td class="border-b border-gray-100 px-3 py-3 text-right align-top tabular-nums">
-                  <span class="font-semibold text-dark">{{ formatVariantCount(maveMdScoreSets[urn]) }}</span>
+                  <span class="font-semibold text-text-dark">{{ formatVariantCount(maveMdScoreSets[urn]) }}</span>
                 </td>
                 <td class="border-b border-gray-100 px-3 py-3 text-center align-top">
                   <router-link :to="{name: 'scoreSetCalibrations', params: {urn}}">

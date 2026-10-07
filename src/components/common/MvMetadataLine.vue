@@ -24,7 +24,7 @@
     <span v-if="publishedDate" class="block tablet:inline"> Published {{ formatDate(publishedDate) }} </span>
     <button
       v-if="jumpToId"
-      class="mt-1 block cursor-pointer text-xs font-semibold text-sage hover:text-sage-dark"
+      class="mt-1 block cursor-pointer text-xs font-semibold text-sage-strong hover:underline"
       @click="scrollToId"
     >
       Jump to details &darr;

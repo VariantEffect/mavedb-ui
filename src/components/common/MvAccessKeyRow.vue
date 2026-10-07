@@ -11,8 +11,8 @@
       <PButton
         :aria-label="revealed ? 'Hide API key' : 'Reveal API key'"
         :aria-pressed="revealed"
-        class="shrink-0 opacity-50 transition-opacity hover:bg-transparent hover:!text-sage hover:opacity-100"
-        :class="revealed ? '!text-sage opacity-100' : ''"
+        class="shrink-0 opacity-50 transition-opacity hover:bg-transparent hover:!text-sage-strong hover:opacity-100"
+        :class="revealed ? '!text-sage-strong opacity-100' : ''"
         :icon="revealed ? 'pi pi-eye-slash' : 'pi pi-eye'"
         rounded
         severity="secondary"

@@ -54,7 +54,7 @@
             <div class="panel-foot-inner">
               <button
                 v-if="controls.length > initialLimit"
-                class="text-xs font-semibold text-sage hover:underline"
+                class="text-xs font-semibold text-sage-strong hover:underline"
                 type="button"
                 @click="showAll = !showAll"
               >

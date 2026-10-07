@@ -2,7 +2,7 @@
   <div class="mave-card overflow-hidden">
     <!-- Title bar -->
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-bg px-3.5 py-3">
-      <span class="text-lg font-bold text-sage">{{ scoreCalibration.title ?? 'Score ranges' }}</span>
+      <span class="text-lg font-bold text-sage-strong">{{ scoreCalibration.title ?? 'Score ranges' }}</span>
       <span v-if="scoreCalibration.primary" v-key-term="'calibration'" class="mave-tag mave-tag-primary">Primary</span>
       <span v-if="scoreCalibration.researchUseOnly" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
         >Research use only</span

@@ -13,7 +13,7 @@
     <div class="mx-auto flex max-w-[800px] flex-col gap-7 py-9">
       <!-- What is a MAVE? -->
       <div class="mave-card px-8 py-7">
-        <h2 class="mb-3 text-lg font-bold text-sage">What is a MAVE?</h2>
+        <h2 class="mb-3 text-lg font-bold text-sage-strong">What is a MAVE?</h2>
         <p class="mb-3 text-sm leading-relaxed text-text-secondary">
           Multiplexed Assays of Variant Effect (MAVEs) are experimental techniques — such as deep mutational scanning
           (DMS) and saturation genome editing (SGE) — that measure the functional impact of large numbers of genetic
@@ -37,7 +37,7 @@
           >
             <div class="mb-1.5 text-xs font-bold tracking-wide text-text-muted">
               <span class="uppercase">{{ String(idx + 1).padStart(2, '0') }}&mdash;&nbsp;</span>
-              <span class="mb-1.5 text-sm font-bold text-sage">{{ step.title }}</span>
+              <span class="mb-1.5 text-sm font-bold text-sage-strong">{{ step.title }}</span>
             </div>
 
             <div class="text-xs leading-relaxed text-text-secondary">{{ step.description }}</div>

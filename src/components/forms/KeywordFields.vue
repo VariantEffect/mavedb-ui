@@ -41,7 +41,7 @@
           <span v-else />
           <button
             v-if="canToggleDescription(kw.key)"
-            class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer shrink-0 ml-2"
+            class="text-xs font-medium text-sage-strong hover:underline cursor-pointer shrink-0 ml-2"
             type="button"
             @click="toggleDescription(kw.key)"
           >
@@ -52,7 +52,7 @@
         <!-- Wizard mode: "Add description" toggle (before textarea is open) -->
         <div v-if="wizardMode && canToggleDescription(kw.key) && !descriptionVisible(kw.key)" class="mt-1 text-right">
           <button
-            class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer"
+            class="text-xs font-medium text-sage-strong hover:underline cursor-pointer"
             type="button"
             @click="toggleDescription(kw.key)"
           >
@@ -90,7 +90,7 @@
             <span v-else />
             <button
               v-if="canToggleDescription(kw.key)"
-              class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer shrink-0 ml-2"
+              class="text-xs font-medium text-sage-strong hover:underline cursor-pointer shrink-0 ml-2"
               type="button"
               @click="toggleDescription(kw.key)"
             >
@@ -101,7 +101,7 @@
           <!-- Wizard mode: "Hide description" toggle -->
           <div v-if="wizardMode && canToggleDescription(kw.key)" class="mt-1 text-right">
             <button
-              class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer"
+              class="text-xs font-medium text-sage-strong hover:underline cursor-pointer"
               type="button"
               @click="toggleDescription(kw.key)"
             >

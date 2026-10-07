@@ -7,7 +7,7 @@
     <h3 class="mb-1.5 text-base font-bold text-text-secondary">{{ title }}</h3>
     <p v-if="description" class="mb-5 max-w-sm text-xs-plus leading-relaxed text-text-muted">{{ description }}</p>
     <button
-      class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage hover:underline"
+      class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage-strong hover:underline"
       type="button"
       @click="$emit('retry')"
     >

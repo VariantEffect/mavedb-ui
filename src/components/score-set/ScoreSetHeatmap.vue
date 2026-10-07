@@ -1312,8 +1312,8 @@ export default defineComponent({
   z-index: 100;
   width: 100%;
   padding: 10px;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .mavedb-heatmap-controls .p-selectbutton {
@@ -1330,7 +1330,7 @@ export default defineComponent({
 
 .mavedb-heatmap-wrapper {
   position: relative;
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .mavedb-heatmap-loading {
@@ -1344,7 +1344,7 @@ export default defineComponent({
   gap: 8px;
   min-height: 120px;
   background-color: rgba(255, 255, 255, 0.7);
-  color: #555;
+  color: var(--color-text-secondary);
   font-size: 13px;
 }
 
@@ -1355,9 +1355,9 @@ export default defineComponent({
 
 .no-heatmap-message {
   padding: 10px;
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: var(--color-danger-light);
+  color: var(--color-text-dark);
+  border: 1px solid var(--color-danger-border);
   border-radius: 4px;
   text-align: center;
   position: relative;

@@ -19,7 +19,7 @@
               :class="
                 viewOptionsOpen || viewOptionCount > 0
                   ? 'border-sage bg-sage text-white'
-                  : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage'
+                  : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage-strong'
               "
               type="button"
               @click="viewOptionsOpen = !viewOptionsOpen"
@@ -32,7 +32,7 @@
               :class="
                 keyDrawer.isOpen.value
                   ? 'border-sage bg-sage text-white'
-                  : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage'
+                  : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage-strong'
               "
               type="button"
               @click="keyDrawer.isOpen.value ? keyDrawer.close() : keyDrawer.open()"
@@ -100,7 +100,7 @@
           :class="
             lookup.includeSuperseded.value
               ? 'border-sage bg-sage text-white'
-              : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage'
+              : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage-strong'
           "
           type="button"
           @click="lookup.includeSuperseded.value = !lookup.includeSuperseded.value"

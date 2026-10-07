@@ -74,10 +74,10 @@
   --color-unpublished-light: #fff3e0;
   --color-unpublished-dot: #ff9800;
 
-  /* ── Status: Superseded (gray) ─────────────────────────────── */
-  --color-superseded: #757575;
-  --color-superseded-light: #f5f5f5;
-  --color-superseded-dot: #bdbdbd;
+  /* ── Status: Superseded (amber) ────────────────────────────── */
+  --color-superseded: #92400e;
+  --color-superseded-light: #fef3c7;
+  --color-superseded-dot: #b45309;
 
   /* ── Evidence: PS3 Pathogenic (red gradient) ────────────────── */
   --color-ps3-very-strong: #943744;
@@ -162,8 +162,6 @@
   --color-subject-light: #ddecee;
   /* Tag text: --color-subject on its own 15% tint is ~2.8:1; this clears WCAG AA. */
   --color-subject-strong: #37727c;
-  --color-superseded: #92400e;
-  --color-superseded-light: #fef3c7;
   --color-border: #dee2e6;
   --color-border-light: #f0f0f0;
   --color-bg: #f7f7f7;
@@ -228,6 +226,10 @@ html {
 
 body {
   line-height: 1.75;
+  /* Raleway defaults to old-style figures, which bob above and below the baseline in scores, coordinates and HGVS.
+     Set as a feature rather than font-variant-numeric so Tailwind's tabular-nums (which resets the figure style)
+     keeps lining figures. */
+  font-feature-settings: 'lnum' 1;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
 }

@@ -17,14 +17,14 @@
           <div class="flex-1 text-xs leading-relaxed text-text-muted">{{ project.description }}</div>
           <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             <a
-              class="inline-block text-xs font-semibold text-sage no-underline hover:underline"
+              class="inline-block text-xs font-semibold text-sage-strong no-underline hover:underline"
               :href="project.docsHref"
             >
               Read docs &rarr;
             </a>
             <a
               :aria-label="project.title + ' on GitHub (opens in new tab)'"
-              class="inline-block text-xs font-semibold text-sage no-underline hover:underline"
+              class="inline-block text-xs font-semibold text-sage-strong no-underline hover:underline"
               :href="project.githubHref"
               rel="noopener"
               target="_blank"
@@ -34,7 +34,7 @@
             <a
               v-if="project.extraHref"
               :aria-label="project.title + ' on ' + project.extraLabel + ' (opens in new tab)'"
-              class="inline-block text-xs font-semibold text-sage no-underline hover:underline"
+              class="inline-block text-xs font-semibold text-sage-strong no-underline hover:underline"
               :href="project.extraHref"
               rel="noopener"
               target="_blank"
@@ -47,7 +47,7 @@
 
       <!-- API docs callout -->
       <div class="mave-card px-8 py-7">
-        <h2 class="mb-4 text-lg font-bold text-sage">REST API</h2>
+        <h2 class="mb-4 text-lg font-bold text-sage-strong">REST API</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           MaveDB provides a REST API for programmatic access to score sets, experiments, and variants. Interactive
           documentation is available at

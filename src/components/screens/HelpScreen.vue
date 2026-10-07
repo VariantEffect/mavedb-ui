@@ -20,7 +20,7 @@
           <div class="flex-1 text-xs leading-relaxed text-text-muted">{{ channel.description }}</div>
           <component
             :is="channel.external ? 'a' : 'router-link'"
-            class="mt-1 inline-block text-sm font-semibold text-sage no-underline hover:underline"
+            class="mt-1 inline-block text-sm font-semibold text-sage-strong no-underline hover:underline"
             v-bind="
               channel.external
                 ? {
@@ -53,7 +53,7 @@
 
       <!-- Clinical application -->
       <div class="mave-card px-8 py-7">
-        <h2 class="mb-4 text-lg font-bold text-sage">Clinical application</h2>
+        <h2 class="mb-4 text-lg font-bold text-sage-strong">Clinical application</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           The Alliance for Variant Effects (AVE) maintains a
           <a
@@ -70,7 +70,7 @@
 
       <!-- Contact us -->
       <div class="mave-card px-8 py-7">
-        <h2 class="mb-4 text-lg font-bold text-sage">Contact us</h2>
+        <h2 class="mb-4 text-lg font-bold text-sage-strong">Contact us</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           For questions not covered above, general conversation and community support, chat with us on
           <a aria-label="Zulip (opens in new tab)" class="text-link" :href="ZULIP_CHAT" rel="noopener" target="_blank"

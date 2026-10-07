@@ -84,7 +84,7 @@
               Gene information is temporarily unavailable. Try again in a moment.
             </MvStatusMessage>
             <button
-              class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage hover:bg-sage-light disabled:cursor-wait disabled:opacity-70"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage-strong hover:bg-sage-light disabled:cursor-wait disabled:opacity-70"
               :disabled="loadingMore"
               type="button"
               @click="loadMoreScoreSets"

@@ -13,7 +13,7 @@
           :to="{name: 'scoreSet', params: {urn: itemId}}"
         >
           <span
-            >View your score set: <span class="font-mono font-normal text-sage">{{ itemId }}</span></span
+            >View your score set: <span class="font-mono font-normal text-sage-strong">{{ itemId }}</span></span
           >
           <span class="text-lg text-sage">&rarr;</span>
         </router-link>

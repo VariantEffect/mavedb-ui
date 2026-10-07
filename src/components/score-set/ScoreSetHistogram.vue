@@ -1527,10 +1527,10 @@ export default defineComponent({
 
 <style scoped>
 .mavedb-histogram-controls-panel {
-  border: 2px solid #d7d7d7;
+  border: 1px solid var(--color-border);
   padding: 0.5rem 1rem;
   border-radius: 5px;
-  background: #fafafa;
+  background: var(--color-bg);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1550,9 +1550,9 @@ export default defineComponent({
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border: 1px solid var(--p-tabs-tablist-border-color, #dee2e6);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
   font-size: 13px;
   line-height: 1.4;
@@ -1561,11 +1561,11 @@ export default defineComponent({
 }
 
 .mavedb-threshold-trigger:hover {
-  border-color: #adb5bd;
+  border-color: var(--color-sage);
 }
 
 .mavedb-threshold-trigger-label {
-  color: #6c757d;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -1576,7 +1576,7 @@ export default defineComponent({
 }
 
 .mavedb-threshold-trigger-value {
-  color: #212529;
+  color: var(--color-text-dark);
   font-weight: 600;
   max-width: 180px;
   overflow: hidden;
@@ -1591,7 +1591,7 @@ export default defineComponent({
 
 .mavedb-threshold-trigger-icon {
   font-size: 10px;
-  color: #6c757d;
+  color: var(--color-text-muted);
 }
 
 .mavedb-histogram-source-select {
@@ -1604,7 +1604,7 @@ export default defineComponent({
 .mavedb-histogram-source-select-label {
   font-size: 13px;
   font-weight: 500;
-  color: #6c757d;
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -1612,8 +1612,8 @@ export default defineComponent({
   display: flex;
   align-items: flex-end;
   margin-bottom: 0.75rem;
-  background: #fff;
-  border-bottom: 2px solid var(--p-tabs-tablist-border-color, #dee2e6);
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-border);
 }
 
 .mavedb-histogram-controls :deep(.p-tablist) {
@@ -1641,7 +1641,7 @@ export default defineComponent({
 
 <style>
 .mavedb-thresholds-popover.p-popover {
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: 0;
@@ -1679,11 +1679,11 @@ export default defineComponent({
 }
 
 .mavedb-thresholds-option:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-mint-light);
 }
 
 .mavedb-thresholds-option--active {
-  background-color: #f0f7ff;
+  background-color: var(--color-sage-light);
   font-weight: 600;
 }
 
@@ -1694,7 +1694,7 @@ export default defineComponent({
 
 .mavedb-thresholds-option-check {
   font-size: 12px;
-  color: var(--p-primary-color, #3b82f6);
+  color: var(--color-sage-strong);
   flex-shrink: 0;
 }
 

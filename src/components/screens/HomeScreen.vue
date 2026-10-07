@@ -96,7 +96,7 @@
     <div class="mt-9 grid md:grid-cols-1 lg:grid-cols-2 gap-5">
       <!-- Explore -->
       <div class="mave-card flex flex-col px-8 py-7">
-        <h2 class="mb-1.5 text-xl font-bold text-sage">Explore datasets</h2>
+        <h2 class="mb-1.5 text-xl font-bold text-sage-dark">Explore datasets</h2>
         <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
           Browse published datasets by gene, organism, or keyword. Over 2,700 datasets covering 700+ human genes from
           community-contributed MAVE experiments.
@@ -122,7 +122,7 @@
 
       <!-- Contribute -->
       <div class="mave-card flex flex-col px-8 py-7">
-        <h2 class="mb-1.5 text-xl font-bold text-sage">Contribute data</h2>
+        <h2 class="mb-1.5 text-xl font-bold text-sage-dark">Contribute data</h2>
         <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
           Upload your MAVE assay results to make functional variant data available to the community.
         </p>

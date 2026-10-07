@@ -10,8 +10,8 @@
         class="rounded-[14px] border-[1.5px] px-3 py-1 text-xs font-semibold transition-all"
         :class="
           isActive(chip.value)
-            ? 'border-sage bg-chip text-sage hover:cursor-pointer hover:bg-white'
-            : 'border-border bg-white text-text-secondary hover:border-sage hover:text-sage hover:cursor-pointer'
+            ? 'border-sage bg-chip text-sage-strong hover:cursor-pointer hover:bg-white'
+            : 'border-border bg-white text-text-secondary hover:border-sage hover:text-sage-strong hover:cursor-pointer'
         "
         type="button"
         @click="toggle(chip)"

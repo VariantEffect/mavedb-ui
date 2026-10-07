@@ -60,7 +60,7 @@
             class="group border-b border-border-light transition-colors last:border-b-0 hover:bg-bg"
           >
             <td class="px-4 py-2.5 [overflow-wrap:anywhere]">
-              <router-link class="line-clamp-1 text-sm font-semibold leading-snug text-sage hover:underline" :to="{name: 'collection', params: {urn: col.urn}}">
+              <router-link class="line-clamp-1 text-sm font-semibold leading-snug text-sage-strong hover:underline" :to="{name: 'collection', params: {urn: col.urn}}">
                 {{ col.name }}
               </router-link>
               <div v-if="col.description" class="line-clamp-2 text-xs leading-tight text-text-muted">
@@ -94,7 +94,7 @@
         <div v-for="col in filteredCollections" :key="col.urn" class="px-4 py-3">
           <div class="flex items-start justify-between gap-2">
             <router-link
-              class="line-clamp-2 text-sm font-semibold leading-snug text-sage hover:underline [overflow-wrap:anywhere]"
+              class="line-clamp-2 text-sm font-semibold leading-snug text-sage-strong hover:underline [overflow-wrap:anywhere]"
               :to="{name: 'collection', params: {urn: col.urn}}"
             >
               {{ col.name }}

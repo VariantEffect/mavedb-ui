@@ -34,7 +34,12 @@
 </template>
 
 <script lang="ts">
-import '@fontsource/raleway'
+// The package index ships only weight 400; without explicit weights every bold/semibold/italic is browser-synthesized.
+import '@fontsource/raleway/400.css'
+import '@fontsource/raleway/400-italic.css'
+import '@fontsource/raleway/500.css'
+import '@fontsource/raleway/600.css'
+import '@fontsource/raleway/700.css'
 import '@fontsource/exo-2/700.css'
 import '@fontsource/exo-2/800.css'
 import '@fontsource/exo-2/900.css'

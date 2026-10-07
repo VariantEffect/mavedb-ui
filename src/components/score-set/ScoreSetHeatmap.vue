@@ -20,11 +20,13 @@
           />
         </div>
       </div>
-      <!-- Informational notes about what the heatmap can and can't show. Controls live in the parent header. -->
-      <div
-        v-if="selectedVariantNotOnHeatmap || notShownCounts.noCoordinate > 0 || notShownCounts.complex > 0"
-        class="mt-2 flex flex-col gap-1 px-2 text-sm text-text-muted"
-      >
+      <!-- The wild-type colour sits outside the score scale, so it gets its own key; then notes about what the
+           heatmap can and can't show. Controls live in the parent header. -->
+      <div class="mt-2 flex flex-col gap-1 px-2 text-sm text-text-muted">
+        <div class="flex items-center gap-1.5">
+          <span class="inline-block size-3 shrink-0 rounded-sm" :style="{backgroundColor: WILD_TYPE_COLOR}" />
+          <span>Wild type</span>
+        </div>
         <div v-if="selectedVariantNotOnHeatmap" class="flex items-center gap-1.5">
           <i class="pi pi-info-circle text-xs" />
           <span
@@ -99,6 +101,9 @@ interface VariantClassHeatmapDatum {
   /** One variant in the class. All of its properties are shared by the other variants except its score, which should be ignored. */
   instance?: DisplayVariant
 }
+
+/** Fill for a position's wild-type cell; deliberately outside the score colour scale. */
+const WILD_TYPE_COLOR = '#ffee99'
 
 const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
   (aa) =>
@@ -244,7 +249,7 @@ export default defineComponent({
   ],
 
   setup() {
-    return {...useVariantCoordinates()}
+    return {...useVariantCoordinates(), WILD_TYPE_COLOR}
   },
 
   data: () => ({
@@ -1190,7 +1195,7 @@ export default defineComponent({
         .data(this.heatmapData)
         .valueField((v: VariantClassHeatmapDatum) => v.meanScore)
         // WT color was previously #ddbb00.
-        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color('#ffee99') : v.meanScore))
+        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color(WILD_TYPE_COLOR) : v.meanScore))
         .refresh()
 
       if (this.selectedVariant) {
@@ -1229,7 +1234,7 @@ export default defineComponent({
         .data(this.heatmapData)
         .valueField((v: VariantClassHeatmapDatum) => v.meanScore)
         // WT color was previously #ddbb00.
-        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color('#ffee99') : v.meanScore))
+        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color(WILD_TYPE_COLOR) : v.meanScore))
         .refresh()
 
       if (this.selectedVariant) {

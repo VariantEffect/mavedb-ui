@@ -1,11 +1,6 @@
 <template>
-  <div
-    :class="
-      flush
-        ? 'border-t border-border-light bg-surface'
-        : 'mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-surface'
-    "
-  >
+  <!-- Sits flush inside the score-set page's variant card, which owns the frame. -->
+  <div class="border-t border-border-light bg-surface">
     <!-- Loading / error -->
     <div v-if="status === 'loading'" class="flex items-center justify-center px-5 py-4">
       <MvLoader text="Loading variant..." />
@@ -29,7 +24,7 @@
           {{ underlyingCoordinate }}
         </span>
         <span class="ml-auto flex items-baseline gap-1.5 leading-none">
-          <span class="text-[10px] font-bold uppercase tracking-wide text-text-muted">Score</span>
+          <span class="mave-label">Score</span>
           <span v-if="score != null" class="font-mono text-base font-bold text-text-primary">{{
             formatScore(score)
           }}</span>
@@ -44,15 +39,12 @@
       >
         <VariantConsequenceStat :vep="consequence" />
         <div class="stat">
-          <span v-key-term="'functional-impact'" class="stat-label">Functional impact</span>
+          <span v-key-term="'functional-impact'" class="mave-label w-fit">Functional impact</span>
           <span v-if="selectedClassification" class="flex flex-wrap items-center gap-1.5">
-            <span
-              v-key-term="'functional-impact'"
-              class="rounded px-1.5 py-0.5 text-xs-plus"
-              :class="classificationClass"
-            >
-              {{ formatToken(selectedClassification.classification.functionalClassification) }}
-            </span>
+            <MvClassificationTag
+              :classification="selectedClassification.classification.functionalClassification ?? 'not_specified'"
+              compact
+            />
             <MvEvidenceTag v-if="acmgCode" :code="acmgCode" />
           </span>
           <span v-else class="stat-value font-semibold">—</span>
@@ -94,7 +86,7 @@
       <!-- Status and links — the superseded badge and full-details link, shown below either the facts
            grid or the empty state above. -->
       <div
-        v-if="!detail.isCurrent || detail.clingenAlleleId"
+        v-if="!detail.isCurrent || detail.clingenAlleleId || classificationCalibration"
         class="border-t border-border-light bg-surface flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
       >
         <span
@@ -104,6 +96,23 @@
         >
           <i class="pi pi-exclamation-triangle text-[10px]" />
           <span>Superseded</span>
+        </span>
+        <!-- The calibration behind the call above, as the variant page's Functional evidence footer names it. -->
+        <span
+          v-if="classificationCalibration"
+          class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary"
+        >
+          <span v-key-term="'calibration'" class="mave-label">Calibration</span>
+          <span>{{ classificationCalibration.title }}</span>
+          <span v-if="classificationCalibration.primary" v-key-term="'calibration'" class="mave-tag mave-tag-primary"
+            >Primary</span
+          >
+          <span
+            v-if="classificationCalibration.researchUseOnly"
+            v-key-term="'calibration'"
+            class="mave-tag mave-tag-ruo"
+            >Research use only</span
+          >
         </span>
         <router-link
           v-if="detail.clingenAlleleId"
@@ -120,6 +129,7 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
+import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import VariantConsequenceStat from '@/components/variant/VariantConsequenceStat.vue'
@@ -136,6 +146,7 @@ import type {components} from '@/schema/openapi'
 type VariantDetail = components['schemas']['VariantDetail']
 type VariantClassification = components['schemas']['VariantClassification']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
+type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 /**
  * Compact selected-variant summary for the score-set page, consuming `GET /variants/{urn}`.
@@ -151,7 +162,14 @@ type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 export default defineComponent({
   name: 'VariantDetailPanel',
 
-  components: {MvEvidenceTag, MvLoader, VariantConsequenceStat, VariantGnomadStat, VariantClinvarStat},
+  components: {
+    MvClassificationTag,
+    MvEvidenceTag,
+    MvLoader,
+    VariantConsequenceStat,
+    VariantGnomadStat,
+    VariantClinvarStat
+  },
 
   props: {
     urn: {type: String, required: true},
@@ -169,9 +187,8 @@ export default defineComponent({
     // The ClinVar release the page's clinical-controls store has selected (raw `MM_YYYY`), passed through to
     // the ClinVar cell so it reduces over the same release as parent components. Null → fall back to latest.
     clinvarVersion: {type: String as PropType<string | null>, default: null},
-    // When embedded inside another card (e.g. under the search box), drop the panel's own card chrome
-    // and separate from the row above with just a top divider, so the two read as one unit.
-    flush: {type: Boolean, default: false}
+    // The score set's calibrations, to name the one behind the shown call; classifications carry only an id.
+    calibrations: {type: Array as PropType<ScoreCalibration[]>, default: () => []}
   },
 
   data() {
@@ -203,11 +220,13 @@ export default defineComponent({
       }
       return classifications.find((c) => c.primary) ?? classifications[0] ?? null
     },
+    // The calibration that produced the shown call, from the score set's list (classifications carry only an id).
+    classificationCalibration(): ScoreCalibration | null {
+      const id = this.selectedClassification?.calibrationId
+      return id != null ? (this.calibrations.find((c) => c.id === id) ?? null) : null
+    },
     oddspathsRatio(): number | null {
       return this.selectedClassification?.classification.oddspathsRatio ?? null
-    },
-    classificationClass(): string {
-      return `mave-classification-${this.selectedClassification?.classification.functionalClassification ?? 'not_specified'}`
     },
     acmgCode(): string | null {
       const acmg = this.selectedClassification?.classification.acmgClassification
@@ -277,10 +296,6 @@ export default defineComponent({
         console.error(`Error fetching variant detail for "${urn}"`, error)
         this.status = 'error'
       }
-    },
-    formatToken(value: string | null | undefined): string {
-      if (!value) return '—'
-      return value.replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())
     }
   }
 })
@@ -295,14 +310,6 @@ export default defineComponent({
   gap: 3px;
   background: var(--color-surface);
   padding: 10px 14px;
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-muted);
 }
 
 .stat-value {

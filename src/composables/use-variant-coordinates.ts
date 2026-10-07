@@ -9,18 +9,19 @@ export type SequenceLevel = components['schemas']['SequenceLevel']
 /** The coordinate frame: `submitted` = submitted/target numbering, `reference` = reference numbering. */
 export type CoordinateFrame = 'submitted' | 'reference'
 
-/** Key-drawer glossary for the coordinate-frame axis this composable resolves. */
+/** Key-drawer glossary for the score-set page's Submitted / Reference variants toggle. */
 export const COORDINATE_FRAME_KEY_SECTION: KeySection = {
   id: 'frame',
-  title: 'Coordinate frame',
+  title: 'Submitted and reference variants',
   terms: [
     {
-      label: 'Submitted',
-      definition: 'Coordinates exactly as the depositor submitted them, relative to the target sequence.'
+      label: 'Submitted variants',
+      definition: "Variants as the researchers submitted them, numbered against the assay's own target sequence."
     },
     {
-      label: 'Reference',
-      definition: "Coordinates re-expressed against a standard reference sequence by MaveDB's mapping pipeline."
+      label: 'Reference variants',
+      definition:
+        "The same variants placed on standard reference sequences (a transcript, the GRCh38 genome, or the protein) by MaveDB's mapping, so they line up with clinical databases. For endogenously edited targets the two are usually identical."
     }
   ]
 }

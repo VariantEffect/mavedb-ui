@@ -66,11 +66,8 @@
 
       <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1000px">
         <!-- Variant search + selected-variant detail — one unit -->
-        <div
-          v-if="variants?.length"
-          class="mave-gradient-bar relative mb-4 overflow-hidden rounded-lg border border-border bg-surface"
-        >
-          <div class="flex flex-col gap-3 px-4 py-3 tablet:flex-row tablet:items-center">
+        <div v-if="variants?.length" class="mave-card mb-4 overflow-hidden">
+          <div class="flex flex-col gap-3 px-4 py-3 tablet:flex-row tablet:items-center tablet:px-5">
             <ScoreSetVariantSearch
               v-model="selectedVariant"
               class="mt-2"
@@ -80,50 +77,47 @@
             />
             <div class="flex items-center gap-2 text-sm text-text-secondary tablet:ml-auto">
               <span
+                v-key-term="'frame'"
                 :class="[
-                  clinicalMode ? 'text-text-muted' : 'font-semibold text-sage',
+                  clinicalMode ? 'text-text-muted' : 'font-semibold text-text-primary',
                   {'opacity-50': coordinateSwitching}
                 ]"
                 >Submitted variants</span
               >
-              <!-- Wrapper so the tooltip fires even when the switch is disabled (a disabled control has
-                 pointer-events: none and won't trigger a tooltip on itself). Only shown when mapped
-                 mode is unavailable — clinicalModeHelpText returns the "no mapped variants" reason then. -->
+              <ToggleSwitch
+                :aria-label="`Show ${clinicalMode ? 'submitted' : 'reference'} variants`"
+                :disabled="coordinateSwitching || !mappedModeAvailable"
+                :model-value="clinicalMode"
+                @update:model-value="toggleClinicalMode"
+              />
               <span
-                v-tooltip.top="mappedModeAvailable ? undefined : clinicalModeHelpText"
-                class="inline-flex"
-                :class="{'cursor-not-allowed': !mappedModeAvailable}"
-              >
-                <ToggleSwitch
-                  :aria-label="`Click to change to ${clinicalMode ? 'submitted data' : 'clinical view'}.`"
-                  :disabled="coordinateSwitching || !mappedModeAvailable"
-                  :model-value="clinicalMode"
-                  @update:model-value="toggleClinicalMode"
-                />
-              </span>
-              <span
+                v-key-term="'frame'"
                 :class="[
-                  clinicalMode ? 'font-semibold text-sage' : 'text-text-muted',
+                  clinicalMode ? 'font-semibold text-text-primary' : 'text-text-muted',
                   {'opacity-50': coordinateSwitching}
                 ]"
                 >Reference variants</span
               >
+              <!-- A caveat for this score set only; the frames themselves are defined in the Key. -->
+              <i
+                v-if="frameNote && !coordinateSwitching"
+                v-tooltip.top="frameNote"
+                :aria-label="frameNote"
+                class="pi pi-info-circle cursor-help text-xs text-text-muted"
+                role="img"
+                tabindex="0"
+              />
               <i v-if="coordinateSwitching" class="pi pi-spinner pi-spin text-xs text-sage" />
-              <span
-                v-tooltip.top="clinicalModeHelpText"
-                class="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full bg-sage text-[10px] font-bold text-white"
-                >?</span
-              >
             </div>
           </div>
 
-          <!-- Selected-variant detail (assayed variant envelope: GET /variants/{urn}), flush within the card -->
+          <!-- Selected-variant detail (assayed variant envelope: GET /variants/{urn}), within the card -->
           <VariantDetailPanel
             v-if="variantToVisualize?.variantUrn"
             :key="variantToVisualize.variantUrn"
+            :calibrations="item.scoreCalibrations ?? []"
             :clinvar-version="clinvarControls.controlVersion"
             :coordinate="variantOptionLabel(variantToVisualize)"
-            :flush="true"
             :score="variantToVisualize.score ?? null"
             :selected-calibration-id="selectedCalibrationObjects[0]?.id ?? null"
             :underlying-coordinate="variantUnderlyingLabel(variantToVisualize) ?? ''"
@@ -139,11 +133,8 @@
         <!-- Visualizations -->
         <template v-if="variants?.length">
           <!-- Score Distribution -->
-          <div class="mb-4 overflow-hidden rounded-lg border border-border bg-surface">
-            <div
-              class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5"
-            >
-              <h3 class="mave-section-title">Score Distribution</h3>
+          <MvPanel class="mb-4" :padded="false" title="Score distribution">
+            <template #actions>
               <div v-if="distHistogramExportFn" class="inline-flex items-center gap-1">
                 <SplitButton
                   :disabled="distHistogramInProgress"
@@ -156,8 +147,8 @@
                 />
                 <i v-if="distHistogramInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
               </div>
-            </div>
-            <div class="p-3 tablet:p-5">
+            </template>
+            <div class="px-4 py-3 tablet:px-5">
               <ScoreSetHistogram
                 ref="distHistogram"
                 :clinical="clinvarControls"
@@ -178,13 +169,13 @@
             </div>
             <div
               v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
-              class="border-t border-border-light p-5"
+              class="border-t border-border-light px-4 py-3 tablet:px-5"
             >
               <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
             </div>
             <div
               v-if="hasCalibrations"
-              class="flex items-center gap-2 border-t border-border-light px-5 py-3 text-xs text-text-muted"
+              class="flex items-center gap-2 border-t border-border-light px-4 py-3 text-xs text-text-muted tablet:px-5"
             >
               <template v-if="selectedCalibrationObjects[0] && sameCalibrationSelected">
                 <i class="pi pi-info-circle" />
@@ -197,14 +188,16 @@
                 View all calibrations &rarr;
               </router-link>
             </div>
-          </div>
+          </MvPanel>
 
           <!-- Clinical Score Distribution -->
-          <div v-if="hasClinicalVariants" class="mb-4 overflow-hidden rounded-lg border border-border bg-surface">
-            <div
-              class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5"
-            >
-              <h3 class="mave-section-title">Clinical Score Distribution</h3>
+          <MvPanel
+            v-if="hasClinicalVariants"
+            class="mb-4"
+            :padded="false"
+            title="Clinical score distribution"
+          >
+            <template #actions>
               <div v-if="clinicalHistogramExportFn" class="inline-flex items-center gap-1">
                 <SplitButton
                   :disabled="clinicalHistogramInProgress"
@@ -217,8 +210,8 @@
                 />
                 <i v-if="clinicalHistogramInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
               </div>
-            </div>
-            <div class="p-3 tablet:p-5">
+            </template>
+            <div class="px-4 py-3 tablet:px-5">
               <ScoreSetHistogram
                 ref="clinicalHistogram"
                 :clinical="clinvarControls"
@@ -235,10 +228,10 @@
                 @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'distHistogram'})"
               />
             </div>
-            <div v-if="selectedCalibrationObjects[1]" class="border-t border-border-light p-5">
+            <div v-if="selectedCalibrationObjects[1]" class="border-t border-border-light px-4 py-3 tablet:px-5">
               <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
             </div>
-            <div v-if="hasCalibrations" class="flex items-center justify-end border-t border-border-light px-5 py-3">
+            <div v-if="hasCalibrations" class="flex items-center justify-end border-t border-border-light px-4 py-3 tablet:px-5">
               <router-link
                 class="text-xs font-semibold text-link no-underline"
                 :to="{path: `/score-sets/${item.urn}/calibrations`}"
@@ -246,18 +239,16 @@
                 View all calibrations &rarr;
               </router-link>
             </div>
-          </div>
+          </MvPanel>
 
           <!-- Variant Effect Heatmap -->
-          <div
+          <MvPanel
             v-if="showHeatmap && !isScoreSetVisualizerVisible"
-            class="mb-4 overflow-hidden rounded-lg border border-border bg-surface"
+            class="mb-4"
+            :padded="false"
+            title="Variant effect heatmap"
           >
-            <div
-              class="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border-light bg-surface px-4 py-3.5 tablet:px-5"
-            >
-              <h3 class="mave-section-title">Variant Effect Heatmap</h3>
-              <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <template #actions>
                 <Select
                   v-if="heatmapSequenceTypeOptions.length > 1"
                   :model-value="heatmapSequenceType"
@@ -268,7 +259,7 @@
                   @update:model-value="heatmapSequenceType = $event"
                 >
                   <template #value="{value}">
-                    Sequence: {{ heatmapSequenceTypeOptions.find((o) => o.value === value)?.title ?? value }}
+                    Coordinate system: {{ heatmapSequenceTypeOptions.find((o) => o.value === value)?.title ?? value }}
                   </template>
                 </Select>
                 <Select
@@ -283,14 +274,6 @@
                     Layout: {{ heatmapLayoutOptions.find((o) => o.value === value)?.title ?? value }}
                   </template>
                 </Select>
-                <PButton
-                  v-if="hasMappedVariants && uniprotId != null"
-                  icon="pi pi-box"
-                  label="Protein Structure"
-                  severity="secondary"
-                  size="small"
-                  @click="showProteinStructureModal"
-                />
                 <div v-if="heatmapExportFn" class="inline-flex items-center gap-1">
                   <SplitButton
                     :disabled="heatmapInProgress"
@@ -303,9 +286,8 @@
                   />
                   <i v-if="heatmapInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
                 </div>
-              </div>
-            </div>
-            <div class="p-3 tablet:p-5">
+            </template>
+            <div class="px-4 py-3 tablet:px-5">
               <ScoreSetHeatmap
                 ref="heatmap"
                 :coordinates="frame"
@@ -322,7 +304,21 @@
                 @variant-selected="childComponentSelectedVariant"
               />
             </div>
-          </div>
+            <!-- A view onto the same scores, not a heatmap setting, so it sits with the panel's other links rather
+                 than among the header controls. -->
+            <div
+              v-if="hasMappedVariants && uniprotId != null"
+              class="flex justify-end border-t border-border-light px-4 py-3 tablet:px-5"
+            >
+              <button
+                class="cursor-pointer text-xs font-semibold text-link hover:underline"
+                type="button"
+                @click="showProteinStructureModal"
+              >
+                View on protein structure &rarr;
+              </button>
+            </div>
+          </MvPanel>
         </template>
 
         <!-- No visualizations available -->
@@ -352,7 +348,7 @@
         </div>
 
         <!-- Assay facts -->
-        <div class="mb-4 mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white p-5">
+        <div class="mave-card mb-4 relative overflow-hidden p-5">
           <MvAssayFactsCard :assay-level="assayLevel" :link-title="false" :score-set="item" />
         </div>
 
@@ -510,15 +506,11 @@ import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/cal
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {dominantAssayLevel} from '@/lib/measurement-types'
 import {type DisplayVariant} from '@/lib/variants'
-import {
-  deleteScoreSet,
-  publishScoreSet,
-  getScoreSetClinicalControlOptions,
-  leanScoreSetVariantsUrl
-} from '@/api/mavedb'
+import {deleteScoreSet, publishScoreSet, getScoreSetClinicalControlOptions, leanScoreSetVariantsUrl} from '@/api/mavedb'
 import {components} from '@/schema/openapi'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
+import MvPanel from '@/components/common/MvPanel.vue'
 
 type ScoreSet = components['schemas']['ScoreSet']
 const ACTIONS = ['delete', 'publish', 'update', 'add_calibration']
@@ -537,6 +529,7 @@ export default {
     MvEntityLink,
     MvExternalIdentifiersCard,
     MvEmptyState,
+    MvPanel,
     MvLayout,
     MvMetadataLine,
     MvPageHeader,
@@ -642,14 +635,15 @@ export default {
       // A mapping state of "complete" or "incomplete" indicates that at least some variants have been mapped to a reference genome
       return ['complete', 'incomplete'].includes(this.item?.mappingState ?? '')
     },
-    clinicalModeHelpText() {
+    // A frame caveat specific to this score set, or null; behind an info icon beside the toggle.
+    frameNote(): string | null {
       if (!this.mappedModeAvailable) {
-        return 'This score set has no mapped variants, so only submitted coordinates are available.'
+        return 'Reference variants are unavailable because this score set has no mapped variants.'
       }
-      if (this.item?.targetGenes?.[0]?.targetSequence) {
-        return 'In clinical mode, reference coordinates are used when available, and start- and stop-loss codons are omitted because this score set was produced using a synthetic target sequence.'
+      if (this.clinicalMode && this.item?.targetGenes?.[0]?.targetSequence) {
+        return 'Start- and stop-loss variants are omitted: this score set used a synthetic target sequence.'
       }
-      return 'In clinical mode, reference coordinates are used when available. For experiments with endogenously-edited targets, submitted and reference data are usually identical.'
+      return null
     },
     contributors() {
       const creatorId = this.item?.createdBy?.orcidId

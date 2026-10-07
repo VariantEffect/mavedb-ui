@@ -168,11 +168,9 @@
       clinical.refreshed &&
       effectiveControlSource === 'clinvar'
     "
-    class="mt-1 block text-center text-xs italic leading-tight"
+    class="mt-1 block text-center text-xs leading-tight text-text-muted"
   >
-    Note: The ClinVar annotations shown above are matched to variants in this score set and may not correspond to the
-    control variants used to derive the displayed calibration. For details on which variants were used, refer to the
-    sources associated with each calibration.
+    ClinVar classifications of this score set's variants, not necessarily the controls behind the calibration.
   </span>
   <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
     *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
@@ -219,6 +217,7 @@ import {
   clinvarClinicalSignificanceClassifications,
   clinvarConflictingSignificanceClassificationForVersion,
   conflictingClinicalSignificanceSeriesLabelForVersion,
+  formatClinvarVersion,
   isUncertainSignificance
 } from '@/lib/clinvar-controls'
 import {
@@ -1216,7 +1215,7 @@ export default defineComponent({
         rows.push(
           tooltipCountRow({
             color: series?.color || DEFAULT_SERIES_COLOR,
-            label: title || (allSeries.length > 1 ? `Series ${i + 1}` : ''),
+            label: title || (allSeries.length > 1 ? `Series ${i + 1}` : 'All variants'),
             count: serieBin.length,
             active: seriesContainingVariant.includes(series)
           })
@@ -1369,13 +1368,13 @@ export default defineComponent({
         .title('Distribution of Functional Scores')
         .legendNote(
           // The version note describes a ClinVar-style database source only; calibration controls have no such
-          // provenance, and an unloaded database would otherwise render "undefined data from version null".
+          // provenance, and an unloaded database would otherwise render "undefined null".
           this.vizOptions[this.activeViz]?.clinvarControlLegendNoteEnabled &&
             this.clinical.refreshed &&
             this.effectiveControlSource === 'clinvar' &&
             this.clinical.controlDb?.dbName &&
             this.clinical.controlVersion
-            ? `${this.clinical.controlDb.dbName} data from version ${this.clinical.controlVersion}`
+            ? `${this.clinical.controlDb.dbName} ${formatClinvarVersion(this.clinical.controlVersion)}`
             : null
         )
         .shaders(this.histogramShaders)

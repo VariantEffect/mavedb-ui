@@ -46,10 +46,10 @@ The fuzzy search validates your input and queries the ClinGen Allele Registry to
 
 When a variant is found in one or more MaveMD datasets, the results page displays:
 
-- **Available measurements** -- A list of MAVE datasets (assays) that include functional data for the variant. When the variant has been measured in multiple assays, each is listed separately.
+- **Available measurements** -- The variant's measurements, grouped as on the [variant page](variant-page.md): measurements of this exact change, of the protein change it encodes, and of other nucleotide changes that encode the same protein change. Each row shows the score set, its functional impact and ACMG evidence code, and the score. Each group previews its top-ranked measurements, with the rest on the variant page.
 - **Variant representation** -- The variant shown in HGVS format along with alternate identifiers (ClinGen Allele ID, ClinVar Variation ID, dbSNP RSID) where available.
 
-Select a measurement to view the full [variant page](variant-page.md) with detailed functional evidence, assay facts, and calibration information.
+Select **View variant** to open the full [variant page](variant-page.md) with detailed functional evidence, assay facts, and calibration information. A score set's name opens that score set.
 
 ## Linking from external resources
 

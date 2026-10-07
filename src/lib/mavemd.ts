@@ -114,13 +114,9 @@ export interface AlleleResult {
   transcriptAlleles: ClinGenTranscriptAllele[]
   maneCoordinates: ManeCoordinate[]
   variantsStatus: string
-  // Measurements of this allele's equivalence class, bucketed by each one's relationship to the searched
-  // change (mirrors the API `AlleleMeasurement.relationship`).
-  variants: {
-    direct: AlleleMeasurement[]
-    proteinConsequence: AlleleMeasurement[]
-    nucleotideEncoding: AlleleMeasurement[]
-  }
+  // Measurements of this allele's equivalence class, in the API's ranking; each carries its relationship to the
+  // searched change.
+  measurements: AlleleMeasurement[]
   /** MaveDB variant URN — present when a VRS digest search resolves to a variant without a ClinGen Allele ID. */
   variantUrn?: string
 }
@@ -161,8 +157,7 @@ export function createAlleleResult(data: ClinGenAllele, maneStatus: string | nul
     // Complete records carry a communityStandardTitle; lean amino-acid records (no title, genomic, or
     // transcript alleles) only carry the protein hgvs. Fall back to that, then to the ClinGen ID, so the
     // card always has a heading instead of rendering undefined.
-    canonicalAlleleName:
-      data.communityStandardTitle?.[0] ?? data.aminoAcidAlleles?.[0]?.hgvs?.[0] ?? clingenAlleleId,
+    canonicalAlleleName: data.communityStandardTitle?.[0] ?? data.aminoAcidAlleles?.[0]?.hgvs?.[0] ?? clingenAlleleId,
     maneStatus,
     genomicAlleles: data.genomicAlleles ?? [],
     grch38Hgvs: null,
@@ -170,7 +165,7 @@ export function createAlleleResult(data: ClinGenAllele, maneStatus: string | nul
     transcriptAlleles: data.transcriptAlleles ?? [],
     maneCoordinates: [],
     variantsStatus: 'NotLoaded',
-    variants: {direct: [], proteinConsequence: [], nucleotideEncoding: []}
+    measurements: []
   }
 
   for (const genomicAllele of allele.genomicAlleles) {

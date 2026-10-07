@@ -355,13 +355,13 @@
         v-for="(allele, alleleIdx) in alleles"
         :key="allele.clingenAlleleId || allele.variantUrn || alleleIdx"
         :aria-label="'Allele result: ' + allele.canonicalAlleleName"
-        class="mb-5 overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
+        class="mave-card mb-5 overflow-hidden"
       >
         <!-- Card header -->
         <div class="border-b border-gray-100 px-5 pt-4 pb-3.5">
           <!--
-            Alleles the registry resolved but has not registered have no ClinGen ID to link to, so the heading renders
-            as plain text for those. Everything else about the header is shared.
+            The heading links to the variant page whenever the allele has one: alleles the registry resolved but has not
+            registered have no ClinGen ID. Everything else about the header is shared.
           -->
           <component
             :is="allele.clingenAlleleId ? 'router-link' : 'div'"
@@ -441,77 +441,60 @@
           </MvCollapsible>
         </div>
 
-        <!-- Card body: searched change first (Section 1), then the rest of its equivalence class (Section 2).
-             One row per measurement, no score-set dedup, so the full class stays visible. -->
-        <div
-          v-if="
-            allele.variantsStatus === 'Loaded' &&
-            (searchedMeasurements(allele).length || relatedEvidence(allele).length)
-          "
-        >
-          <!-- Section 1: what was searched, measured directly. -->
-          <div v-if="searchedMeasurements(allele).length" aria-label="Directly measured" role="group">
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-0.5">
-              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">{{ searchedHeading(allele) }}</span>
-              <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
-                searchedMeasurements(allele).length
-              }}</span>
-            </div>
+        <!-- Card body: the searched change's measurements, grouped and worded exactly as on the variant page. A
+             preview: each group shows its top-ranked rows, the rest one click away on the variant page. -->
+        <div v-if="allele.variantsStatus === 'Loaded' && allele.measurements.length">
+          <section
+            v-for="group in measurementGroups(allele)"
+            :key="group.relationship"
+            :aria-label="`Measurements of ${groupSubject(group, anchorIsProtein(allele))}`"
+          >
+            <MvMeasurementGroupHeader :anchor-is-protein="anchorIsProtein(allele)" class="px-5" :group="group" />
             <MvMeasurementRow
-              v-for="(m, idx) in searchedMeasurements(allele)"
-              :key="m.variantUrn ?? idx"
-              class="pl-8 pr-5"
+              v-for="m in previewedMeasurements(group)"
+              :key="m.variantUrn"
+              class="px-5"
               :measurement="m"
+              :show-level="hasMixedLevels(group)"
             />
-          </div>
-
-          <div
-            v-if="searchedMeasurements(allele).length && relatedEvidence(allele).length"
-            class="mx-5 h-px bg-gray-100"
-          ></div>
-
-          <!-- Section 2: the same functional change, measured elsewhere. -->
-          <div v-if="relatedEvidence(allele).length" :aria-label="relatedHeading(allele)" role="group">
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-0.5">
-              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">{{ relatedHeading(allele) }}</span>
-              <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
-                relatedEvidence(allele).length
-              }}</span>
-            </div>
-            <div class="px-5 pb-1.5 text-xs italic text-gray-400">{{ relatedDescription(allele) }}</div>
-            <MvMeasurementRow
-              v-for="(m, idx) in relatedEvidence(allele)"
-              :key="m.variantUrn ?? idx"
-              class="pl-8 pr-5"
-              :measurement="m"
-            />
-          </div>
+            <router-link
+              v-if="group.measurements.length > previewedMeasurements(group).length && allele.clingenAlleleId"
+              class="block border-b border-border-light px-5 py-2 text-xs font-semibold text-link hover:underline"
+              :to="{name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}}"
+              >{{ group.measurements.length - previewedMeasurements(group).length }} more on the variant page
+              &rarr;</router-link
+            >
+          </section>
         </div>
 
         <div v-else-if="allele.variantsStatus === 'Loading'" class="px-5 py-4">
           <MvLoader text="Loading assay results..." />
         </div>
 
-        <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
-          <!-- VRS digest searches may not resolve to a ClinGen Allele ID -->
-          <template v-if="allele.variantUrn && !allele.clingenAlleleId">
-            <p class="mb-3 text-sm text-gray-600">
-              This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
-            </p>
-            <router-link
-              v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
-              class="text-sm font-semibold text-link hover:underline"
-              :to="{
-                name: 'scoreSet',
-                params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)},
-                query: {variant: allele.variantUrn}
-              }"
-            >
-              View score set &rarr;
-            </router-link>
-          </template>
-          <Message v-else> No score sets containing this variant were found in MaveDB. </Message>
+        <!-- VRS digest searches may not resolve to a ClinGen Allele ID -->
+        <div
+          v-else-if="allele.variantsStatus === 'Loaded' && allele.variantUrn && !allele.clingenAlleleId"
+          class="px-5 py-4"
+        >
+          <p class="mb-3 text-sm text-gray-600">
+            This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
+          </p>
+          <router-link
+            v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
+            class="text-sm font-semibold text-link hover:underline"
+            :to="{
+              name: 'scoreSet',
+              params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)},
+              query: {variant: allele.variantUrn}
+            }"
+          >
+            View score set &rarr;
+          </router-link>
         </div>
+        <!-- Worded and styled like a measurement group's header, so an empty result reads as a count of zero. -->
+        <p v-else-if="allele.variantsStatus === 'Loaded'" class="bg-bg px-5 py-2 text-xs-plus text-text-secondary">
+          <span class="font-semibold text-text-primary">No measurements</span> of this variant in MaveDB
+        </p>
 
         <div v-else-if="allele.variantsStatus === 'Error'" class="px-5 py-4">
           <Message :closable="false" severity="error"> Failed to load variant measurements. </Message>
@@ -729,6 +712,7 @@ import {useHead} from '@unhead/vue'
 
 import MvCollapsible from '@/components/common/MvCollapsible.vue'
 import MvMeasurementRow from '@/components/search/MvMeasurementRow.vue'
+import MvMeasurementGroupHeader from '@/components/variant/MvMeasurementGroupHeader.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import {
   type AlleleResult,
@@ -745,6 +729,13 @@ import {
   createAlleleResult,
   mergeAlleleSpellings
 } from '@/lib/mavemd'
+import {
+  buildMeasurementGroups,
+  groupSubject,
+  hasMixedLevels,
+  type MeasurementGroup,
+  searchPreview
+} from '@/lib/measurement-groups'
 import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName, getPublicationUrl} from '@/lib/score-sets'
@@ -800,6 +791,7 @@ export default defineComponent({
     MvEntityLink,
     InputText,
     MvCollapsible,
+    MvMeasurementGroupHeader,
     MvMeasurementRow,
     MvLayout,
     Message,
@@ -829,6 +821,8 @@ export default defineComponent({
 
   data: function () {
     return {
+      // Search results preview each measurement group; the variant page lists them all.
+      searchPreviewCount: 3,
       loading: false,
       defaultSearchVisible: true,
       searchSuggestionsVisible: false,
@@ -1407,7 +1401,7 @@ export default defineComponent({
                 transcriptAlleles: [],
                 maneCoordinates: [],
                 variantsStatus: 'Loaded',
-                variants: {direct: [], proteinConsequence: [], nucleotideEncoding: []}
+                measurements: []
               })
             }
           }
@@ -1490,37 +1484,18 @@ export default defineComponent({
         })
       }
     },
-    // Result composition:
-    // Section 1: the searched change itself, measured directly (nucleotide for a CA, protein for a PA).
-    searchedMeasurements(allele: AlleleResult): AlleleMeasurement[] {
-      return allele.variants.direct
+    // The searched change's measurements in the variant page's groups (API ranking kept within each).
+    measurementGroups(allele: AlleleResult): MeasurementGroup[] {
+      return buildMeasurementGroups(allele.measurements)
     },
-    searchedHeading(allele: AlleleResult): string {
-      return allele.clingenAlleleId?.startsWith('PA')
-        ? 'Searched · measured directly (protein)'
-        : 'Searched · measured directly (nucleotide)'
+    anchorIsProtein(allele: AlleleResult): boolean {
+      return allele.clingenAlleleId?.startsWith('PA') ?? false
     },
-    // Section 2: the rest of the equivalence class (protein consequence + its encodings), one row per measurement.
-    relatedEvidence(allele: AlleleResult): AlleleMeasurement[] {
-      return [...allele.variants.proteinConsequence, ...allele.variants.nucleotideEncoding]
+    hasMixedLevels,
+    previewedMeasurements(group: MeasurementGroup): AlleleMeasurement[] {
+      return searchPreview(group, this.searchPreviewCount)
     },
-    relatedHeading(allele: AlleleResult): string {
-      if (allele.clingenAlleleId?.startsWith('PA')) return 'Nucleotide-level evidence'
-      const label = this.proteinChangeLabel(allele)
-      return label ? `Same protein change (${label})` : 'Same protein change'
-    },
-    relatedDescription(allele: AlleleResult): string {
-      return allele.clingenAlleleId?.startsWith('PA')
-        ? 'DNA variants that produce this protein change'
-        : "Other studies that measured this variant's protein consequence"
-    },
-    // The consequence's protein HGVS, taken from any protein-level measurement in the class (for the heading).
-    proteinChangeLabel(allele: AlleleResult): string | null {
-      const proteinMeasurement = [...allele.variants.proteinConsequence, ...allele.variants.direct].find(
-        (m) => m.assayLevel === 'protein'
-      )
-      return proteinMeasurement?.assayLevelHgvs || proteinMeasurement?.submittedHgvs || null
-    },
+    groupSubject,
     searchVariants: async function () {
       for (const allele of this.alleles) {
         const caId = allele.clingenAlleleId
@@ -1529,24 +1504,10 @@ export default defineComponent({
         try {
           // Full equivalence class: a CA query returns its protein consequence and the other encodings of it,
           // a PA query its nt encodings — the same set the variant page shows.
-          const measurements = await getAlleleMeasurements(caId)
-
-          // Bucket by the API's relationship field; searchedHeading/relatedHeading interpret each bucket
-          // for display. No score-set dedup — every measurement gets its own row.
-          const buckets: AlleleResult['variants'] = {direct: [], proteinConsequence: [], nucleotideEncoding: []}
-          for (const m of measurements) {
-            const bucket =
-              m.relationship === 'direct'
-                ? 'direct'
-                : m.relationship === 'protein_consequence'
-                  ? 'proteinConsequence'
-                  : 'nucleotideEncoding'
-            buckets[bucket].push(m)
-          }
-          allele.variants = buckets
+          allele.measurements = await getAlleleMeasurements(caId)
           allele.variantsStatus = 'Loaded'
         } catch (error: unknown) {
-          allele.variants = {direct: [], proteinConsequence: [], nucleotideEncoding: []}
+          allele.measurements = []
           console.log('Error while loading MaveDB search results for variant', error)
           allele.variantsStatus = 'Error'
           const {status} = getErrorResponse(error)

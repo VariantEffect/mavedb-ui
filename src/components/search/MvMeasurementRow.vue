@@ -1,23 +1,22 @@
 <template>
-  <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-gray-50 py-1.5 text-sm last:border-b-0">
-    <span
-      v-key-term="'assay-level'"
-      class="inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3px]"
-      :class="levelClass"
-      >{{ levelLabel }}</span
-    >
-    <span class="font-mono text-xs-plus font-semibold text-gray-700">{{ hgvs }}</span>
-    <span v-if="measurement.score != null" class="text-xs-minus text-gray-500"
-      >score <strong class="font-mono text-gray-700">{{ formatScore(measurement.score) }}</strong></span
-    >
-    <MvClassificationTag v-if="classification" :classification="classification" />
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border-light py-2">
+    <span v-if="showLevel" v-key-term="'assay-level'" class="mave-tag" :class="level.class">{{ level.label }}</span>
     <router-link
-      v-if="showScoreSet"
-      class="ml-auto max-w-[45%] truncate text-xs-minus text-link hover:underline"
+      class="min-w-0 flex-1 truncate text-xs-plus text-link hover:underline"
       :title="measurement.scoreSetTitle"
       :to="{name: 'scoreSet', params: {urn: measurement.scoreSetUrn}}"
       >{{ measurement.scoreSetTitle }}</router-link
     >
+    <span class="flex shrink-0 flex-wrap items-center gap-1.5">
+      <MvClassificationTag v-if="classification" :classification="classification" />
+      <MvEvidenceTag v-if="evidenceCode" :code="evidenceCode" />
+      <span v-if="displayed?.researchUseOnly" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
+        >Research use only</span
+      >
+      <span class="w-16 text-right font-mono text-xs-minus text-text-muted">{{
+        measurement.score != null ? formatScore(measurement.score) : '—'
+      }}</span>
+    </span>
   </div>
 </template>
 
@@ -25,34 +24,37 @@
 import {defineComponent, type PropType} from 'vue'
 
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
-import {assayLevelDisplay} from '@/lib/measurement-types'
+import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
+import {assayLevelDisplay, displayedClassification, evidenceCode} from '@/lib/measurement-types'
 import {formatScore} from '@/lib/scores'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 
-/** One compact line for a single measurement: level badge, the specific change (HGVS), its score and
- * functional call, and (unless nested under a score-set heading) a link to the score set that produced it. */
+/**
+ * One compact search-result line for a measurement: its score set, functional call and evidence, and score. The
+ * group header above names the measured variant, so the row doesn't repeat it.
+ */
 export default defineComponent({
   name: 'MvMeasurementRow',
-  components: {MvClassificationTag},
+  components: {MvClassificationTag, MvEvidenceTag},
   props: {
     measurement: {type: Object as PropType<AlleleMeasurement>, required: true},
-    // Hide the score-set link when the row is already nested under its score set's heading.
-    showScoreSet: {type: Boolean, default: true}
+    // The level tag only distinguishes rows when their group mixes assay levels.
+    showLevel: {type: Boolean, default: false}
   },
   computed: {
-    hgvs(): string {
-      return this.measurement.assayLevelHgvs || this.measurement.submittedHgvs || '—'
+    level(): {label: string; class: string} {
+      return assayLevelDisplay(this.measurement.assayLevel)
     },
-    levelLabel(): string {
-      return assayLevelDisplay(this.measurement.assayLevel).label
-    },
-    levelClass(): string {
-      return assayLevelDisplay(this.measurement.assayLevel).class
+    displayed(): ReturnType<typeof displayedClassification> {
+      return displayedClassification(this.measurement)
     },
     classification(): string | null {
-      return this.measurement.preferredClassification?.functionalClassification ?? null
+      return this.displayed?.classification.functionalClassification ?? null
+    },
+    evidenceCode(): string | null {
+      return evidenceCode(this.displayed?.classification)
     }
   },
   methods: {formatScore}

@@ -21,7 +21,7 @@ function result(overrides: Partial<AlleleResult>): AlleleResult {
     transcriptAlleles: [],
     maneCoordinates: [],
     variantsStatus: 'NotLoaded',
-    variants: {direct: [], proteinConsequence: [], nucleotideEncoding: []},
+    measurements: [],
     ...overrides
   }
 }
@@ -39,9 +39,7 @@ describe('createAlleleResult', () => {
     const allele = createAlleleResult(
       {
         '@id': 'http://reg.genome.network/allele/PA2579942745',
-        aminoAcidAlleles: [
-          {hgvs: ['NP_001484.1:p.Pro368Ser'], matchingRegisteredTranscripts: [{'@id': 'CA415209784'}]}
-        ]
+        aminoAcidAlleles: [{hgvs: ['NP_001484.1:p.Pro368Ser'], matchingRegisteredTranscripts: [{'@id': 'CA415209784'}]}]
       },
       null
     )

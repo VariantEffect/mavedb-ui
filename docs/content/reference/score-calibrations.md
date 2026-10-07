@@ -65,6 +65,33 @@ In addition, users may provide three types of publication references (e.g., a DO
 - **Threshold sources**: The publication describing how score thresholds or classification boundaries were determined. Required when functional classifications are provided.
 - **Evidence sources**: The publication describing how ACMG/AMP evidence strengths were assigned to the functional classifications. Required when evidence strengths are provided.
 
+## Calibration controls
+
+Calibration controls are the variants of known clinical significance used to derive a calibration. Each control is a variant in the calibration's score set, labeled `pathogenic` or `benign`. They are shown with the calibration, alongside the functional classification each one falls into.
+
+Controls are uploaded as a CSV file with two columns:
+
+- One of `variant_urn`, `hgvs_nt`, or `hgvs_pro`: the URN or HGVS notation of a variant in the score set. Use `variant_urn` when an HGVS string matches more than one variant.
+- `clinical_status`: `pathogenic` or `benign` (case-insensitive).
+
+Uploading a new file replaces all of a calibration's existing controls. Controls can only be added when editing an existing calibration, not while creating a score set, because they refer to the score set's variants and those don't exist until its scores have been processed.
+
+### Protected health information
+
+Control data must not contain protected health information (PHI). When you add controls, you must confirm that they contain no PHI, and MaveDB only stores controls while that confirmation is in place:
+
+- A calibration with controls can't be saved without the confirmation.
+- Uploading a replacement controls file requires you to confirm again, for the new set.
+- **Unchecking the confirmation removes the calibration's controls.** The editor asks before doing this, and the controls are deleted when you save the calibration. Until then, you can undo the removal.
+
+!!! warning
+    Removed controls can't be recovered. To restore them after saving, upload the controls file again.
+
+If you upload new scores for a score set, MaveDB carries each calibration's controls over to the matching new variants. A control whose variant is missing from the new upload is dropped. You don't need to confirm again: the remaining controls are ones you already confirmed, and removing controls can't add PHI.
+
+!!! info "Calibration controls are not clinical controls"
+    Calibration controls are supplied by the calibration's author. They are separate from the ClinVar [clinical controls](../finding-data/visualizations.md) that MaveDB shows in the score set histogram.
+
 ## Calibration privacy
 
 By default, score calibrations are not visible to all MaveDB users. However, you may choose to [publish](../submitting-data/publishing.md) a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set. Published calibrations are visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.

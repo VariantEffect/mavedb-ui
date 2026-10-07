@@ -76,6 +76,7 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import {cloneDeep} from 'lodash'
+import {useConfirm} from 'primevue/useconfirm'
 
 import CalibrationControlsField from '@/components/calibration/CalibrationControlsField.vue'
 import CalibrationFields from '@/components/calibration/CalibrationFields.vue'
@@ -119,7 +120,7 @@ export default defineComponent({
   emits: ['canceled', 'saved', 'update:draft'],
 
   setup(props) {
-    return {...useCalibrationEditor(props)}
+    return {...useCalibrationEditor(props), confirm: useConfirm()}
   },
 
   data() {
@@ -151,13 +152,9 @@ export default defineComponent({
       return this.controlsChangeStaged && this.controlsNotPhiBeforeChange === true
     },
 
-    /** Inline PHI acknowledgment error (#677), shown when a published calibration's controls are unacknowledged. */
+    /** Inline PHI acknowledgment error (#677), shown while controls would be saved unacknowledged. */
     phiError(): string | null {
-      return phiAcknowledgmentError({
-        hasControls: this.hasControls,
-        isPrivate: this.draft.private ?? true,
-        controlsNotPhi: this.draft.controlsNotPhi
-      })
+      return phiAcknowledgmentError({hasControls: this.hasControls, controlsNotPhi: this.draft.controlsNotPhi})
     },
 
     activeValidationErrors(): ValidationErrors {
@@ -514,7 +511,37 @@ export default defineComponent({
       this.markChanged()
     },
 
+    /**
+     * Withdrawing the affirmation from saved controls stages their removal, as the API deletes them on
+     * save; undoing the removal restores the affirmation. Because a checkbox deleting data is surprising,
+     * the user confirms first.
+     */
     onControlsNotPhiUpdate(value: boolean) {
+      if (!value && !this.draftControlsFile && !this.controlsCleared) {
+        // Mirror the uncheck so the checkbox re-renders when it is restored on cancel.
+        this.draft.controlsNotPhi = false
+        const count = this.draft.controls?.length ?? this.draft.controlsCount ?? 0
+        const restore = () => {
+          if (!this.controlsCleared) this.draft.controlsNotPhi = true
+        }
+        this.confirm.require({
+          header: 'Remove calibration controls?',
+          message:
+            `Controls can only be kept while you confirm they contain no protected health information. ` +
+            `Unchecking this removes the ${count} attached control${count === 1 ? '' : 's'}, which are ` +
+            `deleted when you save. You can undo this until then.`,
+          icon: 'pi pi-exclamation-triangle',
+          acceptProps: {label: 'Remove controls', severity: 'danger', icon: 'pi pi-trash'},
+          rejectProps: {label: 'Keep controls', severity: 'secondary', icon: 'pi pi-times'},
+          accept: () => {
+            this.draft.controlsNotPhi = true
+            this.onClearControls()
+          },
+          reject: restore,
+          onHide: restore
+        })
+        return
+      }
       this.draft.controlsNotPhi = value
       this.clearClientError('controlsNotPhi')
       this.markChanged()
@@ -533,9 +560,9 @@ export default defineComponent({
     async saveCalibration() {
       if (this.saving) return
 
-      // The backend gates PHI acknowledgment on publish, not on save, so guard it here: a published
-      // calibration with controls may not be saved without the acknowledgment. The error also renders
-      // inline via the `phiError` computed; returning undefined leaves the editor open without a save.
+      // The backend rejects controls saved without the PHI acknowledgment; catch it before the round trip.
+      // The error also renders inline via the `phiError` computed; returning undefined leaves the editor
+      // open without a save.
       if (this.phiError) {
         this.$toast.add({
           severity: 'error',

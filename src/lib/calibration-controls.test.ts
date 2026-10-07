@@ -98,20 +98,16 @@ describe('parseControlsCsv', () => {
 })
 
 describe('phiAcknowledgmentError', () => {
-  it('requires acknowledgment for a published calibration with unacknowledged controls', () => {
-    expect(phiAcknowledgmentError({hasControls: true, isPrivate: false, controlsNotPhi: null})).not.toBeNull()
-    expect(phiAcknowledgmentError({hasControls: true, isPrivate: false, controlsNotPhi: false})).not.toBeNull()
+  it('requires acknowledgment for unacknowledged controls', () => {
+    expect(phiAcknowledgmentError({hasControls: true, controlsNotPhi: null})).not.toBeNull()
+    expect(phiAcknowledgmentError({hasControls: true, controlsNotPhi: false})).not.toBeNull()
   })
 
   it('allows saving once acknowledged', () => {
-    expect(phiAcknowledgmentError({hasControls: true, isPrivate: false, controlsNotPhi: true})).toBeNull()
-  })
-
-  it('does not gate private drafts', () => {
-    expect(phiAcknowledgmentError({hasControls: true, isPrivate: true, controlsNotPhi: null})).toBeNull()
+    expect(phiAcknowledgmentError({hasControls: true, controlsNotPhi: true})).toBeNull()
   })
 
   it('does not gate calibrations without controls', () => {
-    expect(phiAcknowledgmentError({hasControls: false, isPrivate: false, controlsNotPhi: null})).toBeNull()
+    expect(phiAcknowledgmentError({hasControls: false, controlsNotPhi: null})).toBeNull()
   })
 })

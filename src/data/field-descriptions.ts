@@ -269,7 +269,7 @@ export function calibrationDescriptions(): CalibrationDescriptions {
       hint: 'Confirm the controls contain no PHI.',
       help: 'Protected health information',
       detail:
-        'Control data must not contain protected health information (PHI). A calibration with controls cannot be published until this is confirmed.'
+        'Control data must not contain protected health information (PHI). Controls cannot be saved until this is confirmed, and unchecking it removes the saved controls.'
     }
   }
 }

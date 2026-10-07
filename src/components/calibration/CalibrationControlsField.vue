@@ -96,8 +96,8 @@
             I confirm that the control variant data provided does not contain protected health information (PHI).
           </label>
         </div>
-        <!-- The help text already states the publishing requirement; this covers only the case it can't:
-             an affirmation silently invalidated by a staged controls change. -->
+        <!-- The help text already states the requirement; this covers only the case it can't: an
+             affirmation silently invalidated by a staged controls change. -->
         <p v-if="reacknowledgmentRequired" class="mt-1.5 text-xs text-orange-cta-dark">
           Changing the controls cleared your earlier confirmation — confirm again for the new set.
         </p>

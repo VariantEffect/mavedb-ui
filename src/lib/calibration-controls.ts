@@ -157,18 +157,16 @@ export function parseControlsCsv(csvText: string): ControlsCsvPreview {
 }
 
 /**
- * The PHI-acknowledgment gate (#677). A calibration that carries controls may not be saved in a
- * non-private (published) state until the submitter has affirmed the controls contain no PHI. The
- * backend enforces this on publish; the editor surfaces it inline at save time. Returns the error
- * message when the box must be checked, or null when saving is allowed.
+ * The PHI-acknowledgment gate (#677). Controls are stored only while the submitter affirms they contain
+ * no PHI; the backend rejects any save that would keep controls without it. Returns the error message
+ * when the box must be checked, or null when saving is allowed.
  */
 export function phiAcknowledgmentError(params: {
   hasControls: boolean
-  isPrivate: boolean
   controlsNotPhi: boolean | null | undefined
 }): string | null {
-  if (params.hasControls && !params.isPrivate && params.controlsNotPhi !== true) {
-    return 'Confirm the control data contains no protected health information (PHI) before saving a published calibration.'
+  if (params.hasControls && params.controlsNotPhi !== true) {
+    return 'Confirm the control data contains no protected health information (PHI) before saving.'
   }
   return null
 }

@@ -3,7 +3,6 @@ import type {RouteLocationNormalized, RouteRecordRaw} from 'vue-router'
 
 import AboutView from '@/components/screens/AboutView.vue'
 import CollectionView from '@/components/screens/CollectionView.vue'
-import CollectionsView from '@/components/screens/CollectionsView.vue'
 import DashboardView from '@/components/screens/DashboardView.vue'
 import DocumentationView from '@/components/screens/DocumentationView.vue'
 import ExperimentCreator from '@/components/screens/ExperimentCreator.vue'
@@ -162,10 +161,10 @@ const routes: RouteRecordRaw[] = [
     })
   },
   {
+    // Collections moved into the dashboard; keep old bookmarks working.
     path: '/collections',
     name: 'collections',
-    component: CollectionsView,
-    meta: {requiresAuth: true}
+    redirect: {name: 'dashboard', query: {tab: 'collections'}}
   },
   {
     path: '/collections/:urn',

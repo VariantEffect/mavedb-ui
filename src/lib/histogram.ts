@@ -8,6 +8,14 @@ type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
 type Accessor<T, Self> = (value?: T) => T | Self
 
+/**
+ * How many ticks an axis of the given pixel length can carry without its labels running together. Score labels
+ * like "-2.5" need roughly 50px each; on a phone-width chart, ten fixed ticks overlap.
+ */
+export function axisTickCount(lengthPx: number, minSpacingPx = 50, maxTicks = 10): number {
+  return Math.max(2, Math.min(maxTicks, Math.floor(lengthPx / minSpacingPx)))
+}
+
 export const DEFAULT_SHADER_COLOR = '#333333'
 export const DEFAULT_SERIES_COLOR = '#333333'
 export const CATEGORICAL_SERIES_COLORS = [
@@ -880,7 +888,7 @@ export default function makeHistogram(): Histogram {
           .select('g.histogram-bottom-axis')
           .attr('transform', `translate(0,${height})`)
           // @ts-ignore
-          .call(d3.axisBottom(xScale).ticks(10))
+          .call(d3.axisBottom(xScale).ticks(axisTickCount(width)))
         svg
           .select('g.histogram-left-axis')
           // @ts-ignore

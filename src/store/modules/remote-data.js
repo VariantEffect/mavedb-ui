@@ -70,8 +70,13 @@ export default () => {
             commit('loadedData', {data: response.data || null})
           } catch (err) {
             console.log(`Error while loading data (URL="${dataUrl}")`, err)
+            commit('loadingFailed')
           }
         }
+      },
+
+      async reloadData({dispatch, state}) {
+        await dispatch('loadData', {dataUrl: state.dataUrl})
       },
 
       async ensureDataLoaded({dispatch, state}) {

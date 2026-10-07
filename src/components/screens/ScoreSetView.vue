@@ -54,7 +54,24 @@
     <MvPageLoading v-if="itemStatus === 'Loading' || itemStatus === 'NotLoaded'" text="Loading score set..." />
 
     <!-- Not found -->
-    <MvItemNotFound v-else-if="itemStatus === 'Failed'" :item-id="itemId" model="score set" />
+    <MvItemNotFound
+      v-else-if="itemStatus === 'Failed' && itemErrorStatus === 404"
+      :item-id="itemId"
+      model="score set"
+    />
+
+    <!-- Load failed for another reason (server error, network) -->
+    <div v-else-if="itemStatus === 'Failed'" class="mx-auto w-full max-w-[1000px] px-6 py-16">
+      <MvErrorState
+        :description="
+          itemErrorStatus
+            ? `The server returned an error (HTTP ${itemErrorStatus}). Try again in a moment.`
+            : 'Check your connection and try again.'
+        "
+        title="This score set couldn't be loaded"
+        @retry="reloadItem()"
+      />
+    </div>
 
     <!-- Loaded -->
     <template v-else-if="itemStatus === 'Loaded' && item">
@@ -126,9 +143,19 @@
         </div>
 
         <!-- Variants loading spinner -->
-        <div v-if="variants == null && variantsDataStatus !== 'Loaded'" class="flex items-center justify-center py-6">
+        <div
+          v-if="variants == null && variantsDataStatus !== 'Loaded' && variantsDataStatus !== 'Failed'"
+          class="flex items-center justify-center py-6"
+        >
           <MvLoader text="Loading variants..." />
         </div>
+        <MvErrorState
+          v-else-if="variantsDataStatus === 'Failed'"
+          class="mb-4"
+          description="The score set loaded, but its variant scores didn't. Charts, variant search and downloads need them."
+          title="Variant scores couldn't be loaded"
+          @retry="reloadVariantsData()"
+        />
 
         <!-- Visualizations -->
         <template v-if="variants?.length">
@@ -469,6 +496,7 @@ import {useHead} from '@unhead/vue'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
 import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
+import MvErrorState from '@/components/common/MvErrorState.vue'
 import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
 import MvCollectionStrip from '@/components/common/MvCollectionStrip.vue'
@@ -523,6 +551,7 @@ export default {
     CalibrationTable,
     Drawer,
     MvEmailPrompt,
+    MvErrorState,
     MvItemNotFound,
     MvAssayFactsCard,
     MvCollectionStrip,
@@ -601,6 +630,7 @@ export default {
       variantsDataStatus: variantsRemoteData.remoteDataStatus,
       setVariantsDataUrl: variantsRemoteData.setDataUrl,
       ensureVariantsDataLoaded: variantsRemoteData.ensureDataLoaded,
+      reloadVariantsData: variantsRemoteData.reloadData,
 
       distHistogramExportFn,
       clinicalHistogramExportFn,

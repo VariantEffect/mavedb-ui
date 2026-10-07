@@ -11,6 +11,13 @@
         The {{ modelNameForDisplay || 'item' }} with identifier
         <code class="rounded bg-gray-100 px-1 py-0.5 text-sm">{{ itemId }}</code>
         does not exist, or you do not have permission to view it.
+        <template v-if="!userIsAuthenticated">
+          If it's a private record,
+          <button class="cursor-pointer border-none bg-transparent p-0 font-semibold text-sage-strong underline" type="button" @click="signIn">
+            sign in
+          </button>
+          to view it.
+        </template>
       </template>
       <template v-else>
         This page doesn't exist or may have been moved. Check the URL, or try searching for a
@@ -20,7 +27,7 @@
 
     <div class="flex flex-wrap justify-center gap-3">
       <router-link
-        class="inline-flex items-center gap-1.5 rounded-md bg-orange-cta px-5 py-2.5 text-sm font-semibold text-white no-underline transition-colors hover:brightness-90"
+        class="inline-flex items-center gap-1.5 rounded-md bg-orange-cta px-5 py-2.5 text-sm font-semibold text-text-dark no-underline transition-colors hover:brightness-90"
         to="/search"
       >
         Search MaveDB
@@ -38,6 +45,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 import MvDecorativeBars from '@/components/common/MvDecorativeBars.vue'
+import useAuth from '@/composition/auth'
 
 export default defineComponent({
   name: 'MvItemNotFound',
@@ -47,6 +55,11 @@ export default defineComponent({
   props: {
     model: {type: String, default: null},
     itemId: {type: String, default: null}
+  },
+
+  setup() {
+    const {signIn, userIsAuthenticated} = useAuth()
+    return {signIn, userIsAuthenticated}
   },
 
   computed: {

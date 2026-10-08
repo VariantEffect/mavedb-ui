@@ -31,7 +31,7 @@ When you select a measurement from one of the other groups, a notice at the top 
 
 ## View options
 
-The **View options** button in the page header holds two settings that change which measurements are shown: **MaveDB as of**, which shows the molecular and annotation layer as MaveDB held it on a past date (scores never change), and **Show superseded score sets**. The button shows a count when either is set. The **Key** button beside it opens a glossary of the terms on this page.
+The **View options** button in the page header holds two settings that change which measurements are shown: **MaveDB as of**, which shows the molecular and annotation layer as MaveDB held it on a past date (scores never change), and a **Superseded score sets** switch. The button shows a count when either is set. The **Key** button beside it opens a glossary of the terms on this page.
 
 ## Assay facts
 

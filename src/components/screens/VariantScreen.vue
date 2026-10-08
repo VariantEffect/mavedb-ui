@@ -95,19 +95,14 @@
             Clear
           </button>
         </div>
-        <button
-          class="flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors tablet:ml-auto"
-          :class="
-            lookup.includeSuperseded.value
-              ? 'border-sage bg-sage text-white'
-              : 'border-border bg-surface text-text-secondary hover:border-sage hover:text-sage-strong'
-          "
-          type="button"
-          @click="lookup.includeSuperseded.value = !lookup.includeSuperseded.value"
-        >
-          <i class="pi text-[11px]" :class="lookup.includeSuperseded.value ? 'pi-check' : 'pi-plus'" />
-          {{ lookup.includeSuperseded.value ? 'Hide superseded score sets' : 'Show superseded score sets' }}
-        </button>
+        <!-- A setting, so a switch like RUO evidence on the measurement table. -->
+        <label class="flex cursor-pointer items-center gap-1.5 text-xs whitespace-nowrap tablet:ml-auto">
+          <ToggleSwitch v-model="lookup.includeSuperseded.value" class="scale-75" />
+          <!-- No Key link here: inside a label, its click would also flip the switch. -->
+          <span :class="lookup.includeSuperseded.value ? 'font-semibold text-text-primary' : 'text-text-muted'"
+            >Superseded score sets</span
+          >
+        </label>
       </div>
 
       <!-- Error / loading / empty -->
@@ -126,7 +121,9 @@
           <template v-if="hasMixedLevels || showResearchUseOnlyToggle" #actions>
             <!-- A single assay level has nothing to filter, so the level toggles only render for mixed levels. -->
             <span v-if="hasMixedLevels" class="flex items-center gap-1.5">
-              <span v-key-term="'assay-level'" class="mave-label mr-0.5 hidden whitespace-nowrap tablet:inline">Assay level</span>
+              <span v-key-term="'assay-level'" class="mave-label mr-0.5 hidden whitespace-nowrap tablet:inline"
+                >Assay level</span
+              >
               <MvBadgeToggle
                 v-model="lookup.showNucleotide.value"
                 active-background="var(--color-nucleotide-light)"

@@ -1,5 +1,6 @@
 # Derived files
 /dist/
+/src/schema/openapi.d.ts
 
 # MkDocs documentation (Prettier breaks admonitions and collapsible syntax)
 /docs/

@@ -93,6 +93,11 @@
   --color-bs3-moderate: #d0e8f0;
   --color-bs3-supporting: #e4f1f6;
 
+  /* ── Research use only ─────────────────────────────────────── */
+  --color-ruo: #856404;
+  --color-ruo-light: #fff3cd;
+  --color-ruo-border: #f0d78c;
+
   /* ── Evidence: Indeterminate ───────────────────────────────── */
   --color-evidence-indeterminate: #e0e0e0;
 
@@ -406,12 +411,19 @@ body .p-button {
   letter-spacing: 0.01em;
 }
 .mave-tag-ruo {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: var(--color-ruo-light);
+  color: var(--color-ruo);
 }
 .mave-tag-primary {
   background-color: #d1ecf1;
   color: #0c5460;
+}
+/* The absence of a call (unclassified, not calibrated). Dashed and unfilled so it never reads as a grey call such
+   as Not Specified. The border replaces a pixel of padding to keep the tag geometry. */
+.mave-tag-no-call {
+  padding: 1px 6px;
+  border: 1px dashed var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* Evidence ramp fills match the published calibration figures, so contrast is met through text colour alone: the

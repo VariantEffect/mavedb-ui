@@ -1,23 +1,43 @@
 <template>
   <!-- The panel's border closes the table, so the last row drops its own rule. -->
-  <div class="[&>section:last-child>*:last-child]:border-b-0">
-    <!-- Column headers (tablet+). On mobile each row stacks, so the headers would label nothing. -->
-    <div class="measurement-grid mave-label hidden tablet:grid border-b border-border-light px-5 py-2">
+  <div class="@container [&>section:last-child>*:last-child]:border-b-0">
+    <div
+      v-if="callSummary"
+      class="flex flex-wrap items-center gap-1 border-b border-border-light px-4 py-2 @xl:gap-1.5 @xl:px-5"
+    >
+      <span class="mr-1 basis-full text-xs-minus text-text-secondary @md:basis-auto"
+        >Calls across
+        {{ callSummary.total === 1 ? 'this measurement' : `these ${callSummary.total} measurements` }}</span
+      >
+      <span
+        v-for="entry in callSummary.counts"
+        :key="entry.call"
+        v-key-term="'functional-impact'"
+        class="mave-tag"
+        :class="MEASUREMENT_CALLS[entry.call].class"
+        >{{ entry.count }} {{ MEASUREMENT_CALLS[entry.call].label }}</span
+      >
+      <span v-if="callSummary.researchUseOnlyCount > 0" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
+        >{{ callSummary.researchUseOnlyCount }} Research use only</span
+      >
+    </div>
+    <!-- Column headers for wide tables. Narrow tables stack each row, so the headers would label nothing. -->
+    <div class="measurement-grid mave-label hidden @xl:grid border-b border-border-light px-5 py-2">
       <span>Score set</span>
-      <span><span v-key-term="'functional-impact'">Functional impact</span></span>
-      <span><span v-key-term="'acmg'">Evidence</span></span>
-      <span class="text-right">Score</span>
+      <span><span v-key-term="'functional-impact'">Impact</span> · <span v-key-term="'acmg'">Evidence</span></span>
     </div>
     <section v-for="group in groups" :key="group.relationship">
-      <MvMeasurementGroupHeader :anchor-is-protein="anchorIsProtein" class="px-4 tablet:px-5" :group="group" />
+      <MvMeasurementGroupHeader :anchor-is-protein="anchorIsProtein" class="px-4 @xl:px-5" :group="group" />
       <MvMeasurementTableRow
         v-for="m in preview(group).visible"
         :key="m.variantUrn"
         :citation="getCitation(m.scoreSetUrn)"
         :facts="assayFacts(m)"
-        :facts-loading="!isScoreSetLoaded(m.scoreSetUrn)"
+        :facts-loading="getScoreSet(m.scoreSetUrn) == null"
+        :include-research-use-only="includeResearchUseOnly"
         :loading="m.variantUrn === selectedUrn && loading"
         :measurement="m"
+        :score-set="getScoreSet(m.scoreSetUrn)"
         :selected="m.variantUrn === selectedUrn"
         :show-level="hasMixedLevels(group)"
         :show-urn="duplicateTitles.has(m.scoreSetTitle)"
@@ -25,7 +45,7 @@
       />
       <button
         v-if="preview(group).hiddenCount > 0"
-        class="block w-full cursor-pointer border-b border-border-light bg-surface px-4 py-2 text-left text-xs font-semibold text-link hover:underline tablet:px-5"
+        class="block w-full cursor-pointer border-b border-border-light bg-surface px-4 py-2 text-left text-xs font-semibold text-link hover:underline @xl:px-5"
         type="button"
         @click="expandedGroups = [...expandedGroups, group.relationship]"
       >
@@ -41,10 +61,18 @@ import {defineComponent, type PropType} from 'vue'
 import MvMeasurementGroupHeader from '@/components/variant/MvMeasurementGroupHeader.vue'
 import MvMeasurementTableRow, {type AssayFact} from '@/components/variant/MvMeasurementTableRow.vue'
 import {buildMeasurementGroups, hasMixedLevels, type MeasurementGroup, tablePreview} from '@/lib/measurement-groups'
-import type {MeasurementRelationship} from '@/lib/measurement-types'
+import {
+  eligibleCalibrations,
+  MEASUREMENT_CALLS,
+  type MeasurementCallSummary,
+  type MeasurementRelationship,
+  measurementCall,
+  summarizeMeasurementCalls
+} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
+type ScoreSet = components['schemas']['ScoreSet']
 
 /**
  * Comparison table for choosing which of a variant's measurements drives the rest of the page.
@@ -69,8 +97,11 @@ export default defineComponent({
       type: Function as PropType<(scoreSetUrn: string, key: string) => string | null>,
       required: true
     },
-    isScoreSetLoaded: {
-      type: Function as PropType<(scoreSetUrn: string) => boolean>,
+    // Null until the score set loads, so a null keyword then means "not loaded" rather than "not provided".
+    // Whether research-use-only calibrations count, as set in the page's View options.
+    includeResearchUseOnly: {type: Boolean, default: false},
+    getScoreSet: {
+      type: Function as PropType<(scoreSetUrn: string) => ScoreSet | null>,
       required: true
     },
     getCitation: {
@@ -81,11 +112,26 @@ export default defineComponent({
 
   emits: ['select'],
 
+  setup() {
+    return {MEASUREMENT_CALLS}
+  },
+
   data() {
     return {expandedGroups: [] as MeasurementRelationship[]}
   },
 
   computed: {
+    // Counts every listed measurement, including rows behind "Show N more".
+    callSummary(): MeasurementCallSummary | null {
+      return summarizeMeasurementCalls(this.measurements, (m) => {
+        const scoreSet = this.getScoreSet(m.scoreSetUrn)
+        return measurementCall(
+          m,
+          eligibleCalibrations(scoreSet?.scoreCalibrations, this.includeResearchUseOnly),
+          scoreSet != null
+        )
+      })
+    },
     groups(): MeasurementGroup[] {
       return buildMeasurementGroups(this.measurements)
     },
@@ -129,10 +175,10 @@ export default defineComponent({
 </script>
 
 <style>
-/* Unscoped: shared with MvMeasurementTableRow so the column headers and rows line up. Tablet+ only; rows
+/* Unscoped: shared with MvMeasurementTableRow so the column headers and rows line up. Wide tables only; rows
    stack below that. */
 .measurement-grid {
-  grid-template-columns: minmax(0, 1fr) 10rem 8.5rem 6rem;
+  grid-template-columns: minmax(0, 1fr) 14rem;
   column-gap: 1.25rem;
 }
 </style>

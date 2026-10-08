@@ -5,7 +5,9 @@
     >
       <h3 class="mave-section-title !mb-0">{{ title }}</h3>
       <span v-if="$slots.meta" class="text-xs-minus text-text-muted"><slot name="meta" /></span>
-      <div v-if="$slots.actions" class="ml-auto flex items-center gap-1.5"><slot name="actions" /></div>
+      <div v-if="$slots.actions" class="ml-auto flex flex-wrap items-center gap-x-1.5 gap-y-1">
+        <slot name="actions" />
+      </div>
     </header>
     <!-- Inset rather than full-bleed, so the card's frame reads as one continuous surface. -->
     <div v-if="$slots.notice" class="px-4 pt-3 tablet:px-5" :class="{'pb-1': !padded}">

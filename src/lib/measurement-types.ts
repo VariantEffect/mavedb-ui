@@ -1,3 +1,4 @@
+import type {ScoreCalibration} from '@/lib/calibrations'
 import type {components} from '@/schema/openapi'
 import type {KeySection} from '@/composables/use-key-drawer'
 import type {SequenceLevel} from '@/composables/use-variant-coordinates'
@@ -7,20 +8,98 @@ type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 type SavedFunctionalClassification = components['schemas']['SavedFunctionalClassification']
 
 /**
- * The call a measurement row shows: its preferred (clinical-grade) classification, else the API's display-only
- * research-use-only fallback, flagged so the row can tag it. Ranking never uses the fallback; the API orders
- * rows on `preferredClassification` alone.
+ * The call a measurement row shows, flagged when it comes from a research-use-only calibration (only served when
+ * the page asks for research-use-only calls). The API never ranks rows by such calls.
  */
 export function displayedClassification(
   measurement: AlleleMeasurement
 ): {classification: SavedFunctionalClassification; researchUseOnly: boolean} | null {
-  if (measurement.preferredClassification) {
-    return {classification: measurement.preferredClassification, researchUseOnly: false}
+  if (!measurement.classification) return null
+  return {
+    classification: measurement.classification,
+    researchUseOnly: measurement.classificationIsResearchUseOnly ?? false
   }
-  if (measurement.researchUseOnlyClassification) {
-    return {classification: measurement.researchUseOnlyClassification, researchUseOnly: true}
+}
+
+/**
+ * What a measurement row says about its variant: a classification's direction, or why there is none.
+ * `unclassified` means a calibration exists but leaves this variant out; `uncalibrated` means the score set
+ * has no calibration with classifications.
+ */
+export type MeasurementCall = 'abnormal' | 'normal' | 'not_specified' | 'unclassified' | 'uncalibrated'
+
+/**
+ * Display order, wording and tag styles for measurement calls, shared by the rows and the summary above them.
+ * Directional calls take the classification tags' colors. The two kinds of no call get a dashed, unfilled tag,
+ * so they don't read as the grey, filled Not Specified tag: that is a call, these are its absence.
+ */
+export const MEASUREMENT_CALLS: Record<MeasurementCall, {label: string; class: string}> = {
+  abnormal: {label: 'Abnormal', class: 'mave-classification-abnormal'},
+  normal: {label: 'Normal', class: 'mave-classification-normal'},
+  not_specified: {label: 'Not specified', class: 'mave-classification-not_specified'},
+  unclassified: {label: 'Unclassified', class: 'mave-tag-no-call'},
+  uncalibrated: {label: 'Not calibrated', class: 'mave-tag-no-call'}
+}
+
+/**
+ * The calibrations a measurement row may draw on: research-use-only ones only when the page shows research-use-only
+ * calls, matching the API's `include_research_use_only`. Otherwise a row could shade by, or count as calibrated
+ * through, a calibration whose call it doesn't show.
+ */
+export function eligibleCalibrations(
+  scoreCalibrations: ScoreCalibration[] | null | undefined,
+  includeResearchUseOnly: boolean
+): ScoreCalibration[] {
+  return (scoreCalibrations ?? []).filter((c) => includeResearchUseOnly || !c.researchUseOnly)
+}
+
+/**
+ * The call a measurement row shows. Null while an unclassified row's score set is still loading, since only the
+ * score set says whether a calibration exists.
+ */
+export function measurementCall(
+  measurement: AlleleMeasurement,
+  scoreCalibrations: ScoreCalibration[] | null | undefined,
+  scoreSetLoaded: boolean
+): MeasurementCall | null {
+  const displayed = displayedClassification(measurement)
+  if (displayed) {
+    const direction = displayed.classification.functionalClassification
+    return direction === 'abnormal' || direction === 'normal' ? direction : 'not_specified'
   }
-  return null
+  if (!scoreSetLoaded) return null
+  const calibrated = (scoreCalibrations ?? []).some((c) => (c.functionalClassifications?.length ?? 0) > 0)
+  return calibrated ? 'unclassified' : 'uncalibrated'
+}
+
+export interface MeasurementCallSummary {
+  total: number
+  /** Non-zero counts in {@link MEASUREMENT_CALLS} order. */
+  counts: {call: MeasurementCall; count: number}[]
+  /** Calls that come from a research-use-only calibration; counted within `counts` too. */
+  researchUseOnlyCount: number
+}
+
+/**
+ * Tallies the calls across a variant's measurements. Null until every row's call is known, so the line never
+ * shows a count that is about to change.
+ */
+export function summarizeMeasurementCalls(
+  measurements: AlleleMeasurement[],
+  callOf: (measurement: AlleleMeasurement) => MeasurementCall | null
+): MeasurementCallSummary | null {
+  const tally = new Map<MeasurementCall, number>()
+  let researchUseOnlyCount = 0
+  for (const measurement of measurements) {
+    const call = callOf(measurement)
+    if (call == null) return null
+    tally.set(call, (tally.get(call) ?? 0) + 1)
+    if (displayedClassification(measurement)?.researchUseOnly) researchUseOnlyCount += 1
+  }
+  const counts = (Object.keys(MEASUREMENT_CALLS) as MeasurementCall[])
+    .filter((call) => tally.has(call))
+    .map((call) => ({call, count: tally.get(call)!}))
+  return {total: measurements.length, counts, researchUseOnlyCount}
 }
 
 /**

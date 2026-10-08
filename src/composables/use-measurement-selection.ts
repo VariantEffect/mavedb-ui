@@ -2,7 +2,8 @@ import {computed, ref, watch, type ComputedRef, type Ref} from 'vue'
 
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
 import {scoreSetUrnOf, type UseMeasurementCacheReturn} from '@/composables/use-measurement-cache'
-import {chooseDefaultCalibration} from '@/lib/calibrations'
+import {displayedClassification, eligibleCalibrations} from '@/lib/measurement-types'
+import {stripCalibration} from '@/lib/score-strip'
 import type {DisplayVariant} from '@/lib/variants'
 import type {components} from '@/schema/openapi'
 
@@ -45,7 +46,8 @@ export function useMeasurementSelection(
   variants: Ref<AlleleMeasurement[]>,
   filteredVariants: ComputedRef<AlleleMeasurement[]>,
   highlightUrn: Ref<string | null>,
-  cache: UseMeasurementCacheReturn
+  cache: UseMeasurementCacheReturn,
+  includeResearchUseOnly: Ref<boolean>
 ): UseMeasurementSelectionReturn {
   const selectedVariantUrn = ref<string | null>(null)
   const selectedCalibration = ref<string | null>(null)
@@ -122,19 +124,27 @@ export function useMeasurementSelection(
     cache.loadScores(scoreSetUrnOf(newUrn))
   })
 
-  // A new score set invalidates any manual calibration pick (a stale URN wouldn't match the new set).
-  watch(selectedScoreSetUrn, () => {
-    selectedCalibration.value = null
+  // The calibration behind the selected row's call, so the panel and histogram open on what the row shows; else
+  // the score set's default among the calibrations the row may draw on.
+  const defaultCalibrationUrn = computed<string | null>(() => {
+    const scoreSet = selectedScoreSet.value
+    if (!scoreSet || !selectedVariant.value) return null
+    const classificationId = displayedClassification(selectedVariant.value)?.classification.id
+    const calibrations = eligibleCalibrations(scoreSet.scoreCalibrations, includeResearchUseOnly.value)
+    return stripCalibration(classificationId, calibrations)?.urn ?? null
   })
 
-  // Default the calibration from the score set as soon as it loads. Only fills an empty selection,
-  // so a user's manual pick via the histogram dropdown is always retained.
+  // A new measurement or a change to RUO evidence resets any manual pick to that measurement's default.
+  watch([selectedVariantUrn, includeResearchUseOnly], () => {
+    selectedCalibration.value = defaultCalibrationUrn.value
+  })
+
+  // Fill the default once the score set loads. Only fills an empty selection, so a manual pick via either
+  // calibration picker is retained while the measurement stays selected.
   watch(
-    selectedScoreSet,
-    (scoreSet) => {
-      if (!selectedCalibration.value) {
-        selectedCalibration.value = chooseDefaultCalibration(scoreSet?.scoreCalibrations)?.urn ?? null
-      }
+    defaultCalibrationUrn,
+    (urn) => {
+      if (!selectedCalibration.value) selectedCalibration.value = urn
     },
     {immediate: true}
   )

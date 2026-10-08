@@ -16,6 +16,7 @@ import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 type VariantDetail = components['schemas']['VariantDetail']
+type ScoreSet = components['schemas']['ScoreSet']
 
 export type {AlleleMeasurement}
 
@@ -35,6 +36,8 @@ export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
   showNucleotide: Ref<boolean>
   showProtein: Ref<boolean>
   includeSuperseded: Ref<boolean>
+  // Whether research-use-only calls may stand in where a score set has no clinical calibration.
+  includeResearchUseOnly: Ref<boolean>
   // Content valid-time — null = current; reconstructs the molecular/annotation layer as of an instant.
   asOf: Ref<string | null>
   nucleotideCount: ComputedRef<number>
@@ -46,10 +49,11 @@ export interface UseVariantLookupReturn extends UseMeasurementSelectionReturn {
 
   // Per-measurement helpers (for the measurement table)
   getKeyword: (scoreSetUrn: string | null | undefined, key: string) => string | null
-  // Whether the score set has been prefetched, so a null keyword means "not provided" rather than "not loaded".
-  isScoreSetLoaded: (scoreSetUrn: string) => boolean
   // The score set's short citation name (as Assay facts heads it), or null until loaded or without a publication.
   getCitation: (scoreSetUrn: string) => string | null
+  // The score set as served to this viewer, or null until it loads (so a null keyword then means "not loaded"
+  // rather than "not provided").
+  getScoreSet: (scoreSetUrn: string) => ScoreSet | null
 
   // Page-level
   geneName: ComputedRef<string | null>
@@ -89,8 +93,10 @@ export function useVariantLookup(
   clingenAlleleId: Ref<string>,
   options?: {
     highlightUrn?: Ref<string | null>
-    // Seeded from the URL so a shared `?include_superseded=`/`?as_of=` link loads in one fetch.
+    // Seeded from the URL so a shared `?include_superseded=`/`?include_research_use_only=`/`?as_of=` link loads in
+    // one fetch.
     initialIncludeSuperseded?: boolean
+    initialIncludeResearchUseOnly?: boolean
     initialAsOf?: string | null
     toast?: {add: (opts: {severity: string; summary: string; detail: string; life: number}) => void}
   }
@@ -104,6 +110,7 @@ export function useVariantLookup(
   const showNucleotide = ref(true)
   const showProtein = ref(true)
   const includeSuperseded = ref(options?.initialIncludeSuperseded ?? false)
+  const includeResearchUseOnly = ref(options?.initialIncludeResearchUseOnly ?? true)
   const downloadInProgressLabel = ref<string | null>(null)
   const asOf = ref<string | null>(options?.initialAsOf ?? null)
 
@@ -132,14 +139,16 @@ export function useVariantLookup(
 
   // ── Composed sub-domains ──────────────────────────────────
   const cache = useMeasurementCache(asOf)
-  const selection = useMeasurementSelection(variants, filteredVariants, highlightUrn, cache)
+  const selection = useMeasurementSelection(variants, filteredVariants, highlightUrn, cache, includeResearchUseOnly)
 
   // The selected variant's own status as one of the active calibration's controls, if it was used
   // as one — distinct from `calibrationResolution`, which classifies the variant by score.
   const selectedVariantControlStatus = computed<CalibrationControlStatus | null>(() => {
     const urn = selection.selectedVariantUrn.value
     if (!urn) return null
-    return selection.selectedCalibrationObject.value?.controls?.find((c) => c.variantUrn === urn)?.clinicalStatus ?? null
+    return (
+      selection.selectedCalibrationObject.value?.controls?.find((c) => c.variantUrn === urn)?.clinicalStatus ?? null
+    )
   })
 
   // ── Page-level ────────────────────────────────────────────
@@ -154,8 +163,8 @@ export function useVariantLookup(
     variants.value.map((m) => cache.variantDetails.value[m.variantUrn]).filter((d): d is VariantDetail => d != null)
   )
 
-  function isScoreSetLoaded(scoreSetUrn: string): boolean {
-    return scoreSetUrn in cache.scoreSets.value
+  function getScoreSet(scoreSetUrn: string): ScoreSet | null {
+    return cache.scoreSets.value[scoreSetUrn] ?? null
   }
 
   function getCitation(scoreSetUrn: string): string | null {
@@ -186,6 +195,7 @@ export function useVariantLookup(
       // The API order IS the default (direct-first, strongest-evidence) — never re-ranked here.
       const measurements = await getAlleleMeasurements(clingenAlleleId.value, {
         includeSuperseded: includeSuperseded.value,
+        includeResearchUseOnly: includeResearchUseOnly.value,
         asOf: asOf.value ?? undefined
       })
 
@@ -289,7 +299,7 @@ export function useVariantLookup(
 
   // Any query-axis change (anchor, superseded scope, content valid-time) refetches; fetchVariants clears
   // the per-URN caches so detail/scores re-resolve under the new as_of.
-  watch([clingenAlleleId, includeSuperseded, asOf], fetchVariants, {immediate: true})
+  watch([clingenAlleleId, includeSuperseded, includeResearchUseOnly, asOf], fetchVariants, {immediate: true})
 
   return {
     ...selection,
@@ -300,6 +310,7 @@ export function useVariantLookup(
     showNucleotide,
     showProtein,
     includeSuperseded,
+    includeResearchUseOnly,
     asOf,
     nucleotideCount,
     proteinCount,
@@ -307,7 +318,7 @@ export function useVariantLookup(
     selectedVariantControlStatus,
     getKeyword,
     getCitation,
-    isScoreSetLoaded,
+    getScoreSet,
     geneName,
     loadedVariantDetails,
     downloadInProgressLabel,

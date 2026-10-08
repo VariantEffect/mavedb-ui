@@ -2010,8 +2010,12 @@ export interface components {
       scoreSetUrn: string;
       /** Scoresettitle */
       scoreSetTitle: string;
-      preferredClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
-      researchUseOnlyClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      classification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      /**
+       * Classificationisresearchuseonly
+       * @default false
+       */
+      classificationIsResearchUseOnly?: boolean;
       /** Iscurrent */
       isCurrent: boolean;
       /** Supersededbyscoreset */
@@ -5251,6 +5255,25 @@ export interface components {
       scoreSetUrn: string;
     };
     /**
+     * ScoreDistribution
+     * @description Binned summary of a score set's scores, built by ``mavedb.lib.score_distribution.summarize_scores``.
+     *
+     * ``counts`` holds equal-width bins spanning ``[min, max]``; scores that are null or not finite are
+     * counted in ``null_count`` instead.
+     */
+    ScoreDistribution: {
+      /** Version */
+      version: number;
+      /** Min */
+      min: number;
+      /** Max */
+      max: number;
+      /** Counts */
+      counts: number[];
+      /** Nullcount */
+      nullCount: number;
+    };
+    /**
      * ScoreSet
      * @description Score set view model containing most properties visible to non-admin users, but no variant data.
      */
@@ -5322,6 +5345,7 @@ export interface components {
       mappingState?: components["schemas"]["MappingState"] | null;
       /** Mappingerrors */
       mappingErrors?: Record<string, never> | null;
+      scoreDistribution?: components["schemas"]["ScoreDistribution"] | null;
     };
     /**
      * ScoreSetCreate

@@ -2,7 +2,7 @@
   <!-- The whole row selects on click; the title button is its keyboard and screen-reader control. A row-wide button
        would nest the Key tags' own controls inside it. -->
   <div
-    class="measurement-grid relative block w-full cursor-pointer border-b border-border-light px-4 py-3 text-left tablet:grid tablet:px-5"
+    class="measurement-grid relative block w-full cursor-pointer border-b border-border-light px-4 py-3 text-left @xl:grid @xl:px-5"
     :class="selected ? 'bg-sage-light/60 shadow-[inset_3px_0_0_var(--color-sage)]' : 'bg-surface hover:bg-mint-light'"
     @click="$emit('select', measurement.variantUrn)"
   >
@@ -32,21 +32,36 @@
       <p v-else-if="factsLoading" class="mt-1.5 h-2.5 w-2/3 animate-pulse rounded-sm bg-border-light" />
       <p v-else-if="noFactsProvided" class="mt-1 text-xs-minus italic text-text-muted">No assay details provided</p>
     </div>
-    <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 tablet:contents">
-      <span class="flex flex-wrap items-center gap-1 self-center">
-        <MvClassificationTag v-if="classification" :classification="classification" />
-        <span v-else class="hidden text-xs-minus text-text-muted tablet:inline">—</span>
-        <span v-if="displayed?.researchUseOnly" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
-          >Research use only</span
-        >
-      </span>
-      <span class="self-center">
-        <MvEvidenceTag v-if="evidenceCode" :code="evidenceCode" />
-        <span v-else class="text-xs-minus text-text-muted tablet:inline hidden">—</span>
-      </span>
-      <span class="self-center font-mono text-xs-minus text-text-muted tablet:text-right">
-        <span class="tablet:hidden">score </span>{{ measurement.score != null ? formatScore(measurement.score) : '—' }}
-      </span>
+    <!-- Narrow tables: the strip spans the row, with the tags on one line below. Wide tables: a grid cell, with the
+         tags no wider than the strip above them. -->
+    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 @xl:contents">
+      <div class="contents @xl:flex @xl:flex-col @xl:gap-1 @xl:self-center">
+        <div v-if="measurement.score != null && (distribution || factsLoading)" class="basis-full @xl:basis-auto">
+          <MvScoreStrip
+            v-if="distribution"
+            :calibration="calibration"
+            :distribution="distribution"
+            :score="measurement.score"
+          />
+          <!-- Holds the strip's space while the score set loads, so rows don't shift when it arrives. -->
+          <span v-else class="block h-[22px] animate-pulse rounded-sm bg-border-light" />
+        </div>
+        <span class="flex items-center gap-1">
+          <MvClassificationTag v-if="showClassificationTag" :classification="classification!" />
+          <MvEvidenceTag v-if="evidenceCode" :code="evidenceCode" />
+          <span
+            v-else-if="!classification && call"
+            v-key-term="'functional-impact'"
+            class="mave-tag"
+            :class="MEASUREMENT_CALLS[call].class"
+            >{{ MEASUREMENT_CALLS[call].label }}</span
+          >
+          <span v-else-if="!classification" class="hidden text-xs-minus text-text-muted @xl:inline">—</span>
+          <span v-if="displayed?.researchUseOnly" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
+            >Research use only</span
+          >
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -56,11 +71,22 @@ import {defineComponent, type PropType} from 'vue'
 
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
-import {assayLevelDisplay, displayedClassification, evidenceCode} from '@/lib/measurement-types'
-import {formatScore} from '@/lib/scores'
+import MvScoreStrip from '@/components/variant/MvScoreStrip.vue'
+import type {ScoreCalibration} from '@/lib/calibrations'
+import {
+  assayLevelDisplay,
+  displayedClassification,
+  eligibleCalibrations,
+  evidenceCode,
+  MEASUREMENT_CALLS,
+  type MeasurementCall,
+  measurementCall
+} from '@/lib/measurement-types'
+import {stripCalibration, type ScoreDistribution} from '@/lib/score-strip'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
+type ScoreSet = components['schemas']['ScoreSet']
 
 export interface AssayFact {
   key: string
@@ -70,13 +96,14 @@ export interface AssayFact {
 /**
  * One selectable measurement row in {@link MvMeasurementTable}; lays out on the table's shared grid.
  *
- * The score is deliberately muted: it is the raw measurement, but scales differ between assays, so the
- * classification is what compares across rows.
+ * Raw scores are on each assay's own scale, so the row shows none: the score strip places the score within its own
+ * score set's distribution and calibration, and the call is what compares across rows. With the strip drawn, an
+ * evidence code stands in for the classification tag, since the strip's shading already shows the direction.
  */
 export default defineComponent({
   name: 'MvMeasurementTableRow',
 
-  components: {MvClassificationTag, MvEvidenceTag},
+  components: {MvClassificationTag, MvEvidenceTag, MvScoreStrip},
 
   props: {
     measurement: {type: Object as PropType<AlleleMeasurement>, required: true},
@@ -85,6 +112,10 @@ export default defineComponent({
     facts: {type: Array as PropType<AssayFact[]>, required: true},
     // The score set behind `facts` hasn't loaded yet, so empty facts are unknown rather than absent.
     factsLoading: {type: Boolean, default: false},
+    // Null until loaded; supplies the score distribution and the calibrations the strip shades by.
+    scoreSet: {type: Object as PropType<ScoreSet | null>, default: null},
+    // Whether research-use-only calibrations count, as set in the page's View options.
+    includeResearchUseOnly: {type: Boolean, default: false},
     selected: {type: Boolean, default: false},
     loading: {type: Boolean, default: false},
     // The level badge only distinguishes rows when their group mixes assay levels.
@@ -92,6 +123,10 @@ export default defineComponent({
   },
 
   emits: ['select'],
+
+  setup() {
+    return {MEASUREMENT_CALLS}
+  },
 
   computed: {
     level(): {label: string; class: string} {
@@ -113,10 +148,23 @@ export default defineComponent({
     },
     evidenceCode(): string | null {
       return evidenceCode(this.displayed?.classification)
+    },
+    calibrations(): ScoreCalibration[] {
+      return eligibleCalibrations(this.scoreSet?.scoreCalibrations, this.includeResearchUseOnly)
+    },
+    distribution(): ScoreDistribution | null {
+      return this.scoreSet?.scoreDistribution ?? null
+    },
+    calibration(): ScoreCalibration | null {
+      return stripCalibration(this.displayed?.classification.id, this.calibrations)
+    },
+    call(): MeasurementCall | null {
+      return measurementCall(this.measurement, this.calibrations, this.scoreSet != null)
+    },
+    showClassificationTag(): boolean {
+      return this.classification != null && !(this.evidenceCode && this.distribution && this.measurement.score != null)
     }
-  },
-
-  methods: {formatScore}
+  }
 })
 </script>
 

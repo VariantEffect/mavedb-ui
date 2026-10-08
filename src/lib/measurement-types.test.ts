@@ -3,11 +3,14 @@ import {describe, expect, it} from 'vitest'
 import {
   assayLevelBucket,
   displayedClassification,
+  eligibleCalibrations,
   dominantAssayLevel,
   evidenceCode,
   formatEvidenceCode,
+  measurementCall,
   RELATIONSHIP_KEY_SECTION,
   SELECTED_MEASUREMENT_TAG,
+  summarizeMeasurementCalls,
   YOUR_VARIANT_TAG
 } from '@/lib/measurement-types'
 
@@ -89,21 +92,17 @@ describe('displayedClassification', () => {
   } as const
   const call = (functionalClassification: string) => ({functionalClassification}) as never
 
-  it('prefers the clinical-grade call', () => {
-    expect(
-      displayedClassification({
-        ...base,
-        preferredClassification: call('normal'),
-        researchUseOnlyClassification: call('abnormal')
-      })
-    ).toEqual({classification: call('normal'), researchUseOnly: false})
+  it('returns a clinical call unflagged', () => {
+    expect(displayedClassification({...base, classification: call('normal')})).toEqual({
+      classification: call('normal'),
+      researchUseOnly: false
+    })
   })
 
-  it('falls back to the research-use-only call, flagged', () => {
-    expect(displayedClassification({...base, researchUseOnlyClassification: call('abnormal')})).toEqual({
-      classification: call('abnormal'),
-      researchUseOnly: true
-    })
+  it('flags a research-use-only call', () => {
+    expect(
+      displayedClassification({...base, classification: call('abnormal'), classificationIsResearchUseOnly: true})
+    ).toEqual({classification: call('abnormal'), researchUseOnly: true})
   })
 
   it('returns null when neither call exists', () => {
@@ -137,5 +136,92 @@ describe('formatEvidenceCode', () => {
 
   it('title-cases every word of a non-ACMG code', () => {
     expect(formatEvidenceCode('NOT_PROVIDED')).toBe('Not Provided')
+  })
+})
+
+describe('measurementCall', () => {
+  const base = {
+    variantUrn: 'urn:mavedb:00000001-a-1#1',
+    relationship: 'direct',
+    scoreSetUrn: 'urn:mavedb:00000001-a-1',
+    scoreSetTitle: 'Score set',
+    isCurrent: true
+  } as const
+  const call = (functionalClassification: string) => ({functionalClassification}) as never
+  const calibrated = [{functionalClassifications: [call('abnormal')]}] as never
+
+  it('takes the direction of the displayed classification', () => {
+    expect(measurementCall({...base, classification: call('abnormal')}, null, false)).toBe('abnormal')
+    expect(
+      measurementCall({...base, classification: call('normal'), classificationIsResearchUseOnly: true}, null, false)
+    ).toBe('normal')
+    expect(measurementCall({...base, classification: call('not_specified')}, null, false)).toBe('not_specified')
+  })
+
+  it('is unknown for an unclassified row until its score set loads', () => {
+    expect(measurementCall(base, null, false)).toBeNull()
+  })
+
+  it('tells an unclassified variant from an uncalibrated score set', () => {
+    expect(measurementCall(base, calibrated, true)).toBe('unclassified')
+    expect(measurementCall(base, [{functionalClassifications: []}] as never, true)).toBe('uncalibrated')
+    expect(measurementCall(base, null, true)).toBe('uncalibrated')
+  })
+})
+
+describe('summarizeMeasurementCalls', () => {
+  const measurement = (urn: string, extra: object = {}) =>
+    ({
+      variantUrn: urn,
+      relationship: 'direct',
+      scoreSetUrn: urn.split('#')[0],
+      scoreSetTitle: 'Score set',
+      isCurrent: true,
+      ...extra
+    }) as never
+
+  it('counts calls in display order and leaves out zero counts', () => {
+    const calls = {a: 'unclassified', b: 'abnormal', c: 'unclassified'} as const
+    const summary = summarizeMeasurementCalls(
+      [measurement('a#1'), measurement('b#1'), measurement('c#1')],
+      (m: {scoreSetUrn: string}) => calls[m.scoreSetUrn as keyof typeof calls]
+    )
+
+    expect(summary).toEqual({
+      total: 3,
+      counts: [
+        {call: 'abnormal', count: 1},
+        {call: 'unclassified', count: 2}
+      ],
+      researchUseOnlyCount: 0
+    })
+  })
+
+  it('counts research-use-only calls', () => {
+    const ruo = measurement('a#1', {
+      classification: {functionalClassification: 'abnormal'},
+      classificationIsResearchUseOnly: true
+    })
+
+    expect(summarizeMeasurementCalls([ruo], () => 'abnormal')?.researchUseOnlyCount).toBe(1)
+  })
+
+  it('is null while any call is unknown', () => {
+    expect(
+      summarizeMeasurementCalls([measurement('a#1'), measurement('b#1')], (m: {scoreSetUrn: string}) =>
+        m.scoreSetUrn === 'a' ? 'normal' : null
+      )
+    ).toBeNull()
+  })
+})
+
+describe('eligibleCalibrations', () => {
+  const clinical = {title: 'clinical', researchUseOnly: false} as never
+  const research = {title: 'research', researchUseOnly: true} as never
+
+  it('drops research-use-only calibrations unless they are shown', () => {
+    expect(eligibleCalibrations([clinical, research], false)).toEqual([clinical])
+    expect(eligibleCalibrations([clinical, research], true)).toEqual([clinical, research])
+    expect(eligibleCalibrations(null, true)).toEqual([])
   })
 })

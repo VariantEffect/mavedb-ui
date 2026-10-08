@@ -12,14 +12,16 @@ type AvailableCsvNamespace = components['schemas']['AvailableCsvNamespace']
 // Entrypoint for the ClinGen-allele-centric variant page: every measurement whose cross-layer
 // equivalence class touches this CAID/PAID, in the API's default order (direct-first).
 // A CA query also pulls in its protein consequence and that consequence's other encodings;
-// a PA query pulls in its nt encodings. `includeSuperseded` opts in to superseded score-set versions.
+// a PA query pulls in its nt encodings. `includeSuperseded` opts in to superseded score-set versions;
+// `includeResearchUseOnly` lets a research-use-only call stand in where a score set has no clinical calibration.
 export const getAlleleMeasurements = memoizeRead(
   async (
     clingenAlleleId: string,
-    options?: {includeSuperseded?: boolean; asOf?: string}
+    options?: {includeSuperseded?: boolean; includeResearchUseOnly?: boolean; asOf?: string}
   ): Promise<AlleleMeasurement[]> => {
     const params: Record<string, string | boolean> = {}
     if (options?.includeSuperseded) params.include_superseded = true
+    if (options?.includeResearchUseOnly) params.include_research_use_only = true
     if (options?.asOf) params.as_of = options.asOf
     const response = await axios.get(
       `${config.apiBaseUrl}/clingen-alleles/${encodeURIComponent(clingenAlleleId)}/measurements`,
@@ -27,7 +29,8 @@ export const getAlleleMeasurements = memoizeRead(
     )
     return response.data
   },
-  (clingenAlleleId, options) => `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.asOf ?? ''}`
+  (clingenAlleleId, options) =>
+    `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.includeResearchUseOnly ?? false}|${options?.asOf ?? ''}`
 )
 
 // The endpoint resolves the live mapping layer by default, which is what the retired `only_current=true`

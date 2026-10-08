@@ -14,7 +14,7 @@ export type FunctionalClassification = 'abnormal' | 'normal' | 'not_specified'
  * classification tag, the drawer's consequence section, and the calibration histogram all derive from
  * this, so the vocabulary can never drift across surfaces. `class` styles the inline chip (the `--fn-*`
  * palette); `rangeColor` fills the histogram score range (the `--cal-*` palette) — intentionally distinct.
- * `not_specified` carries no gloss — it isn't surfaced in the drawer. Insertion order is display order.
+ * Insertion order is display order.
  */
 export const FUNCTIONAL_CLASSIFICATIONS: Record<
   FunctionalClassification,
@@ -38,7 +38,9 @@ export const FUNCTIONAL_CLASSIFICATIONS: Record<
     label: 'Not Specified',
     shortLabel: 'Not Specified',
     class: 'mave-classification-not_specified',
-    rangeColor: 'var(--color-cal-unspecified)'
+    rangeColor: 'var(--color-cal-unspecified)',
+    definition:
+      'The variant falls in a calibrated range that is neither abnormal nor normal, such as one its authors label indeterminate or intermediate. It is a call, but one that gives no direction.'
   }
 }
 
@@ -49,6 +51,23 @@ export const FUNCTIONAL_IMPACT_KEY_SECTION: KeySection = {
     {label: 'Functional impact', definition: "The assay's verdict on whether the variant alters function."},
     ...Object.values(FUNCTIONAL_CLASSIFICATIONS)
       .filter((c) => c.definition)
-      .map((c) => ({label: c.label, definition: c.definition!, class: c.class}))
+      .map((c) => ({label: c.label, definition: c.definition!, class: c.class})),
+    {
+      label: 'Score distribution',
+      definition:
+        "The small chart beside each measurement: the score set's scores as a histogram, shaded by its calibration's abnormal and normal ranges, with a line at this variant's score. It shows how close the score sits to a threshold."
+    },
+    {
+      label: 'Unclassified',
+      definition:
+        "No call: the score set has a calibration, but it doesn't classify this variant, because the score falls outside every calibrated range or the variant isn't in any calibrated class. Not the same as Not Specified, which is a call that places the variant in a range with no direction, such as an indeterminate one.",
+      class: 'mave-tag-no-call'
+    },
+    {
+      label: 'Not calibrated',
+      definition:
+        'No call: the score set has no calibration, or only research-use-only ones while RUO evidence is turned off, so its scores carry no functional impact.',
+      class: 'mave-tag-no-call'
+    }
   ]
 }

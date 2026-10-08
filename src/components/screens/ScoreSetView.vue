@@ -136,9 +136,10 @@
             :clinvar-version="clinvarControls.controlVersion"
             :coordinate="variantOptionLabel(variantToVisualize)"
             :score="variantToVisualize.score ?? null"
-            :selected-calibration-id="selectedCalibrationObjects[0]?.id ?? null"
+            :selected-calibration-urn="selectedCalibrations[0]"
             :underlying-coordinate="variantUnderlyingLabel(variantToVisualize) ?? ''"
             :urn="variantToVisualize.variantUrn"
+            @calibration-changed="(cal) => childComponentSelectedCalibration(cal, 0)"
           />
         </div>
 

@@ -1,6 +1,12 @@
 import {describe, expect, it} from 'vitest'
 
-import {buildControlPlacements} from '@/lib/calibrations'
+import {
+  buildControlPlacements,
+  isClassBasedCalibration,
+  orderCalibrationOptions,
+  unclassifiedCallLabel,
+  type ScoreCalibration
+} from '@/lib/calibrations'
 
 /** A range as the API serves it: identified by id, which is what each control's placement points at. */
 const range = (id: number, label: string, functionalClassification: string) =>
@@ -86,5 +92,42 @@ describe('buildControlPlacements', () => {
     const p = buildControlPlacements([{clinicalStatus: 'pathogenic', functionalClassificationId: 1}], null)
     expect(p.unplaced).toBe(1)
     expect(p.byRange.size).toBe(0)
+  })
+})
+
+describe('orderCalibrationOptions', () => {
+  const cal = (title: string, flags: Partial<ScoreCalibration> = {}) => ({title, ...flags}) as ScoreCalibration
+
+  it('orders primary, then clinical-grade, then research-use-only, alphabetical within each tier', () => {
+    const ordered = orderCalibrationOptions([
+      cal('Zeta RUO', {researchUseOnly: true}),
+      cal('Beta'),
+      cal('Alpha RUO', {researchUseOnly: true}),
+      cal('Primary', {primary: true}),
+      cal('Alpha')
+    ])
+    expect(ordered.map((c) => c.title)).toEqual(['Primary', 'Alpha', 'Beta', 'Alpha RUO', 'Zeta RUO'])
+  })
+
+  it('does not mutate its input and tolerates a missing list', () => {
+    const input = [cal('B'), cal('A')]
+    orderCalibrationOptions(input)
+    expect(input.map((c) => c.title)).toEqual(['B', 'A'])
+    expect(orderCalibrationOptions(null)).toEqual([])
+  })
+})
+
+describe('unclassifiedCallLabel', () => {
+  const withClasses = (...classes: Array<string | null>) =>
+    ({functionalClassifications: classes.map((c) => ({class: c}))}) as unknown as ScoreCalibration
+
+  it('names range-based and class-based gaps differently', () => {
+    expect(unclassifiedCallLabel(withClasses(null, null))).toBe('Outside calibrated ranges')
+    expect(unclassifiedCallLabel(withClasses('A', 'B'))).toBe('Not in a calibrated class')
+  })
+
+  it('treats a calibration with no classifications, or mixed ones, as range-based', () => {
+    expect(isClassBasedCalibration(withClasses())).toBe(false)
+    expect(isClassBasedCalibration(withClasses('A', null))).toBe(false)
   })
 })

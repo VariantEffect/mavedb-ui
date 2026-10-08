@@ -2,7 +2,7 @@ import {computed, ref, watch, type ComputedRef, type Ref} from 'vue'
 
 import {getScoreCalibrationVariants} from '@/api/mavedb/calibrations'
 import {formatEvidenceCode} from '@/lib/acmg'
-import {functionalClassificationContainsVariant} from '@/lib/calibrations'
+import {functionalClassificationContainsVariant, isClassBasedCalibration} from '@/lib/calibrations'
 import type {components} from '@/schema/openapi'
 
 type ScoreCalibration = components['schemas']['ScoreCalibration']
@@ -15,6 +15,8 @@ export interface UseCalibrationResolutionReturn {
   formattedEvidenceCode: ComputedRef<string>
   oddspathRatio: ComputedRef<string | null>
   isClassBased: ComputedRef<boolean>
+  /** True once the calibration's call is known, so a null `scoreRange` means the variant is unclassified rather than pending. */
+  resolved: ComputedRef<boolean>
 }
 
 /**
@@ -35,11 +37,7 @@ export function useCalibrationResolution(
   // Cache of class-based membership maps keyed by calibration URN
   const membershipCache = ref<Record<string, FunctionalClassificationVariants[]>>({})
 
-  const isClassBased = computed(() => {
-    const fcs = calibration.value?.functionalClassifications
-    if (!fcs || fcs.length === 0) return false
-    return fcs.every((fc) => fc.class != null)
-  })
+  const isClassBased = computed(() => (calibration.value ? isClassBasedCalibration(calibration.value) : false))
 
   // Fetch membership map when calibration changes and is class-based
   watch(
@@ -86,6 +84,13 @@ export function useCalibrationResolution(
     return cal.functionalClassifications.find((fc) => functionalClassificationContainsVariant(fc, scoreVal)) || null
   })
 
+  const resolved = computed(() => {
+    const cal = calibration.value
+    if (!cal?.functionalClassifications) return false
+    if (isClassBased.value) return !!cal.urn && membershipCache.value[cal.urn] != null
+    return score.value != null
+  })
+
   const classification = computed(() => scoreRange.value?.functionalClassification || null)
   const formattedEvidenceCode = computed(() => formatEvidenceCode(scoreRange.value))
   const oddspathRatio = computed(() =>
@@ -97,6 +102,7 @@ export function useCalibrationResolution(
     classification,
     formattedEvidenceCode,
     oddspathRatio,
-    isClassBased
+    isClassBased,
+    resolved
   }
 }

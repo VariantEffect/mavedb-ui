@@ -47,6 +47,9 @@
             />
             <MvEvidenceTag v-if="acmgCode" :code="acmgCode" />
           </span>
+          <span v-else-if="unclassifiedLabel" class="text-xs font-semibold italic text-text-muted">{{
+            unclassifiedLabel
+          }}</span>
           <span v-else class="stat-value font-semibold">—</span>
           <template v-if="oddspathsRatio != null">
             <span class="stat-value font-semibold flex flex-wrap items-center mt-0.5 gap-x-1.5 gap-y-0.5">
@@ -86,8 +89,8 @@
       <!-- Status and links — the superseded badge and full-details link, shown below either the facts
            grid or the empty state above. -->
       <div
-        v-if="!detail.isCurrent || detail.clingenAlleleId || classificationCalibration"
-        class="border-t border-border-light bg-surface flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
+        v-if="!detail.isCurrent || detail.clingenAlleleId || calibrations.length > 0"
+        class="border-t border-border-light bg-surface flex flex-wrap items-center gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
       >
         <span
           v-if="!detail.isCurrent"
@@ -97,22 +100,15 @@
           <i class="pi pi-exclamation-triangle text-[10px]" />
           <span>Superseded</span>
         </span>
-        <!-- The calibration behind the call above, as the variant page's Functional evidence footer names it. -->
-        <span
-          v-if="classificationCalibration"
-          class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary"
-        >
+        <!-- The calibration behind the call above; shares the page's selection with the score distribution. -->
+        <span v-if="calibrations.length > 0" class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <span v-key-term="'calibration'" class="mave-label">Calibration</span>
-          <span>{{ classificationCalibration.title }}</span>
-          <span v-if="classificationCalibration.primary" v-key-term="'calibration'" class="mave-tag mave-tag-primary"
-            >Primary</span
-          >
-          <span
-            v-if="classificationCalibration.researchUseOnly"
-            v-key-term="'calibration'"
-            class="mave-tag mave-tag-ruo"
-            >Research use only</span
-          >
+          <MvCalibrationSelect
+            :calibrations="calibrations"
+            class="w-full tablet:w-80"
+            :model-value="selectedCalibrationUrn"
+            @update:model-value="$emit('calibrationChanged', $event)"
+          />
         </span>
         <router-link
           v-if="detail.clingenAlleleId"
@@ -132,6 +128,7 @@ import {defineComponent, type PropType} from 'vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
+import MvCalibrationSelect from '@/components/calibration/MvCalibrationSelect.vue'
 import VariantConsequenceStat from '@/components/variant/VariantConsequenceStat.vue'
 import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
@@ -139,6 +136,7 @@ import {getVariantDetail} from '@/api/mavedb/variants'
 import {groupAlleles} from '@/lib/allele-grouping'
 import {collectGnomadFrequencies} from '@/lib/gnomad'
 import {formatScore} from '@/lib/scores'
+import {isClassBasedCalibration, unclassifiedCallLabel} from '@/lib/calibrations'
 import {enumerateUnderlyingClinvar, resolveClinvarRecords} from '@/lib/clinvar-controls'
 import {resolveClinvarHeadline} from '@/lib/clinvar-control-placement'
 import type {components} from '@/schema/openapi'
@@ -163,6 +161,7 @@ export default defineComponent({
   name: 'VariantDetailPanel',
 
   components: {
+    MvCalibrationSelect,
     MvClassificationTag,
     MvEvidenceTag,
     MvLoader,
@@ -182,14 +181,16 @@ export default defineComponent({
     // The variant's functional score, or null for an NA/absent score. Rendered in the headline so a
     // selection still reports its measurement even when the histogram has no bar to jump to.
     score: {type: Number as PropType<number | null>, default: null},
-    // The calibration selected on the page (its numeric id); its classification is the one shown.
-    selectedCalibrationId: {type: Number as PropType<number | null>, default: null},
+    // The calibration selected on the page (its URN), or null for none; its classification is the one shown.
+    selectedCalibrationUrn: {type: String as PropType<string | null>, default: null},
     // The ClinVar release the page's clinical-controls store has selected (raw `MM_YYYY`), passed through to
     // the ClinVar cell so it reduces over the same release as parent components. Null → fall back to latest.
     clinvarVersion: {type: String as PropType<string | null>, default: null},
-    // The score set's calibrations, to name the one behind the shown call; classifications carry only an id.
+    // The score set's calibrations, offered by the picker; classifications carry only a calibration id.
     calibrations: {type: Array as PropType<ScoreCalibration[]>, default: () => []}
   },
+
+  emits: ['calibrationChanged'],
 
   data() {
     return {
@@ -211,19 +212,23 @@ export default defineComponent({
     gnomad(): AlleleAnnotations['gnomad'] | null {
       return this.assayAnnotations?.gnomad ?? null
     },
-    // The classification for the page's selected calibration; falls back to primary, then first.
-    selectedClassification(): VariantClassification | null {
-      const classifications = this.detail?.classifications ?? []
-      if (this.selectedCalibrationId != null) {
-        const match = classifications.find((c) => c.calibrationId === this.selectedCalibrationId)
-        if (match) return match
-      }
-      return classifications.find((c) => c.primary) ?? classifications[0] ?? null
+    selectedCalibration(): ScoreCalibration | null {
+      return this.calibrations.find((c) => c.urn === this.selectedCalibrationUrn) ?? null
     },
-    // The calibration that produced the shown call, from the score set's list (classifications carry only an id).
-    classificationCalibration(): ScoreCalibration | null {
-      const id = this.selectedClassification?.calibrationId
-      return id != null ? (this.calibrations.find((c) => c.id === id) ?? null) : null
+    // The selected calibration's call for this variant. No fallback to another calibration: one that leaves
+    // the variant unclassified is shown as such.
+    selectedClassification(): VariantClassification | null {
+      const id = this.selectedCalibration?.id
+      if (id == null) return null
+      return this.detail?.classifications?.find((c) => c.calibrationId === id) ?? null
+    },
+    // Display-only stand-in when the selected calibration leaves this variant unclassified; never a call. An
+    // unscored variant can't fall outside a range, so it stays blank.
+    unclassifiedLabel(): string | null {
+      const calibration = this.selectedCalibration
+      if (!calibration || this.selectedClassification) return null
+      if (!isClassBasedCalibration(calibration) && this.score == null) return null
+      return unclassifiedCallLabel(calibration)
     },
     oddspathsRatio(): number | null {
       return this.selectedClassification?.classification.oddspathsRatio ?? null

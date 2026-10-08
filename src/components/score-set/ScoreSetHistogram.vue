@@ -8,37 +8,14 @@
       </TabList>
     </Tabs>
     <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
-      <button class="mavedb-threshold-trigger" type="button" @click="toggleThresholdsPopover">
-        <span class="mavedb-threshold-trigger-label">Active calibration</span>
-        <span class="mavedb-threshold-trigger-value">{{ activeCalibration.label }}</span>
-        <span v-if="activeCalibration.value?.primary" class="mave-tag mave-tag-primary shrink-0">Primary</span>
-        <span v-if="activeCalibration.value?.researchUseOnly" class="mave-tag mave-tag-ruo shrink-0"
-          >Research use only</span
-        >
-        <i class="pi pi-chevron-down mavedb-threshold-trigger-icon" />
-      </button>
-      <Popover ref="thresholdsPopoverRef" class="mavedb-thresholds-popover">
-        <div class="mavedb-thresholds-list" role="listbox">
-          <button
-            v-for="option of activeCalibrationOptions"
-            :key="option.value?.urn ?? 'none'"
-            :aria-selected="activeCalibration.value?.urn === option.value?.urn"
-            class="mavedb-thresholds-option"
-            :class="{'mavedb-thresholds-option--active': activeCalibration.value?.urn === option.value?.urn}"
-            role="option"
-            type="button"
-            @click="selectCalibration(option)"
-          >
-            <span class="mavedb-thresholds-option-label">{{ option.value?.title ?? 'None' }}</span>
-            <span v-if="option.value?.researchUseOnly" class="mave-tag mave-tag-ruo shrink-0"> Research use only </span>
-            <span v-if="option.value?.primary" class="mave-tag mave-tag-primary shrink-0"> Primary </span>
-            <i
-              v-if="activeCalibration.value?.urn === option.value?.urn"
-              class="pi pi-check mavedb-thresholds-option-check"
-            />
-          </button>
-        </div>
-      </Popover>
+      <span class="mave-label hidden shrink-0 tablet:inline">Calibration</span>
+      <MvCalibrationSelect
+        :calibrations="scoreSet.scoreCalibrations ?? []"
+        class="w-48 tablet:w-80"
+        mark-class-based
+        :model-value="activeCalibration.value?.urn ?? null"
+        @update:model-value="selectCalibrationUrn"
+      />
     </div>
   </div>
   <div v-if="showControlSourceSelector" class="mavedb-histogram-source-select">
@@ -195,7 +172,6 @@ import axios from 'axios'
 import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
 import PSelect from 'primevue/select'
-import Popover from 'primevue/popover'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import Tabs from 'primevue/tabs'
@@ -239,12 +215,14 @@ import makeHistogram, {
 import {getScoreCalibrationVariants} from '@/api/mavedb'
 import {
   chooseDefaultCalibration,
+  orderCalibrationOptions,
   prepareCalibrationsForHistogram,
   shaderOverlapsBin,
   functionalClassificationContainsVariant,
   getClassificationColor
 } from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
+import MvCalibrationSelect from '@/components/calibration/MvCalibrationSelect.vue'
 import {
   tooltipBadgeBlock,
   tooltipCountRow,
@@ -297,7 +275,7 @@ interface ControlSourceOption {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Checkbox, Popover, PSelect, Rating, Tabs, TabList, Tab, ProgressSpinner},
+  components: {Checkbox, MvCalibrationSelect, PSelect, Rating, Tabs, TabList, Tab, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -778,27 +756,10 @@ export default defineComponent({
     activeCalibrationOptions: function () {
       if (!this.scoreCalibrations) return []
 
-      const calibrationOptions = Object.entries(this.scoreCalibrations).map(([, value]) => {
-        // Research-use-only and primary status render as tags beside the title, not in it.
-        let label = value.title
-        // Append asterisk if class-based
-        label = value.functionalClassifications?.every((fc) => fc.class != null) ? `${label}*` : label
-        return {
-          label,
-          value
-        }
-      })
-
-      // Sort options: research use only at the end, alphabetically otherwise
-      calibrationOptions.sort((a, b) => {
-        const aIsResearchOnly = a.value?.researchUseOnly || false
-        const bIsResearchOnly = b.value?.researchUseOnly || false
-
-        if (aIsResearchOnly && !bIsResearchOnly) return 1
-        if (!aIsResearchOnly && bIsResearchOnly) return -1
-
-        return a.label.localeCompare(b.label)
-      })
+      const calibrationOptions = orderCalibrationOptions(Object.values(this.scoreCalibrations)).map((value) => ({
+        label: value.title,
+        value
+      }))
 
       return [{label: 'None', value: null}, ...calibrationOptions]
     },
@@ -1257,12 +1218,11 @@ export default defineComponent({
       return tooltipKeyValue('Overlapped classes', names.join(', '))
     },
 
-    toggleThresholdsPopover(event: Event) {
-      ;(this.$refs.thresholdsPopoverRef as InstanceType<typeof Popover>)?.toggle(event)
-    },
-    selectCalibration(option: {label: string; value: components['schemas']['ScoreCalibration'] | null}) {
-      this.activeCalibration = option
-      ;(this.$refs.thresholdsPopoverRef as InstanceType<typeof Popover>)?.hide()
+    selectCalibrationUrn(urn: string | null) {
+      this.activeCalibration = this.activeCalibrationOptions.find((option) => option.value?.urn === urn) || {
+        label: 'None',
+        value: null
+      }
     },
     // A histogram series per named protein-effect bucket, classified by VEP consequence.
     proteinEffectSeries(bucketNames: string[]) {
@@ -1541,57 +1501,9 @@ export default defineComponent({
   margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 8px;
   padding: 0 0.5rem;
   margin-bottom: 6px;
-}
-
-.mavedb-threshold-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-surface);
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1.4;
-  white-space: nowrap;
-  transition: border-color 0.15s;
-}
-
-.mavedb-threshold-trigger:hover {
-  border-color: var(--color-sage);
-}
-
-.mavedb-threshold-trigger-label {
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-@media (max-width: 896px) {
-  .mavedb-threshold-trigger-label {
-    display: none;
-  }
-}
-
-.mavedb-threshold-trigger-value {
-  color: var(--color-text-dark);
-  font-weight: 600;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (max-width: 480px) {
-  .mavedb-threshold-trigger-value {
-    max-width: 100px;
-  }
-}
-
-.mavedb-threshold-trigger-icon {
-  font-size: 10px;
-  color: var(--color-text-muted);
 }
 
 .mavedb-histogram-source-select {
@@ -1640,64 +1552,6 @@ export default defineComponent({
 </style>
 
 <style>
-.mavedb-thresholds-popover.p-popover {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  padding: 0;
-}
-
-.mavedb-thresholds-popover .p-popover-content {
-  padding: 4px 0;
-}
-
-.mavedb-thresholds-popover.p-popover::before,
-.mavedb-thresholds-popover.p-popover::after {
-  display: none;
-}
-
-.mavedb-thresholds-list {
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-  max-width: 360px;
-}
-
-.mavedb-thresholds-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  text-align: left;
-  font-size: 13px;
-  line-height: 1.4;
-  transition: background-color 0.1s;
-}
-
-.mavedb-thresholds-option:hover {
-  background-color: var(--color-mint-light);
-}
-
-.mavedb-thresholds-option--active {
-  background-color: var(--color-sage-light);
-  font-weight: 600;
-}
-
-.mavedb-thresholds-option-label {
-  flex: 1;
-  min-width: 0;
-}
-
-.mavedb-thresholds-option-check {
-  font-size: 12px;
-  color: var(--color-sage-strong);
-  flex-shrink: 0;
-}
-
 .histogram-tooltip {
   position: absolute;
 }

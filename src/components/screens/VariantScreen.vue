@@ -217,56 +217,14 @@
             >
               <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary">
                 <span v-key-term="'calibration'" class="mave-label shrink-0">Calibration</span>
-                <template v-if="lookup.selectedCalibrationObject.value">
-                  <!-- Switching here re-derives the call below and the histogram's shading; one shared selection. Fixed width so
-                       the trigger doesn't resize with each title. -->
-                  <PSelect
-                    v-if="calibrationOptions.length > 1"
-                    aria-label="Calibration"
-                    class="w-full min-w-0 tablet:w-80"
+                <template v-if="hasCalibrations">
+                  <!-- Shares one selection with the histogram below; switching re-derives the call and the shading. -->
+                  <MvCalibrationSelect
+                    :calibrations="lookup.selectedScoreSet.value?.scoreCalibrations ?? []"
+                    class="w-full tablet:w-80"
                     :model-value="lookup.selectedCalibration.value"
-                    option-label="title"
-                    option-value="urn"
-                    :options="calibrationOptions"
-                    size="small"
                     @update:model-value="lookup.selectedCalibration.value = $event"
-                  >
-                    <template #value>
-                      <span class="flex min-w-0 items-center gap-1.5 text-xs">
-                        <span class="truncate">{{ lookup.selectedCalibrationObject.value.title }}</span>
-                        <span v-if="lookup.selectedCalibrationObject.value.primary" class="mave-tag mave-tag-primary"
-                          >Primary</span
-                        >
-                        <span
-                          v-if="lookup.selectedCalibrationObject.value.researchUseOnly"
-                          class="mave-tag mave-tag-ruo"
-                          >Research use only</span
-                        >
-                      </span>
-                    </template>
-                    <template #option="{option}">
-                      <span class="flex items-center gap-1.5 text-xs">
-                        <span>{{ option.title }}</span>
-                        <span v-if="option.primary" class="mave-tag mave-tag-primary">Primary</span>
-                        <span v-if="option.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
-                      </span>
-                    </template>
-                  </PSelect>
-                  <span v-else class="flex min-w-0 items-center gap-1.5">
-                    <span class="truncate">{{ lookup.selectedCalibrationObject.value.title }}</span>
-                    <span
-                      v-if="lookup.selectedCalibrationObject.value.primary"
-                      v-key-term="'calibration'"
-                      class="mave-tag mave-tag-primary"
-                      >Primary</span
-                    >
-                    <span
-                      v-if="lookup.selectedCalibrationObject.value.researchUseOnly"
-                      v-key-term="'calibration'"
-                      class="mave-tag mave-tag-ruo"
-                      >Research use only</span
-                    >
-                  </span>
+                  />
                   <button
                     class="ml-auto flex shrink-0 cursor-pointer items-center gap-1 font-semibold whitespace-nowrap text-link hover:underline"
                     type="button"
@@ -289,6 +247,9 @@
                   >
                     <MvClassificationTag :classification="lookup.calibrationResolution.classification.value" />
                   </span>
+                  <span v-else-if="unclassifiedLabel" class="text-xs font-semibold italic text-text-muted">{{
+                    unclassifiedLabel
+                  }}</span>
                   <span v-else class="text-sm text-text-muted">—</span>
                 </div>
                 <div class="flex flex-col gap-0.5">
@@ -423,13 +384,13 @@
 
 <script lang="ts">
 import DatePicker from 'primevue/datepicker'
-import PSelect from 'primevue/select'
 import {defineComponent, toRef, type PropType} from 'vue'
 import {useRoute} from 'vue-router'
 import {useHead} from '@unhead/vue'
 import {useToast} from 'primevue/usetoast'
 
 import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
+import MvCalibrationSelect from '@/components/calibration/MvCalibrationSelect.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import MvErrorState from '@/components/common/MvErrorState.vue'
 import MvPanel from '@/components/common/MvPanel.vue'
@@ -451,13 +412,10 @@ import MvMeasurementTable from '@/components/variant/MvMeasurementTable.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {formatScore} from '@/lib/scores'
-import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
+import {hasFunctionalCalibrations, hasPathogenicityCalibrations, unclassifiedCallLabel} from '@/lib/calibrations'
 import {groupAlleles, mergeDetailAlleles, titleMember, type AlleleGroup} from '@/lib/allele-grouping'
 import {indirectMeasurementNotice, shortHgvs} from '@/lib/measurement-groups'
 import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
-import type {components} from '@/schema/openapi'
-
-type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 /** One entry in a download control: a label and the download it triggers. */
 interface DownloadOption {
@@ -477,8 +435,8 @@ export default defineComponent({
   components: {
     CalibrationTable,
     DatePicker,
-    PSelect,
     MvAlleleLedger,
+    MvCalibrationSelect,
     MvClassificationTag,
     MvAssayFactsCard,
     MvBadge,
@@ -545,12 +503,14 @@ export default defineComponent({
     highlightedRowKey(): string | null {
       return this.pageAlleleGroups.find((g) => g.measured && g.members.some((m) => m.level !== 'protein'))?.key ?? null
     },
-    // The selected score set's calibrations as the histogram's picker orders them: primary, then clinical-grade, then
-    // research-use-only, alphabetical within each.
-    calibrationOptions(): ScoreCalibration[] {
-      const calibrations = [...(this.lookup.selectedScoreSet.value?.scoreCalibrations ?? [])] as ScoreCalibration[]
-      const tier = (c: ScoreCalibration) => (c.primary ? 0 : c.researchUseOnly ? 2 : 1)
-      return calibrations.sort((a, b) => tier(a) - tier(b) || (a.title ?? '').localeCompare(b.title ?? ''))
+    // Display-only stand-in when the selected calibration leaves this variant unclassified; never a call.
+    unclassifiedLabel(): string | null {
+      const calibration = this.lookup.selectedCalibrationObject.value
+      if (!calibration || !this.lookup.calibrationResolution.resolved.value) return null
+      return this.lookup.calibrationResolution.scoreRange.value ? null : unclassifiedCallLabel(calibration)
+    },
+    hasCalibrations(): boolean {
+      return (this.lookup.selectedScoreSet.value?.scoreCalibrations?.length ?? 0) > 0
     },
     calibrationChoice(): {scoreSet: string | null; calibration: string | null} {
       return {scoreSet: this.lookup.selectedScoreSetUrn.value, calibration: this.lookup.selectedCalibration.value}

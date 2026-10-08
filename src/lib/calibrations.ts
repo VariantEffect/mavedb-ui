@@ -339,6 +339,31 @@ export function getPrimaryCalibration(
   return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
 }
 
+/** Whether a calibration classifies by class membership rather than by score range. */
+export function isClassBasedCalibration(calibration: Partial<Pick<ScoreCalibration, 'functionalClassifications'>>): boolean {
+  const fcs = calibration.functionalClassifications
+  return !!fcs && fcs.length > 0 && fcs.every((fc) => fc.class != null)
+}
+
+/**
+ * The display-only label for a variant a calibration leaves unclassified. Not a classification: it must not be
+ * shown as a classification tag or treated as an indeterminate call.
+ */
+export function unclassifiedCallLabel(calibration: Partial<Pick<ScoreCalibration, 'functionalClassifications'>>): string {
+  return isClassBasedCalibration(calibration) ? 'Not in a calibrated class' : 'Outside calibrated ranges'
+}
+
+/**
+ * A score set's calibrations in calibration-picker order: primary, then clinical-grade, then research-use-only,
+ * alphabetical by title within each tier. Returns a new array.
+ */
+export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | null | undefined): ScoreCalibration[] {
+  const tier = (c: ScoreCalibration) => (c.primary ? 0 : c.researchUseOnly ? 2 : 1)
+  return [...(scoreCalibrations ?? [])].sort(
+    (a, b) => tier(a) - tier(b) || (a.title ?? '').localeCompare(b.title ?? '')
+  )
+}
+
 /**
  * Picks the calibration to show by default: primary, else investigator-provided, else the first
  * non-research-use-only, else any with functional classifications, else the first. Depends only on the

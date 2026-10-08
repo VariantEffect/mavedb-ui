@@ -616,6 +616,10 @@ export interface paths {
      * Controls may be supplied either via this file or inline in `calibration_json`, but not both;
      * omitting both leaves existing controls unchanged.
      *
+     * Controls are stored only while `controls_not_phi` is true. New controls must be submitted with
+     * `controls_not_phi: true` in the same request; setting it to false or null without new controls
+     * deletes the existing controls.
+     *
      * ## Response
      * Returns the updated score calibration with all modifications applied and any new
      * classification data from the uploaded file.
@@ -697,7 +701,8 @@ export interface paths {
      * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
      * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
      * `benign`, case-insensitive). Controls may be supplied either via this file or inline in
-     * `calibration_json`, but not both.
+     * `calibration_json`, but not both. Controls are accepted only with `controls_not_phi: true`, the
+     * submitter's affirmation that they contain no protected health information (PHI).
      *
      * ## Response
      * Returns the created score calibration with its generated URN and associated score set information.
@@ -1764,6 +1769,40 @@ export interface components {
       homology?: boolean | null;
     };
     /**
+     * AdjacencyConstraint
+     * @description Components that define a molecular adjacency of congruent elements.
+     */
+    AdjacencyConstraint: {
+      /**
+       * Type
+       * @description MUST be 'AdjacencyConstraint'
+       * @default AdjacencyConstraint
+       * @constant
+       */
+      type?: "AdjacencyConstraint";
+      /**
+       * Adjoinedelements
+       * @description The elements of the adjacency.
+       */
+      adjoinedElements: ({
+          type: "AdjacencyConstraint";
+        } & (components["schemas"]["UnspecifiedElement"] | components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | Omit<components["schemas"]["Location"], "type"> | components["schemas"]["Terminus"]))[];
+      /**
+       * Functionaldomains
+       * @description Functional domains whose presence or absence is required to satisfy the adjacency.
+       */
+      functionalDomains?: components["schemas"]["FunctionalDomain"][] | null;
+      /** @description The sequence found between the adjoined elements. */
+      linker?: {
+        type: "AdjacencyConstraint";
+      } & (Omit<components["schemas"]["SequenceExpression"], "type"> | null);
+      /**
+       * Orderknown
+       * @description When orderKnown is true, the order of adjoinedElements is assumed to denote the 5' partner first and the 3' partner second. If orderKnown is false, then the order of adjoinedElements assumed not in fact to be known, as in the case of a fusion where only one or both partners are known, but not their relative order. This field is redundant and may be set to true when using Sequence Locations and following the VRS 2 Adjacency model, as the order is implied by the usage of start and end on respective adjoinedElements.
+       */
+      orderKnown: boolean;
+    };
+    /**
      * AdminUser
      * @description User view model containing properties to return to admin clients.
      */
@@ -1942,7 +1981,9 @@ export interface components {
       /** Clingenalleleid */
       clingenAlleleId?: string | null;
       /** Vrs */
-      vrs?: Record<string, never> | null;
+      vrs?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Alleles
        * @default {}
@@ -1987,11 +2028,11 @@ export interface components {
      * ``genomic``) — always shown, since the measured level is the clinically load-bearing fact.
      * ``relationship`` says how the measurement relates to the queried ClinGen id: ``direct`` (assayed at
      * this allele), ``protein_consequence`` (a protein measurement of a nt query's consequence), or
-     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``preferredClassification`` is the
-     * readable functional classification the UI defaults to (primary-first cascade, RUO excluded), omitted
-     * when absent or gated; ranking uses it alone. ``researchUseOnlyClassification`` is a display-only
-     * fallback from research-use-only calibrations, present only when the score set has no readable non-RUO
-     * calibration; it must not be treated as clinical evidence. ``isCurrent`` /
+     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``classification`` is the readable
+     * functional classification for the variant (primary-first cascade), omitted when absent or gated. It comes
+     * from a research-use-only calibration only when the request sets ``include_research_use_only`` and the score
+     * set has no readable non-RUO calibration; ``classificationIsResearchUseOnly`` then marks it, and it must not
+     * be treated as clinical evidence. Ranking uses non-RUO calls alone. ``isCurrent`` /
      * ``supersededByScoreSet`` let a superseded measurement (surfaced only under ``include_superseded``)
      * self-describe; ``supersededByScoreSet`` is the superseding *score set*'s URN.
      */
@@ -2021,6 +2062,19 @@ export interface components {
       /** Supersededbyscoreset */
       supersededByScoreSet?: string | null;
     };
+    /**
+     * AnchorOrientation
+     * @description Indicates which side of a discontinuous anchor on the sequenceReference is used
+     * as the reference point for interpreting offsetStart/offsetEnd. The anchor is an
+     * inter-residue coordinate on the sequenceReference. When that anchor corresponds to a
+     * boundary whose realization on a base sequence yields two distinct locations (e.g.,
+     * an exon junction), this property disambiguates which anchor side on the
+     * sequenceReference is intended. `left` denotes the side immediately preceding the
+     * anchor in sequenceReference coordinate order; `right` denotes the side immediately
+     * following the anchor in sequenceReference coordinate order.
+     * @enum {string}
+     */
+    AnchorOrientation: "left" | "right";
     /** ApiVersion */
     ApiVersion: {
       /** Name */
@@ -2068,10 +2122,10 @@ export interface components {
        */
       controls_file?: string | null;
       /**
-       * Item
+       * Calibration Json
        * @description JSON data for the request
        */
-      item?: string;
+      calibration_json?: string;
     };
     /** Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put */
     Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put: {
@@ -2086,10 +2140,10 @@ export interface components {
        */
       controls_file?: string | null;
       /**
-       * Item
+       * Calibration Json
        * @description JSON data for the request
        */
-      item?: string;
+      calibration_json?: string;
     };
     /** Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch */
     Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch: {
@@ -2334,98 +2388,6 @@ export interface components {
        */
       iris?: components["schemas"]["iriReference"][] | null;
     };
-    /**
-     * CohortAlleleFrequencyStudyResult
-     * @description A StudyResult that reports measures related to the frequency of an Allele in a cohort
-     */
-    CohortAlleleFrequencyStudyResult: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'CohortAlleleFrequencyStudyResult'.
-       * @default CohortAlleleFrequencyStudyResult
-       * @constant
-       */
-      type?: "CohortAlleleFrequencyStudyResult";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Specifiedby
-       * @description A specification that describes all or part of the process that led to creation of the Information Entity
-       */
-      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Contributions
-       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
-       */
-      contributions?: components["schemas"]["Contribution"][] | null;
-      /**
-       * Reportedin
-       * @description A document in which the the Information Entity is reported.
-       */
-      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description The dataset from which the CohortAlleleFrequencyStudyResult was reported. */
-      sourceDataSet?: components["schemas"]["DataSet"] | null;
-      /**
-       * Ancillaryresults
-       * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
-       */
-      ancillaryResults?: Record<string, never> | null;
-      /**
-       * Qualitymeasures
-       * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
-       */
-      qualityMeasures?: Record<string, never> | null;
-      /**
-       * Focusallele
-       * @description The Allele for which frequency results are reported.
-       */
-      focusAllele: components["schemas"]["Allele"] | components["schemas"]["iriReference"];
-      /**
-       * Focusallelecount
-       * @description The number of occurrences of the focusAllele in the cohort.
-       */
-      focusAlleleCount: number;
-      /**
-       * Locusallelecount
-       * @description The number of occurrences of all alleles at the locus in the cohort.
-       */
-      locusAlleleCount: number;
-      /**
-       * Focusallelefrequency
-       * @description The frequency of the focusAllele in the cohort.
-       */
-      focusAlleleFrequency: number;
-      /** @description The cohort from which the frequency was derived. */
-      cohort: components["schemas"]["StudyGroup"];
-      /**
-       * Subcohortfrequency
-       * @description A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.
-       */
-      subCohortFrequency?: components["schemas"]["CohortAlleleFrequencyStudyResult"][] | null;
-    };
     /** Collection */
     Collection: {
       /**
@@ -2569,32 +2531,108 @@ export interface components {
     };
     /**
      * Condition
-     * @description A single condition (disease, phenotype, or trait), or a set of conditions (ConditionSet).
+     * @description A specialization of MappableConcept representing a single condition (disease,
+     * phenotype, or trait).
+     *
+     * Allowed conceptType values include: Condition, Phenotype,
+     * Disease, Trait, Absent.
      */
-    Condition: components["schemas"]["ConditionSet"] | components["schemas"]["MappableConcept"];
-    /**
-     * ConditionSet
-     * @description A set of conditions (diseases, phenotypes, traits) that occur together or are
-     * related, depending on the membership operator, and may manifest together in the
-     * same patient or individually in a different subset of participants in a research
-     * study.
-     */
-    ConditionSet: {
+    Condition: {
       /**
        * Id
-       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
        */
       id?: string | null;
+      /**
+       * Type
+       * @description MUST be "MappableConcept".
+       * @default MappableConcept
+       * @constant
+       */
+      type?: "MappableConcept";
+      /**
+       * Name
+       * @description A primary name for the concept.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
       /**
        * Extensions
        * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Conditions
+       * Concepttype
+       * @description A term indicating the type of concept being represented by the MappableConcept.
+       * @default Condition
+       */
+      conceptType?: string;
+      /** @description A primary coding for the concept. */
+      primaryCoding?: components["schemas"]["Coding"] | null;
+      /**
+       * Mappings
+       * @description A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation.
+       */
+      mappings?: components["schemas"]["ConceptMapping"][] | null;
+    };
+    /**
+     * ConditionSet
+     * @description A specialization of ConceptSet representing a set of conditions (diseases,
+     * phenotypes, traits) that occur together or are related, depending on the membership
+     * operator. Concepts are restricted to Condition and ConditionSet members.
+     */
+    ConditionSet: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "ConceptSet".
+       * @default ConceptSet
+       * @constant
+       */
+      type?: "ConceptSet";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Conceptsettype
+       * @description A term indicating the type of concept being represented by the ConceptSet.
+       */
+      conceptSetType?: string | null;
+      /**
+       * Concepts
        * @description A list of conditions (diseases, phenotypes, traits) that are co-occurring or related, depending on the membership operator.
        */
-      conditions: (components["schemas"]["MappableConcept"] | components["schemas"]["ConditionSet"])[];
+      concepts: (components["schemas"]["Condition"] | components["schemas"]["ConditionSet"] | components["schemas"]["iriReference"])[];
       /** @description The logical relationship between members of the set, that indicates how they manifest in patients/research subjects. The value 'AND' indicates that all conditions in the set co-occur together in a given patient or subject. The value 'OR' indicates that only one condition in the set manifests in each participant interrogated in a given study. */
       membershipOperator: components["schemas"]["MembershipOperator"];
     };
@@ -2602,12 +2640,12 @@ export interface components {
      * Constraint
      * @description Constraints are used to construct an intensional semantics of categorical variant types.
      */
-    Constraint: components["schemas"]["DefiningAlleleConstraint"] | components["schemas"]["DefiningLocationConstraint"] | components["schemas"]["CopyCountConstraint"] | components["schemas"]["CopyChangeConstraint"] | components["schemas"]["FeatureContextConstraint"];
+    Constraint: components["schemas"]["DefiningAlleleConstraint"] | components["schemas"]["DefiningLocationConstraint"] | components["schemas"]["AdjacencyConstraint"] | components["schemas"]["FeatureContextConstraint"] | components["schemas"]["CopyCountConstraint"] | components["schemas"]["CopyChangeConstraint"] | components["schemas"]["FunctionConstraint"];
     /**
      * Contribution
      * @description An action taken by an agent in contributing to the creation, modification,
-     * assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
-     * DataSet, Publication, etc.)
+     * assessment, or deprecation of a particular entity (e.g. a Statement, DataSet,
+     * Publication, etc.)
      */
     Contribution: {
       /**
@@ -2642,8 +2680,11 @@ export interface components {
        * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
        */
       extensions?: components["schemas"]["Extension"][] | null;
-      /** @description The agent that made the contribution. */
-      contributor?: components["schemas"]["Agent"] | null;
+      /**
+       * Contributor
+       * @description The agent that made the contribution.
+       */
+      contributor?: components["schemas"]["Agent"] | components["schemas"]["iriReference"] | null;
       /**
        * Activitytype
        * @description The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).
@@ -2708,7 +2749,8 @@ export interface components {
     CopyChange: "complete genomic loss" | "high-level loss" | "low-level loss" | "loss" | "regional base ploidy" | "gain" | "low-level gain" | "high-level gain";
     /**
      * CopyChangeConstraint
-     * @description A representation of copy number change
+     * @description The relative assessment of the change in copies that members of this categorical
+     * variant satisfy.
      */
     CopyChangeConstraint: {
       /**
@@ -2884,6 +2926,68 @@ export interface components {
       email?: string | null;
     };
     /**
+     * DataItem
+     * @description An Information Entity representing an individual piece of data, generated or
+     * acquired through methods which reliably produce truthful information about
+     * something.
+     */
+    DataItem: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be "DataItem"
+       * @default DataItem
+       * @constant
+       */
+      type?: "DataItem";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /**
+       * Value
+       * @description The value of the data item (could be a structured value, a quantitative or qualitative value, or an IRI reference to either).
+       */
+      value?: {
+        [key: string]: unknown;
+      } | string | components["schemas"]["iriReference"] | null;
+    };
+    /**
      * DataSet
      * @description A collection of related data items or records that are organized together in a
      * common format or structure, to enable their computational manipulation as a unit.
@@ -2941,8 +3045,11 @@ export interface components {
        * @description The version of the DataSet, as assigned by its creator.
        */
       version?: string | null;
-      /** @description A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.) */
-      license?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * License
+       * @description A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)
+       */
+      license?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /**
      * DatasetColumnMetadata
@@ -3072,12 +3179,6 @@ export interface components {
       circular?: boolean | null;
     };
     /**
-     * DiagnosticPredicate
-     * @description Define constraints for diagnostic predicate
-     * @enum {string}
-     */
-    DiagnosticPredicate: "isDiagnosticInclusionCriterionFor" | "isDiagnosticExclusionCriterionFor";
-    /**
      * Direction
      * @description A term indicating whether the Statement supports, disputes, or remains neutral
      * w.r.t. the validity of the Proposition it evaluates.
@@ -3165,6 +3266,42 @@ export interface components {
       identifier: string;
     };
     /**
+     * Entity
+     * @description Anything that exists, has existed, or will exist.
+     */
+    Entity: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description The name of the class that is instantiated by a data object representing the Entity.
+       */
+      type: string;
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+    };
+    /**
      * EvidenceLine
      * @description An independent, evidence-based argument that may support or refute the validity
      * of a specific Proposition. The strength and direction of this argument is based on
@@ -3223,27 +3360,29 @@ export interface components {
        * Targetproposition
        * @description The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.
        */
-      targetProposition?: {
-        type: "EvidenceLine";
-      } & (components["schemas"]["Proposition"] | Omit<components["schemas"]["SubjectVariantProposition"], "type"> | null);
+      targetProposition?: components["schemas"]["Proposition"] | components["schemas"]["iriReference"] | null;
       /**
        * Hasevidenceitems
        * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
        */
-      hasEvidenceItems?: {
-          type: "EvidenceLine";
-        }[] | null;
+      hasEvidenceItems?: ((components["schemas"]["InformationEntity"] | components["schemas"]["iriReference"])[]) | null;
       /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
       directionOfEvidenceProvided: components["schemas"]["Direction"];
-      /** @description The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value. */
-      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Strengthofevidenceprovided
+       * @description The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
+       */
+      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Scoreofevidenceprovided
        * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
        */
       scoreOfEvidenceProvided?: number | null;
-      /** @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition. */
-      evidenceOutcome?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Evidenceoutcome
+       * @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.
+       */
+      evidenceOutcome?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /** Experiment */
     Experiment: {
@@ -3256,7 +3395,9 @@ export interface components {
       /** Methodtext */
       methodText?: string | null;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Urn */
@@ -3333,7 +3474,9 @@ export interface components {
       /** Methodtext */
       methodText: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Contributors */
       contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Keywords */
@@ -3389,7 +3532,9 @@ export interface components {
       /** Methodtext */
       methodText: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Contributors */
       contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Keywords */
@@ -3402,69 +3547,6 @@ export interface components {
       secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Rawreadidentifiers */
       rawReadIdentifiers?: components["schemas"]["RawReadIdentifierCreate"][] | null;
-    };
-    /**
-     * ExperimentalVariantFunctionalImpactProposition
-     * @description A Proposition describing the impact of a variant on the function sequence feature
-     * (typically a gene or gene product).
-     */
-    ExperimentalVariantFunctionalImpactProposition: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'ExperimentalVariantFunctionalImpactProposition'.
-       * @default ExperimentalVariantFunctionalImpactProposition
-       * @constant
-       */
-      type?: "ExperimentalVariantFunctionalImpactProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "ExperimentalVariantFunctionalImpactProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Predicate
-       * @description The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.
-       * @default impactsFunctionOf
-       * @constant
-       */
-      predicate?: "impactsFunctionOf";
-      /**
-       * Objectsequencefeature
-       * @description The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.
-       */
-      objectSequenceFeature: components["schemas"]["iriReference"] | components["schemas"]["MappableConcept"];
-      /**
-       * Experimentalcontextqualifier
-       * @description An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.
-       */
-      experimentalContextQualifier?: components["schemas"]["iriReference"] | components["schemas"]["Document"] | Record<string, never> | null;
     };
     /**
      * ExperimentalVariantFunctionalImpactStudyResult
@@ -3518,25 +3600,32 @@ export interface components {
        * @description A document in which the the Information Entity is reported.
        */
       reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description The full data set that provided the reported the functional impact score. */
-      sourceDataSet?: components["schemas"]["DataSet"] | null;
+      /**
+       * Focus
+       * @description The genetic variant for which a functional impact score is generated.
+       */
+      focus: {
+        type: "ExperimentalVariantFunctionalImpactStudyResult";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["iriReference"]);
+      /**
+       * Sourcedataset
+       * @description The full data set that provided the reported the functional impact score.
+       */
+      sourceDataSet?: components["schemas"]["DataSet"] | components["schemas"]["iriReference"] | null;
       /**
        * Ancillaryresults
        * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
        */
-      ancillaryResults?: Record<string, never> | null;
+      ancillaryResults?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Qualitymeasures
        * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
        */
-      qualityMeasures?: Record<string, never> | null;
-      /**
-       * Focusvariant
-       * @description The genetic variant for which a functional impact score is generated.
-       */
-      focusVariant: {
-        type: "ExperimentalVariantFunctionalImpactStudyResult";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["iriReference"]);
+      qualityMeasures?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Functionalimpactscore
        * @description The score of the variant impact measured in the assay or study.
@@ -3620,7 +3709,9 @@ export interface components {
        * Value
        * @description The value of the Extension - can be any primitive or structured object
        */
-      value: number | string | boolean | Record<string, never> | unknown[] | null;
+      value: number | string | boolean | {
+        [key: string]: unknown;
+      } | unknown[] | null;
       /**
        * Description
        * @description A description of the meaning or utility of the Extension, to explain the type of information it is meant to hold.
@@ -3716,6 +3807,31 @@ export interface components {
       featureContext: components["schemas"]["MappableConcept"];
     };
     /**
+     * FunctionConstraint
+     * @description A classification of the protein functional consequence that characterizes members of this categorical variant.
+     */
+    FunctionConstraint: {
+      /**
+       * Type
+       * @description MUST be "FunctionConstraint"
+       * @default FunctionConstraint
+       * @constant
+       */
+      type?: "FunctionConstraint";
+      /** @description The functional consequence of members of this categorical variant, as defined by an external ontology. We recommend using one of the defined terms from [The Sequence Ontology](http://www.sequenceontology.org). See Implementation Guidance for more details. */
+      functionConsequence: components["schemas"]["MappableConcept"];
+      /**
+       * Description
+       * @description A free-text description of the function change.
+       */
+      description?: string | null;
+    };
+    /**
+     * FunctionalClassification
+     * @enum {string}
+     */
+    "FunctionalClassification-Input": "normal" | "abnormal" | "not_specified";
+    /**
      * FunctionalClassificationCreate
      * @description Model used to create a new functional range.
      */
@@ -3725,7 +3841,7 @@ export interface components {
       /** Description */
       description?: string | null;
       /** @default not_specified */
-      functionalClassification?: components["schemas"]["mavedb__models__enums__functional_classification__FunctionalClassification"];
+      functionalClassification?: components["schemas"]["FunctionalClassification-Input"];
       /** Range */
       range?: ([number | null, number | null]) | null;
       /** Class */
@@ -3753,6 +3869,54 @@ export interface components {
        */
       variants?: components["schemas"]["VariantEffectMeasurement"][];
     };
+    /**
+     * FunctionalDomain
+     * @description A sequence location whose presence or absence is used to define an adjacency.
+     */
+    FunctionalDomain: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be "FunctionalDomain"
+       * @default FunctionalDomain
+       * @constant
+       */
+      type?: "FunctionalDomain";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description A Sequence Location for the domain. */
+      location: components["schemas"]["Location"];
+      /** @description MUST be either "preserved" or "lost" */
+      status: components["schemas"]["FunctionalDomainStatus"];
+    };
+    /**
+     * FunctionalDomainStatus
+     * @description Define whether a functional domain is preserved or lost.
+     * @enum {string}
+     */
+    FunctionalDomainStatus: "lost" | "preserved";
     /** GeneResponse */
     GeneResponse: {
       /** Symbol */
@@ -3880,6 +4044,59 @@ export interface components {
       variant: string;
     };
     /**
+     * InformationEntity
+     * @description An abstract (non-physical) entity that represents 'information content' carried by
+     * physical or digital information artifacts such as books, web pages, data sets, or
+     * images.
+     */
+    InformationEntity: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description The name of the class that is instantiated by a data object representing the Entity.
+       */
+      type: string;
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+    };
+    /**
      * JobRunDetail
      * @description Single-job-run detail response including the error traceback.
      */
@@ -3904,9 +4121,13 @@ export interface components {
       /** Id */
       id: number;
       /** Jobparams */
-      jobParams?: Record<string, never> | null;
+      jobParams?: {
+        [key: string]: unknown;
+      } | null;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /** Maxretries */
       maxRetries: number;
       /** Retrycount */
@@ -4151,15 +4372,42 @@ export interface components {
       sequence: components["schemas"]["sequenceString"];
     };
     /**
+     * Location
+     * @description A contiguous segment of a biological sequence.
+     */
+    Location: components["schemas"]["SequenceLocation"] | components["schemas"]["RelativeSequenceLocation"];
+    /**
      * MappableConcept
      * @description A concept based on a primaryCoding and/or name that may be mapped to one or more other `Codings`.
      */
     MappableConcept: {
       /**
        * Id
-       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
        */
       id?: string | null;
+      /**
+       * Type
+       * @description MUST be "MappableConcept".
+       * @default MappableConcept
+       * @constant
+       */
+      type?: "MappableConcept";
+      /**
+       * Name
+       * @description A primary name for the concept.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
       /**
        * Extensions
        * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
@@ -4170,11 +4418,6 @@ export interface components {
        * @description A term indicating the type of concept being represented by the MappableConcept.
        */
       conceptType?: string | null;
-      /**
-       * Name
-       * @description A primary name for the concept.
-       */
-      name?: string | null;
       /** @description A primary coding for the concept. */
       primaryCoding?: components["schemas"]["Coding"] | null;
       /**
@@ -4210,12 +4453,13 @@ export interface components {
     MeasurementRelationship: "direct" | "protein_consequence" | "nucleotide_encoding";
     /**
      * MembershipOperator
-     * @description The logical relationship between members of the set, that indicates how they
-     * manifest in patients/research subjects.
-     * The value 'AND' indicates that all conditions in the set co-occur together in a
-     * given patient or subject.
-     * The value 'OR' indicates that only one condition in the set manifests in each
-     * participant interrogated in a given study.
+     * @description The logical relationship between concepts in the set, in the context of some
+     * knowledge reported about them. The value 'AND' indicates that the concepts are
+     * dependent and occur together in this context - i.e. the reported assertion is not
+     * necessarily true for each concept on its own - only in combination with the
+     * other(s). The value 'OR' indicates that each concept applies independently in this
+     * context - i.e. the reported assertion is necessarily true for each concept on its
+     * own, independent of the presence of the other(s).
      * @enum {string}
      */
     MembershipOperator: "AND" | "OR";
@@ -4276,7 +4520,7 @@ export interface components {
      * MolecularVariation
      * @description A `variation` on a contiguous molecule.
      */
-    MolecularVariation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"];
+    MolecularVariation: components["schemas"]["Allele"] | components["schemas"]["RelativeAllele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"];
     /**
      * MoleculeType
      * @description Molecule types as `defined by RefSeq <https://www.ncbi.nlm.nih.gov/books/NBK21091/>`_ (see Table 1).
@@ -4348,7 +4592,9 @@ export interface components {
       /** Id */
       id: number;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /**
        * Createdat
        * Format: date-time
@@ -4400,12 +4646,6 @@ export interface components {
      */
     ProcessingState: "incomplete" | "processing" | "failed" | "success";
     /**
-     * PrognosticPredicate
-     * @description Define constraints for prognostic predicate
-     * @enum {string}
-     */
-    PrognosticPredicate: "associatedWithBetterOutcomeFor" | "associatedWithWorseOutcomeFor";
-    /**
      * Proposition
      * @description An abstract entity representing a possible fact that may be true or false. As
      * abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
@@ -4447,7 +4687,9 @@ export interface components {
        * Subject
        * @description The Entity or concept about which the Proposition is made.
        */
-      subject: Record<string, never>;
+      subject: {
+        [key: string]: unknown;
+      } | components["schemas"]["iriReference"];
       /**
        * Predicate
        * @description The relationship declared to hold between the subject and the object of the Proposition.
@@ -4457,7 +4699,9 @@ export interface components {
        * Object
        * @description An Entity or concept that is related to the subject of a Proposition via its predicate.
        */
-      object: Record<string, never>;
+      object: {
+        [key: string]: unknown;
+      } | components["schemas"]["iriReference"];
     };
     /** PublicationAuthors */
     PublicationAuthors: {
@@ -4573,7 +4817,7 @@ export interface components {
        * @description The number of residues in the expressed sequence.
        */
       length: components["schemas"]["Range"] | number;
-      /** @description the literal Sequence encoded by the Reference Length Expression. */
+      /** @description the literal sequence encoded by the Reference Length Expression. */
       sequence?: components["schemas"]["sequenceString"] | null;
       /**
        * Repeatsubunitlength
@@ -4690,6 +4934,121 @@ export interface components {
      * @enum {string}
      */
     Relation: "closeMatch" | "exactMatch" | "broadMatch" | "narrowMatch" | "relatedMatch";
+    /**
+     * RelativeAllele
+     * @description An Allele defined on a mapped location relative to a base location. Often used to describe intronic variants.
+     */
+    RelativeAllele: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "RelativeAllele"
+       * @default RelativeAllele
+       * @constant
+       */
+      type?: "RelativeAllele";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Mappedstate
+       * @description The state of the RelativeAllele as expressed on the mapped sequence. This will differ from the base state when mapping to a reverse complement sequence, commonly observed when representing the state on transcripts mapped to the "negative strand" of a chromosome.
+       */
+      mappedState: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
+      /**
+       * Basestate
+       * @description The state of the RelativeAllele as expressed on the base sequence.
+       */
+      baseState: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
+      /**
+       * Relativelocation
+       * @description The relative location at which the baseState and mappedState are expressed.
+       */
+      relativeLocation: components["schemas"]["RelativeSequenceLocation"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * RelativeSequenceLocation
+     * @description A location on a base sequence and its position relative to a boundary offset on a
+     * mapped sequence gap. Typically used to describe intronic locations that exist with
+     * respect to a mapped RNA transcript sequence.
+     */
+    RelativeSequenceLocation: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "RelativeSequenceLocation"
+       * @default RelativeSequenceLocation
+       * @constant
+       */
+      type?: "RelativeSequenceLocation";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /**
+       * Basesequencelocation
+       * @description An absolute location on a sequence.
+       */
+      baseSequenceLocation: components["schemas"]["SequenceLocation"] | components["schemas"]["iriReference"];
+      /**
+       * Mappedsequencelocation
+       * @description A location relative to an offset on a mapped sequence.
+       */
+      mappedSequenceLocation: components["schemas"]["SequenceOffsetLocation"] | components["schemas"]["iriReference"];
+    };
     /**
      * ResidueAlphabet
      * @description The interpretation of the character codes referred to by the refget accession,
@@ -4828,9 +5187,13 @@ export interface components {
       /** Id */
       id: number;
       /** Jobparams */
-      jobParams?: Record<string, never> | null;
+      jobParams?: {
+        [key: string]: unknown;
+      } | null;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /** Maxretries */
       maxRetries: number;
       /** Retrycount */
@@ -4877,7 +5240,9 @@ export interface components {
       /** Id */
       id: number;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /**
        * Createdat
        * Format: date-time
@@ -5019,7 +5384,9 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifier"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Id */
@@ -5093,7 +5460,9 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Scoreseturn */
       scoreSetUrn?: string | null;
       /** Controls */
@@ -5133,7 +5502,9 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Id */
@@ -5212,7 +5583,9 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Id */
@@ -5287,7 +5660,9 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Datausagepolicy */
       dataUsagePolicy?: string | null;
       /** Recordtype */
@@ -5341,10 +5716,14 @@ export interface components {
       private: boolean;
       processingState?: components["schemas"]["ProcessingState"] | null;
       /** Processingerrors */
-      processingErrors?: Record<string, never> | null;
+      processingErrors?: {
+        [key: string]: unknown;
+      } | null;
       mappingState?: components["schemas"]["MappingState"] | null;
       /** Mappingerrors */
-      mappingErrors?: Record<string, never> | null;
+      mappingErrors?: {
+        [key: string]: unknown;
+      } | null;
       scoreDistribution?: components["schemas"]["ScoreDistribution"] | null;
     };
     /**
@@ -5361,7 +5740,9 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Datausagepolicy */
       dataUsagePolicy?: string | null;
       /** Contributors */
@@ -5399,7 +5780,9 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Datausagepolicy */
       dataUsagePolicy?: string | null;
       /** Contributors */
@@ -5515,6 +5898,11 @@ export interface components {
       seqrepo_dependency_version: string;
     };
     /**
+     * SequenceExpression
+     * @description An expression describing a `Sequence`.
+     */
+    SequenceExpression: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
+    /**
      * SequenceLevel
      * @description The molecular sequence level of a variant representation: genomic DNA, coding DNA, or protein.
      *
@@ -5589,6 +5977,67 @@ export interface components {
       sequence?: components["schemas"]["sequenceString"] | null;
     };
     /**
+     * SequenceOffsetLocation
+     * @description A location defined by an offset relative to an anchor on a mapped sequence
+     * reference.
+     */
+    SequenceOffsetLocation: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "SequenceOffsetLocation"
+       * @default SequenceOffsetLocation
+       * @constant
+       */
+      type?: "SequenceOffsetLocation";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Sequencereference
+       * @description A sequence reference that has been mapped from which a relative location is defined.
+       */
+      sequenceReference: components["schemas"]["SequenceReference"] | components["schemas"]["iriReference"];
+      /**
+       * Anchor
+       * @description The inter-residue position on the sequence reference from which the relative location offset is calculated.
+       */
+      anchor: number;
+      /** @description Indicates which side of a discontinuous anchor on the sequenceReference is used as the reference point for interpreting offsetStart/offsetEnd. The anchor is an inter-residue coordinate on the sequenceReference. When that anchor corresponds to a boundary whose realization on a base sequence yields two distinct locations (e.g., an exon junction), this property disambiguates which anchor side on the sequenceReference is intended. `left` denotes the side immediately preceding the anchor in sequenceReference coordinate order; `right` denotes the side immediately following the anchor in sequenceReference coordinate order. */
+      anchorOrientation: components["schemas"]["AnchorOrientation"];
+      /**
+       * Offsetstart
+       * @description The start offset, in inter-residue coordinates, from the anchor realization selected by anchorOrientation on the sequenceReference.
+       */
+      offsetStart?: number | components["schemas"]["Range"] | null;
+      /**
+       * Offsetend
+       * @description The end offset, in inter-residue coordinates, from the anchor realization selected by anchorOrientation on the sequenceReference.
+       */
+      offsetEnd?: number | components["schemas"]["Range"] | null;
+    };
+    /**
      * SequenceReference
      * @description A sequence of nucleic or amino acid character codes.
      */
@@ -5653,7 +6102,9 @@ export interface components {
       /** Methodtext */
       methodText?: string | null;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Urn */
@@ -5849,18 +6300,34 @@ export interface components {
        * Proposition
        * @description A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.
        */
-      proposition: components["schemas"]["ExperimentalVariantFunctionalImpactProposition"] | components["schemas"]["VariantDiagnosticProposition"] | components["schemas"]["VariantOncogenicityProposition"] | components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["VariantPrognosticProposition"] | components["schemas"]["VariantTherapeuticResponseProposition"];
+      proposition: components["schemas"]["Proposition"] | components["schemas"]["iriReference"];
       /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
-      direction: components["schemas"]["Direction"];
-      /** @description A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it. */
-      strength?: components["schemas"]["MappableConcept"] | null;
+      direction?: components["schemas"]["Direction"] | null;
+      /**
+       * Strength
+       * @description A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it.
+       */
+      strength?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Score
        * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
        */
       score?: number | null;
-      /** @description A single term or phrase summarizing the outcome of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject. */
-      classification?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Classification
+       * @description A single term or phrase summarizing the result of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject.
+       */
+      classification?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Quality
+       * @description A term used to report the quality of the assessment of a Proposition taking into consideration the reliability of the method, the contributor's self-reporting of the rigor of the evaluation, and the overall robustness of the supporting or disputing evidence. This is useful when there is a consistent policy and authority that manages and a governing framework for evaluating the quality of evidence. Also known as trust rating, review status or ranking.
+       */
+      quality?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Hasevidence
+       * @description An individual piece of information that was evaluated as evidence in assessing the validity of the Proposition put forth by the Statement.
+       */
+      hasEvidence?: ((components["schemas"]["Statement"] | components["schemas"]["StudyResult"] | components["schemas"]["DataItem"] | components["schemas"]["iriReference"])[]) | null;
       /**
        * Hasevidencelines
        * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
@@ -5874,13 +6341,12 @@ export interface components {
      */
     StrengthOfEvidenceProvided: "VERY_STRONG" | "STRONG" | "MODERATE_PLUS" | "MODERATE" | "SUPPORTING";
     /**
-     * StudyGroup
-     * @description A collection of individuals or specimens from the same taxonomic class, selected
-     * for analysis in a scientific study based on their exhibiting one or more common
-     * characteristics  (e.g. species, race, age, gender, disease state, income). May be
-     * referred to as a 'cohort' or 'population' in specific research settings.
+     * StudyResult
+     * @description A collection of data items from a single study that pertain to a particular
+     * subject or experimental unit in the study, along with optional provenance
+     * information describing how these data items were generated.
      */
-    StudyGroup: {
+    StudyResult: {
       /**
        * Id
        * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
@@ -5888,11 +6354,9 @@ export interface components {
       id?: string | null;
       /**
        * Type
-       * @description Must be 'StudyGroup'
-       * @default StudyGroup
-       * @constant
+       * @description The name of the class that is instantiated by a data object representing the Entity.
        */
-      type?: "StudyGroup";
+      type: string;
       /**
        * Name
        * @description A primary name for the entity.
@@ -5914,26 +6378,45 @@ export interface components {
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Membercount
-       * @description The total number of individual members in the StudyGroup.
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
        */
-      memberCount?: number | null;
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
       /**
-       * Characteristics
-       * @description A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
        */
-      characteristics?: components["schemas"]["MappableConcept"][] | null;
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /**
+       * Focus
+       * @description The specific participant, subject or experimental unit in a Study that data included in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.
+       */
+      focus: components["schemas"]["Entity"] | components["schemas"]["iriReference"];
+      /**
+       * Sourcedataset
+       * @description A larger DataSet from which the data included in the StudyResult was taken or derived.
+       */
+      sourceDataSet?: components["schemas"]["DataSet"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Ancillaryresults
+       * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
+       */
+      ancillaryResults?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Qualitymeasures
+       * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
+       */
+      qualityMeasures?: {
+        [key: string]: unknown;
+      } | null;
     };
-    /**
-     * StudyResult
-     * @description A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated.
-     */
-    StudyResult: components["schemas"]["CohortAlleleFrequencyStudyResult"] | components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
-    /**
-     * SubjectVariantProposition
-     * @description A `Proposition` that has a variant as the subject.
-     */
-    SubjectVariantProposition: components["schemas"]["ExperimentalVariantFunctionalImpactProposition"] | components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["VariantDiagnosticProposition"] | components["schemas"]["VariantPrognosticProposition"] | components["schemas"]["VariantOncogenicityProposition"] | components["schemas"]["VariantTherapeuticResponseProposition"];
     /**
      * Syntax
      * @description The syntax used to describe the variation. The value should be one of the
@@ -6147,42 +6630,6 @@ export interface components {
       text?: string | null;
     };
     /**
-     * Therapeutic
-     * @description An individual therapy (drug, procedure, behavioral intervention, etc.), or group of therapies (TherapyGroup).
-     */
-    Therapeutic: components["schemas"]["TherapyGroup"] | components["schemas"]["MappableConcept"];
-    /**
-     * TherapeuticResponsePredicate
-     * @description Define constraints for therapeutic response predicate
-     * @enum {string}
-     */
-    TherapeuticResponsePredicate: "predictsSensitivityTo" | "predictsResistanceTo";
-    /**
-     * TherapyGroup
-     * @description A group of two or more therapies that are applied in combination to a single
-     * patient/subject, or applied individually to a different subset of participants in a
-     * research study
-     */
-    TherapyGroup: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Therapies
-       * @description A list of therapies that are applied to treat a condition.
-       */
-      therapies: components["schemas"]["MappableConcept"][];
-      /** @description The logical relationship between members of the group, that indicates how they were applied in treating participants in a study.  The value 'AND' indicates that all therapies in the group were applied in combination to a given patient or subject. The value 'OR' indicates that each therapy was applied individually to a distinct subset of participants in the cohort that was interrogated in a given study. */
-      membershipOperator: components["schemas"]["MembershipOperator"];
-    };
-    /**
      * TraversalBlock
      * @description A component used to describe the orientation of applicable molecular variation
      * within a DerivativeMolecule.
@@ -6226,6 +6673,44 @@ export interface components {
       component?: components["schemas"]["Adjacency"] | null;
     };
     /**
+     * UnspecifiedElement
+     * @description Represents an unspecified element that satisfies the described adjacency.
+     */
+    UnspecifiedElement: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be "UnspecifiedElement"
+       * @default UnspecifiedElement
+       * @constant
+       */
+      type?: "UnspecifiedElement";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+    };
+    /**
      * User
      * @description User view model containing properties visible to non-admin users.
      */
@@ -6252,6 +6737,10 @@ export interface components {
       msg: string;
       /** Error Type */
       type: string;
+      /** Input */
+      input?: unknown;
+      /** Context */
+      ctx?: Record<string, never>;
     };
     /**
      * VariantClassification
@@ -6294,9 +6783,13 @@ export interface components {
       /** Urn */
       urn: string;
       /** Scores */
-      scores?: Record<string, never> | null;
+      scores?: {
+        [key: string]: unknown;
+      } | null;
       /** Counts */
-      counts?: Record<string, never> | null;
+      counts?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Classifications
        * @default []
@@ -6312,11 +6805,17 @@ export interface components {
       /** Clingenalleleid */
       clingenAlleleId?: string | null;
       /** Premapped */
-      preMapped?: Record<string, never> | null;
+      preMapped?: {
+        [key: string]: unknown;
+      } | null;
       /** Postmapped */
-      postMapped?: Record<string, never> | null;
+      postMapped?: {
+        [key: string]: unknown;
+      } | null;
       /** Molecularrepresentation */
-      molecularRepresentation?: Record<string, never> | null;
+      molecularRepresentation?: {
+        [key: string]: unknown;
+      } | null;
       /** Mode */
       mode?: string | null;
       /**
@@ -6337,69 +6836,6 @@ export interface components {
       isCurrent: boolean;
       /** Supersededbyscoreset */
       supersededByScoreSet?: string | null;
-    };
-    /**
-     * VariantDiagnosticProposition
-     * @description A Proposition about whether a variant is associated with a disease (a diagnostic
-     * inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
-     */
-    VariantDiagnosticProposition: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'VariantDiagnosticProposition'.
-       * @default VariantDiagnosticProposition
-       * @constant
-       */
-      type?: "VariantDiagnosticProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "VariantDiagnosticProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /** @description The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'isDiagnosticInclusionCriterionFor' or 'isDiagnosticExclusionCriterionFor'. */
-      predicate: components["schemas"]["DiagnosticPredicate"];
-      /**
-       * Objectcondition
-       * @description The disease that is evaluated for diagnosis.
-       */
-      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
     };
     /**
      * VariantEffectMeasurement
@@ -6434,10 +6870,14 @@ export interface components {
       recordType?: string;
     };
     /**
-     * VariantOncogenicityProposition
-     * @description A proposition describing the role of a variant in causing a tumor type.
+     * VariantPathogenicityEvidenceLine
+     * @description An Evidence Line that describes how a specific type of information was
+     * interpreted as evidence for or against a variant's pathogenicity. In the ACMG
+     * Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
+     * with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
+     * adjusting the default strength based on the quality and abundance of evidence.
      */
-    VariantOncogenicityProposition: {
+    VariantPathogenicityEvidenceLine: {
       /**
        * Id
        * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
@@ -6445,11 +6885,11 @@ export interface components {
       id?: string | null;
       /**
        * Type
-       * @description MUST be 'VariantOncogenicityProposition'.
-       * @default VariantOncogenicityProposition
+       * @description MUST be 'EvidenceLine'.
+       * @default EvidenceLine
        * @constant
        */
-      type?: "VariantOncogenicityProposition";
+      type?: "EvidenceLine";
       /**
        * Name
        * @description A primary name for the entity.
@@ -6471,34 +6911,47 @@ export interface components {
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
+       * Specifiedby
+       * @description The guidelines or rubrics followed in interpreting evidence, to determine the strength and direction of support that it provides for or against a variant's pathogenicity. While the ACMG Criteria themselves provide minimal guidance, typically a more detailed, disease- or gene- specific rubric is followed to determine if a given criterion was met, and how strongly (e.g. the ClinGen Hearing Loss Expert Panel guidelines for ACMG interpretations).
        */
-      subjectVariant: {
-        type: "VariantOncogenicityProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
       /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
        */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      contributions?: components["schemas"]["Contribution"][] | null;
       /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
        */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
       /**
-       * Predicate
-       * @description The relationship the Proposition describes between the subject variant and object tumor type. MUST be 'isOncogenicFor'.
-       * @default isOncogenicFor
-       * @constant
+       * Targetproposition
+       * @description A Variant Pathogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.
        */
-      predicate?: "isOncogenicFor";
+      targetProposition?: components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["iriReference"] | null;
       /**
-       * Objecttumortype
-       * @description The tumor type for which the variant impact is evaluated.
+       * Hasevidenceitems
+       * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
        */
-      objectTumorType: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+      hasEvidenceItems?: ((components["schemas"]["InformationEntity"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
+      directionOfEvidenceProvided: components["schemas"]["Direction"];
+      /**
+       * Strengthofevidenceprovided
+       * @description The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute, and captured using a MappableConcept, whose nested 'code' field is bound to an enumerated set of values. Conditional requirement: if `directionOfEvidenceProvided` is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.
+       */
+      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Scoreofevidenceprovided
+       * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
+       */
+      scoreOfEvidenceProvided?: number | null;
+      /**
+       * Evidenceoutcome
+       * @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.
+       */
+      evidenceOutcome?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /**
      * VariantPathogenicityProposition
@@ -6538,22 +6991,12 @@ export interface components {
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Subjectvariant
+       * Subject
        * @description A variant that is the subject of the Proposition.
        */
-      subjectVariant: {
+      subject: {
         type: "VariantPathogenicityProposition";
       } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Predicate
        * @description The relationship the Proposition describes between the subject variant and object condition. MUST be 'isCausalFor'.
@@ -6562,14 +7005,30 @@ export interface components {
        */
       predicate?: "isCausalFor";
       /**
-       * Objectcondition
-       * @description The Condition for which the variant impact is stated.
+       * Object
+       * @description The Condition or ConditionSet for which the variant impact is stated.
        */
-      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
-      /** @description Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition. */
-      penetranceQualifier?: components["schemas"]["MappableConcept"] | null;
-      /** @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance). */
-      modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | null;
+      object: components["schemas"]["Condition"] | components["schemas"]["ConditionSet"] | components["schemas"]["iriReference"];
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable "germline" variant, an acquired "somatic" variant in a tumor, or a post-zygotic "mosaic" variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. "maternal" vs "paternal" allele origin). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Penetrancequalifier
+       * @description Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition.
+       */
+      penetranceQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Modeofinheritancequalifier
+       * @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance).
+       */
+      modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /**
      * VariantPathogenicityStatement
@@ -6623,154 +7082,40 @@ export interface components {
        * @description A document in which the the Information Entity is reported.
        */
       reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim. */
-      proposition: components["schemas"]["VariantPathogenicityProposition"];
+      /**
+       * Proposition
+       * @description A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.
+       */
+      proposition: components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["iriReference"];
       /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
-      direction: components["schemas"]["Direction"];
-      /** @description The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. */
-      strength?: components["schemas"]["MappableConcept"] | null;
+      direction?: components["schemas"]["Direction"] | null;
+      /**
+       * Strength
+       * @description The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.
+       */
+      strength?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Score
        * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
        */
       score?: number | null;
-      /** @description The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively. */
-      classification: components["schemas"]["MappableConcept"];
       /**
-       * Hasevidencelines
-       * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
+       * Classification
+       * @description The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.
        */
-      hasEvidenceLines?: ((components["schemas"]["EvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
-    };
-    /**
-     * VariantPrognosticProposition
-     * @description A Proposition about whether a variant is associated with an improved or worse outcome for a disease.
-     */
-    VariantPrognosticProposition: {
+      classification: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"];
       /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       * Quality
+       * @description A term used to report the quality of the assessment of a Proposition taking into consideration the reliability of the method, the contributor's self-reporting of the rigor of the evaluation, and the overall robustness of the supporting or disputing evidence. This is useful when there is a consistent policy and authority that manages and a governing framework for evaluating the quality of evidence. Also known as trust rating, review status or ranking.
        */
-      id?: string | null;
+      quality?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
-       * Type
-       * @description MUST be 'VariantPrognosticProposition'.
-       * @default VariantPrognosticProposition
-       * @constant
+       * Hasevidence
+       * @description An individual piece of information that was evaluated as evidence in assessing the validity of the Proposition put forth by the Statement.
        */
-      type?: "VariantPrognosticProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "VariantPrognosticProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /** @description The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'associatedWithBetterOutcomeFor' or 'associatedWithWorseOutcomeFor'. */
-      predicate: components["schemas"]["PrognosticPredicate"];
-      /**
-       * Objectcondition
-       * @description The disease that is evaluated for outcome.
-       */
-      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
-    };
-    /**
-     * VariantTherapeuticResponseProposition
-     * @description A Proposition about the role of a variant in modulating the response of a neoplasm to drug
-     * administration or other therapeutic procedures.
-     */
-    VariantTherapeuticResponseProposition: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'VariantTherapeuticResponseProposition'.
-       * @default VariantTherapeuticResponseProposition
-       * @constant
-       */
-      type?: "VariantTherapeuticResponseProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "VariantTherapeuticResponseProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /** @description The relationship the Proposition describes between the subject variant and object theapeutic. MUST be one of 'predictsSensitivityTo' or 'predictsResistanceTo'. */
-      predicate: components["schemas"]["TherapeuticResponsePredicate"];
-      /**
-       * Objecttherapeutic
-       * @description A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.
-       */
-      objectTherapeutic: components["schemas"]["Therapeutic"] | components["schemas"]["iriReference"];
-      /**
-       * Conditionqualifier
-       * @description Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.
-       */
-      conditionQualifier: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+      hasEvidence?: ((components["schemas"]["Statement"] | components["schemas"]["StudyResult"] | components["schemas"]["DataItem"] | components["schemas"]["iriReference"])[]) | null;
+      /** Hasevidencelines */
+      hasEvidenceLines?: ((components["schemas"]["VariantPathogenicityEvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
     };
     /**
      * VariantVrsMatch
@@ -6794,7 +7139,7 @@ export interface components {
      * Variation
      * @description A representation of the state of one or more biomolecules.
      */
-    Variation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
+    Variation: components["schemas"]["Allele"] | components["schemas"]["RelativeAllele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
     /**
      * VepAnnotation
      * @description VEP molecular consequence for an allele and the Ensembl release it resolved under.
@@ -6860,138 +7205,6 @@ export interface components {
      * @description A character string of Residues that represents a biological sequence using the conventional sequence order (5'-to-3' for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
      */
     sequenceString: string;
-    /**
-     * ACMGClassificationModify
-     * @description Model used to modify an existing ACMG classification.
-     */
-    ACMGClassificationModify: {
-      /** @default null */
-      criterion?: components["schemas"]["ACMGCriterion"] | null;
-      /** @default null */
-      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
-      /**
-       * Points
-       * @default null
-       */
-      points?: number | null;
-    };
-    /**
-     * FunctionalClassification
-     * @enum {string}
-     */
-    FunctionalClassification: "normal" | "abnormal" | "not_specified";
-    /**
-     * FunctionalClassificationModify
-     * @description Model used to modify an existing functional range.
-     */
-    FunctionalClassificationModify: {
-      /** Label */
-      label: string;
-      /**
-       * Description
-       * @default null
-       */
-      description?: string | null;
-      /** @default not_specified */
-      functionalClassification?: components["schemas"]["FunctionalClassification"];
-      /**
-       * Range
-       * @default null
-       */
-      range?: ([number | null, number | null]) | null;
-      /**
-       * Class
-       * @default null
-       */
-      class?: string | null;
-      /**
-       * Inclusivelowerbound
-       * @default null
-       */
-      inclusiveLowerBound?: boolean | null;
-      /**
-       * Inclusiveupperbound
-       * @default null
-       */
-      inclusiveUpperBound?: boolean | null;
-      /** @default null */
-      acmgClassification?: components["schemas"]["ACMGClassificationModify"] | null;
-      /**
-       * Oddspathsratio
-       * @default null
-       */
-      oddspathsRatio?: number | null;
-      /**
-       * Positivelikelihoodratio
-       * @default null
-       */
-      positiveLikelihoodRatio?: number | null;
-    };
-    /**
-     * ScoreCalibrationModify
-     * @description Model used to modify an existing score calibration.
-     */
-    ScoreCalibrationModify: {
-      /** Title */
-      title: string;
-      /**
-       * Researchuseonly
-       * @default false
-       */
-      researchUseOnly?: boolean;
-      /**
-       * Baselinescore
-       * @default null
-       */
-      baselineScore?: number | null;
-      /**
-       * Baselinescoredescription
-       * @default null
-       */
-      baselineScoreDescription?: string | null;
-      /**
-       * Notes
-       * @default null
-       */
-      notes?: string | null;
-      /**
-       * Controlsnotphi
-       * @default null
-       */
-      controlsNotPhi?: boolean | null;
-      /**
-       * Functionalclassifications
-       * @default null
-       */
-      functionalClassifications?: components["schemas"]["FunctionalClassificationModify"][] | null;
-      /** Thresholdsources */
-      thresholdSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /** Evidencesources */
-      evidenceSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /** Methodsources */
-      methodSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /**
-       * Calibrationmetadata
-       * @default null
-       */
-      calibrationMetadata?: Record<string, never> | null;
-      /**
-       * Scoreseturn
-       * @default null
-       */
-      scoreSetUrn?: string | null;
-      /**
-       * Controls
-       * @default null
-       */
-      controls?: components["schemas"]["CalibrationControlCreate"][] | null;
-      /**
-       * Disease
-       * @description The MONDO code (e.g. "MONDO:0015263") for this calibration's disease context; validated against OLS. Omitted or null resolves to the generic "disease or disorder" term.
-       * @default null
-       */
-      disease?: string | null;
-    };
   };
   responses: never;
   parameters: never;
@@ -7204,6 +7417,9 @@ export interface operations {
         /** @description Reconstruct the molecular layer (equivalence-class membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant. ISO 8601, ideally timezone-aware. The focus allele's own identity is content-addressed and immutable, so it is unaffected. Defaults to current. */
         as_of?: string | null;
       };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
         /** @description A GA4GH VRS digest (one allele), or a ClinGen allele id: a nucleotide CAID (the nt-canonical change, its genomic + coding frames) or a protein PAID. */
         identifier: string;
@@ -7275,6 +7491,8 @@ export interface operations {
       query?: {
         /** @description Include measurements from superseded score-set versions. Default false — superseded measurements are a deliberate power-user / citation path, never surfaced by discovery. */
         include_superseded?: boolean;
+        /** @description Let a call from a research-use-only calibration stand in when the score set has no readable calibration that is not research use only. Such calls set classificationIsResearchUseOnly and are not clinical evidence. Default false; ordering never uses them. */
+        include_research_use_only?: boolean;
         /** @description Reconstruct the equivalence class (which mapping records / allele links are live) as it stood at this instant. ISO 8601, ideally timezone-aware. Scores and classifications are as-of-invariant. Defaults to current. */
         as_of?: string | null;
       };
@@ -8651,7 +8869,9 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Resource not found. */
@@ -8717,7 +8937,9 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Resource not found. */
@@ -9946,6 +10168,10 @@ export interface operations {
    * Controls may be supplied either via this file or inline in `calibration_json`, but not both;
    * omitting both leaves existing controls unchanged.
    *
+   * Controls are stored only while `controls_not_phi` is true. New controls must be submitted with
+   * `controls_not_phi: true` in the same request; setting it to false or null without new controls
+   * deletes the existing controls.
+   *
    * ## Response
    * Returns the updated score calibration with all modifications applied and any new
    * classification data from the uploaded file.
@@ -10148,7 +10374,8 @@ export interface operations {
    * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
    * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
    * `benign`, case-insensitive). Controls may be supplied either via this file or inline in
-   * `calibration_json`, but not both.
+   * `calibration_json`, but not both. Controls are accepted only with `controls_not_phi: true`, the
+   * submitter's affirmation that they contain no protected health information (PHI).
    *
    * ## Response
    * Returns the created score calibration with its generated URN and associated score set information.

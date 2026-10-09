@@ -1097,11 +1097,11 @@ export default defineComponent({
       // A projected placement: the measured allele has no ClinVar record, so this call
       // is about a related variant at a different level. Say so — otherwise the histogram appears to
       // contradict the assay-facts card, which shows this variant's own (empty) measured-level ClinVar.
-      // "Inferred" is the app-wide word for this (matches VariantClinvarStat's "inferred from N related
-      // variants"), rather than a bare asterisk that needs its own legend to decode.
+      // "Inferred" is the app-wide word for this (matches VariantClinvarStat's "inferred from N variants"),
+      // rather than a bare asterisk that needs its own legend to decode.
       const projectedNote = control.projected
         ? tooltipFootnote(
-            'This classification is inferred from a related variant that encodes the same protein change. The measured variant has no ClinVar record of its own.'
+            'This protein change has no ClinVar record. The classification shown is inferred from a nucleotide variant that encodes it.'
           )
         : null
 

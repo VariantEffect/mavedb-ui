@@ -37,6 +37,8 @@ Mapped variants in MaveDB are cross-referenced with the [gnomAD database](https:
 
 A variant's frequency is displayed on its [variant page](../mavemd/variant-page.md), and is available in bulk through the `gnomad` namespace of the variant data download. Each frequency is matched by ClinGen allele ID, so it is a direct assertion about that variant rather than an aggregate over related variants. Variants absent from gnomAD show no frequency.
 
+A protein change has no gnomAD record of its own. For a protein-level measurement, the score set's variant panel shows the record of the nucleotide variant encoding that change with the highest FAF95, the frequency ACMG BA1/BS1 thresholds apply to. The record is labelled with that variant, and every encoding variant's record is listed alongside it. Frequencies are shown exactly as gnomAD records them and are never summed.
+
 ## Ensembl VEP
 
 MaveDB uses the [Ensembl Variant Effect Predictor (VEP)](https://www.ensembl.org/info/docs/tools/vep/index.html) to annotate mapped variants with predicted functional consequences, including effects on protein coding sequences, splicing, and regulatory regions. These VEP annotations are displayed alongside variant effect scores on score set pages, providing additional context for interpreting the functional impact of each variant.

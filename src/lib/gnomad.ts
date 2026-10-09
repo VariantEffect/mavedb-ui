@@ -55,12 +55,22 @@ export interface UnderlyingGnomad {
 }
 
 /**
+ * Order gnomAD records by clinical strength: highest grpmax FAF95 first (the figure ACMG BA1/BS1 thresholds
+ * apply to), records without one after every record with one, then by allele frequency.
+ */
+function byClinicalStrength(a: UnderlyingGnomad, b: UnderlyingGnomad): number {
+  const fafA = a.gnomad.faf95Max ?? -1
+  const fafB = b.gnomad.faf95Max ?? -1
+  return fafB - fafA || b.gnomad.alleleFrequency - a.gnomad.alleleFrequency
+}
+
+/**
  * Collect the distinct gnomAD measurements across a variant record's alleles — the *related* frequencies
  * shown as context.
  *
  * A protein change is encoded by several genomic variants, each with its own gnomAD frequency. Enumerate
  * this set of distinct frequencies, deduplicating by gnomAD variant id and preferring a coding HGVS for
- * the label. Sort by descending allele frequency.
+ * the label. Sort by clinical strength (see {@link byClinicalStrength}).
  *
  * `subjectDigests` names the subject allele (the measured/page allele, including its projection); its own
  * frequency is the headline, so it — and any other frame carrying the same gnomAD record — is excluded here,
@@ -94,14 +104,14 @@ export function collectGnomadFrequencies(
       existing.hgvs = hgvs
     }
   }
-  return [...byVariant.values()].sort((a, b) => b.gnomad.alleleFrequency - a.gnomad.alleleFrequency)
+  return [...byVariant.values()].sort(byClinicalStrength)
 }
 
 /**
- * Which frequency a gnomAD cell headlines for its subject allele:
+ * Which record a gnomAD cell headlines for its subject allele:
  *  - `direct`: the subject's own record;
- *  - `enumerated`: protein (or unknown) level with no record of its own, so the max AF across the variants that
- *    can encode it, pooled from `underlying`;
+ *  - `enumerated`: protein (or unknown) level with no record of its own, so the clinically strongest record among
+ *    the variants that can encode it, shown as gnomAD stores it and attributed to its variant;
  *  - `absent`: nucleotide level with no record of its own; related frequencies are never borrowed;
  *  - `none`: nothing to show.
  */
@@ -111,10 +121,10 @@ export interface GnomadHeadline {
   state: GnomadHeadlineState
   // The subject's own record (`direct` only).
   direct: GnomadAnnotation | null
-  // Related frequencies, highest AF first (see {@link collectGnomadFrequencies}).
+  // Related frequencies, clinically strongest first (see {@link collectGnomadFrequencies}).
   underlying: UnderlyingGnomad[]
-  // The pooled headline AF (`enumerated` only).
-  maxAf: number | null
+  // The encoding variant whose record is the headline (`enumerated` only).
+  strongest: UnderlyingGnomad | null
 }
 
 /**
@@ -131,21 +141,21 @@ export function resolveGnomadHeadline(
 ): GnomadHeadline {
   const underlying = collectGnomadFrequencies(annotations, alleles, subjectDigests)
   const canEnumerate = assayLevel !== 'cdna' && assayLevel !== 'genomic'
-  if (assayGnomad) return {state: 'direct', direct: assayGnomad, underlying, maxAf: null}
+  if (assayGnomad) return {state: 'direct', direct: assayGnomad, underlying, strongest: null}
   if (canEnumerate && underlying.length) {
-    return {state: 'enumerated', direct: null, underlying, maxAf: underlying[0].gnomad.alleleFrequency}
+    return {state: 'enumerated', direct: null, underlying, strongest: underlying[0]}
   }
-  return {state: underlying.length ? 'absent' : 'none', direct: null, underlying, maxAf: null}
+  return {state: underlying.length ? 'absent' : 'none', direct: null, underlying, strongest: null}
 }
 
-/** Popover note explaining a cell's related frequencies, worded for whether they were pooled into the headline. */
+/** Popover note explaining a cell's related frequencies, worded for whether one of them is the cell's headline. */
 export function underlyingGnomadNote(state: GnomadHeadlineState, count: number): string {
   if (state === 'enumerated') {
     return count === 1
-      ? 'The frequency of any variants in gnomAD which can encode this protein change. This assay does not establish which one underlies the measurement.'
-      : 'Frequencies of any variants in gnomAD which can encode this protein change. This assay does not establish which of them underlie the measurement.'
+      ? 'This protein change has no gnomAD record. The frequency shown is from the one nucleotide variant in gnomAD that encodes it.'
+      : `This protein change has no gnomAD record. ${count} nucleotide variants in gnomAD encode it. The frequency shown is from the first, which has the highest FAF95.`
   }
-  return 'Other variants that encode the same protein change and also have gnomAD frequencies.'
+  return 'Other nucleotide variants that encode the same protein change, with their gnomAD records.'
 }
 
 /**

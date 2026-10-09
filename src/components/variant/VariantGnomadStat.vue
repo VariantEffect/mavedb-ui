@@ -4,10 +4,15 @@
     <!-- The subject allele's own frequency: the canonical statistic. -->
     <MvGnomadCell v-if="headlineState === 'direct'" :gnomad="assayGnomad" />
     <!-- No frequency on the subject itself, but its encoding variants carry frequencies (protein level assay):
-         enumerate them as a max-AF headline + a popover of full allele-level frequencies. -->
-    <span v-else-if="headlineState === 'enumerated'" class="stat-value font-semibold"
-      >Up to AF {{ formatFrequency(underlyingGnomadMaxAf) }}</span
-    >
+         headline the clinically strongest encoding's own record, attributed to it, with every encoding in the popover. -->
+    <template v-else-if="headlineState === 'enumerated' && strongestGnomad">
+      <span class="stat-value font-mono font-semibold">{{
+        formatFrequency(strongestGnomad.gnomad.alleleFrequency)
+      }}</span>
+      <span v-if="strongestGnomad.gnomad.faf95Max != null" class="text-xs text-text-muted"
+        >FAF95 <span class="font-mono">{{ formatFrequency(strongestGnomad.gnomad.faf95Max) }}</span></span
+      >
+    </template>
     <!-- Nucleotide subject with no frequency of its own but related variants carry frequencies: be explicit
          rather than borrow related variants' frequencies. Related frequencies, if any, show below as context. -->
     <span v-else-if="headlineState === 'absent'" class="stat-value text-sm italic text-text-muted">
@@ -15,10 +20,9 @@
     </span>
     <span v-else class="stat-value">—</span>
 
-    <!-- Related-allele records. For a projected headline this control doubles as a caveat about the projection's
-         provenance: it states the headline is inferred, not a direct assertion on this variant, and opens the
-         records it was pooled from. For a non-projected headline it's pure context (records that didn't drive
-         the call). -->
+    <!-- Related-allele records. For an enumerated headline this control doubles as a caveat: the headline is an
+         encoding variant's record, not a direct assertion on this variant, and it opens every encoding's record.
+         Otherwise it's pure context (records that didn't drive the cell). -->
     <template v-if="underlyingGnomad.length">
       <button
         class="text-xs text-link"
@@ -32,10 +36,11 @@
       >
         <template v-if="headlineState === 'enumerated'">
           <i class="pi pi-info-circle shrink-0 !text-xs not-italic" />
-          <span class="whitespace-nowrap underline decoration-dotted"
-            >pooled from {{ underlyingGnomad.length }}
-            {{ underlyingGnomad.length === 1 ? 'variant' : 'variants' }}</span
-          >
+          <span class="whitespace-nowrap underline decoration-dotted">{{
+            underlyingGnomad.length === 1
+              ? 'taken from 1 variant'
+              : `taken from 1 of ${underlyingGnomad.length} variants`
+          }}</span>
         </template>
         <template v-else
           ><span class="underline decoration-dotted"
@@ -81,7 +86,7 @@ type AlleleIdentity = components['schemas']['AlleleIdentity']
 type SequenceLevel = components['schemas']['SequenceLevel']
 
 /**
- * The gnomAD stat cell for the score-set variant panel. Placement rules (own record, pooled at protein level,
+ * The gnomAD stat cell for the score-set variant panel. Placement rules (own record, strongest encoding at protein level,
  * explicit absence at nucleotide level) come from {@link resolveGnomadHeadline}; this component adds the panel
  * layout and the related-frequency popover.
  */
@@ -121,8 +126,8 @@ export default defineComponent({
     underlyingGnomad(): UnderlyingGnomad[] {
       return this.headline.underlying
     },
-    underlyingGnomadMaxAf(): number | null {
-      return this.headline.maxAf
+    strongestGnomad(): UnderlyingGnomad | null {
+      return this.headline.strongest
     },
     // Only the non-enumerated (context) trigger uses this — the enumerated trigger writes its own caveat copy.
     underlyingLabel(): string {

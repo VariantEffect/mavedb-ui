@@ -54,13 +54,29 @@ describe('collectGnomadFrequencies — enumeration of encoding-variant frequenci
     expect(result.find((r) => r.gnomad.dbIdentifier === '1-200-C-T')?.hgvs).toBe('c.20C>T')
   })
 
-  test('sorts by descending allele frequency (max first — drives the headline)', () => {
+  test('sorts by descending allele frequency when no record carries a FAF95', () => {
     const annotations = {
       low: {gnomad: gnomad({dbIdentifier: 'low', alleleFrequency: 0.0001})},
       high: {gnomad: gnomad({dbIdentifier: 'high', alleleFrequency: 0.05})},
       mid: {gnomad: gnomad({dbIdentifier: 'mid', alleleFrequency: 0.01})}
     }
     expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['high', 'mid', 'low'])
+  })
+
+  test('sorts by grpmax FAF95 first, the figure BA1/BS1 apply to, even over a higher global AF', () => {
+    const annotations = {
+      common: {gnomad: gnomad({dbIdentifier: 'common', alleleFrequency: 0.004, faf95Max: 0.001})},
+      grpmax: {gnomad: gnomad({dbIdentifier: 'grpmax', alleleFrequency: 0.002, faf95Max: 0.003})}
+    }
+    expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['grpmax', 'common'])
+  })
+
+  test('records without a FAF95 follow every record with one', () => {
+    const annotations = {
+      noFaf: {gnomad: gnomad({dbIdentifier: 'noFaf', alleleFrequency: 0.05, faf95Max: null})},
+      faf: {gnomad: gnomad({dbIdentifier: 'faf', alleleFrequency: 0.0001, faf95Max: 0.00001})}
+    }
+    expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['faf', 'noFaf'])
   })
 
   test('missing HGVS is tolerated → null label', () => {
@@ -155,13 +171,14 @@ describe('resolveGnomadHeadline — which frequency a cell shows', () => {
     const headline = resolveGnomadHeadline(own, related, {}, ['subject-digest'], 'protein')
     expect(headline.state).toBe('direct')
     expect(headline.direct).toBe(own)
-    expect(headline.maxAf).toBeNull()
+    expect(headline.strongest).toBeNull()
   })
 
-  test('protein level with no record of its own pools related frequencies, max AF first', () => {
-    const headline = resolveGnomadHeadline(null, related, {}, ['subject-digest'], 'protein')
+  test("protein level with no record of its own headlines the strongest encoding's own record", () => {
+    const headline = resolveGnomadHeadline(null, related, {'enc-b': {hgvs: 'c.20C>T'}}, ['subject-digest'], 'protein')
     expect(headline.state).toBe('enumerated')
-    expect(headline.maxAf).toBe(0.004)
+    expect(headline.strongest?.gnomad).toBe(related['enc-b'].gnomad)
+    expect(headline.strongest?.hgvs).toBe('c.20C>T')
     expect(ids(headline.underlying)).toEqual(['enc-b', 'enc-a'])
   })
 
@@ -172,7 +189,7 @@ describe('resolveGnomadHeadline — which frequency a cell shows', () => {
   test.each(['cdna', 'genomic'])('%s level never borrows related frequencies', (level) => {
     const headline = resolveGnomadHeadline(null, related, {}, ['subject-digest'], level)
     expect(headline.state).toBe('absent')
-    expect(headline.maxAf).toBeNull()
+    expect(headline.strongest).toBeNull()
   })
 
   test('nothing anywhere → none', () => {

@@ -186,8 +186,12 @@ export default defineComponent({
     },
     underlyingClinvarNote(): string {
       return this.isProjectedHeadline
-        ? 'This variant has no ClinVar record. The classification above is inferred from these nucleotide variants that encode the same protein change and does not represent a ClinVar assertion for this variant.'
-        : 'Other variants that encode the same protein change and also carry ClinVar records.'
+        ? `This protein change has no ClinVar record. The classification shown is inferred from ${
+            this.underlyingClinvar.length === 1
+              ? 'the nucleotide variant below, which encodes'
+              : 'the nucleotide variants below, which encode'
+          } it.`
+        : 'Other nucleotide variants that encode the same protein change, with their ClinVar records.'
     }
   },
 

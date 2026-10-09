@@ -28,7 +28,7 @@ export const INFERRED_CONTROL_KEY_SECTION: KeySection = {
     {
       label: 'Inferred call',
       definition:
-        'A ClinVar call inferred from a related variant that encodes the same protein change — shown only when the assayed variant has no ClinVar record of its own.'
+        'A classification inferred from a nucleotide variant that encodes the measured protein change. Shown only when the protein change has no ClinVar record of its own.'
     }
   ]
 }

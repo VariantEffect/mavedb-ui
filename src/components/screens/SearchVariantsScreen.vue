@@ -405,7 +405,13 @@
           </component>
 
           <!-- MANE coordinates (collapsible) -->
-          <MvCollapsible v-if="allele.maneCoordinates.length > 0" class="mt-3" :open="false" title="MANE transcripts">
+          <!-- Negative margin cancels the collapsible's own inset so its title lines up with the header text. -->
+          <MvCollapsible
+            v-if="allele.maneCoordinates.length > 0"
+            class="-mx-4 mt-3"
+            :open="false"
+            title="MANE transcripts"
+          >
             <table aria-label="MANE transcript coordinates" class="w-full border-collapse text-xs">
               <thead>
                 <tr>
@@ -1503,8 +1509,9 @@ export default defineComponent({
         allele.variantsStatus = 'Loading'
         try {
           // Full equivalence class: a CA query returns its protein consequence and the other encodings of it,
-          // a PA query its nt encodings — the same set the variant page shows.
-          allele.measurements = await getAlleleMeasurements(caId)
+          // a PA query its nt encodings — the same set the variant page shows. Research-use-only calls stand in as
+          // they do by default there, labeled as such.
+          allele.measurements = await getAlleleMeasurements(caId, {includeResearchUseOnly: true})
           allele.variantsStatus = 'Loaded'
         } catch (error: unknown) {
           allele.measurements = []

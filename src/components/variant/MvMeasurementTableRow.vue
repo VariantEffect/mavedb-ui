@@ -57,8 +57,13 @@
             >{{ MEASUREMENT_CALLS[call].label }}</span
           >
           <span v-else-if="!classification" class="hidden text-xs-minus text-text-muted @xl:inline">—</span>
-          <span v-if="displayed?.researchUseOnly" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
-            >Research use only</span
+          <span
+            v-if="displayed?.researchUseOnly"
+            v-key-term="'calibration'"
+            aria-label="Research use only"
+            class="mave-tag mave-tag-ruo"
+            title="Research use only — opens the Key"
+            >RUO</span
           >
         </span>
       </div>

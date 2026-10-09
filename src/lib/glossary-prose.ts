@@ -31,7 +31,7 @@ export const CALIBRATION_KEY_SECTION: KeySection = {
       class: 'mave-tag-primary'
     },
     {
-      label: 'Research use only',
+      label: 'Research use only (RUO)',
       definition:
         'Not intended for clinical or diagnostic use, for example because its method is exploratory or not yet validated. Do not rely on it alone to classify a variant.',
       class: 'mave-tag-ruo'

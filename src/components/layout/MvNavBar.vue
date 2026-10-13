@@ -8,6 +8,8 @@
     </Message>
   </div>
 
+  <MvMaintenanceBanner />
+
   <!-- Beta site banner -->
   <div v-if="config.PREVIEW_SITE" class="bg-orange-cta px-4 py-1 text-center text-sm text-text-dark">
     This is a beta test site. For the production site, please visit
@@ -165,6 +167,8 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import Message from 'primevue/message'
 import Popover from 'primevue/popover'
 
+import MvMaintenanceBanner from '@/components/layout/MvMaintenanceBanner.vue'
+
 import config from '@/config'
 import useAuth from '@/composition/auth'
 import {MAVEDB_PRODUCTION, ZULIP_BETA_TESTERS} from '@/lib/links'
@@ -185,7 +189,7 @@ const ADD_MENU_ITEMS = [
 export default defineComponent({
   name: 'MvNavBar',
 
-  components: {FontAwesomeIcon, Message, Popover},
+  components: {FontAwesomeIcon, Message, MvMaintenanceBanner, Popover},
 
   setup() {
     const {signIn, signOut, userProfile, userIsAuthenticated} = useAuth()

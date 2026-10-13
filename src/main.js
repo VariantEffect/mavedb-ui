@@ -12,6 +12,7 @@ import { definePreset, palette } from '@primeuix/themes'
 
 import App from '@/App.vue'
 import config from '@/config'
+import {installAxiosMaintenanceInterceptor, startMaintenanceWatch} from '@/composables/use-maintenance'
 import {installAxiosAuthHeaderInterceptor, installAxiosUnauthorizedResponseInterceptor} from '@/lib/auth'
 import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/orcid'
 import router from '@/router'
@@ -256,3 +257,6 @@ initRestClient({apiBaseUrl: config.apiBaseUrl})
 // Monkey-patch Axios so that all requests will have the user's credentials.
 installAxiosAuthHeaderInterceptor()
 installAxiosUnauthorizedResponseInterceptor()
+installAxiosMaintenanceInterceptor()
+
+startMaintenanceWatch()

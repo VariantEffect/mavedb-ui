@@ -1,5 +1,9 @@
 <template>
-  <router-view :key="$route.path" />
+  <!-- Hidden rather than unmounted during maintenance, so in-progress work survives until the site is back. -->
+  <div v-show="!showMaintenanceScreen" class="contents">
+    <router-view :key="$route.path" />
+  </div>
+  <MaintenanceScreen v-if="showMaintenanceScreen" />
   <ConfirmDialog></ConfirmDialog>
   <Toast position="bottom-right" />
 </template>
@@ -9,8 +13,16 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 import {mapActions, mapState} from 'vuex'
 
+import MaintenanceScreen from '@/components/screens/MaintenanceScreen.vue'
+import {useMaintenance} from '@/composables/use-maintenance'
+
 export default {
-  components: {ConfirmDialog, Toast},
+  components: {ConfirmDialog, MaintenanceScreen, Toast},
+
+  setup() {
+    const {showMaintenanceScreen} = useMaintenance()
+    return {showMaintenanceScreen}
+  },
 
   computed: mapState('toast', ['toasts']),
 

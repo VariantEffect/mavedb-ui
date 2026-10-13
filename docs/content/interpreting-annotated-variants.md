@@ -21,6 +21,12 @@ A variant can be described at three molecular levels:
 
 MaveDB shows a variant at whichever of these levels apply. The important point is that **these levels are not all equally direct.** An assay measures a variant at one of these levels. We must *derive* all other levels from that measurement. How faithfully a level can be derived and interpreted depends on the underlying biology, which the four relationships below capture.
 
+### Which transcript a coding change is written on
+
+The same coding change can be written on more than one transcript, or on more than one version of a transcript. For example, `NM_007294.3:c.5143A>C` and `NM_007294.4:c.5143A>C` are the same BRCA1 change on two versions of the same transcript. A score set submitted against a specific transcript keeps that transcript, while changes MaveDB derives from protein-level measurements can land on another (see [Transcript selection](mapping/reverse-translation.md#transcript-selection)).
+
+The [variant page](mavemd/variant-page.md) lists each change once, however many transcripts its score sets use. Your variant is written on the transcript it was measured on, so it matches the submitted data. Every other change is written on the [MANE Select](https://www.ncbi.nlm.nih.gov/refseq/MANE/) transcript, the standard for clinical reporting.
+
 ## Measured, resolved, convergent, and candidate
 
 MaveDB records how each representation of an annotated variant relates to the variant the assay explicitly measured. The variant page doesn't tag each representation with these terms; it groups measurements by what they assayed and words that relationship in each group's header, but the distinctions below are what those groups and the downloadable data rest on:

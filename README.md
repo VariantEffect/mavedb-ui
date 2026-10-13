@@ -106,11 +106,11 @@ MODE=prodapi npm run preview
 
 #### Procedure
 
-To deploy in production, simply push the contents of `dist` to the appropriate S3 bucket:
+The deployment steps for each environment are in the [mavedb-deployment README](https://github.com/VariantEffect/mavedb-deployment#mavedb-ui-production-deployment-on-aws). They keep `maintenance.json` in the bucket while replacing the build.
 
-```
-aws s3 sync ./dist s3://mavedb-ui
-```
+### Maintenance notices
+
+The UI reads `/maintenance.json` to show a scheduled-maintenance banner, or the maintenance screen during downtime (`src/composables/use-maintenance.ts`). In deployed environments the file is managed by the maintenance-window scripts in mavedb-deployment (`docs/maintenance.md`). To try it locally, put a notice in `public/maintenance.json` (gitignored), e.g. `{"status": "scheduled", "start": "2030-01-01T16:00:00Z", "end": "2030-01-01T18:00:00Z"}`; use `"status": "active"` for the maintenance screen.
 
 ### Building and deploying documentation
 

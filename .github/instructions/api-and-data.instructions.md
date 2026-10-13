@@ -25,6 +25,8 @@ Two Axios interceptors are installed at startup in `src/lib/auth.ts`:
 
 This means components do not need to manually attach auth headers; they are injected globally.
 
+A third response interceptor, in `src/composables/use-maintenance.ts`, re-reads `/maintenance.json` when an API request fails with 502/503/504 or no response, so the maintenance screen appears as soon as maintenance starts. Components need not handle maintenance themselves.
+
 ## Item Types Configuration
 
 `src/lib/item-types.js` defines a registry of REST resource types. Each entry maps a logical name to its REST collection endpoint and optional HTTP overrides:

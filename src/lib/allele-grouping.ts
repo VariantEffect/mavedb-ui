@@ -37,8 +37,8 @@ export interface AlleleMember extends AlleleIdentity {
 
 /**
  * A group of alleles rendered as one entry. Either a single allele (the protein apex, an unpaired
- * measured allele, or a projection-failed one-member candidate) or a c↔g projection pair collapsed into
- * one (the same change at two levels).
+ * measured allele, or a projection-failed one-member candidate) or the same change at several levels:
+ * a genomic allele with every cDNA allele projected onto it, one per transcript the page's score sets use.
  */
 export interface AlleleGroup {
   key: string
@@ -58,8 +58,9 @@ export interface AlleleGroup {
 }
 
 /**
- * The member whose HGVS titles a group. A projection pair holds one change in two coordinate frames
- * (genomic + coding); lead with cDNA (community-preferred), then protein, then genomic.
+ * The member whose HGVS titles a group. A group holds one change in several coordinate frames; lead with
+ * cDNA (community-preferred), then protein, then genomic. Among cDNA members, the first in `members` wins,
+ * which {@link groupAlleles} orders by preference.
  */
 export function titleMember(group: Pick<AlleleGroup, 'members'>): AlleleMember | null {
   return (
@@ -77,6 +78,10 @@ export interface GroupAllelesInput {
   annotations: Record<string, AlleleAnnotations>
   /** The ClinGen id the page is anchored on. */
   pageClingenAlleleId: string | null
+  /** HGVS of the page allele as measured; its group leads with that form. */
+  measuredHgvs?: string[]
+  /** MANE transcript accessions (e.g. `NM_007294.4`); other groups lead with a cDNA on one of these. */
+  maneTranscripts?: string[]
 }
 
 /**
@@ -113,19 +118,27 @@ function pickDerivation(members: AlleleMember[]): Derivation | null {
   return best
 }
 
-// A digest -> its projection map: the two members of a projection pair (the same change expressed at
-// coding and genomic level). Mutual by construction, but honor a one-sided link too so a pair is never
-// split by iteration order.
-function buildProjectionMap(alleles: Record<string, AlleleIdentity>): Map<string, string> {
-  const projectionOf = new Map<string, string>()
+// Undirected `projectionOf` links. A genomic allele can link to several cDNA alleles when score sets on different
+// transcripts (e.g. a submitted NM_007294.3 and a MANE NM_007294.4 projection) describe the same change. A
+// one-sided link counts, so a group is never split by iteration order.
+function buildProjectionLinks(alleles: Record<string, AlleleIdentity>): Map<string, Set<string>> {
+  const links = new Map<string, Set<string>>()
+  const link = (a: string, b: string) => {
+    if (!links.has(a)) links.set(a, new Set())
+    links.get(a)!.add(b)
+  }
   for (const [digest, identity] of Object.entries(alleles)) {
     const projection = identity.projectionOf
     if (projection && projection !== digest && alleles[projection]) {
-      projectionOf.set(digest, projection)
-      projectionOf.set(projection, digest)
+      link(digest, projection)
+      link(projection, digest)
     }
   }
-  return projectionOf
+  return links
+}
+
+function transcriptOf(hgvs: string | null | undefined): string | null {
+  return hgvs?.split(':')[0] ?? null
 }
 
 function makeMember(
@@ -148,29 +161,51 @@ function makeMember(
 }
 
 /**
- * Collapse the detail envelope's `alleles` sidecar into rendered groups, pairing each c↔g projection
- * (linked by `projectionOf`) into one entry and deduplicating its annotations. `derivation` labels the
- * group's confidence — orthogonal to Cat-VRS `relation`, which stays per member. Groups are ordered
+ * Collapse the detail envelope's `alleles` sidecar into rendered groups, joining alleles linked by
+ * `projectionOf` into one entry and deduplicating their annotations. `derivation` labels the group's
+ * confidence — orthogonal to Cat-VRS `relation`, which stays per member. Groups are ordered
  * measured/page-root first, then bottom-up by level.
+ *
+ * When a group holds the change on several transcripts, the page allele's group leads with its measured
+ * form (`measuredHgvs`) and the others with the MANE transcript (`maneTranscripts`). Neither depends on the
+ * selected measurement, so titles stay put as the selection moves.
  */
 export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
   const {alleles, annotations, pageClingenAlleleId} = input
-  const projectionOf = buildProjectionMap(alleles)
+  const links = buildProjectionLinks(alleles)
+  const measuredHgvs = new Set(input.measuredHgvs ?? [])
+  const maneTranscripts = new Set(input.maneTranscripts ?? [])
 
-  // Pair-and-consume: each allele is visited once; its projection (if any) is pulled in immediately.
+  // Each allele is visited once; everything reachable through its links joins its group.
   const done = new Set<string>()
   const groups: AlleleGroup[] = []
-  for (const [digest, identity] of Object.entries(alleles)) {
+  for (const digest of Object.keys(alleles)) {
     if (done.has(digest)) continue
     done.add(digest)
-    const members = [makeMember(digest, identity, annotations, pageClingenAlleleId)]
-    const projection = projectionOf.get(digest)
-    if (projection && !done.has(projection)) {
-      done.add(projection)
-      members.push(makeMember(projection, alleles[projection], annotations, pageClingenAlleleId))
+    const members: AlleleMember[] = []
+    const queue = [digest]
+    while (queue.length > 0) {
+      const next = queue.shift()!
+      members.push(makeMember(next, alleles[next], annotations, pageClingenAlleleId))
+      for (const linked of links.get(next) ?? []) {
+        if (!done.has(linked)) {
+          done.add(linked)
+          queue.push(linked)
+        }
+      }
     }
-    // Sort members genomic → cDNA → protein so the group reads consistently regardless of input order.
-    members.sort((a, b) => (LEVEL_ORDER[a.level ?? ''] ?? 99) - (LEVEL_ORDER[b.level ?? ''] ?? 99))
+    const pageRoot = members.some((m) => m.pageRoot)
+    const preference = (m: AlleleMember) =>
+      pageRoot && m.hgvs != null && measuredHgvs.has(m.hgvs)
+        ? 0
+        : maneTranscripts.has(transcriptOf(m.hgvs) ?? '')
+          ? 1
+          : 2
+    // Genomic → cDNA → protein so the group reads consistently regardless of input order; within a level, the
+    // preferred transcript first.
+    members.sort(
+      (a, b) => (LEVEL_ORDER[a.level ?? ''] ?? 99) - (LEVEL_ORDER[b.level ?? ''] ?? 99) || preference(a) - preference(b)
+    )
 
     // See coalesceAnnotations for the present-wins/conflict rule.
     const {merged, conflict} = coalesceAnnotations(members)
@@ -179,7 +214,7 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
       key: members[0].digest,
       members,
       measured: members.some((m) => m.isFocus),
-      pageRoot: members.some((m) => m.pageRoot),
+      pageRoot,
       derivation: pickDerivation(members),
       annotationsMatch: !conflict,
       coalescedAnnotations: merged,

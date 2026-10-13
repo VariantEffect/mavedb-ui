@@ -557,7 +557,15 @@ export default defineComponent({
       return mergeDetailAlleles(this.lookup.loadedVariantDetails.value, this.lookup.selectedVariantDetail.value)
     },
     pageAlleleGroups(): AlleleGroup[] {
-      return groupAlleles({...this.pageAlleles, pageClingenAlleleId: this.clingenAlleleId})
+      return groupAlleles({
+        ...this.pageAlleles,
+        pageClingenAlleleId: this.clingenAlleleId,
+        measuredHgvs: this.lookup.variants.value
+          .filter((m) => m.relationship === 'direct')
+          .map((m) => m.assayLevelHgvs)
+          .filter((hgvs): hgvs is string => hgvs != null),
+        maneTranscripts: this.lookup.clingenAllele.maneTranscripts.value
+      })
     },
     // The protein change a nucleotide page's variant encodes. The clinical table has no protein row (protein alleles
     // carry no external records), so the header is the route to its page.

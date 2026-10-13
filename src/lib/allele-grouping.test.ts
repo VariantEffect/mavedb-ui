@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import {describe, expect, it} from 'vitest'
 
 import {
@@ -205,6 +206,47 @@ describe('groupAlleles — projection pairing + confidence', () => {
     // The shared CAID is the page anchor, so no outward link and the group is flagged page-root.
     expect(groups[0].pageRoot).toBe(true)
     expect(groups[0].clingenLinks).toEqual([])
+  })
+})
+
+describe('groupAlleles — one change on several transcripts', () => {
+  // A nucleotide score set submitted on NM_007294.3 and a protein score set projected onto MANE NM_007294.4 both
+  // reach the same genomic allele, for the page's variant and for a sibling encoding the same protein change.
+  const alleles: Record<string, AlleleIdentity> = {
+    g1: {level: 'genomic', hgvs: 'NC_1:g.10T>G', clingenAlleleId: 'CA1', isFocus: false, projectionOf: 'c1old'},
+    c1old: {level: 'cdna', hgvs: 'NM_1.3:c.5A>C', clingenAlleleId: 'CA1', isFocus: true, projectionOf: 'g1'},
+    c1mane: {level: 'cdna', hgvs: 'NM_1.4:c.5A>C', clingenAlleleId: 'CA1', isFocus: false, projectionOf: 'g1'},
+    g2: {level: 'genomic', hgvs: 'NC_1:g.8G>C', clingenAlleleId: 'CA2', isFocus: false, projectionOf: 'c2old'},
+    c2old: {level: 'cdna', hgvs: 'NM_1.3:c.7C>G', clingenAlleleId: 'CA2', isFocus: false, projectionOf: 'g2'},
+    c2mane: {level: 'cdna', hgvs: 'NM_1.4:c.7C>G', clingenAlleleId: 'CA2', isFocus: false, projectionOf: 'g2'}
+  }
+  const input = {alleles, pageClingenAlleleId: 'CA1', measuredHgvs: ['NM_1.3:c.5A>C'], maneTranscripts: ['NM_1.4']}
+
+  it('joins every transcript form of a change into one group', () => {
+    const groups = run(input)
+    expect(groups).toHaveLength(2)
+    expect(groups.map((g) => g.members.map((m) => m.digest).sort())).toEqual([
+      ['c1mane', 'c1old', 'g1'],
+      ['c2mane', 'c2old', 'g2']
+    ])
+  })
+
+  it('titles the page allele by its measured form and other changes by the MANE transcript', () => {
+    const [page, sibling] = run(input)
+    expect(page.pageRoot).toBe(true)
+    expect(titleMember(page)?.hgvs).toBe('NM_1.3:c.5A>C')
+    expect(titleMember(sibling)?.hgvs).toBe('NM_1.4:c.7C>G')
+  })
+
+  it('keeps titles when the selection moves to another transcript form', () => {
+    const moved = _.mapValues(alleles, (identity, digest) => ({...identity, isFocus: digest === 'c2old'}))
+    const groups = run({...input, alleles: moved})
+    expect(groups.map((g) => titleMember(g)?.hgvs).sort()).toEqual(['NM_1.3:c.5A>C', 'NM_1.4:c.7C>G'])
+  })
+
+  it('fills a gap in one form from another', () => {
+    const [page] = run({...input, annotations: {c1mane: vep('missense_variant')}})
+    expect(page.coalescedAnnotations?.vep).toEqual({consequence: 'missense_variant'})
   })
 })
 

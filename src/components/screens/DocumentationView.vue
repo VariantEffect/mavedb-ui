@@ -9,11 +9,7 @@
     <div class="mx-auto flex max-w-[800px] flex-col gap-7 py-9">
       <!-- Project cards -->
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div
-          v-for="project in projects"
-          :key="project.title"
-          class="flex flex-col gap-2 rounded-lg border border-border bg-white px-5 pb-4.5 pt-5.5"
-        >
+        <div v-for="project in projects" :key="project.title" class="mave-card flex flex-col gap-2 px-5 pb-4.5 pt-5.5">
           <div class="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" :class="project.iconBg">
             <FontAwesomeIcon class="text-lg" :icon="project.icon" :style="{color: project.iconColor}" />
           </div>
@@ -21,14 +17,14 @@
           <div class="flex-1 text-xs leading-relaxed text-text-muted">{{ project.description }}</div>
           <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             <a
-              class="inline-block text-xs font-semibold text-sage no-underline hover:underline"
+              class="inline-block text-xs font-semibold text-sage-strong no-underline hover:underline"
               :href="project.docsHref"
             >
               Read docs &rarr;
             </a>
             <a
               :aria-label="project.title + ' on GitHub (opens in new tab)'"
-              class="inline-block text-xs font-semibold text-sage no-underline hover:underline"
+              class="inline-block text-xs font-semibold text-sage-strong no-underline hover:underline"
               :href="project.githubHref"
               rel="noopener"
               target="_blank"
@@ -38,7 +34,7 @@
             <a
               v-if="project.extraHref"
               :aria-label="project.title + ' on ' + project.extraLabel + ' (opens in new tab)'"
-              class="inline-block text-xs font-semibold text-sage no-underline hover:underline"
+              class="inline-block text-xs font-semibold text-sage-strong no-underline hover:underline"
               :href="project.extraHref"
               rel="noopener"
               target="_blank"
@@ -50,8 +46,8 @@
       </div>
 
       <!-- API docs callout -->
-      <div class="rounded-lg border border-border bg-white px-8 py-7">
-        <h2 class="mb-4 text-lg font-bold text-sage">REST API</h2>
+      <div class="mave-card px-8 py-7">
+        <h2 class="mb-4 text-lg font-bold text-sage-strong">REST API</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           MaveDB provides a REST API for programmatic access to score sets, experiments, and variants. Interactive
           documentation is available at

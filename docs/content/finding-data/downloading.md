@@ -8,21 +8,21 @@ Each [score set](../getting-started/key-concepts.md#score-sets) page in MaveDB i
 
 <figure markdown="span">
   ![Download buttons on a MaveDB score set page](../images/download_buttons.png)
-  <figcaption>Download options available on a score set page, including score/count CSV, mapped variants JSON, and annotated variant exports.</figcaption>
+  <figcaption>Download options available on a score set page, including score/count CSV, variant details, and annotated variant exports.</figcaption>
 </figure>
 
 ### Score and count data
 
 MaveDB allows users to download variant effect score data along with associated count data in **CSV** (Comma-Separated Values) format.
 
-The downloaded file contains the same data that was uploaded by the submitter, with an additional column for variant [URNs](../reference/accession-numbers.md) that uniquely identify each variant in MaveDB. Users may also choose to include other MaveDB-generated columns in this output, such as mapped variant HGVS strings and VRS identifiers, if available.
+The downloaded file contains the same data that was uploaded by the submitter, with an additional column for variant [URNs](../reference/accession-numbers.md) that uniquely identify each variant in MaveDB. Using the **Custom CSV** option, users may also choose to include other MaveDB-generated columns in this output, such as mapped variant HGVS strings and VRS identifiers, and — where available — annotation columns for gnomAD allele frequency, Ensembl VEP consequence, ClinGen allele IDs, and ClinVar clinical significance.
 
 !!! warning
     Score and count columns are non-prescriptive and may vary between datasets. Columns may mean different things between datasets, so users should refer to the dataset methods section for details on the specific columns included in each download.
 
-### Mapped variants (VRS JSON)
+### Variant details (VRS JSON)
 
-MaveDB stores [mapped variants](../reference/variant-mapping.md) using the [GA4GH VRS](https://vrs.ga4gh.org/) standard for representing genetic variants. For datasets that have been mapped, users may download a JSON file containing all mapped variants associated with the score set. This provides a structured representation of each variant including genomic coordinates, alleles, and reference sequences.
+MaveDB represents [mapped variants](../reference/variant-mapping.md) using the [GA4GH VRS](https://vrs.ga4gh.org/) standard. For datasets that have been mapped, the **Variant Details** button downloads a [newline-delimited JSON](https://jsonlines.org/) (NDJSON) file — one record per mapped variant, the bulk counterpart of a single variant's detail page. Each record carries the assayed-level (pre-mapped) and measured (post-mapped) VRS objects, the full [GA4GH Cat-VRS](https://vrs.ga4gh.org/) categorical variant (the variant's equivalence class of related alleles), and its gnomAD, Ensembl VEP, and ClinVar annotations.
 
 ### Annotated variants (VA-Spec)
 
@@ -51,6 +51,8 @@ The archive contains:
 
 - A single JSON document called `main.json` that provides the structured metadata for every [experiment set, experiment, and score set](../getting-started/key-concepts.md).
 - Score set data in `.csv` format, with separate score and count files for each record as appropriate. Each file is named using the score set URN.
+- For mapped score sets, an annotations CSV (mapped HGVS, VRS identifiers, and VEP, gnomAD, ClinGen, ClinVar, and score calibration columns), a [VRS](../reference/data-standards.md#vrs-variant-representation) NDJSON file, and a [VA-Spec](../reference/data-standards.md) NDJSON file.
+- A `README.md` describing every file and column, and a `CHANGELOG.md` recording what changed between archive versions.
 
 ### Who should use bulk downloads?
 

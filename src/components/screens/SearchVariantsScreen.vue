@@ -4,7 +4,7 @@
       <!-- HERO -->
       <section class="bg-[#fafcfa] px-6 py-10 text-center">
         <img alt="MaveMD" class="mx-auto h-24" src="@/assets/mavemd-logo.png" />
-        <h1 class="mt-4 font-display text-2xl font-bold leading-tight text-dark md:text-3xl">
+        <h1 class="mt-4 font-display text-2xl font-bold leading-tight text-text-dark md:text-3xl">
           MAVE evidence for clinical variant interpretation
         </h1>
         <p class="mx-auto mt-2.5 max-w-[580px] text-sm leading-relaxed text-gray-500 md:text-base">
@@ -30,7 +30,7 @@
         class="border-b border-gray-200 bg-linear-to-br from-published-light via-[#fafcfa] to-unpublished-light px-6 py-9"
       >
         <div class="mx-auto mb-5 max-w-[800px] text-center">
-          <div class="text-lg font-bold text-dark">Find functional evidence for a variant</div>
+          <div class="text-lg font-bold text-text-dark">Find functional evidence for a variant</div>
           <div class="mt-1.5 text-sm text-gray-600">
             Enter a variant identifier to retrieve matching measurements and clinical evidence calibrations.
           </div>
@@ -208,7 +208,7 @@
               </div>
             </div>
             <button
-              class="w-full cursor-pointer whitespace-nowrap border-t border-gray-200 bg-sage px-7 py-3 text-sm font-semibold text-dark transition-colors hover:bg-sage-dark md:w-auto md:border-t-0 md:border-l md:border-l-gray-200"
+              class="w-full cursor-pointer whitespace-nowrap border-t border-gray-200 bg-sage px-7 py-3 text-sm font-semibold text-text-dark transition-colors hover:bg-sage-dark md:w-auto md:border-t-0 md:border-l md:border-l-gray-200"
               @click="guidedSearch"
             >
               Search
@@ -264,7 +264,7 @@
     <div v-if="searchResultsVisible" ref="searchResults" class="mx-auto w-full max-w-[800px] py-8">
       <div class="mb-5 flex items-center justify-between">
         <div aria-live="polite" role="status">
-          <div class="text-lg font-bold text-dark">
+          <div class="text-lg font-bold text-text-dark">
             {{ alleles.length }} allele{{ alleles.length !== 1 ? 's' : '' }} found
           </div>
           <!-- An "Any" search leaves the selected type as "Any", so report what the string was taken to be. -->
@@ -280,7 +280,7 @@
         </div>
         <button
           aria-label="Clear results and start a new search"
-          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-sage hover:text-sage-dark"
+          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-sage-strong hover:underline"
           @click="clearSearch"
         >
           <span aria-hidden="true">&larr;</span> New search
@@ -297,7 +297,7 @@
         <div class="min-w-0">
           <div class="text-sm text-gray-600">
             Read as
-            <span class="font-semibold text-dark">{{ gnomadInterpretation.name }}</span>
+            <span class="font-semibold text-text-dark">{{ gnomadInterpretation.name }}</span>
             coordinates
           </div>
           <code v-if="gnomadInterpretation.hgvs" class="mt-0.5 block truncate font-mono text-xs text-gray-500">
@@ -355,13 +355,13 @@
         v-for="(allele, alleleIdx) in alleles"
         :key="allele.clingenAlleleId || allele.variantUrn || alleleIdx"
         :aria-label="'Allele result: ' + allele.canonicalAlleleName"
-        class="mb-5 overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
+        class="mave-card mb-5 overflow-hidden"
       >
         <!-- Card header -->
         <div class="border-b border-gray-100 px-5 pt-4 pb-3.5">
           <!--
-            Alleles the registry resolved but has not registered have no ClinGen ID to link to, so the heading renders
-            as plain text for those. Everything else about the header is shared.
+            The heading links to the variant page whenever the allele has one: alleles the registry resolved but has not
+            registered have no ClinGen ID. Everything else about the header is shared.
           -->
           <component
             :is="allele.clingenAlleleId ? 'router-link' : 'div'"
@@ -374,7 +374,7 @@
             <div class="min-w-0">
               <span
                 class="text-base font-bold leading-snug sm:text-lg"
-                :class="allele.clingenAlleleId ? 'text-link group-hover:underline' : 'text-dark'"
+                :class="allele.clingenAlleleId ? 'text-link group-hover:underline' : 'text-text-dark'"
               >
                 {{ allele.canonicalAlleleName }}
               </span>
@@ -405,7 +405,13 @@
           </component>
 
           <!-- MANE coordinates (collapsible) -->
-          <MvCollapsible v-if="allele.maneCoordinates.length > 0" class="mt-3" :open="false" title="MANE transcripts">
+          <!-- Negative margin cancels the collapsible's own inset so its title lines up with the header text. -->
+          <MvCollapsible
+            v-if="allele.maneCoordinates.length > 0"
+            class="-mx-4 mt-3"
+            :open="false"
+            title="MANE transcripts"
+          >
             <table aria-label="MANE transcript coordinates" class="w-full border-collapse text-xs">
               <thead>
                 <tr>
@@ -441,152 +447,60 @@
           </MvCollapsible>
         </div>
 
-        <!-- Card body: measurements -->
-        <div
-          v-if="
-            allele.variantsStatus === 'Loaded' &&
-            (allele.variants.nucleotide.length > 0 ||
-              allele.variants.protein.length > 0 ||
-              allele.variants.associatedNucleotide.length > 0)
-          "
-        >
-          <!-- Nucleotide measurements -->
-          <div v-if="allele.variants.nucleotide.length > 0" aria-label="Nucleotide level assays" role="group">
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
-              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">Nucleotide level assays</span>
-              <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
-                allele.variants.nucleotide.length
-              }}</span>
-            </div>
-            <MvScoreSetRow
-              v-for="(variant, idx) in nucleotideScoreSetListIsExpanded[alleleIdx]
-                ? allele.variants.nucleotide
-                : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-              :key="variant.urn ?? idx"
-              class="pl-8"
-              :score-set="variant.scoreSet"
-              :show-description="false"
-              :show-meta="false"
-            />
-            <button
-              v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-              :aria-expanded="!!nucleotideScoreSetListIsExpanded[alleleIdx]"
-              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
-              @click="nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]"
-            >
-              {{
-                nucleotideScoreSetListIsExpanded[alleleIdx]
-                  ? 'Show less'
-                  : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
-              }}
-            </button>
-          </div>
-
-          <div
-            v-if="allele.variants.nucleotide.length > 0 && allele.variants.protein.length > 0"
-            class="mx-5 h-px bg-gray-100"
-          ></div>
-
-          <!-- Protein measurements -->
-          <div v-if="allele.variants.protein.length > 0" aria-label="Protein level assays" role="group">
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
-              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">Protein level assays</span>
-              <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
-                allele.variants.protein.length
-              }}</span>
-            </div>
-            <MvScoreSetRow
-              v-for="(variant, idx) in proteinScoreSetListIsExpanded[alleleIdx]
-                ? allele.variants.protein
-                : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
-              :key="variant.urn ?? idx"
-              class="pl-8"
-              :score-set="variant.scoreSet"
-              :show-description="false"
-              :show-meta="false"
-            />
-            <button
-              v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-              :aria-expanded="!!proteinScoreSetListIsExpanded[alleleIdx]"
-              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
-              @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
-            >
-              {{
-                proteinScoreSetListIsExpanded[alleleIdx]
-                  ? 'Show less'
-                  : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
-              }}
-            </button>
-          </div>
-
-          <div
-            v-if="
-              allele.variants.associatedNucleotide.length > 0 &&
-              (allele.variants.nucleotide.length > 0 || allele.variants.protein.length > 0)
-            "
-            class="mx-5 h-px bg-gray-100"
-          ></div>
-
-          <!-- Associated nucleotide measurements -->
-          <div
-            v-if="allele.variants.associatedNucleotide.length > 0"
-            aria-label="Associated nucleotide assays"
-            role="group"
+        <!-- Card body: the searched change's measurements, grouped and worded exactly as on the variant page. A
+             preview: each group shows its top-ranked rows, the rest one click away on the variant page. -->
+        <div v-if="allele.variantsStatus === 'Loaded' && allele.measurements.length">
+          <section
+            v-for="group in measurementGroups(allele)"
+            :key="group.relationship"
+            :aria-label="`Measurements of ${groupSubject(group, anchorIsProtein(allele))}`"
           >
-            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
-              <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Associated nucleotide</span>
-              <span class="rounded-full bg-sage px-2 py-px text-[0.6875rem] font-semibold text-white">{{
-                allele.variants.associatedNucleotide.length
-              }}</span>
-            </div>
-            <MvScoreSetRow
-              v-for="(variant, idx) in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                ? allele.variants.associatedNucleotide
-                : allele.variants.associatedNucleotide.slice(0, defaultNumScoreSetsToShow)"
-              :key="variant.urn ?? idx"
-              class="pl-8"
-              :score-set="variant.scoreSet"
-              :show-description="false"
-              :show-meta="false"
+            <MvMeasurementGroupHeader :anchor-is-protein="anchorIsProtein(allele)" class="px-5" :group="group" />
+            <MvMeasurementRow
+              v-for="m in previewedMeasurements(group)"
+              :key="m.variantUrn"
+              class="px-5"
+              :measurement="m"
+              :show-level="hasMixedLevels(group)"
             />
-            <button
-              v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-              :aria-expanded="!!associatedNucleotideScoreSetListIsExpanded[alleleIdx]"
-              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
-              @click="
-                associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
-                  !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-              "
+            <router-link
+              v-if="group.measurements.length > previewedMeasurements(group).length && allele.clingenAlleleId"
+              class="block border-b border-border-light px-5 py-2 text-xs font-semibold text-link hover:underline"
+              :to="{name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}}"
+              >{{ group.measurements.length - previewedMeasurements(group).length }} more on the variant page
+              &rarr;</router-link
             >
-              {{
-                associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                  ? 'Show less'
-                  : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
-              }}
-            </button>
-          </div>
+          </section>
         </div>
 
         <div v-else-if="allele.variantsStatus === 'Loading'" class="px-5 py-4">
           <MvLoader text="Loading assay results..." />
         </div>
 
-        <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
-          <!-- VRS Digest based searches may not always resolve to variants with a ClinGen Allele ID -->
-          <template v-if="allele.variantUrn && !allele.clingenAlleleId">
-            <p class="mb-3 text-sm text-gray-600">
-              This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
-            </p>
-            <router-link
-              v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
-              class="text-sm font-semibold text-link hover:underline"
-              :to="{name: 'scoreSet', params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)}}"
-            >
-              View score set &rarr;
-            </router-link>
-          </template>
-          <Message v-else> No score sets containing this variant were found in MaveDB. </Message>
+        <!-- VRS digest searches may not resolve to a ClinGen Allele ID -->
+        <div
+          v-else-if="allele.variantsStatus === 'Loaded' && allele.variantUrn && !allele.clingenAlleleId"
+          class="px-5 py-4"
+        >
+          <p class="mb-3 text-sm text-gray-600">
+            This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
+          </p>
+          <router-link
+            v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
+            class="text-sm font-semibold text-link hover:underline"
+            :to="{
+              name: 'scoreSet',
+              params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)},
+              query: {variant: allele.variantUrn}
+            }"
+          >
+            View score set &rarr;
+          </router-link>
         </div>
+        <!-- Worded and styled like a measurement group's header, so an empty result reads as a count of zero. -->
+        <p v-else-if="allele.variantsStatus === 'Loaded'" class="bg-bg px-5 py-2 text-xs-plus text-text-secondary">
+          <span class="font-semibold text-text-primary">No measurements</span> of this variant in MaveDB
+        </p>
 
         <div v-else-if="allele.variantsStatus === 'Error'" class="px-5 py-4">
           <Message :closable="false" severity="error"> Failed to load variant measurements. </Message>
@@ -608,7 +522,7 @@
     <!-- HOW IT WORKS (shown when no results) -->
     <section v-if="!searchResultsVisible" class="-mx-6 border-y border-gray-200 bg-white px-6 py-10">
       <div class="mx-auto max-w-[900px] text-center">
-        <div class="text-lg font-bold text-dark">How MaveMD works</div>
+        <div class="text-lg font-bold text-text-dark">How MaveMD works</div>
         <div class="mb-8 text-sm text-gray-500">From variant identifier to clinical evidence in three steps</div>
         <div
           aria-label="How MaveMD works"
@@ -619,11 +533,11 @@
             <div class="flex flex-col items-center gap-2.5 px-3" role="listitem">
               <div
                 aria-hidden="true"
-                class="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-sage text-base font-bold text-dark"
+                class="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-sage text-base font-bold text-text-dark"
               >
                 {{ step.number }}
               </div>
-              <div class="text-sm font-bold text-dark">{{ step.title }}</div>
+              <div class="text-sm font-bold text-text-dark">{{ step.title }}</div>
               <div class="text-sm leading-relaxed text-gray-500">{{ step.description }}</div>
             </div>
             <div
@@ -640,9 +554,27 @@
 
     <!-- SCORE SETS TABLE (shown when no results) -->
     <section v-if="!searchResultsVisible" class="mx-auto w-full max-w-[1000px] px-6 py-10">
-      <div class="text-lg font-bold text-dark">MaveMD score sets</div>
-      <div class="text-sm text-gray-500">
-        {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div class="text-lg font-bold text-text-dark">MaveMD score sets</div>
+          <div class="text-sm text-gray-500">
+            <template v-if="!maveMdScoreSetsLoading">
+              {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+            </template>
+          </div>
+        </div>
+        <div
+          v-if="!maveMdScoreSetsError"
+          class="flex w-full shrink-0 overflow-hidden rounded-lg border border-gray-200 focus-within:border-sage bg-white transition-colors sm:w-64"
+        >
+          <InputText
+            v-model="filterGene"
+            aria-label="Filter score sets by gene"
+            class="min-w-0 flex-1 !rounded-none !border-none !shadow-none"
+            placeholder="Filter by gene (e.g. BRCA1)"
+            type="search"
+          />
+        </div>
       </div>
 
       <Message v-if="maveMdScoreSetsError" class="mt-5" :closable="false" severity="error">
@@ -655,75 +587,120 @@
         </button>
       </Message>
 
-      <table v-else aria-label="MaveMD score sets by gene" class="mt-5 w-full table-fixed border-collapse text-sm">
-        <thead>
-          <tr>
-            <th
-              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
-              style="width: 55%"
-            >
-              Score set
-            </th>
-            <th
-              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
-              style="width: 30%"
-            >
-              Publication
-            </th>
-            <th
-              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-center text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
-              style="width: 15%"
-            >
-              Calibrations
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="({gene, urns}, gi) in maveMdScoreSetsGroupedByGene" :key="gene">
-            <tr>
-              <td class="border-b border-gray-100 bg-gray-50/60 px-3 py-1.5 text-gray-700" colspan="3">
-                <span v-if="gi === 0" class="mr-2 text-[0.625rem] font-bold uppercase tracking-wider text-gray-400"
-                  >Gene</span
-                >
-                <span class="font-semibold">{{ gene }}</span>
-              </td>
-            </tr>
-            <tr v-for="urn in urns" :key="urn">
-              <td class="border-b border-gray-100 py-2 pl-5 pr-3">
-                <MvEntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
-              </td>
-              <td class="border-b border-gray-100 px-3 py-2">
-                <router-link
-                  v-if="maveMdScoreSets[urn]"
-                  class="text-sm text-link"
-                  :to="{name: 'scoreSet', params: {urn}}"
-                >
-                  {{ getScoreSetShortName(maveMdScoreSets[urn]!) }}
-                </router-link>
-              </td>
-              <td class="border-b border-gray-100 px-3 py-2 text-center">
-                <router-link :to="{name: 'scoreSetCalibrations', params: {urn}}">
-                  <span
-                    class="inline-block whitespace-nowrap rounded-full border border-purple-300 bg-purple-50 px-2.5 py-px text-xs font-semibold text-purple-800"
-                  >
-                    {{ calibrationCountWithEvidence(urn) }} / {{ calibrationCountTotal(urn) }}
-                  </span>
-                </router-link>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-
-      <div v-if="!guideExpanded" class="mt-3 flex items-center gap-3 border-t border-gray-200 pt-3">
-        <button
-          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-link hover:underline"
-          @click="guideExpanded = true"
-        >
-          Show all {{ maveMdScoreSetUrns.length }} datasets
-        </button>
-        <span class="text-xs text-gray-400">Showing first 8 genes</span>
+      <div v-else-if="maveMdScoreSetsLoading" class="mt-5">
+        <MvLoader text="Loading score sets..." />
       </div>
+
+      <template v-else>
+        <table aria-label="MaveMD score sets by gene" class="mt-5 w-full table-fixed border-collapse text-base">
+          <thead>
+            <tr>
+              <th
+                class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+                style="width: 60%"
+              >
+                Score set
+              </th>
+              <th
+                class="border-b-2 border-gray-200 pb-2.5 pr-3 text-right text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+                style="width: 15%"
+              >
+                Variants
+              </th>
+              <th
+                class="border-b-2 border-gray-200 pb-2.5 pl-3 text-center text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+                style="width: 25%"
+              >
+                <span
+                  v-tooltip.top="{
+                    value: CALIBRATION_STATUS_LEGEND_HTML,
+                    escape: false,
+                    fitContent: false,
+                    autoHide: false,
+                    class: 'calibration-status-tooltip'
+                  }"
+                  class="cursor-help border-b border-dashed border-gray-300"
+                >
+                  Calibrations
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="({gene, urns}, gi) in maveMdScoreSetsGroupedByGene" :key="gene">
+              <tr>
+                <td class="border-b border-gray-100 bg-gray-50/60 px-3 py-1.5 text-gray-700" colspan="3">
+                  <span v-if="gi === 0" class="mr-2 text-[0.625rem] font-bold uppercase tracking-wider text-gray-400"
+                    >Gene</span
+                  >
+                  <span class="font-semibold">{{ gene }}</span>
+                </td>
+              </tr>
+              <tr v-for="urn in urns" :key="urn">
+                <td class="border-b border-gray-100 py-3 pl-5 pr-3 align-top">
+                  <span class="font-semibold">
+                    <MvEntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
+                  </span>
+                  <template v-if="maveMdScoreSets[urn]">
+                    <div
+                      v-if="maveMdScoreSets[urn]!.shortDescription"
+                      class="mt-0.5 line-clamp-2 text-sm text-gray-500"
+                    >
+                      {{ maveMdScoreSets[urn]!.shortDescription }}
+                    </div>
+                    <div class="mt-1">
+                      <a
+                        v-if="getPublicationUrl(maveMdScoreSets[urn]!)"
+                        class="text-xs font-medium text-gray-500 hover:text-link hover:underline"
+                        :href="getPublicationUrl(maveMdScoreSets[urn]!)!"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        {{ getScoreSetShortName(maveMdScoreSets[urn]!) }}
+                        <span aria-hidden="true">&nearr;</span>
+                      </a>
+                      <span
+                        v-else-if="maveMdScoreSets[urn]!.primaryPublicationIdentifiers.length > 0"
+                        class="text-xs font-medium text-gray-500"
+                        >{{ getScoreSetShortName(maveMdScoreSets[urn]!) }}</span
+                      >
+                      <span v-else class="text-xs italic text-gray-400">No linked publication</span>
+                    </div>
+                  </template>
+                </td>
+                <td class="border-b border-gray-100 px-3 py-3 text-right align-top tabular-nums">
+                  <span class="font-semibold text-text-dark">{{ formatVariantCount(maveMdScoreSets[urn]) }}</span>
+                </td>
+                <td class="border-b border-gray-100 px-3 py-3 text-center align-top">
+                  <router-link :to="{name: 'scoreSetCalibrations', params: {urn}}">
+                    <span
+                      class="inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                      :class="calibrationStatus(urn).badgeClass"
+                    >
+                      {{ calibrationStatus(urn).label }}
+                    </span>
+                  </router-link>
+                </td>
+              </tr>
+            </template>
+            <tr v-if="maveMdScoreSetsGroupedByGene.length === 0">
+              <td class="border-b border-gray-100 px-3 py-6 text-center text-sm text-gray-500" colspan="3">
+                No genes match "{{ filterGene }}".
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div v-if="!guideExpanded && !filterGene" class="mt-3 flex items-center gap-3 border-t border-gray-200 pt-3">
+          <button
+            class="cursor-pointer border-none bg-transparent text-sm font-semibold text-link hover:underline"
+            @click="guideExpanded = true"
+          >
+            Show all {{ maveMdScoreSetUrns.length }} datasets
+          </button>
+          <span class="text-xs text-gray-400">Showing first 8 genes</span>
+        </div>
+      </template>
     </section>
   </MvLayout>
 </template>
@@ -740,7 +717,8 @@ import {useToast} from 'primevue/usetoast'
 import {useHead} from '@unhead/vue'
 
 import MvCollapsible from '@/components/common/MvCollapsible.vue'
-import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import MvMeasurementRow from '@/components/search/MvMeasurementRow.vue'
+import MvMeasurementGroupHeader from '@/components/variant/MvMeasurementGroupHeader.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import {
   type AlleleResult,
@@ -754,11 +732,19 @@ import {
   vrsDigestRegex,
   scoreSetUrnFromVariantUrn,
   extractIdFromUrl,
-  createAlleleResult
+  createAlleleResult,
+  mergeAlleleSpellings
 } from '@/lib/mavemd'
+import {
+  buildMeasurementGroups,
+  groupSubject,
+  hasMixedLevels,
+  type MeasurementGroup,
+  searchPreview
+} from '@/lib/measurement-groups'
 import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
-import {getScoreSetShortName} from '@/lib/score-sets'
+import {getScoreSetShortName, getPublicationUrl} from '@/lib/score-sets'
 import {type GenomeAssembly, GENOME_ASSEMBLY_NAMES, gnomadIdToHgvs, otherAssembly} from '@/lib/gnomad'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
 import {SEARCH_COLORS, SEARCH_PLACEHOLDERS} from '@/data/search'
@@ -778,15 +764,30 @@ import {
   getAlleleByGnomad,
   getGeneBySymbol
 } from '@/api/clingen'
-import {getCollection, lookupVariantsByClingenId} from '@/api/mavedb'
+import {getCollection} from '@/api/mavedb'
 import {getErrorResponse} from '@/lib/errors'
-import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
+import {getAlleleMeasurements, lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
 import {useEntityCache} from '@/composables/entity-cache'
 import MvLoader from '@/components/common/MvLoader.vue'
 
-const SCORE_SETS_TO_SHOW = 5
+/**
+ * Legend for the calibration-status column header, rendered as HTML so the states read as a scannable bullet list.
+ * Passed to the tooltip with `escape: false`; the markup is static, so there is no injection surface.
+ */
+const CALIBRATION_STATUS_LEGEND_HTML = `
+  <div class="cal-status-legend">
+    <div class="cal-status-legend__title">ACMG/AMP calibration status</div>
+    <ul>
+      <li><span class="cal-status-legend__label">None</span> — no calibrations</li>
+      <li><span class="cal-status-legend__label">Uncalibrated</span> — calibrations exist but assign no evidence strengths</li>
+      <li><span class="cal-status-legend__label">Research use only</span> — the only evidence-bearing calibrations are RUO</li>
+      <li><span class="cal-status-legend__label">Calibrated</span> — at least one calibration assigns evidence strengths for clinical use</li>
+    </ul>
+  </div>
+`
 
 type ScoreSet = components['schemas']['ScoreSet']
+type AlleleMeasurement = components['schemas']['AlleleMeasurement']
 type TargetGene = components['schemas']['TargetGene']
 
 export default defineComponent({
@@ -796,10 +797,11 @@ export default defineComponent({
     MvEntityLink,
     InputText,
     MvCollapsible,
+    MvMeasurementGroupHeader,
+    MvMeasurementRow,
     MvLayout,
     Message,
     MvLoader,
-    MvScoreSetRow,
     PSelect
   },
 
@@ -810,11 +812,23 @@ export default defineComponent({
     const router = useRouter()
     const toast = useToast()
     const {getEntity} = useEntityCache()
-    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn, AVE_CLINICAL_APPLICATION}
+    return {
+      route,
+      router,
+      toast,
+      getEntity,
+      getScoreSetShortName,
+      getPublicationUrl,
+      scoreSetUrnFromVariantUrn,
+      AVE_CLINICAL_APPLICATION,
+      CALIBRATION_STATUS_LEGEND_HTML
+    }
   },
 
   data: function () {
     return {
+      // Search results preview each measurement group; the variant page lists them all.
+      searchPreviewCount: 3,
       loading: false,
       defaultSearchVisible: true,
       searchSuggestionsVisible: false,
@@ -842,21 +856,20 @@ export default defineComponent({
       gnomadReading: null as {id: string; assembly: GenomeAssembly; mismatch: 'reference' | 'position' | null} | null,
       /** What an "Any" search resolved the string to; null when the search type was chosen explicitly. */
       detectedSearchType: null as string | null,
-      nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
-      proteinScoreSetListIsExpanded: [] as Array<boolean>,
-      associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
-      defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
       guideExpanded: false,
+      filterGene: '',
       maveMdScoreSetUrns: [] as string[],
       maveMdScoreSets: {} as {[urn: string]: ScoreSet | undefined},
       maveMdScoreSetsError: false,
+      maveMdScoreSetsLoading: true,
       howItWorksSteps: HOW_IT_WORKS_STEPS
     }
   },
 
   computed: {
-    maveMdScoreSetsGroupedByGene: function () {
-      const groups = _(this.maveMdScoreSetUrns)
+    /** All score sets grouped by gene name, sorted alphabetically — the unfiltered, unsliced source list. */
+    allScoreSetsGroupedByGene: function (): Array<{gene: string; urns: string[]}> {
+      return _(this.maveMdScoreSetUrns)
         .groupBy((urn) => {
           const scoreSet = this.maveMdScoreSets[urn]
           if (!scoreSet) return 'Unknown'
@@ -866,7 +879,14 @@ export default defineComponent({
         .map(([gene, urns]) => ({gene, urns}))
         .sortBy(({gene}) => gene.toLowerCase())
         .value()
-      return this.guideExpanded ? groups : groups.slice(0, 8)
+    },
+    maveMdScoreSetsGroupedByGene: function (): Array<{gene: string; urns: string[]}> {
+      // A gene filter searches the whole collection, so it bypasses the eight-gene preview and returns every match.
+      const filter = this.filterGene.trim().toLowerCase()
+      if (filter) {
+        return this.allScoreSetsGroupedByGene.filter(({gene}) => gene.toLowerCase().includes(filter))
+      }
+      return this.guideExpanded ? this.allScoreSetsGroupedByGene : this.allScoreSetsGroupedByGene.slice(0, 8)
     },
     searchIsClearable: function () {
       return (
@@ -933,18 +953,10 @@ export default defineComponent({
   },
 
   watch: {
-    alleles: {
-      handler: function (newValue) {
-        this.nucleotideScoreSetListIsExpanded = newValue.map(() => false)
-        this.proteinScoreSetListIsExpanded = newValue.map(() => false)
-        this.associatedNucleotideScoreSetListIsExpanded = newValue.map(() => false)
-      }
-    },
     searchType: {
       handler(newVal, oldVal) {
         if (newVal !== oldVal && this.defaultSearchVisible) {
-          // Don't clear searchText on initial hydration from query params (oldVal is null).
-          // Only clear when the user actively switches search type.
+          // oldVal is null on initial hydration from query params; only clear on an actual user-driven switch.
           if (oldVal != null) {
             this.searchText = ''
           }
@@ -989,8 +1001,7 @@ export default defineComponent({
     inputGene(newVal) {
       const normalized = newVal?.toUpperCase() ?? null
       if (newVal && newVal !== normalized) {
-        // Setting inputGene re-triggers this watcher with the normalized value, return
-        // early to avoid syncing query params twice.
+        // Re-entrant: normalizing retriggers this watcher, so return early to avoid a duplicate sync.
         this.inputGene = normalized
         return
       }
@@ -1093,11 +1104,15 @@ export default defineComponent({
     },
     fetchMaveMdScoreSets: async function () {
       this.maveMdScoreSetsError = false
+      this.maveMdScoreSetsLoading = true
       try {
         if (this.maveMdScoreSetUrns.length === 0) {
           const collection = await getCollection(MAVEMD_COLLECTION_URN)
           this.maveMdScoreSetUrns = collection.scoreSetUrns
         }
+        // The URN list is what "loading" means to the user; per-score-set detail still streams in below and fills
+        // out each row progressively rather than blocking the whole table on the slowest one.
+        this.maveMdScoreSetsLoading = false
         for (const urn of this.maveMdScoreSetUrns) {
           if (!this.maveMdScoreSets[urn]) {
             const scoreSet = await this.getEntity('scoreSet', urn)
@@ -1107,6 +1122,7 @@ export default defineComponent({
       } catch (error) {
         console.error('Failed to load MaveMD score sets', error)
         this.maveMdScoreSetsError = true
+        this.maveMdScoreSetsLoading = false
       }
     },
     searchForText: async function (example: string, searchType: string) {
@@ -1362,9 +1378,7 @@ export default defineComponent({
           let mappedVariants
           try {
             mappedVariants = await lookupVariantsByVrsDigest(searchStr)
-          } catch (error: unknown) {
-            const {status} = getErrorResponse(error)
-            if (status === 404) {
+            if (mappedVariants.length === 0) {
               this.toast.add({
                 severity: 'warn',
                 summary: 'VRS identifier not found',
@@ -1373,6 +1387,7 @@ export default defineComponent({
               })
               return
             }
+          } catch (error: unknown) {
             throw error
           }
           for (const mappedVariant of mappedVariants) {
@@ -1392,7 +1407,7 @@ export default defineComponent({
                 transcriptAlleles: [],
                 maneCoordinates: [],
                 variantsStatus: 'Loaded',
-                variants: {nucleotide: [], protein: [], associatedNucleotide: []}
+                measurements: []
               })
             }
           }
@@ -1428,15 +1443,20 @@ export default defineComponent({
               if (searchType !== 'hgvs' || aminoAcidAlleles[i].hgvs?.includes(searchString)) {
                 const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
                 if (transcripts.length > 0) {
+                  // Policy: one result per protein change, not per transcript spelling. Anchor on the PA
+                  // (its equivalence class already returns protein-level evidence) and merge each
+                  // transcript's spelling onto it.
+                  const card = createAlleleResult(result, maneStatus)
                   for (let j = 0; j < transcripts.length; j++) {
                     const associatedId = extractIdFromUrl(transcripts[j]?.['@id'])
-                    const associatedData = await getAlleleByCaId(associatedId!)
-                    this.alleles.push(createAlleleResult(associatedData, maneStatus))
+                    if (!associatedId) continue
+                    mergeAlleleSpellings(card, createAlleleResult(await getAlleleByCaId(associatedId), maneStatus))
                   }
+                  this.alleles.push(card)
                 } else {
-                  const bareAllele = createAlleleResult(result, null)
-                  bareAllele.canonicalAlleleName = searchStr
-                  this.alleles.push(bareAllele)
+                  // No transcripts to merge; createAlleleResult titles it from the record's own protein
+                  // hgvs, falling back to the ClinGen ID.
+                  this.alleles.push(createAlleleResult(result, null))
                 }
               }
               break
@@ -1470,58 +1490,43 @@ export default defineComponent({
         })
       }
     },
+    // The searched change's measurements in the variant page's groups (API ranking kept within each).
+    measurementGroups(allele: AlleleResult): MeasurementGroup[] {
+      return buildMeasurementGroups(allele.measurements)
+    },
+    anchorIsProtein(allele: AlleleResult): boolean {
+      return allele.clingenAlleleId?.startsWith('PA') ?? false
+    },
+    hasMixedLevels,
+    previewedMeasurements(group: MeasurementGroup): AlleleMeasurement[] {
+      return searchPreview(group, this.searchPreviewCount)
+    },
+    groupSubject,
     searchVariants: async function () {
       for (const allele of this.alleles) {
         const caId = allele.clingenAlleleId
         if (!caId) continue
         allele.variantsStatus = 'Loading'
         try {
-          const data = await lookupVariantsByClingenId([caId])
-
-          if (caId.startsWith('CA')) {
-            allele.variants.nucleotide = data[0]?.exactMatch?.variantEffectMeasurements || []
-            allele.variants.protein = (data[0]?.equivalentAa || []).flatMap(
-              (entry) => entry.variantEffectMeasurements || []
-            )
-            allele.variants.associatedNucleotide = (data[0]?.equivalentNt || []).flatMap(
-              (entry) => entry.variantEffectMeasurements || []
-            )
-          } else if (caId.startsWith('PA')) {
-            allele.variants.protein = data[0]?.exactMatch?.variantEffectMeasurements || []
-            allele.variants.nucleotide = (data[0]?.equivalentNt || []).flatMap(
-              (entry) => entry.variantEffectMeasurements || []
-            )
-          }
+          // Full equivalence class: a CA query returns its protein consequence and the other encodings of it,
+          // a PA query its nt encodings — the same set the variant page shows. Research-use-only calls stand in as
+          // they do by default there, labeled as such.
+          allele.measurements = await getAlleleMeasurements(caId, {includeResearchUseOnly: true})
           allele.variantsStatus = 'Loaded'
         } catch (error: unknown) {
-          allele.variants = {nucleotide: [], protein: [], associatedNucleotide: []}
+          allele.measurements = []
           console.log('Error while loading MaveDB search results for variant', error)
+          allele.variantsStatus = 'Error'
           const {status} = getErrorResponse(error)
-          if (status === 404) {
-            allele.variantsStatus = 'Loaded'
-            this.toast.add({
-              severity: 'info',
-              summary: 'No results found',
-              detail: 'No variants match the provided search criteria.',
-              life: 10000
-            })
-          } else if (status >= 500) {
-            allele.variantsStatus = 'Error'
-            this.toast.add({
-              severity: 'error',
-              summary: 'Server Error',
-              detail: 'The server encountered an unexpected error. Please try again later.',
-              life: 10000
-            })
-          } else {
-            allele.variantsStatus = 'Error'
-            this.toast.add({
-              severity: 'error',
-              summary: 'Error fetching results',
-              detail: 'An error occurred while fetching MaveDB variants.',
-              life: 10000
-            })
-          }
+          this.toast.add({
+            severity: 'error',
+            summary: status >= 500 ? 'Server Error' : 'Error fetching results',
+            detail:
+              status >= 500
+                ? 'The server encountered an unexpected error. Please try again later.'
+                : 'An error occurred while fetching MaveDB variants.',
+            life: 10000
+          })
         }
       }
     },
@@ -1616,24 +1621,100 @@ export default defineComponent({
       }
     },
 
-    calibrationCountWithEvidence(urn: string): number {
-      const scoreSet = this.maveMdScoreSets[urn]
-      if (!scoreSet?.scoreCalibrations) return 0
-      return scoreSet.scoreCalibrations.filter(
-        (calibration: components['schemas']['ScoreCalibration']) =>
-          Array.isArray(calibration.functionalClassifications) &&
-          calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
-      ).length
+    /** A calibration carries evidence when at least one of its functional classifications assigns an ACMG strength. */
+    calibrationHasEvidence(calibration: components['schemas']['ScoreCalibration']): boolean {
+      return (
+        Array.isArray(calibration.functionalClassifications) &&
+        calibration.functionalClassifications.some((range) => range.acmgClassification)
+      )
     },
 
-    calibrationCountTotal(urn: string): number {
-      return this.maveMdScoreSets[urn]?.scoreCalibrations?.length || 0
+    /**
+     * Derive a labeled ACMG calibration status for a score set, replacing the opaque "with-evidence / total" badge.
+     *
+     * A single calibration that assigns ACMG evidence strengths is enough to call a score set calibrated — the status
+     * does not require every calibration to carry evidence. The one qualification is research-use-only (RUO): when the
+     * only evidence-bearing calibrations are RUO, the score set is flagged as such rather than shown as clinically
+     * calibrated, since RUO calibrations are not intended for clinical interpretation.
+     */
+    calibrationStatus(urn: string): {label: string; badgeClass: string; tooltip: string} {
+      const calibrations = this.maveMdScoreSets[urn]?.scoreCalibrations ?? []
+      const withEvidence = calibrations.filter((c) => this.calibrationHasEvidence(c))
+      const clinicalEvidence = withEvidence.filter((c) => !c.researchUseOnly)
+      const muted = 'border-gray-200 bg-gray-50 text-gray-500'
+
+      if (calibrations.length === 0) {
+        return {
+          label: 'None',
+          badgeClass: muted,
+          tooltip: 'This score set has no clinical evidence calibrations.'
+        }
+      }
+      if (withEvidence.length === 0) {
+        return {
+          label: 'Uncalibrated',
+          badgeClass: muted,
+          tooltip: 'Calibrations exist but none assign ACMG/AMP evidence strengths.'
+        }
+      }
+      if (clinicalEvidence.length === 0) {
+        return {
+          label: 'Research use only',
+          badgeClass: 'border-orange-border bg-orange-light text-orange-cta-dark',
+          tooltip:
+            'The only calibrations assigning ACMG/AMP evidence strengths are marked research-use-only, so they are not intended for clinical variant interpretation.'
+        }
+      }
+      return {
+        label: 'Calibrated',
+        badgeClass: 'border-published-dot bg-published-light text-published',
+        tooltip: 'At least one calibration assigns ACMG/AMP evidence strengths for clinical variant interpretation.'
+      }
+    },
+
+    /** Format a variant count with a thousands separator, or an em dash when the count is unavailable. */
+    formatVariantCount(scoreSet: ScoreSet | undefined): string {
+      return typeof scoreSet?.numVariants === 'number' ? scoreSet.numVariants.toLocaleString() : '—'
     }
   }
 })
 </script>
 
 <style>
+/* Calibration-status legend tooltip. Tooltips teleport to the body, so these rules cannot be scoped.
+   PrimeVue applies the custom class to the same root element as .p-tooltip (not a wrapper around it),
+   so the override must target that root, which is where the theme's max-width is set. */
+.p-tooltip.calibration-status-tooltip {
+  max-width: 30rem;
+}
+
+.calibration-status-tooltip .p-tooltip-text {
+  white-space: normal;
+}
+
+.cal-status-legend__title {
+  margin-bottom: 0.375rem;
+  font-weight: 700;
+}
+
+.cal-status-legend ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+
+.cal-status-legend li {
+  line-height: 1.4;
+}
+
+.cal-status-legend li + li {
+  margin-top: 0.25rem;
+}
+
+.cal-status-legend__label {
+  font-weight: 600;
+}
+
 /* Guided search PrimeVue Select overrides */
 .guided-select-cell .guided-select {
   width: 100%;

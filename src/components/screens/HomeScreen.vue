@@ -93,16 +93,16 @@
     </template>
 
     <!-- Paths: Explore + Contribute -->
-    <div class="mt-9 grid md:grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5">
+    <div class="mt-9 grid md:grid-cols-1 lg:grid-cols-2 gap-5">
       <!-- Explore -->
-      <div class="flex flex-col rounded-lg border border-border bg-white px-8 py-7">
-        <h2 class="mb-1.5 text-xl font-bold text-sage">Explore datasets</h2>
+      <div class="mave-card flex flex-col px-8 py-7">
+        <h2 class="mb-1.5 text-xl font-bold text-sage-dark">Explore datasets</h2>
         <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
           Browse published datasets by gene, organism, or keyword. Over 2,700 datasets covering 700+ human genes from
           community-contributed MAVE experiments.
         </p>
         <div class="mt-auto mb-2 text-sm font-bold uppercase tracking-wide text-text-muted">Browse by</div>
-        <div class="grid md:grid-cols-3 gap-2.5">
+        <div class="grid md:grid-cols-2 gap-2.5">
           <router-link
             v-for="cat in BROWSE_CATEGORIES"
             :key="cat.label"
@@ -114,15 +114,19 @@
             <div class="text-xs leading-snug text-text-secondary">{{ cat.description }}</div>
           </router-link>
         </div>
+        <p class="mt-2.5 text-xs text-text-secondary">
+          Learn about dataset search in the
+          <a class="font-semibold text-link" :href="SEARCH_GUIDE_HREF">search guide &rarr;</a>
+        </p>
       </div>
 
       <!-- Contribute -->
-      <div class="flex flex-col rounded-lg border border-border bg-white px-8 py-7">
-        <h2 class="mb-1.5 text-xl font-bold text-sage">Contribute data</h2>
+      <div class="mave-card flex flex-col px-8 py-7">
+        <h2 class="mb-1.5 text-xl font-bold text-sage-dark">Contribute data</h2>
         <p class="mb-4.5 text-sm leading-relaxed text-text-secondary">
           Upload your MAVE assay results to make functional variant data available to the community.
         </p>
-        <div class="mt-auto mb-2 text-sm font-bold uppercase tracking-wide text-text-muted">Start with</div>
+        <div class="mt-auto mb-2 text-sm font-bold uppercase tracking-wide text-text-muted">Contribute a</div>
         <div class="grid md:grid-cols-1 lg:grid-cols-2 gap-2.5">
           <router-link
             v-for="cat in CONTRIBUTE_CATEGORIES"
@@ -135,6 +139,10 @@
             <div class="text-xs leading-snug text-text-secondary">{{ cat.description }}</div>
           </router-link>
         </div>
+        <p class="mt-2.5 text-xs text-text-secondary">
+          First time submitting data? Start with the
+          <a class="font-semibold text-link" :href="SUBMISSION_GUIDE_HREF">submission guide &rarr;</a>
+        </p>
       </div>
     </div>
 
@@ -144,11 +152,7 @@
     <section aria-label="Featured collections" class="mb-9">
       <div class="mb-3.5 text-lg font-bold text-text-primary">Featured collections</div>
       <div class="grid grid-cols-2 gap-4">
-        <div
-          v-for="coll in FEATURED_COLLECTIONS"
-          :key="coll.title"
-          class="rounded-lg border border-border bg-white p-5"
-        >
+        <div v-for="coll in FEATURED_COLLECTIONS" :key="coll.title" class="mave-card p-5">
           <img
             :alt="coll.title"
             class="mb-3 block h-8 w-auto max-w-[120px] object-contain object-left"
@@ -164,7 +168,7 @@
     <!-- What's new -->
     <section aria-label="What's new" class="mb-9">
       <div class="mb-3.5 text-lg font-bold text-text-primary">What's new</div>
-      <div class="overflow-hidden rounded-lg border border-border bg-white">
+      <div class="mave-card overflow-hidden">
         <div
           v-for="(item, idx) in newsItems"
           :key="idx"
@@ -194,7 +198,7 @@
         <div class="text-lg font-bold text-text-primary">Recently published</div>
         <router-link class="text-sm text-link" to="/search">View all</router-link>
       </div>
-      <div class="overflow-hidden rounded-lg border border-border bg-white divide-y divide-border-light">
+      <div class="mave-card overflow-hidden divide-y divide-border-light">
         <MvScoreSetRow
           v-for="scoreSet in recentlyPublished"
           :key="scoreSet.urn"
@@ -227,7 +231,14 @@ import Select from 'primevue/select'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
-import {BROWSE_CATEGORIES, CONTRIBUTE_CATEGORIES, FEATURED_COLLECTIONS, WATERMARK_BARS} from '@/data/home'
+import {
+  BROWSE_CATEGORIES,
+  CONTRIBUTE_CATEGORIES,
+  FEATURED_COLLECTIONS,
+  SEARCH_GUIDE_HREF,
+  SUBMISSION_GUIDE_HREF,
+  WATERMARK_BARS
+} from '@/data/home'
 import {NEWS_ITEMS, NEWS_ITEMS_LIMIT, NEWS_TAG_STYLES} from '@/data/news'
 import {SEARCH_COLORS, SEARCH_PLACEHOLDERS, SEARCH_TYPES} from '@/data/search'
 import {geneSymbolRegex, geneSymbolSearchTarget} from '@/lib/mavemd'
@@ -254,7 +265,9 @@ export default defineComponent({
       SEARCH_COLORS,
       BROWSE_CATEGORIES,
       CONTRIBUTE_CATEGORIES,
-      FEATURED_COLLECTIONS
+      FEATURED_COLLECTIONS,
+      SEARCH_GUIDE_HREF,
+      SUBMISSION_GUIDE_HREF
     }
   },
 

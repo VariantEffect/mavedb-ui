@@ -84,12 +84,19 @@ const {downloadFile, downloadMultipleData, customDialogVisible, dataTypeOptions}
 
 ## Variant Coordinates (`src/composables/use-variant-coordinates.ts`)
 
-Stateless utilities for resolving variant HGVS coordinates based on display mode (raw vs mapped). Shared between ScoreSetView (variant search, labels, sequence type detection) and ScoreSetHeatmap.
+Stateless resolution of a lean variant's HGVS coordinate across two orthogonal axes: sequence
+**level** (`dna` ↔ `protein`) and **frame** (`raw` = submitted/target numbering ↔ `mapped` =
+reference numbering). `coordinateFor` is the single source of truth — every derivation (heatmap
+x/y, axis availability, labels, tooltips) resolves through it, so the (level, frame) → coordinate
+mapping lives in one place. The frame axis is load-bearing: `raw` and `mapped` are genuinely
+different coordinate systems, so flipping frame reprojects the grid, it does not merely relabel it.
+Shared between ScoreSetView (search, labels, level options) and ScoreSetHeatmap (plotting).
 
 ```ts
-const {getHgvsNt, getHgvsPro, labelForVariant, sequenceTypeOptions} = useVariantCoordinates()
-const nt = getHgvsNt(variant, useMapped) // resolved NT coordinate
-const options = sequenceTypeOptions(variants, useMapped) // [{title: 'DNA', value: 'dna'}, ...]
+const {coordinateFor, sequenceTypeOptions, resolveLevel, labelForVariant} = useVariantCoordinates()
+coordinateFor(variant, 'dna', 'mapped') // → HgvsField | null (null for protein assays — no mapped coding, mavedb-api#784)
+sequenceTypeOptions(variants, 'mapped') // → [{title: 'DNA', value: 'dna'}, ...] available for that frame
+resolveLevel(variants, 'protein', 'mapped') // → the level to display, falling back when the desired one is stranded
 ```
 
 ## Entity Cache (`src/composables/entity-cache.ts`)

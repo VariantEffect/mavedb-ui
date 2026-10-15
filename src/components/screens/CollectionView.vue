@@ -121,7 +121,7 @@
 
     <div v-else-if="item" class="mx-auto w-full space-y-6 px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1200px">
       <template v-for="section in entitySections" :key="section.type">
-        <div class="overflow-hidden rounded-lg border border-border bg-white">
+        <div class="mave-card overflow-hidden">
           <div class="flex items-center justify-between border-b border-border-light px-5 py-4">
             <span class="text-[15px] font-bold text-text-dark">{{ section.title }} ({{ section.items.length }})</span>
             <PButton
@@ -159,9 +159,8 @@
       </template>
 
       <!-- User Permissions -->
-      <div class="relative overflow-hidden rounded-lg border border-border bg-white">
-        <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sage via-mint to-orange-cta" />
-        <div class="flex items-center justify-between border-b border-border-light px-5 py-4 pt-[19px]">
+      <div class="mave-card">
+        <div class="flex items-center justify-between border-b border-border-light px-5 py-4">
           <span class="text-[15px] font-bold text-text-dark">User Permissions</span>
           <div v-if="userIsAuthorized.add_role">
             <CollectionPermissionsEditor :collection-urn="item.urn" @saved="childComponentEditedCollection" />

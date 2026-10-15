@@ -6,6 +6,7 @@
   <MaintenanceScreen v-if="showMaintenanceScreen" />
   <ConfirmDialog></ConfirmDialog>
   <Toast position="bottom-right" />
+  <MvKeyDrawer />
 </template>
 
 <script>
@@ -13,11 +14,12 @@ import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 import {mapActions, mapState} from 'vuex'
 
+import MvKeyDrawer from '@/components/common/MvKeyDrawer.vue'
 import MaintenanceScreen from '@/components/screens/MaintenanceScreen.vue'
 import {useMaintenance} from '@/composables/use-maintenance'
 
 export default {
-  components: {ConfirmDialog, MaintenanceScreen, Toast},
+  components: {ConfirmDialog, MaintenanceScreen, MvKeyDrawer, Toast},
 
   setup() {
     const {showMaintenanceScreen} = useMaintenance()

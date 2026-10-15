@@ -1,6 +1,6 @@
 <template>
   <div class="detail-row flex flex-col sm:flex-row text-xs-plus py-[5px] gap-0.5 sm:gap-4" :style="{alignItems: align}">
-    <span class="font-semibold text-text-muted sm:min-w-[160px] shrink-0">{{ label }}</span>
+    <span v-key-term="term" class="font-semibold text-text-muted sm:min-w-[160px] shrink-0">{{ label }}</span>
     <span class="detail-value text-text-primary leading-normal">
       <slot v-if="hasSlotContent" />
       <template v-else-if="value != null">{{ value }}</template>
@@ -10,13 +10,14 @@
 </template>
 
 <script lang="ts">
-import {Comment, defineComponent} from 'vue'
+import {Comment, defineComponent, type PropType} from 'vue'
 
 export default defineComponent({
   name: 'MvDetailRow',
 
   props: {
     label: {type: String, required: true},
+    term: {type: String as PropType<string | null>, default: null},
     value: {type: [String, Number, null], default: null},
     fallback: {type: String, default: 'N/A'},
     align: {type: String, default: 'baseline'}

@@ -17,7 +17,7 @@
       <div class="flex items-center justify-between border-b border-border-light pb-2">
         <span class="text-sm text-text-muted">{{ selectionSummary }}</span>
         <button
-          class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage hover:underline"
+          class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage-strong hover:underline"
           type="button"
           @click="toggleAll()">
           {{ allSelected ? 'Select none' : 'Select all' }}
@@ -39,6 +39,7 @@
             :class="{'pl-3': subsection.label}">
             <Checkbox v-model="selected" :value="entry.namespace" />
             {{ entry.label }}
+            <span v-if="entry.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
           </label>
         </template>
       </div>

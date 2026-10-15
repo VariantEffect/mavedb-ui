@@ -28,7 +28,7 @@
                   Score Sets
                   <span
                     class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
-                    :class="activeTab === 'score-sets' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                    :class="activeTab === 'score-sets' ? 'bg-sage text-text-dark' : 'bg-chip text-sage-strong'"
                   >
                     {{ tabCounts.scoreSets }}
                   </span>
@@ -37,7 +37,7 @@
                   Experiments
                   <span
                     class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
-                    :class="activeTab === 'experiments' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                    :class="activeTab === 'experiments' ? 'bg-sage text-text-dark' : 'bg-chip text-sage-strong'"
                   >
                     {{ tabCounts.experiments }}
                   </span>
@@ -46,7 +46,7 @@
                   Collections
                   <span
                     class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
-                    :class="activeTab === 'collections' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                    :class="activeTab === 'collections' ? 'bg-sage text-text-dark' : 'bg-chip text-sage-strong'"
                   >
                     {{ tabCounts.collections }}
                   </span>
@@ -55,7 +55,7 @@
                   Calibrations
                   <span
                     class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
-                    :class="activeTab === 'calibrations' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                    :class="activeTab === 'calibrations' ? 'bg-sage text-text-dark' : 'bg-chip text-sage-strong'"
                   >
                     {{ tabCounts.calibrations }}
                   </span>

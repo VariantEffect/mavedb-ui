@@ -30,10 +30,7 @@
       style="max-width: 900px"
     >
       <!-- Experiments list -->
-      <div
-        v-if="item.experiments && item.experiments.length > 0"
-        class="mt-6 overflow-hidden rounded-lg border border-border bg-white"
-      >
+      <div v-if="item.experiments && item.experiments.length > 0" class="mave-card mt-6 overflow-hidden">
         <div class="border-b border-border-light px-5 py-3.5">
           <span class="text-sm font-bold text-text-dark">Experiments ({{ item.experiments.length }})</span>
         </div>
@@ -64,6 +61,7 @@ import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import useItem from '@/composition/item.ts'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {components} from '@/schema/openapi'
 
@@ -93,8 +91,11 @@ export default defineComponent({
     const urnRef = toRef(props, 'itemId')
     const {permissions} = useDatasetPermissions('experiment-set', urnRef, ACTIONS)
 
+    const experimentSet = useItem<ExperimentSet>({itemTypeName: 'experimentSet'})
+    useCanonicalUrn(experimentSet.item, urnRef)
+
     return {
-      ...useItem<ExperimentSet>({itemTypeName: 'experimentSet'}),
+      ...experimentSet,
       permissions
     }
   },

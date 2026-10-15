@@ -10,7 +10,7 @@ MaveDB UI is the frontend for [MaveDB](https://mavedb.org), a database for Multi
 | ------------------ | ------------------------------------------------------- |
 | Framework          | Vue 3 (Composition API via `defineComponent` + `setup`) |
 | Language           | TypeScript (strict mode) with some legacy `.js` files   |
-| Build tool         | Vite 5                                                  |
+| Build tool         | Vite 7                                                  |
 | Package manager    | npm                                                     |
 | Component library  | PrimeVue 4 (Aura theme)                                 |
 | CSS                | Tailwind CSS 4                                          |

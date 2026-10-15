@@ -6,6 +6,7 @@
         ref="autoCompleteRef"
         :aria-describedby="error ? errorId : undefined"
         :aria-label="label"
+        :aria-required="required || undefined"
         class="w-full"
         :invalid="!!error"
         :model-value="modelValue"
@@ -36,7 +37,10 @@
           </slot>
         </template>
       </AutoComplete>
-      <label :for="fieldId">{{ label }}</label>
+      <label :for="fieldId">
+        {{ label }}
+        <MvRequiredMarker v-if="required" />
+      </label>
     </FloatLabel>
     <p v-if="hint && !error" class="mt-1 text-xs text-text-muted">{{ hint }}</p>
     <MvFieldError :id="errorId" :error="error" />
@@ -48,13 +52,14 @@ import {defineComponent, type PropType} from 'vue'
 import AutoComplete from 'primevue/autocomplete'
 import FloatLabel from 'primevue/floatlabel'
 import MvFieldError from '@/components/forms/MvFieldError.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import {useFieldId} from '@/composables/scoped-id'
 import {isEmptySentinel} from '@/lib/form-helpers'
 
 export default defineComponent({
   name: 'MvTagField',
 
-  components: {AutoComplete, FloatLabel, MvFieldError},
+  components: {AutoComplete, FloatLabel, MvFieldError, MvRequiredMarker},
 
   inheritAttrs: false,
 
@@ -70,7 +75,8 @@ export default defineComponent({
     },
     suggestions: {type: Array as PropType<unknown[]>, default: () => []},
     typeahead: {type: Boolean, default: false},
-    hint: {type: String, default: null}
+    hint: {type: String, default: null},
+    required: {type: Boolean, default: false}
   },
 
   emits: ['update:modelValue', 'blur', 'complete', 'escape', 'option-select'],

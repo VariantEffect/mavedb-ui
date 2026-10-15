@@ -41,7 +41,7 @@
           <span v-else />
           <button
             v-if="canToggleDescription(kw.key)"
-            class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer shrink-0 ml-2"
+            class="text-xs font-medium text-sage-strong hover:underline cursor-pointer shrink-0 ml-2"
             type="button"
             @click="toggleDescription(kw.key)"
           >
@@ -52,7 +52,7 @@
         <!-- Wizard mode: "Add description" toggle (before textarea is open) -->
         <div v-if="wizardMode && canToggleDescription(kw.key) && !descriptionVisible(kw.key)" class="mt-1 text-right">
           <button
-            class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer"
+            class="text-xs font-medium text-sage-strong hover:underline cursor-pointer"
             type="button"
             @click="toggleDescription(kw.key)"
           >
@@ -64,7 +64,8 @@
         <div v-if="descriptionVisible(kw.key)" class="mt-2">
           <MvFloatField
             :error="validationErrors[`keywordDescriptions.${kw.key}`]"
-            :label="`${kw.descriptionLabel} ${keywordKeys[kw.key] === 'Other' ? '(Required)' : '(Optional)'}`"
+            :label="kw.descriptionLabel"
+            :required="keywordKeys[kw.key] === 'Other'"
           >
             <template #default="{id, invalid}">
               <PTextarea
@@ -89,7 +90,7 @@
             <span v-else />
             <button
               v-if="canToggleDescription(kw.key)"
-              class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer shrink-0 ml-2"
+              class="text-xs font-medium text-sage-strong hover:underline cursor-pointer shrink-0 ml-2"
               type="button"
               @click="toggleDescription(kw.key)"
             >
@@ -100,7 +101,7 @@
           <!-- Wizard mode: "Hide description" toggle -->
           <div v-if="wizardMode && canToggleDescription(kw.key)" class="mt-1 text-right">
             <button
-              class="text-xs font-medium text-sage-dark hover:underline hover:text-sage cursor-pointer"
+              class="text-xs font-medium text-sage-strong hover:underline cursor-pointer"
               type="button"
               @click="toggleDescription(kw.key)"
             >

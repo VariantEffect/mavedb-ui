@@ -22,11 +22,11 @@ This means you can search using a ClinVar Variation ID from a clinical report an
 
 ### VRS identifier search
 
-GA4GH VRS identifier search works differently from all other search types. Rather than routing through the ClinGen Allele Registry, it queries MaveDB directly using the [VRS digest](../reference/data-standards.md#vrs--variant-representation) assigned during variant mapping. This makes it useful in workflows where you already have a GA4GH-compatible identifier — for example, from a MaveDB data export, a GA4GH-compliant pipeline, or another VRS-enabled database.
+GA4GH VRS identifier search works differently from all other search types. Rather than routing through the ClinGen Allele Registry, it queries MaveDB directly using the [VRS digest](../reference/data-standards.md#vrs-variant-representation) assigned during variant mapping. This makes it useful in workflows where you already have a GA4GH-compatible identifier — for example, from a MaveDB data export, a GA4GH-compliant pipeline, or another VRS-enabled database.
 
-MaveDB assigns VRS identifiers to both the pre-mapped (target-relative) and post-mapped (reference-relative) forms of each variant, and the search matches against either.
+The search matches both forms of a variant's VRS identifier: the reference-level alleles MaveDB holds for it (the mapped allele and the alleles derived from it at other levels), and the pre-mapped form on the submitted target sequence. A pre-mapped match is reported with the variant's mapped allele, or with no allele if the variant did not map.
 
-Both alleles (`ga4gh:VA.*`) and haplotypes (`ga4gh:VH.*`) are supported.
+Alleles (`ga4gh:VA.*`) and cis-phased blocks (`ga4gh:CPB.*`) are supported.
 
 If the matched variant has a ClinGen Allele ID, the standard results page is displayed. If the variant was mapped but not registered with ClinGen — which can occur for certain variant types — MaveMD will note this and provide a direct link to the source score set instead.
 
@@ -46,10 +46,10 @@ The fuzzy search validates your input and queries the ClinGen Allele Registry to
 
 When a variant is found in one or more MaveMD datasets, the results page displays:
 
-- **Available measurements** -- A list of MAVE datasets (assays) that include functional data for the variant. When the variant has been measured in multiple assays, each is listed separately.
+- **Available measurements** -- The variant's measurements, grouped as on the [variant page](variant-page.md): measurements of this exact change, of the protein change it encodes, and of other nucleotide changes that encode the same protein change. Each row shows the score set, its ACMG evidence code or functional impact, and a small chart of the score set's score distribution, shaded by its calibration, with a line at this variant's score. As on the variant page, a [research-use-only](variant-page.md#evidence-calibrations) call stands in, tagged, when the score set has no other calibration. Each group previews its top-ranked measurements, with the rest on the variant page.
 - **Variant representation** -- The variant shown in HGVS format along with alternate identifiers (ClinGen Allele ID, ClinVar Variation ID, dbSNP RSID) where available.
 
-Select a measurement to view the full [variant page](variant-page.md) with detailed functional evidence, assay facts, and calibration information.
+Select **View variant** to open the full [variant page](variant-page.md) with detailed functional evidence, assay facts, and calibration information. A score set's name opens that score set.
 
 ## Linking from external resources
 

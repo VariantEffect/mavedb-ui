@@ -8,6 +8,14 @@ type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
 type Accessor<T, Self> = (value?: T) => T | Self
 
+/**
+ * How many ticks an axis of the given pixel length can carry without its labels running together. Score labels
+ * like "-2.5" need roughly 50px each; on a phone-width chart, ten fixed ticks overlap.
+ */
+export function axisTickCount(lengthPx: number, minSpacingPx = 50, maxTicks = 10): number {
+  return Math.max(2, Math.min(maxTicks, Math.floor(lengthPx / minSpacingPx)))
+}
+
 export const DEFAULT_SHADER_COLOR = '#333333'
 export const DEFAULT_SERIES_COLOR = '#333333'
 export const CATEGORICAL_SERIES_COLORS = [
@@ -25,6 +33,13 @@ export const CATEGORICAL_SERIES_COLORS = [
   '#FFBF00' // Amber (darker yellow)
 ]
 const LABEL_SIZE = 10
+// Heights at the top of the plot: one line of range titles, and each legend row below them. A legend row grows by
+// LEGEND_WRAPPED_LINE_HEIGHT per wrapped title line beyond the first.
+const SHADER_TITLE_BAND = 22
+const LEGEND_ITEM_HEIGHT = 22
+const LEGEND_WRAPPED_LINE_HEIGHT = 15
+// Gap between the legend and the plot's right edge, and between the legend and the bars below it.
+const LEGEND_EDGE_PADDING = 8
 
 /**
  * Margins of the histogram content inside the SVG, expressed in screen units (pixels).
@@ -39,7 +54,9 @@ export interface HistogramMargins {
 }
 
 export interface HistogramSerieOptions {
-  title?: string
+  // A plain title renders as one legend line. An array wraps it across multiple lines instead of
+  // widening the legend indefinitely — e.g. a base label plus a caveat that doesn't fit alongside it.
+  title?: string | string[]
   color: string // TODO Make this optional by providing default colors.
 }
 
@@ -823,12 +840,20 @@ export default function makeHistogram(): Histogram {
 
         //resizeTo Container()
 
+        // Range titles sit on one line at the top of the plot, above every bar. The legend goes below them, on
+        // whichever side has the lower bars under it; its headroom is settled once it has been measured, below.
+        const activeShaderRegions = shaders && renderShader ? shaders[renderShader] : null
+        const shaderTitleBand =
+          renderShaderTitles !== 'hide' && activeShaderRegions?.some((region) => region.title) ? SHADER_TITLE_BAND : 0
+
         // Calculate space required for y axis and label for the largest possible number of bin members. We will need to
         // re-scale the y-axis for displaying smaller numbers but this will give us enough space for the y-axis at maximum
         // axis width (i.e. with the longest numbers in the counts.
         //
-        // Also leave 5% breathing room at the top of the chart.
-        const yMax = (d3.max(series, (s) => s.maxBinSize) || 0) * 1.1
+        // Leave 10% breathing room above the tallest bar, plus room for the range titles.
+        const maxBinSize = d3.max(series, (s) => s.maxBinSize) || 0
+        const titleFraction = height > shaderTitleBand ? shaderTitleBand / height : 0
+        let yMax = (maxBinSize * 1.1) / (1 - titleFraction)
         const chartHasContent = yMax > 0
         yScale.domain([0, yMax]).range([height, 0])
 
@@ -863,7 +888,7 @@ export default function makeHistogram(): Histogram {
           .select('g.histogram-bottom-axis')
           .attr('transform', `translate(0,${height})`)
           // @ts-ignore
-          .call(d3.axisBottom(xScale).ticks(10))
+          .call(d3.axisBottom(xScale).ticks(axisTickCount(width)))
         svg
           .select('g.histogram-left-axis')
           // @ts-ignore
@@ -906,26 +931,33 @@ export default function makeHistogram(): Histogram {
 
         // Refresh the legend, which is displayed when there is more than one serie.
         const legendX = 32
-        const legendY = 12
-        const legendItemHeight = 22
+        const legendY = 12 + shaderTitleBand
+        const legendItemHeight = LEGEND_ITEM_HEIGHT
+        const legendWrappedLineHeight = LEGEND_WRAPPED_LINE_HEIGHT
         const legendFontSize = '13px'
         const legendCircleWidth = 7
         const legendSpacing = 5
         const legend = svg.select('g.histogram-legend')
+        const legendItemsShown = chartHasContent && series.length > 1
+        const legendSeries = legendItemsShown ? series : []
+        const legendTitleLines = (d: HistogramSerie): string[] =>
+          Array.isArray(d.options.title) ? d.options.title : [d.options.title || '']
+        // Cumulative Y offset per item — an item's own title may wrap across more than one line, which
+        // pushes every item after it further down than a flat `index * legendItemHeight` would.
+        const legendItemOffsets: number[] = []
+        let legendCumulativeHeight = 0
+        for (const d of legendSeries) {
+          legendItemOffsets.push(legendCumulativeHeight)
+          legendCumulativeHeight += legendItemHeight + (legendTitleLines(d).length - 1) * legendWrappedLineHeight
+        }
         const legendItem = legend
           .selectAll('g.histogram-legend-item')
-          .data(chartHasContent && series.length > 1 ? series : [])
+          .data(legendSeries)
           .join(
             (enter) => {
               const g = enter.append('g').attr('class', 'histogram-legend-item')
               g.append('circle').attr('r', legendCircleWidth).attr('cx', legendX)
-              //.attr('cy', (d, i) => legendY + i * legendItemHeight)
-              //.style('fill', (d) => d.options.color)
-              g.append('text')
-                .attr('x', legendX + legendCircleWidth + legendSpacing)
-                .attr('y', (_d: HistogramSerie, i) => legendY + i * legendItemHeight + legendSpacing)
-                .style('font-size', legendFontSize)
-              //.text((d, i) => d.options.title || `Series ${i + 1}`)
+              g.append('text').attr('x', legendX + legendCircleWidth + legendSpacing).style('font-size', legendFontSize)
               return g
             },
             (update) => update,
@@ -934,13 +966,23 @@ export default function makeHistogram(): Histogram {
         legendItem
           .select('circle')
           // @ts-ignore
-          .attr('cy', (_d: HistogramSerie, i) => legendY + i * legendItemHeight)
+          .attr('cy', (_d: HistogramSerie, i) => legendY + legendItemOffsets[i])
           // @ts-ignore
           .style('fill', (d: HistogramSerie) => d.options.color)
         legendItem
           .select('text')
           // @ts-ignore
-          .text((d: HistogramSerie, i) => d.options.title || `Series ${i + 1}`)
+          .attr('y', (_d: HistogramSerie, i) => legendY + legendItemOffsets[i] + legendSpacing)
+          .each(function (d: unknown, i: number) {
+            const lines = legendTitleLines(d as HistogramSerie)
+            d3.select(this)
+              .selectAll('tspan')
+              .data(lines.length ? lines : [`Series ${i + 1}`])
+              .join('tspan')
+              .attr('x', legendX + legendCircleWidth + legendSpacing)
+              .attr('dy', (_line: string, lineIndex: number) => (lineIndex === 0 ? 0 : legendWrappedLineHeight))
+              .text((line: string) => line)
+          })
 
         // The client may have specified a line of text to display below the legend.
         legend
@@ -950,11 +992,40 @@ export default function makeHistogram(): Histogram {
           .attr('class', 'histogram-legend-note')
           .attr('font-size', legendFontSize)
           .attr('x', legendX - legendCircleWidth)
-          .attr('y', legendY + (series.length == 1 ? 0 : series.length) * legendItemHeight + legendSpacing - 1)
+          .attr('y', legendY + (legendItemsShown ? legendCumulativeHeight : 0) + legendSpacing - 1)
           .text((d) => d)
 
-        // Add a background for the legend, for visibility.
+        // Place the legend on the side whose bars under its footprint are lower, then raise the y domain just
+        // enough that those bars clear it. Drawn at the left edge first so its box can be measured.
         const legendBounds = (legend.node() as SVGGraphicsElement | null)?.getBBox()
+        let legendShift = 0
+        if (legendBounds && legendBounds.width > 0) {
+          const tallestUnder = (left: number, right: number) =>
+            d3.max(bins, (bin) => (xScale(bin.x1) > left && xScale(bin.x0) < right ? bin.yMax : 0)) || 0
+          const rightShift = width - LEGEND_EDGE_PADDING - (legendBounds.x + legendBounds.width)
+          const leftTallest = tallestUnder(legendBounds.x, legendBounds.x + legendBounds.width)
+          const rightTallest = tallestUnder(
+            legendBounds.x + rightShift,
+            legendBounds.x + legendBounds.width + rightShift
+          )
+          legendShift = rightTallest < leftTallest ? rightShift : 0
+          const tallest = Math.min(leftTallest, rightTallest)
+
+          // A bar of height v reaches pixel height * (1 - v / yMax); keep it below the legend's bottom edge.
+          const legendBottom = legendBounds.y + legendBounds.height + LEGEND_EDGE_PADDING
+          if (tallest > 0 && legendBottom < height) {
+            yMax = Math.max(yMax, (tallest * height) / (height - legendBottom))
+            yScale.domain([0, yMax])
+            svg
+              .select('g.histogram-left-axis')
+              // @ts-expect-error d3 types reject an axis passed to a generic selection.call
+              .call(d3.axisLeft(yScale).ticks(10))
+          }
+        }
+        legend.attr('transform', `translate(${legendShift}, 0)`)
+        svg.select('g.histogram-legend-background').attr('transform', `translate(${legendShift}, 0)`)
+
+        // Add a background for the legend, for visibility.
         svg
           .select('g.histogram-legend-background')
           .selectAll('rect.histogram-legend-background')
@@ -963,7 +1034,7 @@ export default function makeHistogram(): Histogram {
           .attr('class', 'histogram-legend-background')
           .attr('fill', '#ffffff')
           .attr('fill-opacity', '.6')
-          .attr('y', (d) => d.x - 5 - margins.top)
+          .attr('y', (d) => d.y - 5)
           .attr('x', (d) => d.x - 5)
           .attr('height', (d) => d.height + 10)
           .attr('width', (d) => d.width + 10)

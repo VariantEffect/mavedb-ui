@@ -58,7 +58,7 @@
       <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="clearFilters()" />
     </MvEmptyState>
 
-    <div v-else class="overflow-hidden rounded-lg border border-border bg-white">
+    <div v-else class="mave-card overflow-hidden">
       <!-- Desktop table (md+) -->
       <table class="hidden w-full table-fixed border-collapse text-sm tablet:table">
         <thead>
@@ -83,7 +83,7 @@
           >
             <td class="px-4 py-2.5 [overflow-wrap:anywhere]">
               <router-link
-                class="line-clamp-1 text-sm font-semibold leading-snug text-sage hover:underline"
+                class="line-clamp-1 text-sm font-semibold leading-snug text-sage-strong hover:underline"
                 :to="{name: 'scoreSet', params: {urn: ss.urn}}"
               >
                 {{ ss.title }}
@@ -114,7 +114,7 @@
         <div v-for="ss in filteredScoreSets" :key="ss.urn" class="px-4 py-3">
           <div class="flex items-start justify-between gap-2">
             <router-link
-              class="line-clamp-2 text-sm font-semibold leading-snug text-sage hover:underline [overflow-wrap:anywhere]"
+              class="line-clamp-2 text-sm font-semibold leading-snug text-sage-strong hover:underline [overflow-wrap:anywhere]"
               :to="{name: 'scoreSet', params: {urn: ss.urn}}"
             >
               {{ ss.title }}

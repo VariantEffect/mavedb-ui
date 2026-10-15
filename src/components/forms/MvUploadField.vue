@@ -1,14 +1,16 @@
 <template>
   <div :class="error ? 'mv-field-error' : 'field'">
-    <label v-if="showLabel" class="mb-1 block font-semibold text-xs text-text-secondary" :for="fieldId">{{
-      label
-    }}</label>
+    <label v-if="showLabel" class="mb-1 block font-semibold text-xs text-text-secondary" :for="fieldId">
+      {{ label }}
+      <MvRequiredMarker v-if="required" />
+    </label>
     <FileUpload
       :id="fieldId"
       ref="fileUploadRef"
       :accept="accept"
       :aria-describedby="error ? errorId : undefined"
       :aria-label="label"
+      :aria-required="required || undefined"
       :auto="false"
       :custom-upload="true"
       :file-limit="1"
@@ -22,11 +24,11 @@
         <span class="hidden" :data-cb="storeChoose(chooseCallback)" />
       </template>
       <template #empty>
-        <div class="file-drop-prompt" @click="triggerChoose">
-          <i class="pi pi-upload file-drop-icon" />
-          <p class="file-drop-text">{{ emptyText }}</p>
-          <p class="file-drop-browse">or click to browse</p>
-        </div>
+        <button :aria-label="`Choose file: ${label}`" class="file-drop-prompt" type="button" @click="triggerChoose">
+          <i aria-hidden="true" class="pi pi-upload file-drop-icon" />
+          <span class="file-drop-text">{{ emptyText }}</span>
+          <span class="file-drop-browse">or click to browse</span>
+        </button>
       </template>
     </FileUpload>
     <MvFieldError :id="errorId" :error="error" />
@@ -37,12 +39,13 @@
 import {defineComponent, type PropType} from 'vue'
 import FileUpload from 'primevue/fileupload'
 import MvFieldError from '@/components/forms/MvFieldError.vue'
+import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import {useFieldId} from '@/composables/scoped-id'
 
 export default defineComponent({
   name: 'MvUploadField',
 
-  components: {FileUpload, MvFieldError},
+  components: {FileUpload, MvFieldError, MvRequiredMarker},
 
   inheritAttrs: false,
 
@@ -52,7 +55,8 @@ export default defineComponent({
     error: {type: String as PropType<string | null>, default: null},
     id: {type: String as PropType<string | null>, default: null},
     emptyText: {type: String, default: 'Drop a file here'},
-    showLabel: {type: Boolean, default: true}
+    showLabel: {type: Boolean, default: true},
+    required: {type: Boolean, default: false}
   },
 
   emits: ['select', 'remove'],
@@ -168,24 +172,37 @@ export default defineComponent({
 }
 
 .file-drop-prompt {
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   padding: 8px 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.file-drop-prompt:focus-visible {
+  outline: 2px solid var(--color-sage-strong);
+  outline-offset: 2px;
 }
 
 .file-drop-icon {
   font-size: 1.5rem;
-  color: #ccc;
+  color: var(--color-text-muted);
   margin-bottom: 6px;
 }
 
 .file-drop-text {
   font-size: 13px;
   font-weight: 600;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .file-drop-browse {
   font-size: 12px;
-  color: #bbb;
+  color: var(--color-text-muted);
 }
 </style>

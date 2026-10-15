@@ -6,14 +6,19 @@
   <MvLayout :require-auth="true">
     <template #header>
       <MvPageHeader max-width="1280px" title="Create a new score set" variant="toolbar">
+        <template #subtitle>
+          <p class="text-sm text-text-muted">
+            Fields marked <span class="font-bold text-danger">*</span> are required.
+          </p>
+        </template>
         <template #actions>
-          <PButton severity="secondary" size="small" @click="resetForm">Clear</PButton>
+          <PButton severity="secondary" size="small" @click="confirmReset">Clear</PButton>
           <PButton severity="warn" size="small" @click="backDashboard">Cancel</PButton>
         </template>
       </MvPageHeader>
     </template>
 
-    <div class="mx-auto w-full max-w-screen-xl py-6">
+    <div class="mx-auto w-full max-w-screen-xl py-6" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
       <Stepper v-model:value="activeWizardStep">
         <StepList>
           <Step :value="1">Experiment &amp; context</Step>
@@ -62,7 +67,6 @@
             </div>
             <div class="flex justify-end bg-bg px-2.5 pt-4 pb-2">
               <PButton
-                :disabled="maxWizardStepValidated < activeWizardStep"
                 icon="pi pi-arrow-right"
                 icon-pos="right"
                 label="Next"
@@ -125,7 +129,6 @@
                 @click="activateCallback(activeWizardStep - 1)"
               />
               <PButton
-                :disabled="maxWizardStepValidated < activeWizardStep"
                 icon="pi pi-arrow-right"
                 icon-pos="right"
                 label="Next"
@@ -234,7 +237,6 @@
                 @click="activateCallback(activeWizardStep - 1)"
               />
               <PButton
-                :disabled="maxWizardStepValidated < activeWizardStep"
                 icon="pi pi-arrow-right"
                 icon-pos="right"
                 label="Next"
@@ -266,7 +268,6 @@
                 @click="activateCallback(activeWizardStep - 1)"
               />
               <PButton
-                :disabled="maxWizardStepValidated < activeWizardStep"
                 icon="pi pi-arrow-right"
                 icon-pos="right"
                 label="Next"
@@ -307,6 +308,8 @@
                 <CalibrationEditor
                   ref="calibrationEditor"
                   :allow-class-based="false"
+                  :allow-controls="false"
+                  :show-required-legend="false"
                   @update:draft="calibrationDraft = $event"
                 />
               </div>
@@ -319,7 +322,6 @@
                 @click="activateCallback(activeWizardStep - 1)"
               />
               <PButton
-                :disabled="maxWizardStepValidated < activeWizardStep"
                 icon="pi pi-arrow-right"
                 icon-pos="right"
                 label="Next"
@@ -420,11 +422,13 @@ import type {FileUploadSelectEvent} from 'primevue/fileupload'
 import {useJsonFileField, type JsonFileInputName} from '@/composables/use-json-file-field'
 import {usePublicationIdentifiers} from '@/composables/use-publication-identifiers'
 import {type TargetEditorRef} from '@/composables/use-target-gene'
+import {useUnsavedChangesGuard} from '@/composables/use-unsaved-changes-guard'
 import {useValidationErrors} from '@/composables/use-validation-errors'
 import {type VariantScoreFieldsRef} from '@/components/forms/VariantScoreFields.vue'
 import {suggestionsForAutocomplete, normalizeDoiArray, normalizeContributorArray} from '@/lib/form-helpers'
-import {parseScoreSetValidationErrors} from '@/lib/form-validation'
+import {missingRequiredFieldErrors, parseScoreSetValidationErrors, scrollToFirstError} from '@/lib/form-validation'
 import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {toCalibrationPayload} from '@/lib/calibrations'
 import {components} from '@/schema/openapi'
 
 type Contributor = components['schemas']['Contributor']
@@ -512,7 +516,10 @@ export default {
       }
     }
 
+    const unsavedChanges = useUnsavedChangesGuard()
+
     return {
+      unsavedChanges,
       ...publications,
       ...validation,
       licenses: licenseSearch.items,
@@ -622,6 +629,28 @@ export default {
   },
 
   watch: {
+    // Required-field errors raised by Next clear as soon as the field is filled.
+    title(value) {
+      if (value) this.clearClientError('title')
+    },
+    shortDescription(value) {
+      if (value) this.clearClientError('shortDescription')
+    },
+    abstractText(value) {
+      if (value) this.clearClientError('abstractText')
+    },
+    methodText(value) {
+      if (value) this.clearClientError('methodText')
+    },
+    selectedExperiment(value) {
+      if (value) this.clearClientError('experiment')
+    },
+    supersededScoreSet(value) {
+      if (value) this.clearClientError('supersededScoreSetUrn')
+    },
+    metaAnalyzesScoreSets(value) {
+      if (value?.length) this.clearClientError('metaAnalyzesScoreSetUrns')
+    },
     experimentUrn: {
       immediate: true,
       async handler(newValue, oldValue) {
@@ -687,6 +716,8 @@ export default {
 
     // ── File handling ──
     fileCleared(inputName: JsonFileInputName) {
+      // File drops and dialog edits never reach the form root as input/change events.
+      this.unsavedChanges.markDirty()
       const fieldMap = {
         extraMetadataFile: this.extraMetadataField,
         scoreColumnsMetadataFile: this.scoreColumnsMetadataField,
@@ -700,6 +731,7 @@ export default {
     },
 
     async fileSelected(inputName: JsonFileInputName, event: FileUploadSelectEvent) {
+      this.unsavedChanges.markDirty()
       const fieldMap = {
         extraMetadataFile: {field: this.extraMetadataField, key: 'extraMetadata'},
         scoreColumnsMetadataFile: {field: this.scoreColumnsMetadataField, key: 'scoreColumnsMetadata'},
@@ -736,14 +768,11 @@ export default {
           return this.targetValidities[step - 4] ?? false
         case step === 4 + this.numTargets: {
           if (!this.investigatorIsProvidingScoreCalibrations) return true
-          if (!this.calibrationDraft) return false
+          if (!this.calibrationDraft?.title) return false
           for (const scoreRange of this.calibrationDraft.functionalClassifications || []) {
             if (!scoreRange.label || !scoreRange.functionalClassification) return false
           }
-          return (
-            (this.calibrationDraft.functionalClassifications?.length ?? 0) > 0 ||
-            this.calibrationDraft.baselineScore !== null
-          )
+          return true
         }
         default:
           return true
@@ -770,10 +799,53 @@ export default {
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
         navigate(this.activeWizardStep + 1)
+      } else {
+        this.showStepRequirements()
       }
     },
 
+    /**
+     * Explain why Next didn't advance: inline errors on empty required fields, or a toast for steps whose
+     * requirements live in child components.
+     */
+    showStepRequirements() {
+      const errors = missingRequiredFieldErrors(this.requiredFieldsForStep(this.activeWizardStep))
+      for (const [key, message] of Object.entries(errors)) {
+        this.setClientError(key, message ?? '')
+      }
+      if (Object.keys(errors).length > 0) {
+        scrollToFirstError()
+      } else {
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'Complete the required fields in this step before continuing.',
+          life: 5000
+        })
+      }
+    },
+
+    requiredFieldsForStep(step: number): Record<string, unknown> {
+      if (step === 1) {
+        if (this.isMetaAnalysis) return {metaAnalyzesScoreSetUrns: this.metaAnalyzesScoreSets}
+        if (this.isSupersedingScoreSet) return {supersededScoreSetUrn: this.supersededScoreSet}
+        return {experiment: this.selectedExperiment ?? this.experiment ?? this.experimentUrn}
+      }
+      if (step === 2) {
+        return {
+          title: this.title,
+          shortDescription: this.shortDescription,
+          abstractText: this.abstractText,
+          methodText: this.methodText
+        }
+      }
+      return {}
+    },
+
     // ── Form reset ──
+    async confirmReset() {
+      if (await this.unsavedChanges.confirmDiscard()) this.resetForm()
+    },
+
     resetForm() {
       this.selectedExperiment = null
       this.supersededScoreSet = null
@@ -802,6 +874,7 @@ export default {
       const editors = (this.$refs.targetEditors as TargetEditorRef[]) || []
       editors.forEach((editor) => editor?.reset())
       this.clearValidationState()
+      this.unsavedChanges.markClean()
       this.activeWizardStep = 1
       this.maxWizardStepEntered = 1
     },
@@ -831,7 +904,9 @@ export default {
           countColumnsMetadata: this.countColumnsMetadata || {}
         },
         scoreCalibrations:
-          this.investigatorIsProvidingScoreCalibrations && this.calibrationDraft ? [this.calibrationDraft] : [],
+          this.investigatorIsProvidingScoreCalibrations && this.calibrationDraft
+            ? [toCalibrationPayload(this.calibrationDraft)]
+            : [],
         targetGenes: ((this.$refs.targetEditors as TargetEditorRef[]) || []).map((editor) =>
           editor.getPayload({isBaseEditor: this.isBaseEditor})
         ),
@@ -909,9 +984,11 @@ export default {
       this.progressVisible = false
 
       if (response.status === 200) {
+        this.unsavedChanges.markClean()
         this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
         this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
       } else {
+        this.unsavedChanges.markClean()
         this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
         this.$toast.add({
           severity: 'error',

@@ -1,14 +1,13 @@
 <template>
-  <span
-    class="inline-block rounded px-2 py-0.5 text-[11px] font-bold tracking-wide"
-    :class="`mave-evidence-code-${normalizedCode}`"
-  >
+  <span v-key-term="'acmg'" class="mave-tag whitespace-nowrap" :class="`mave-evidence-code-${normalizedCode}`">
     {{ displayCode }}
   </span>
 </template>
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
+
+import {formatEvidenceCode} from '@/lib/measurement-types'
 
 export default defineComponent({
   name: 'MvEvidenceTag',
@@ -40,8 +39,7 @@ export default defineComponent({
       return ''
     },
     displayCode(): string {
-      // Insert zero-width space after underscores for wrapping
-      return this.normalizedCode.replace(/_/g, '_\u200b')
+      return formatEvidenceCode(this.normalizedCode)
     }
   }
 })

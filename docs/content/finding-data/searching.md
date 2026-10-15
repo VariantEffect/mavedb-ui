@@ -8,28 +8,30 @@ MaveDB provides a search interface to help users find relevant datasets. You can
 ## Search interface
 
 <figure markdown="span">
-  ![MaveDB search interface showing target filters and keyword search](../images/search_interface.png)
-  <figcaption>The MaveDB search interface with target filters and keyword search. Results are grouped by experiment, with matching score sets listed underneath.</figcaption>
+  ![MaveDB search interface showing the filter sidebar and keyword search](../images/search_interface.png)
+  <figcaption>The MaveDB search interface with target, publication, and keyword filters. Results are grouped by experiment, with matching score sets listed underneath.</figcaption>
 </figure>
 
-The search interface allows users to filter datasets based on various criteria.
+The search interface presents a filter sidebar on the left (a slide-out drawer on smaller screens) alongside the results. Each filter is a collapsible section; the **Gene** and **Organism** sections are expanded by default, and the rest can be opened as needed.
 
-In the **Target** tab, users can filter datasets by the following fields drawn from user-submitted [target](../submitting-data/targets.md) metadata:
+The following sections filter datasets by user-submitted [target](../submitting-data/targets.md) metadata:
 
-- **Target name** -- The name of the target associated with the dataset (usually a gene or protein).
-- **Target type** -- The type of target (e.g., protein-coding gene, non-coding RNA, regulatory element).
+- **Gene** -- The name of the target associated with the dataset (usually a gene or protein).
 - **Organism** -- The organism from which the target is derived.
+- **Target type** -- The type of target (e.g., protein-coding gene, non-coding RNA, regulatory element).
 - **Target accession** -- The accession number or identifier for the target (e.g., Ensembl ID, RefSeq ID).
 
-In the **Publication** tab, users can filter datasets by the following publication-related fields:
+These sections filter by publication metadata:
 
 - **Author** -- The author of any publication associated with a dataset.
-- **Database** -- The database of any publication associated with a dataset (e.g., PubMed, CrossRef).
 - **Journal** -- The journal in which any publication associated with a dataset was published.
+- **Publication database** -- The database that indexes an associated publication (e.g., PubMed, CrossRef).
 
-Users may also enter keywords into the search bar to perform a full-text search across all dataset metadata fields, including target metadata, publication metadata, [assay facts](../reference/assay-facts.md), and score set metadata. Note that search filters are additive: datasets must meet **all** specified criteria to appear in the results.
+The **Keywords** section filters by [controlled-vocabulary keywords](../reference/controlled-vocabulary.md), grouped by category, that describe how an assay was performed.
 
-Results are grouped by [experiment](../getting-started/key-concepts.md#experiments), with all matching [score sets](../getting-started/key-concepts.md#score-sets) listed under each experiment.
+Separately, the **search bar** at the top of the page runs a full-text search across all dataset metadata fields, including target metadata, publication metadata, [assay facts](../reference/assay-facts.md), and score set metadata. Filters and the search term are additive: datasets must meet **all** specified criteria to appear in the results, and any filters you have applied appear as removable chips beneath the search bar.
+
+Results are grouped by [experiment](../getting-started/key-concepts.md#experiments), with all matching [score sets](../getting-started/key-concepts.md#score-sets) listed under each experiment. Use the **Sort by** control above the results to order them by most recent, most variants, or title (A--Z).
 
 !!! note
     Search results update in real time as you modify your criteria, but they are limited to the first 100 results for performance reasons. If your search returns more than 100 results, try refining your criteria further.

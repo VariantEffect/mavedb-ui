@@ -27,6 +27,8 @@
   --color-sage: #78b793;
   --color-sage-dark: #5a9375;
   --color-sage-light: #e5f2e4;
+  /* Sage text dark enough for WCAG AA on sage tints (the Selected measurement tag). */
+  --color-sage-strong: #3a654e;
   --color-mint: #a1d8c8;
   --color-mint-light: #f0faf0;
   --color-light-green: #c8e4c6;
@@ -72,10 +74,10 @@
   --color-unpublished-light: #fff3e0;
   --color-unpublished-dot: #ff9800;
 
-  /* ── Status: Superseded (gray) ─────────────────────────────── */
-  --color-superseded: #757575;
-  --color-superseded-light: #f5f5f5;
-  --color-superseded-dot: #bdbdbd;
+  /* ── Status: Superseded (amber) ────────────────────────────── */
+  --color-superseded: #92400e;
+  --color-superseded-light: #fef3c7;
+  --color-superseded-dot: #b45309;
 
   /* ── Evidence: PS3 Pathogenic (red gradient) ────────────────── */
   --color-ps3-very-strong: #943744;
@@ -91,6 +93,11 @@
   --color-bs3-moderate: #d0e8f0;
   --color-bs3-supporting: #e4f1f6;
 
+  /* ── Research use only ─────────────────────────────────────── */
+  --color-ruo: #856404;
+  --color-ruo-light: #fff3cd;
+  --color-ruo-border: #f0d78c;
+
   /* ── Evidence: Indeterminate ───────────────────────────────── */
   --color-evidence-indeterminate: #e0e0e0;
 
@@ -104,7 +111,7 @@
   --color-fn-normal-light: #e3f2fd;
   --color-fn-abnormal: #c62828;
   --color-fn-abnormal-light: #ffebee;
-  --color-fn-unspecified: #757575;
+  --color-fn-unspecified: #6f6f6f;
   --color-fn-unspecified-light: #f5f5f5;
 
   /* ── Clinical Classification Badges (benign/pathogenic) ───── */
@@ -126,16 +133,20 @@
   --color-gene: #b5446e;
   --color-gene-light: #fbeaf1;
 
-  /* ── Measurement Types (variant screen) ────────────────────── */
-  --color-nucleotide: #2e7d32;
-  --color-nucleotide-light: #e8f5e9;
-  --color-nucleotide-border: #c8e4c6;
-  --color-protein: #7e5daf;
-  --color-protein-light: #f1ecf8;
-  --color-protein-border: #b5a0d0;
-  --color-synonymous-nucleotide: #8a5700;
-  --color-synonymous-nucleotide-light: #fef8e1;
-  --color-synonymous-nucleotide-border: #f5c97a;
+  /* ── Assay Level (variant screen) ──────────────────────────── */
+  /* The level a result measured the change at — see LEVEL_BUCKETS in lib/measurement-types.ts. */
+  --color-nucleotide: #a8247c;
+  --color-nucleotide-light: #fce8f4;
+  --color-nucleotide-border: #eec3e0;
+  --color-amino-acid: #7b5aad;
+  --color-amino-acid-light: #f1ecf8;
+  --color-amino-acid-border: #b5a0d0;
+
+  /* ── Indirect relationship (variant screen) ──────────────────── */
+  /* A variant other than yours stood in for the measurement: the indirect-measurement notices on the variant
+     page. */
+  --color-convergent: #8a5700;
+  --color-convergent-light: #fef8e1;
 
   /* ── Role Badges ───────────────────────────────────────────── */
   --color-role-admin: #1a56a0;
@@ -151,6 +162,11 @@
 
   /* ── Semantic colors ─────────────────────────────────────────── */
   --color-link: #0074d9;
+  /* The page's own subject allele (the CAID the page is rooted on). */
+  --color-subject: #4a9ba8;
+  --color-subject-light: #ddecee;
+  /* Tag text: --color-subject on its own 15% tint is ~2.8:1; this clears WCAG AA. */
+  --color-subject-strong: #37727c;
   --color-border: #dee2e6;
   --color-border-light: #f0f0f0;
   --color-bg: #f7f7f7;
@@ -170,6 +186,24 @@
 
   /* ── Custom breakpoints ────────────────────────────────────── */
   --breakpoint-tablet: 56rem; /* 896px — between md (768) and lg (1024) */
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  /* Height of the sticky global nav (MvNavBar). Single source of truth: anything that must sit below
+     the nav (e.g. full-height side panels) offsets by var(--nav-height) instead of a hard-coded px. */
+  --nav-height: 58px;
+}
+
+/* Badges/tags wired to the vocabulary Key via `v-key-term`. The hover ring (inset box-shadow) follows
+   the element's own border-radius and text color, matching the ad-hoc affordance the inline badges used. */
+.key-term {
+  cursor: help;
+}
+.key-term:hover {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.key-term:focus-visible {
+  outline: 2px solid var(--color-sage);
+  outline-offset: 1px;
 }
 
 /* ── Base Styles ───────────────────────────────────────────────── */
@@ -197,6 +231,10 @@ html {
 
 body {
   line-height: 1.75;
+  /* Raleway defaults to old-style figures, which bob above and below the baseline in scores, coordinates and HGVS.
+     Set as a feature rather than font-variant-numeric so Tailwind's tabular-nums (which resets the figure style)
+     keeps lining figures. */
+  font-feature-settings: 'lnum' 1;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
 }
@@ -212,23 +250,12 @@ a:hover {
 
 /* ── Shared Utilities ─────────────────────────────────────────── */
 @layer utilities {
-  /* Brand gradient top-bar for accent cards. Requires `relative` and `rounded-*` on the element. */
-  .mave-gradient-bar::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    bottom: auto;
-    height: 3px;
-    background: linear-gradient(
-      90deg,
-      var(--color-sage),
-      var(--color-mint),
-      var(--color-yellow-accent),
-      var(--color-orange-cta)
-    );
-    border-radius: inherit;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+  /* The one card frame used site-wide: rounded, hairline border, white surface. Padding and overflow stay with
+     each card, since prose sections and data tables inset their content differently. */
+  .mave-card {
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background-color: var(--color-surface);
   }
 }
 
@@ -307,12 +334,16 @@ body .p-button {
 .p-tab {
   padding: 0.5em 1em !important;
   position: relative;
+  /* PrimeVue's surface.500 inactive text (#9e9e9e) fails WCAG AA on white. */
+  color: var(--color-text-muted) !important;
 }
 
 .p-tab-active {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
+  /* The colored bar marks the active tab; sage text would fail WCAG AA. */
+  color: var(--color-text-primary) !important;
 }
 
 .p-tab-active::before {
@@ -364,59 +395,82 @@ body .p-button {
 }
 
 /* ── Evidence & Classification Badges ────────────────────────── */
-/* Shared across CalibrationTable, MvAssayFactsCard, and VariantMeasurementView */
+/* One geometry for every inline tag (classification, evidence code, assay level, relationship, status word).
+   Fill comes from the color classes below: tinted for categories, solid for evidence strength. */
+.mave-tag {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  /* A flex sibling's long text would otherwise squeeze the tag until its word breaks mid-letter. */
+  flex-shrink: 0;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+.mave-tag-ruo {
+  background-color: var(--color-ruo-light);
+  color: var(--color-ruo);
+}
+.mave-tag-primary {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+/* The absence of a call (unclassified, not calibrated). Dashed and unfilled so it never reads as a grey call such
+   as Not Specified. The border replaces a pixel of padding to keep the tag geometry. */
+.mave-tag-no-call {
+  padding: 1px 6px;
+  border: 1px dashed var(--color-text-muted);
+  color: var(--color-text-secondary);
+}
 
+/* Evidence ramp fills match the published calibration figures, so contrast is met through text colour alone: the
+   darkest shade of each fill's own hue that clears WCAG AA (4.5:1), white only where it already does. */
 .mave-evidence-code-PS3_VERY_STRONG {
   background-color: var(--color-ps3-very-strong);
   color: white;
-  font-weight: bold;
 }
 .mave-evidence-code-PS3_STRONG {
   background-color: var(--color-ps3-strong);
-  color: white;
-  font-weight: bold;
+  color: #0a0405;
 }
 .mave-evidence-code-PS3_MODERATE_PLUS {
   background-color: var(--color-ps3-moderate-plus);
-  color: white;
-  font-weight: bold;
+  color: #42191e;
 }
 .mave-evidence-code-PS3_MODERATE {
   background-color: var(--color-ps3-moderate);
-  color: white;
-  font-weight: bold;
+  color: #60242c;
 }
 .mave-evidence-code-PS3_SUPPORTING {
   background-color: var(--color-ps3-supporting);
-  color: white;
-  font-weight: bold;
+  color: #81303b;
 }
 .mave-evidence-code-BS3_SUPPORTING {
   background-color: var(--color-bs3-supporting);
-  font-weight: bold;
+  color: #1e5566;
 }
 .mave-evidence-code-BS3_MODERATE {
   background-color: var(--color-bs3-moderate);
-  font-weight: bold;
+  color: #1e5566;
 }
 .mave-evidence-code-BS3_MODERATE_PLUS {
   background-color: var(--color-bs3-moderate-plus);
-  color: white;
-  font-weight: bold;
+  color: #1d5364;
 }
 .mave-evidence-code-BS3_STRONG {
   background-color: var(--color-bs3-strong);
-  color: white;
-  font-weight: bold;
+  color: #184552;
 }
 .mave-evidence-code-BS3_VERY_STRONG {
   background-color: var(--color-bs3-very-strong);
-  color: white;
-  font-weight: bold;
+  color: #0c2229;
 }
 .mave-evidence-code-INDETERMINATE {
   background-color: var(--color-evidence-indeterminate);
-  font-weight: bold;
+  color: #333333;
 }
 
 .mavedb-classification-badge.mavedb-blue {
@@ -431,17 +485,14 @@ body .p-button {
 .mave-classification-normal {
   background-color: var(--color-fn-normal-light);
   color: var(--color-fn-normal);
-  font-weight: bold;
 }
 .mave-classification-abnormal {
   background-color: var(--color-fn-abnormal-light);
   color: var(--color-fn-abnormal);
-  font-weight: bold;
 }
 .mave-classification-not_specified {
   background-color: var(--color-fn-unspecified-light);
   color: var(--color-fn-unspecified);
-  font-weight: bold;
 }
 
 .p-message {
@@ -611,6 +662,45 @@ body .p-button {
 
 /* ── Section Titles ── */
 /* Shared uppercase section title used in detail cards (variant info, assay facts, etc.) */
+/* Transient sage highlight that draws the eye to an element a click just led to, then fades back to the element's
+   own background (the 100% keyframe is omitted on purpose). Shared by the Key drawer and the variant page. */
+.mave-flash {
+  animation: mave-flash 2s ease;
+}
+
+/* The hold outlasts a smooth scroll (~0.6s), so the highlight is still visible on arrival. */
+@keyframes mave-flash {
+  0%,
+  45% {
+    background-color: var(--color-sage-light);
+  }
+}
+
+/* Transient sage ring around a card whose contents just changed, e.g. the variant page's panels that follow the
+   selected measurement. Rings the outline only, so the card's contents stay readable; fades back to the element's
+   own shadow (no 100% keyframe). The hold outlasts a smooth scroll (~0.6s); the slow fade lets the eye follow it. */
+.mave-flash-outline {
+  animation: mave-flash-outline 3s ease-in-out;
+}
+
+/* Holds ~0.9s, then fades over ~2.1s. */
+@keyframes mave-flash-outline {
+  0%,
+  30% {
+    box-shadow: 0 0 0 2px var(--color-sage);
+  }
+}
+
+/* Small uppercase label above a value or column: table headers, stat labels, card sub-labels. Muted text meets
+   WCAG AA on white, which the old #aaa (2.3:1) did not. */
+.mave-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--color-text-muted);
+}
+
 .mave-section-title {
   font-size: 12px;
   font-weight: 700;

@@ -47,7 +47,7 @@
             {{ gene.targetSequence.sequence.length.toLocaleString() }} residues
           </span>
           <button
-            class="inline-flex cursor-pointer items-center gap-1 text-xs-plus font-medium text-sage hover:text-sage-dark"
+            class="inline-flex cursor-pointer items-center gap-1 text-xs-plus font-medium text-sage-strong hover:underline"
             type="button"
             @click="copySequence"
           >

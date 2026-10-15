@@ -13,7 +13,7 @@
     <div class="flex flex-wrap justify-center gap-3">
       <button
         v-if="retryLabel"
-        class="inline-flex items-center gap-1.5 rounded-md bg-orange-cta px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-90"
+        class="inline-flex items-center gap-1.5 rounded-md bg-orange-cta px-5 py-2.5 text-sm font-semibold text-text-dark transition-colors hover:brightness-90"
         type="button"
         @click="$emit('retry')"
       >

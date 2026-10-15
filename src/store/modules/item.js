@@ -18,7 +18,9 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
     state: () => ({
       itemId: null,
       item: null,
-      itemStatus: 'NotLoaded'
+      itemStatus: 'NotLoaded',
+      // HTTP status of the last failed load (null for network errors), so views can tell "not found" from "failed".
+      itemErrorStatus: null
     }),
 
     mutations: {
@@ -32,6 +34,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
         if (state.itemStatus != 'Loaded') {
           state.itemStatus = 'Loaded'
         }
+        state.itemErrorStatus = null
       },
 
       loadingItem(state, {itemId}) {
@@ -44,12 +47,14 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
         if (state.itemStatus != 'Loading') {
           state.itemStatus = 'Loading'
         }
+        state.itemErrorStatus = null
       },
 
-      loadingFailed(state) {
+      loadingFailed(state, {status = null} = {}) {
         _.merge(state, {
           item: null,
-          itemStatus: 'Failed'
+          itemStatus: 'Failed',
+          itemErrorStatus: status
         })
       },
 
@@ -91,7 +96,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
             commit('loadedItem', {item: response.data || null})
           } catch (err) {
             console.log(`Error while loading item (URL="${url}")`, err)
-            commit('loadingFailed')
+            commit('loadingFailed', {status: err.response?.status ?? null})
           }
         }
       },

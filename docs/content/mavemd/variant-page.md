@@ -4,21 +4,34 @@ When you search for a variant in MaveMD and select a measurement from the [searc
 
 ## Variant identifiers
 
-The top of the page displays the variant in HGVS format along with alternate identifiers where available:
+The top of the page displays the variant in HGVS format, followed by its gene and GRCh38 location, and links to:
 
-- **ClinGen Allele ID** -- A stable identifier from the [ClinGen Allele Registry](https://reg.clinicalgenome.org/), linked directly to the registry entry.
-- **ClinVar Variation ID** -- Links to the variant's [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) entry, if one exists.
-- **dbSNP RSID** -- Links to the variant's [dbSNP](https://www.ncbi.nlm.nih.gov/snp/) entry, if one exists.
+- **The protein change** -- On a nucleotide change's page, the page for the protein change it encodes.
+- **ClinGen Allele Registry** -- The variant's entry in the [ClinGen Allele Registry](https://reg.clinicalgenome.org/).
 
 The variant's **functional classification** is also prominently displayed with a color-coded label (e.g., normal, abnormal, or intermediate), based on the selected dataset's classification thresholds.
 
 ## Switching between assays
 
-When a variant has been measured in more than one MAVE dataset, MaveMD lists all available measurements at the top of the page. You can select a different assay to view its functional evidence, assay facts, and calibration information independently.
+When a variant has been measured in more than one MAVE dataset, MaveMD lists every measurement in a table at the top of the page. Each row shows the score set, its assay type and model system, and its evidence. Scores are on each assay's own scale, so the table compares measurements by their call rather than by score; the selected measurement's score appears in its functional evidence. Selecting a row jumps to its functional evidence, and the assay facts and calibration information below follow the selection. Long lists show their top-ranked measurements first, with the rest behind **Show more**.
+
+A row's evidence is a small chart of its score set's score distribution, shaded where its calibration calls scores abnormal (red) or normal (blue), with a line at this variant's score. It shows how close the score sits to a threshold. Beneath the chart is the row's call: its ACMG evidence code, or its functional impact when the calibration gives no evidence code. A dashed **Unclassified** tag means the score set has a calibration but it doesn't classify this variant; a dashed **Not calibrated** tag means the score set has no calibration, or only research-use-only ones while **RUO evidence** is off. Neither is a call, unlike **Not specified**, which places the variant in a calibrated range with no direction, such as an indeterminate one.
+
+Above the table, a line counts the calls across all the listed measurements, for example **1 Abnormal**, **3 Unclassified**. When a listed score set has a [research-use-only (RUO)](#evidence-calibrations) calibration, an **RUO evidence** toggle in the table's header controls whether its calls stand in for measurements whose score set has no other calibration. It is on by default.
 
 This is important because different assays may measure different molecular properties. For example, one assay might measure overall protein abundance while another measures enzymatic activity — and the results may not always agree. Viewing each assay's evidence in context, including its [assay facts](#assay-facts) and [calibration data](#evidence-calibrations), helps you evaluate which measurements are most relevant to the clinical question.
 
 You can also navigate to the full [score set page](../finding-data/visualizations.md) for the selected assay to view the complete dataset, including the heatmap, all variant scores, and detailed metadata.
+
+## What each measurement measured
+
+The measurement table groups measurements by what they assayed relative to your variant, with a heading for each group: measurements of **this exact nucleotide change**, measurements of **the protein change it encodes**, and measurements of **other nucleotide changes that encode the same protein change**. Only measurements in the first group measured your variant directly. If there are none, a notice at the top of the table says so: every measurement shown assayed a related variant.
+
+When you select a measurement from one of the other groups, a notice at the top of the functional evidence section states what was measured instead and what that can miss. For example, a protein-level measurement may not capture nucleotide-level effects such as splicing.
+
+## View options
+
+The **View options** button in the page header holds two settings that change which measurements are shown: **MaveDB as of**, which shows the molecular and annotation layer as MaveDB held it on a past date (scores never change), and a **Superseded score sets** switch. The button shows a count when either is set. The **Key** button beside it opens a glossary of the terms on this page.
 
 ## Assay facts
 
@@ -36,16 +49,19 @@ Each dataset on the variant page includes an [assay fact](../reference/assay-fac
 
 For the full list of assay fact properties and their definitions, see the [assay facts reference](../reference/assay-facts.md).
 
-## Annotations
+## Clinical and population data
 
-Beneath the assay details, an annotations card gathers evidence about the variant itself, independent of any one assay. **Classification** reports the selected measurement's functional score, ACMG code, and OddsPath ratio.
+Beneath the assay details, **Clinical & population data** reports external evidence for your variant first, then for the other nucleotide changes that encode the same protein change, across all of its measurements. On a protein-change page, it lists the nucleotide changes that encode that protein change. Each nucleotide change has one row, even when score sets describe it on different transcripts: your variant is written as it was measured, and the other changes on the MANE Select transcript (see [Which transcript a coding change is written on](../interpreting-annotated-variants.md#which-transcript-a-coding-change-is-written-on)). The rows do not change as you select different measurements; the one the selected measurement assayed is highlighted and tagged **Selected measurement**. A pathogenic ClinVar classification of a different nucleotide change that encodes the same protein change can support your variant's interpretation (ACMG PS1).
 
-**Population frequency** reports the variant's frequency in [gnomAD](../finding-data/external-integrations.md#gnomad), where it is present:
+Each row reports the **molecular consequence** from Ensembl VEP, the **population frequency** from [gnomAD](../finding-data/external-integrations.md#gnomad), and the **clinical significance** from [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/). For population frequency:
 
-- **AF** -- The allele frequency, followed by the allele count and allele number it was computed from.
-- **FAF95** -- The filtering allele frequency at 95% confidence, a conservative sampling-adjusted estimate, with the genetic ancestry group that attains it. A variant whose FAF95 exceeds a disease's maximum credible allele frequency is too common to be pathogenic (ACMG BA1/BS1).
+- **AF** -- The allele frequency, the headline figure.
+- **FAF95** -- The filtering allele frequency at 95% confidence, a conservative sampling-adjusted estimate. A variant whose FAF95 exceeds a disease's maximum credible allele frequency is too common to be pathogenic (ACMG BA1/BS1).
+- **Allele count / allele number** -- The counts the frequency was computed from.
 
-The gnomAD release the frequencies were drawn from is shown alongside them, with a link to the variant's gnomAD page. Variants absent from gnomAD are reported as having no record rather than as having zero frequency.
+gnomAD and ClinVar record nucleotide changes, not protein changes, so every row is a nucleotide change and shows only its own records. Variants absent from gnomAD are reported as having no record rather than as having zero frequency.
+
+Each source's release (VEP version, gnomAD version, ClinVar release) is shown once in the column heading when every row draws from the same release; otherwise each cell shows its own.
 
 ## Interactive histogram
 
@@ -66,7 +82,7 @@ Vertical bars mark the boundaries between functional classes.
 
 ### Clinical Controls view
 
-Toggle to the Clinical Controls view to see how the assay's functional scores correspond to independently classified clinical variants from [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/):
+Switch to the **Controls** tab to see how the assay's functional scores correspond to independently classified clinical variants from [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/):
 
 - **Red** -- Pathogenic or likely pathogenic variants
 - **Blue** -- Benign or likely benign variants
@@ -79,7 +95,9 @@ You can select different snapshots of the ClinVar database to see how clinical c
 
 Below the histogram, the variant page displays evidence calibration information that translates functional scores into clinical evidence strength compatible with the ACMG/AMP variant classification framework. When multiple calibration methods are available for a dataset, you can toggle between them to compare their results.
 
-The calibration table shows score ranges alongside their functional classifications (normal, abnormal, intermediate), ACMG/AMP evidence codes (e.g., PS3_Strong, BS3_Moderate), and OddsPath values when available. If the selected variant falls within a calibrated score range, the corresponding evidence strength is highlighted.
+The calibration table shows score ranges alongside their functional classifications (normal, abnormal, intermediate), ACMG/AMP evidence codes (e.g., PS3 Strong, BS3 Moderate), and OddsPath values when available. If the selected variant falls within a calibrated score range, the corresponding evidence strength is highlighted.
+
+In the functional evidence section, the functional impact, ACMG code, and OddsPath ratio are read from the calibration chosen above them, set apart from the score itself; when a score set has more than one calibration, you can switch between them there as well as above the histogram, and the two stay in sync. **View score set** opens the score set page with this measurement and calibration already selected. Calibrations marked **Research use only** are not intended for clinical or diagnostic use and are tagged as such wherever their calls appear. The measurement table shows research-use-only calls, tagged **RUO**, unless the **RUO evidence** toggle on the measurement table is turned off, and only for a score set with no other calibration; they never affect the table's order.
 
 For details on calibration methods, how calibrations are uploaded, and how primary calibrations are selected, see [Score Calibrations](../reference/score-calibrations.md).
 

@@ -21,7 +21,7 @@
 
     <template v-else-if="status === 'Loaded' && gene">
       <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1000px">
-        <section aria-labelledby="gene-facts-heading" class="mb-5 rounded-lg border border-border bg-white px-5 py-4">
+        <section aria-labelledby="gene-facts-heading" class="mave-card mb-5 px-5 py-4">
           <h2 id="gene-facts-heading" class="mave-section-title mb-2">Gene facts</h2>
           <div class="gene-facts-grid grid grid-cols-1 gap-x-8 tablet:grid-cols-2">
             <MvDetailRow
@@ -60,11 +60,7 @@
           />
 
           <div v-else class="flex flex-col gap-2.5">
-            <div
-              v-for="group in groupedScoreSets"
-              :key="group.experimentUrn"
-              class="overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
-            >
+            <div v-for="group in groupedScoreSets" :key="group.experimentUrn" class="mave-card overflow-hidden">
               <div class="px-5 pt-3 text-xs font-semibold text-gray-500">
                 Experiment:
                 <router-link class="text-link" :to="{name: 'experiment', params: {urn: group.experimentUrn}}">
@@ -88,7 +84,7 @@
               Gene information is temporarily unavailable. Try again in a moment.
             </MvStatusMessage>
             <button
-              class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage hover:bg-sage-light disabled:cursor-wait disabled:opacity-70"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage-strong hover:bg-sage-light disabled:cursor-wait disabled:opacity-70"
               :disabled="loadingMore"
               type="button"
               @click="loadMoreScoreSets"

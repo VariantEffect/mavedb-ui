@@ -1,21 +1,209 @@
 import {describe, expect, it, test} from 'vitest'
+
 import {
   CHROMOSOME_REFSEQ_IDS,
+  collectGnomadFrequencies,
+  formatAlleleCount,
+  formatFrequency,
   gnomadIdToHgvs,
   gnomadIdToHgvsCandidates,
+  gnomadVariantUrl,
   otherAssembly,
   parseGnomadId,
-  formatFrequency,
-  gnomadFromVariantRow,
-  gnomadVariantUrl,
-  type GnomadFrequency
+  resolveGnomadHeadline,
+  type UnderlyingGnomad
 } from './gnomad'
-import type {RawVariant} from '@/lib/variants'
+
+type GnomadAnnotation = UnderlyingGnomad['gnomad']
+
+// A gnomAD annotation with sensible defaults; only the fields a test cares about need overriding.
+function gnomad(overrides: Partial<GnomadAnnotation> & {dbIdentifier: string}): GnomadAnnotation {
+  return {
+    alleleFrequency: 0.001,
+    alleleCount: 10,
+    alleleNumber: 10000,
+    faf95Max: null,
+    dbVersion: '4',
+    ...overrides
+  }
+}
+
+/** The gnomAD variant ids in a collected list, in returned order. */
+const ids = (list: UnderlyingGnomad[]) => list.map((item) => item.gnomad.dbIdentifier)
+
+describe('collectGnomadFrequencies — enumeration of encoding-variant frequencies', () => {
+  test('nullish annotations → empty', () => {
+    expect(collectGnomadFrequencies(null, null)).toEqual([])
+    expect(collectGnomadFrequencies(undefined, undefined)).toEqual([])
+  })
+
+  test('no allele carries gnomAD → empty', () => {
+    const annotations = {'protein-digest': {}, 'other-digest': {gnomad: null}}
+    expect(collectGnomadFrequencies(annotations, {})).toEqual([])
+  })
+
+  test('collects one measurement per annotated allele, pairing the HGVS from the alleles sidecar', () => {
+    const annotations = {
+      'digest-a': {gnomad: gnomad({dbIdentifier: '1-100-A-G', alleleFrequency: 0.002})},
+      'digest-b': {gnomad: gnomad({dbIdentifier: '1-200-C-T', alleleFrequency: 0.001})}
+    }
+    const alleles = {'digest-a': {hgvs: 'c.10A>G'}, 'digest-b': {hgvs: 'c.20C>T'}}
+    const result = collectGnomadFrequencies(annotations, alleles)
+    expect(result).toHaveLength(2)
+    expect(result.find((r) => r.gnomad.dbIdentifier === '1-100-A-G')?.hgvs).toBe('c.10A>G')
+    expect(result.find((r) => r.gnomad.dbIdentifier === '1-200-C-T')?.hgvs).toBe('c.20C>T')
+  })
+
+  test('sorts by descending allele frequency when no record carries a FAF95', () => {
+    const annotations = {
+      low: {gnomad: gnomad({dbIdentifier: 'low', alleleFrequency: 0.0001})},
+      high: {gnomad: gnomad({dbIdentifier: 'high', alleleFrequency: 0.05})},
+      mid: {gnomad: gnomad({dbIdentifier: 'mid', alleleFrequency: 0.01})}
+    }
+    expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['high', 'mid', 'low'])
+  })
+
+  test('sorts by grpmax FAF95 first, the figure BA1/BS1 apply to, even over a higher global AF', () => {
+    const annotations = {
+      common: {gnomad: gnomad({dbIdentifier: 'common', alleleFrequency: 0.004, faf95Max: 0.001})},
+      grpmax: {gnomad: gnomad({dbIdentifier: 'grpmax', alleleFrequency: 0.002, faf95Max: 0.003})}
+    }
+    expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['grpmax', 'common'])
+  })
+
+  test('records without a FAF95 follow every record with one', () => {
+    const annotations = {
+      noFaf: {gnomad: gnomad({dbIdentifier: 'noFaf', alleleFrequency: 0.05, faf95Max: null})},
+      faf: {gnomad: gnomad({dbIdentifier: 'faf', alleleFrequency: 0.0001, faf95Max: 0.00001})}
+    }
+    expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['faf', 'noFaf'])
+  })
+
+  test('missing HGVS is tolerated → null label', () => {
+    const annotations = {'digest-a': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})}}
+    expect(collectGnomadFrequencies(annotations, {})[0]?.hgvs).toBeNull()
+    expect(collectGnomadFrequencies(annotations, {'digest-a': {hgvs: null}})[0]?.hgvs).toBeNull()
+  })
+
+  describe('deduplication by gnomAD variant id — the c/g members of one genomic variant share it', () => {
+    test('two digests, same dbIdentifier → one entry', () => {
+      const annotations = {
+        'c-digest': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})},
+        'g-digest': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})}
+      }
+      const alleles = {'c-digest': {hgvs: 'c.10A>G'}, 'g-digest': {hgvs: 'g.100A>G'}}
+      const result = collectGnomadFrequencies(annotations, alleles)
+      expect(result).toHaveLength(1)
+    })
+
+    test('coding HGVS is preferred as the label regardless of iteration order', () => {
+      // g-member seen first, c-member second.
+      const gFirst = {
+        'g-digest': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})},
+        'c-digest': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})}
+      }
+      // c-member seen first, g-member second.
+      const cFirst = {
+        'c-digest': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})},
+        'g-digest': {gnomad: gnomad({dbIdentifier: '1-100-A-G'})}
+      }
+      const alleles = {'c-digest': {hgvs: 'NM_1.2:c.10A>G'}, 'g-digest': {hgvs: 'NC_1.11:g.100A>G'}}
+      expect(collectGnomadFrequencies(gFirst, alleles)[0]?.hgvs).toBe('NM_1.2:c.10A>G')
+      expect(collectGnomadFrequencies(cFirst, alleles)[0]?.hgvs).toBe('NM_1.2:c.10A>G')
+    })
+
+    test('genomic HGVS is preferred over a non-c/g label; a present label beats a missing one', () => {
+      const annotations = {
+        'n-digest': {gnomad: gnomad({dbIdentifier: 'X'})},
+        'g-digest': {gnomad: gnomad({dbIdentifier: 'X'})}
+      }
+      expect(
+        collectGnomadFrequencies(annotations, {'n-digest': {hgvs: 'n.5A>G'}, 'g-digest': {hgvs: 'g.100A>G'}})[0]?.hgvs
+      ).toBe('g.100A>G')
+      expect(collectGnomadFrequencies(annotations, {'g-digest': {hgvs: 'g.100A>G'}})[0]?.hgvs).toBe('g.100A>G')
+    })
+  })
+
+  describe('subject exclusion — the subject`s own frequency is the headline, not a "related" one', () => {
+    test('excludes the subject digest', () => {
+      const annotations = {
+        subject: {gnomad: gnomad({dbIdentifier: 'S'})},
+        sib: {gnomad: gnomad({dbIdentifier: 'B'})}
+      }
+      expect(ids(collectGnomadFrequencies(annotations, {}, ['subject']))).toEqual(['B'])
+    })
+
+    test('excludes the subject`s projection (same gnomAD id on a non-subject digest)', () => {
+      // The subject (coding) has no gnomAD of its own; its genomic projection carries the record. Anchoring on both
+      // subject digests drops the projection so the subject`s own frequency is never listed as related.
+      const annotations = {
+        'subject-c': {gnomad: null},
+        'subject-g': {gnomad: gnomad({dbIdentifier: 'S'})},
+        sib: {gnomad: gnomad({dbIdentifier: 'B'})}
+      }
+      expect(ids(collectGnomadFrequencies(annotations, {}, ['subject-c', 'subject-g']))).toEqual(['B'])
+    })
+
+    test('no subject given → collects everything (backward compatible)', () => {
+      const annotations = {
+        subject: {gnomad: gnomad({dbIdentifier: 'S'})},
+        sib: {gnomad: gnomad({dbIdentifier: 'B', alleleFrequency: 0.002})}
+      }
+      expect(ids(collectGnomadFrequencies(annotations, {}))).toEqual(['B', 'S'])
+    })
+  })
+})
 
 /** The GRCh38 translation of a gnomAD ID, which is the one tried first. */
 function grch38Hgvs(gnomadId: string): string | undefined {
   return gnomadIdToHgvsCandidates(gnomadId)[0]?.hgvs
 }
+
+describe('resolveGnomadHeadline — which frequency a cell shows', () => {
+  const own = gnomad({dbIdentifier: 'own', alleleFrequency: 0.003})
+  const related = {
+    'subject-digest': {gnomad: null},
+    'enc-a': {gnomad: gnomad({dbIdentifier: 'enc-a', alleleFrequency: 0.0002})},
+    'enc-b': {gnomad: gnomad({dbIdentifier: 'enc-b', alleleFrequency: 0.004})}
+  }
+
+  test("the subject's own record wins at any level", () => {
+    const headline = resolveGnomadHeadline(own, related, {}, ['subject-digest'], 'protein')
+    expect(headline.state).toBe('direct')
+    expect(headline.direct).toBe(own)
+    expect(headline.strongest).toBeNull()
+  })
+
+  test("protein level with no record of its own headlines the strongest encoding's own record", () => {
+    const headline = resolveGnomadHeadline(null, related, {'enc-b': {hgvs: 'c.20C>T'}}, ['subject-digest'], 'protein')
+    expect(headline.state).toBe('enumerated')
+    expect(headline.strongest?.gnomad).toBe(related['enc-b'].gnomad)
+    expect(headline.strongest?.hgvs).toBe('c.20C>T')
+    expect(ids(headline.underlying)).toEqual(['enc-b', 'enc-a'])
+  })
+
+  test('unknown level behaves like protein level', () => {
+    expect(resolveGnomadHeadline(null, related, {}, ['subject-digest'], null).state).toBe('enumerated')
+  })
+
+  test.each(['cdna', 'genomic'])('%s level never borrows related frequencies', (level) => {
+    const headline = resolveGnomadHeadline(null, related, {}, ['subject-digest'], level)
+    expect(headline.state).toBe('absent')
+    expect(headline.strongest).toBeNull()
+  })
+
+  test('nothing anywhere → none', () => {
+    expect(resolveGnomadHeadline(null, {}, {}, [], 'protein').state).toBe('none')
+  })
+})
+
+describe('formatAlleleCount', () => {
+  test('compacts large counts and leaves small ones', () => {
+    expect(formatAlleleCount(1614062)).toBe('1.6M')
+    expect(formatAlleleCount(7)).toBe('7')
+    expect(formatAlleleCount(12500)).toBe('12.5K')
+  })
+})
 
 describe('parseGnomadId', () => {
   it('parses a substitution', () => {
@@ -155,82 +343,6 @@ describe('CHROMOSOME_REFSEQ_IDS', () => {
   })
 })
 
-/** A variant data row whose gnomad namespace is fully populated; overrides replace individual cells. */
-function row(overrides: Partial<NonNullable<RawVariant['gnomad']>> = {}): RawVariant {
-  return {
-    accession: 'urn:mavedb:00000001-a-1#1',
-    scores: {score: 0.5},
-    gnomad: {
-      gnomad_af: 1.86e-6,
-      gnomad_ac: 3,
-      gnomad_an: 1613510,
-      gnomad_faf95_max: 6.8e-7,
-      gnomad_faf95_max_ancestry: 'nfe',
-      gnomad_id: '10-87961093-A-G',
-      gnomad_version: 'v4.1',
-      ...overrides
-    }
-  }
-}
-
-const frequency: GnomadFrequency = {
-  alleleFrequency: 1.86e-6,
-  alleleCount: 3,
-  alleleNumber: 1613510,
-  faf95Max: 6.8e-7,
-  faf95MaxAncestry: 'nfe',
-  dbIdentifier: '10-87961093-A-G',
-  dbVersion: 'v4.1'
-}
-
-describe('gnomadFromVariantRow', () => {
-  test('reads a populated namespace into the display shape', () => {
-    expect(gnomadFromVariantRow(row())).toEqual(frequency)
-  })
-
-  test('nullish row or absent namespace → null', () => {
-    expect(gnomadFromVariantRow(null)).toBeNull()
-    expect(gnomadFromVariantRow(undefined)).toBeNull()
-    expect(gnomadFromVariantRow({accession: 'x', scores: {score: 0.5}})).toBeNull()
-  })
-
-  test("a variant with no gnomAD record reports 'NA' across the namespace → null", () => {
-    const unannotated = row({
-      gnomad_af: 'NA',
-      gnomad_ac: 'NA',
-      gnomad_an: 'NA',
-      gnomad_faf95_max: 'NA',
-      gnomad_faf95_max_ancestry: 'NA',
-      gnomad_id: 'NA',
-      gnomad_version: 'NA'
-    })
-    expect(gnomadFromVariantRow(unannotated)).toBeNull()
-  })
-
-  test.each(['gnomad_af', 'gnomad_ac', 'gnomad_an', 'gnomad_id'] as const)(
-    'a missing %s makes the record unusable → null',
-    (field) => {
-      expect(gnomadFromVariantRow(row({[field]: 'NA'}))).toBeNull()
-    }
-  )
-
-  test('FAF95 is optional — absent leaves the rest intact', () => {
-    const result = gnomadFromVariantRow(row({gnomad_faf95_max: 'NA', gnomad_faf95_max_ancestry: 'NA'}))
-    expect(result).toMatchObject({alleleFrequency: 1.86e-6, faf95Max: null, faf95MaxAncestry: null})
-  })
-
-  test('a zero allele frequency is a real value, not a missing one', () => {
-    expect(gnomadFromVariantRow(row({gnomad_af: 0, gnomad_ac: 0}))).toMatchObject({
-      alleleFrequency: 0,
-      alleleCount: 0
-    })
-  })
-
-  test('an absent version degrades gracefully rather than dropping the record', () => {
-    expect(gnomadFromVariantRow(row({gnomad_version: 'NA'}))?.dbVersion).toBe('unknown')
-  })
-})
-
 describe('formatFrequency', () => {
   test('nullish → em dash', () => {
     expect(formatFrequency(null)).toBe('—')
@@ -259,7 +371,7 @@ describe('gnomadVariantUrl — dataset matches the record version', () => {
     expect(url).toContain('/variant/1-55051215-G-A')
   })
 
-  test('an unrecognisable version falls back to the current dataset', () => {
-    expect(gnomadVariantUrl({dbIdentifier: 'x', dbVersion: 'unknown'})).toContain('dataset=gnomad_r4')
+  test.each(['unknown', 'v5.0'])('an unrecognised version %s gets no dataset', (dbVersion) => {
+    expect(gnomadVariantUrl({dbIdentifier: 'x', dbVersion})).toBe('https://gnomad.broadinstitute.org/variant/x')
   })
 })

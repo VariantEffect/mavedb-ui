@@ -50,6 +50,13 @@ export const NEWS_ITEMS_LIMIT = 3
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    date: 'Oct 2026',
+    tag: 'improvement',
+    title: 'More complete and accurate mapped variants',
+    description:
+      'Mapped variants now carry coding and protein descriptions for intronic, UTR and multi-codon changes, and for genomic assays without a recorded transcript, which use the MANE Select transcript. Protein consequences are computed from each mapped variant, correcting reference residues and frameshift stop positions.'
+  },
+  {
     date: 'Jun 2026',
     tag: 'feature',
     title: 'Gene pages',

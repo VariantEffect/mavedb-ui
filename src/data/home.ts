@@ -1,8 +1,7 @@
 /**
  * Static content data for the homepage (HomeScreen).
  *
- * Constants here are stub/placeholder data. Items marked with TODO should be
- * replaced with real API data when available.
+ * Items marked with TODO should be replaced with real API data when available.
  */
 
 import igvfLogo from '@/assets/igvf-tag.png'
@@ -28,26 +27,40 @@ export const WATERMARK_BARS = [
   {color: 'var(--color-sage)', height: '12%'}
 ]
 
+/**
+ * "Browse by" facets, most broadly useful first: the full corpus and the
+ * human-organism filter.
+ */
 export const BROWSE_CATEGORIES = [
-  {label: 'BRCA1', description: 'Browse BRCA1 score sets', icon: 'fa-solid fa-dna', route: '/search?target-name=BRCA1'},
+  {label: 'Browse all', description: 'Open search, no filters', icon: 'fa-solid fa-magnifying-glass', route: '/search'},
   {
     label: 'Human',
     description: 'Human variant data',
     icon: 'fa-solid fa-person',
     route: '/search?target-organism-name=Homo+sapiens'
-  },
-  {label: 'Browse all', description: 'Open search, no filters', icon: 'fa-solid fa-magnifying-glass', route: '/search'}
+  }
 ]
+
+/** Points newcomers from the Explore panel at the searching guide. */
+export const SEARCH_GUIDE_HREF = '/docs/mavedb/finding-data/searching.html'
 
 export const CONTRIBUTE_CATEGORIES = [
   {
     label: 'New Experiment',
-    description: 'Group related score sets',
+    description: 'Start uploading a new experiment',
     icon: 'fa-solid fa-folder-plus',
     route: '/create-experiment'
   },
-  {label: 'New Score Set', description: 'Upload variant scores', icon: 'fa-solid fa-upload', route: '/create-score-set'}
+  {
+    label: 'New Score Set',
+    description: 'Add scores to an existing experiment',
+    icon: 'fa-solid fa-upload',
+    route: '/create-score-set'
+  }
 ]
+
+/** Points first-time submitters at the submission guide before the ORCID-gated create forms. */
+export const SUBMISSION_GUIDE_HREF = '/docs/mavedb/submitting-data/before-you-start.html'
 
 export const FEATURED_COLLECTIONS = [
   {

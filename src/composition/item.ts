@@ -20,6 +20,8 @@ interface UseItemReturn<T> {
   stateNamespace: ComputedRef<string | Ref<string | null>>
   item: ComputedRef<T | null>
   itemStatus: ComputedRef<string>
+  /** HTTP status of the last failed load, or null for a network error or when the load didn't fail. */
+  itemErrorStatus: ComputedRef<number | null>
   resetItem: (params?: {itemTypeName?: string | null; stateNamespace?: string | null; options?: Record<string, unknown> | null}) => void
   ensureItemStore: () => boolean
   ensureItemLoaded: (payload?: unknown) => Promise<unknown> | null
@@ -111,6 +113,9 @@ export default <T = unknown>({
     }),
     itemStatus: computed(() =>
       itemStoreReady.value ? _.get(store.state, `${stateNamespace.value}.itemStatus`) : 'NotLoaded'
+    ),
+    itemErrorStatus: computed(() =>
+      itemStoreReady.value ? (_.get(store.state, `${stateNamespace.value}.itemErrorStatus`) ?? null) : null
     ),
 
     // Methods

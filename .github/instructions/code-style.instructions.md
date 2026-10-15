@@ -2,7 +2,7 @@
 
 ## Formatting (Prettier)
 
-The project uses Prettier for code formatting, configured in `.prettierrc.ts`:
+The project uses Prettier for code formatting, configured in `.prettierrc.json`:
 
 | Setting                 | Value    |
 | ----------------------- | -------- |

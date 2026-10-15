@@ -11,15 +11,15 @@
   <MvMaintenanceBanner />
 
   <!-- Beta site banner -->
-  <div v-if="config.PREVIEW_SITE" class="bg-orange-cta px-4 py-1 text-center text-sm text-white">
+  <div v-if="config.PREVIEW_SITE" class="bg-orange-cta px-4 py-1 text-center text-sm text-text-dark">
     This is a beta test site. For the production site, please visit
-    <a class="text-white underline" :href="MAVEDB_PRODUCTION">mavedb.org</a>. To give feedback, please use our
-    <a class="text-white underline" :href="ZULIP_BETA_TESTERS">Zulip message board</a>.
+    <a class="text-text-dark underline" :href="MAVEDB_PRODUCTION">mavedb.org</a>. To give feedback, please use our
+    <a class="text-text-dark underline" :href="ZULIP_BETA_TESTERS">Zulip message board</a>.
   </div>
 
   <!-- Main nav -->
   <nav aria-label="Main navigation" class="sticky top-0 z-100 border-b border-border bg-white">
-    <div class="mx-auto flex h-[58px] max-w-screen-xl items-center gap-6 px-6">
+    <div class="mx-auto flex h-[var(--nav-height)] max-w-screen-xl items-center gap-6 px-6">
       <!-- Logo -->
       <router-link class="shrink-0" to="/">
         <img
@@ -298,12 +298,12 @@ export default defineComponent({
 }
 
 .nav-link:hover {
-  color: var(--color-sage);
+  color: var(--color-sage-strong);
   text-decoration: none;
 }
 
 .nav-link-active {
-  color: var(--color-sage);
+  color: var(--color-sage-strong);
   font-weight: 700;
 }
 
@@ -317,7 +317,7 @@ export default defineComponent({
 }
 
 .mobile-nav-link:hover {
-  color: var(--color-sage);
+  color: var(--color-sage-strong);
   text-decoration: none;
 }
 

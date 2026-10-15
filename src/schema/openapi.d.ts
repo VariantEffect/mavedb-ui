@@ -31,12 +31,48 @@ export interface paths {
      */
     delete: operations["delete_my_access_key_api_v1_users_me_access_keys__key_id__delete"];
   };
+  "/api/v1/alleles/{identifier}": {
+    /**
+     * Fetch allele detail by VRS digest, CAID, or PAID
+     * @description Fetch the detail envelope for a deduplicated allele, by any of its identifiers.
+     *
+     * The allele-grain counterpart of ``GET /variants/{urn}``. Flat anchor identity (digest, level, HGVS,
+     * ClinGen id, spec-pure VRS) plus the cross-layer equivalence class (each member labelled relative to
+     * the focus) and a digest-keyed annotation map. The ``identifier`` may be:
+     *
+     * - a **VRS digest** (``ga4gh:VA.…``) — focuses that one allele.
+     * - a **CAID** (``CA…``) — the nt-canonical change; The coding frame is the preferential focus,
+     *   falling back to the genomic frame if no coding frame exists.
+     * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
+     *   equivalents surface as reverse-translation candidates.
+     *
+     * The envelope carries no score-set-level information. No scores, classifications, measurements, or
+     * version standing. Only the allele's own identity, its cross-layer equivalence class, and public
+     * reference annotations (VEP / gnomAD / ClinVar).
+     *
+     * An allele is in MaveDB only because a score set's mapping produced it, so it is served only to
+     * callers who may read at least one such score set; otherwise the response is a 404, indistinguishable
+     * from an unknown identifier. The equivalence class is likewise limited to readable score sets.
+     */
+    get: operations["get_allele_api_v1_alleles__identifier__get"];
+  };
   "/api/v1/api/version": {
     /**
      * Show API version
      * @description Describe the API version and project.
      */
     get: operations["show_version_api_v1_api_version_get"];
+  };
+  "/api/v1/clingen-alleles/{clingen_allele_id}/measurements": {
+    /**
+     * List measurements for a ClinGen allele's equivalence class
+     * @description List every measurement whose cross-layer equivalence class touches this ClinGen allele (a ``CA`` or
+     * ``PA``) — the direct measurements assayed at this change plus the reverse-translation-related ones,
+     * each labeled by its assayed level and relationship. This is the ClinGen-allele-centric variant page's
+     * entrypoint. A private score set's measurement is never included; its inline classification is withheld
+     * where the calibration is unreadable while the measurement still shows.
+     */
+    get: operations["get_clingen_allele_measurements_api_v1_clingen_alleles__clingen_allele_id__measurements_get"];
   };
   "/api/v1/users/me/collections": {
     /**
@@ -145,6 +181,13 @@ export interface paths {
      */
     post: operations["search_keyword_by_key_and_value_api_v1_controlled_keywords_search__key___value__post"];
   };
+  "/api/v1/diseases/search": {
+    /**
+     * Search MONDO disease terms
+     * @description Typeahead search for MONDO disease terms, returned as GA4GH ``MappableConcept`` suggestions.
+     */
+    get: operations["search_diseases_api_v1_diseases_search_get"];
+  };
   "/api/v1/doi-identifiers/search": {
     /**
      * Search DOI identifiers
@@ -224,6 +267,10 @@ export interface paths {
     /**
      * Validate a provided variant
      * @description Validate the provided HGVS variant string.
+     *
+     * Parsing and validation failures both stem from caller-supplied input, so any ``HGVSError`` — a syntactic
+     * parse failure, an inconsistent variant, an unknown accession — is surfaced as a 400 rather than escaping
+     * to the catch-all 500 handler.
      */
     post: operations["hgvs_validate_api_v1_hgvs_validate_post"];
   };
@@ -313,38 +360,47 @@ export interface paths {
   };
   "/api/v1/mapped-variants/{urn}": {
     /**
-     * Fetch mapped variant by URN
-     * @description Fetch a single mapped variant by URN.
+     * Moved to GET /variants/{urn}
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}`` instead.
      */
-    get: operations["show_mapped_variant_api_v1_mapped_variants__urn__get"];
+    get: operations["redirect_mapped_variant_api_v1_mapped_variants__urn__get"];
   };
   "/api/v1/mapped-variants/{urn}/va/study-result": {
     /**
-     * Construct a VA-Spec StudyResult from a mapped variant
-     * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
+     * Moved to GET /variants/{urn}/va/study-result
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}/va/study-result`` instead.
      */
-    get: operations["show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
+    get: operations["redirect_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
   };
   "/api/v1/mapped-variants/{urn}/va/functional-statement": {
     /**
-     * Construct a VA-Spec Statement from a mapped variant
-     * @description Construct a single VA-Spec Statement from a mapped variant by URN.
+     * Moved to GET /variants/{urn}/va/functional-statement
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}/va/functional-statement`` instead.
      */
-    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
+    get: operations["redirect_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
   };
   "/api/v1/mapped-variants/{urn}/va/pathogenicity-statement": {
     /**
-     * Construct a VA-Spec EvidenceLine from a mapped variant
-     * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
+     * Moved to GET /variants/{urn}/va/pathogenicity-statement
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/{urn}/va/pathogenicity-statement`` instead.
      */
-    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
+    get: operations["redirect_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/mapped-variants/vrs/{identifier}": {
     /**
-     * Fetch mapped variants by VRS identifier
-     * @description Fetch a single mapped variant by GA4GH identifier.
+     * Moved to GET /variants/vrs/{identifier}
+     * @deprecated
+     * @description This resource has moved. Use ``GET /variants/vrs/{identifier}`` instead.
+     *
+     * Note that the replacement's ``only_current`` boolean query parameter has been superseded by
+     * ``as_of``; a caller relying on ``only_current=false`` should switch to passing an explicit
+     * ``as_of`` timestamp rather than expecting it to carry over through this redirect.
      */
-    get: operations["show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get"];
+    get: operations["redirect_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get"];
   };
   "/api/v1/orcid/users/{orcid_id}": {
     /**
@@ -488,7 +544,10 @@ export interface paths {
   "/api/v1/score-calibrations/me": {
     /**
      * List my calibrations
-     * @description List all score calibrations created by the current user.
+     * @description List the score calibrations created by the current user that the user may still read.
+     *
+     * Calibrations on score sets the user can no longer read, for example after being removed as a
+     * contributor, are omitted.
      */
     get: operations["list_my_calibrations_api_v1_score_calibrations_me_get"];
   };
@@ -529,6 +588,7 @@ export interface paths {
      * **Form Fields**:
      * - `calibration_json` (string, required): JSON string containing the calibration update data
      * - `classes_file` (file, optional): CSV file containing updated variant classifications
+     * - `controls_file` (file, optional): CSV file containing calibration controls (replaces existing)
      *
      * **Example**:
      * ```bash
@@ -549,6 +609,16 @@ export interface paths {
      * If provided, this will replace the existing classification data for the calibration.
      * The file should have appropriate headers and follow the expected format for variant
      * classifications within the associated score set.
+     *
+     * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+     * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+     * `benign`, case-insensitive). If provided, it replaces the calibration's existing controls.
+     * Controls may be supplied either via this file or inline in `calibration_json`, but not both;
+     * omitting both leaves existing controls unchanged.
+     *
+     * Controls are stored only while `controls_not_phi` is true. New controls must be submitted with
+     * `controls_not_phi: true` in the same request; setting it to false or null without new controls
+     * deletes the existing controls.
      *
      * ## Response
      * Returns the updated score calibration with all modifications applied and any new
@@ -607,6 +677,7 @@ export interface paths {
      * **Form Fields**:
      * - `calibration_json` (string, required): JSON string containing the calibration data
      * - `classes_file` (file, optional): CSV file containing variant classifications
+     * - `controls_file` (file, optional): CSV file containing calibration controls
      *
      * **Example**:
      * ```bash
@@ -626,6 +697,12 @@ export interface paths {
      * ## File Upload Details
      * The `classes_file` parameter accepts CSV files containing variant classification data.
      * The file should have appropriate headers and contain columns for variant urns and class names.
+     *
+     * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+     * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+     * `benign`, case-insensitive). Controls may be supplied either via this file or inline in
+     * `calibration_json`, but not both. Controls are accepted only with `controls_not_phi: true`, the
+     * submitter's affirmation that they contain no protected health information (PHI).
      *
      * ## Response
      * Returns the created score calibration with its generated URN and associated score set information.
@@ -650,6 +727,8 @@ export interface paths {
     /**
      * Publish Score Calibration Route
      * @description Publish a score calibration, making it publicly visible.
+     *
+     * The calibration's score set must already be published.
      */
     post: operations["publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post"];
   };
@@ -773,6 +852,52 @@ export interface paths {
      */
     get: operations["get_score_set_csv_namespaces_api_v1_score_sets__urn__csv_namespaces_get"];
   };
+  "/api/v1/score-sets/{urn}/variants": {
+    /**
+     * Get the lean whole-set variant view for a score set
+     * @description Return the lean whole-set view for a score set: one pre-chewed record per variant carrying the
+     * selection key (variant URN), score, a representative consequence, the bridge identifiers into the
+     * annotation dimensions (ClinGen allele id, assay-level digest), and the DNA + protein parsed
+     * position/ref/alt blocks that drive the heatmap's level toggle.
+     *
+     * The full set is returned in one payload — the score-set page bins/sorts/filters across every
+     * variant client-side. as_of time-travels the annotation layer only (scores are immutable); the
+     * resolved value is echoed in the X-As-Of response header so the content-time is a visible fact.
+     */
+    get: operations["get_score_set_lean_variants_api_v1_score_sets__urn__variants_get"];
+  };
+  "/api/v1/score-sets/{urn}/variant-details": {
+    /**
+     * Download a score set's variant details (VRS + Cat-VRS + annotations)
+     * @description Download the score set's variant details — the whole-set streaming pair of the single-variant
+     * ``GET /variants/{urn}`` detail endpoint, and the substrate-faithful replacement for the retired
+     * ``/mapped-variants`` export.
+     *
+     * One record per *mapped* variant (unmapped variants carry no VRS and are omitted): the same
+     * VariantDetail envelope the single-variant route serves — the flat ``preMapped``/``postMapped`` VRS
+     * pair for VRS consumers, plus the spec-pure GA4GH CategoricalVariant and the digest-keyed
+     * VEP/gnomAD/ClinVar annotation map for the full molecular picture.
+     *
+     * Streamed as NDJSON (like the annotated-variant exports) so a large score set downloads without
+     * materializing every envelope server-side and a client can process it line by line. ``as_of``
+     * time-travels the molecular layer only (scores/classifications are immutable); the resolved value is
+     * echoed in ``X-As-Of`` and the variant count in ``X-Total-Count``.
+     */
+    get: operations["get_score_set_variant_details_api_v1_score_sets__urn__variant_details_get"];
+  };
+  "/api/v1/score-sets/{urn}/mapped-variants": {
+    /**
+     * Removed; see GET /score-sets/{urn}/variant-details
+     * @deprecated
+     * @description This endpoint has been permanently removed.
+     *
+     * Its JSON-array response has been replaced by a streaming NDJSON payload with a different
+     * field shape (flat ``preMapped``/``postMapped`` VRS pair rather than a ``MappedVariant``-keyed
+     * record), so the two are not wire-compatible and this route does not redirect. Use
+     * ``GET /score-sets/{urn}/variant-details`` instead.
+     */
+    get: operations["get_score_set_mapped_variants_removed_api_v1_score_sets__urn__mapped_variants_get"];
+  };
   "/api/v1/score-sets/{urn}/variants/data": {
     /**
      * Get score set variant data in CSV format
@@ -846,33 +971,40 @@ export interface paths {
      */
     get: operations["get_score_set_counts_csv_api_v1_score_sets__urn__counts_get"];
   };
-  "/api/v1/score-sets/{urn}/mapped-variants": {
-    /**
-     * Get mapped variants from score set by URN
-     * @description Return mapped variants from a score set, identified by URN.
-     */
-    get: operations["get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get"];
-  };
   "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-statement": {
     /**
-     * Get pathogenicity statement annotations for mapped variants within a score set
+     * Get pathogenicity statement annotations for variants within a score set
      * @description Retrieve annotated variants with pathogenicity statements for a given score set.
      *
-     * This endpoint streams pathogenicity evidence lines for all current mapped variants
+     * This endpoint streams pathogenicity evidence lines for all current annotated variants
      * associated with a specific score set. The response is returned as newline-delimited
      * JSON (NDJSON) format for efficient processing of large datasets.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to an annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Pathogenicity evidence line details
      *         }
      *     }
      *     ```
+     *
+     *     `annotation` is null where the variant has no mapping data to annotate, or no pathogenicity statements apply
+     *     to it. A variant whose annotation could not be built is reported in-band rather than by
+     *     truncating the stream, and carries an additional `error` object:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the annotated variant>",
+     *         "annotation": null,
+     *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+     *     }
+     *     ```
+     *
+     *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+     *     body is a truncated one.
      *
      * Args:
      *     urn (str): The Uniform Resource Name (URN) of the score set to retrieve
@@ -883,41 +1015,58 @@ export interface paths {
      *
      * Returns:
      *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
-     *         evidence lines for each mapped variant. Response includes headers with
+     *         evidence lines for each annotated variant. Response includes headers with
      *         total count, processing start time, and stream type information.
+     *
+     * A score set that exists but has no annotatable variants (never mapped, or none live at ``as_of``)
+     * streams an empty body with ``X-Total-Count: 0`` — an empty collection, not a 404.
      *
      * Raises:
      *     HTTPException: 404 error if the score set with the given URN is not found.
-     *     HTTPException: 404 error if no mapped variants are associated with the score set.
      *     HTTPException: 403 error if the user lacks READ permissions for the score set.
      *
      * Note:
      *     This function logs the request context and validates user permissions before
-     *     processing. Only current (non-historical) mapped variants are included in
-     *     the response.
+     *     processing. Use the `as_of` parameter to reconstruct the molecular layer as it stood at a specific
+     *     instant, over the variant's fixed score. The response is streamed to allow for efficient handling
+     *     of large datasets, and progress updates are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/functional-statement": {
     /**
-     * Get functional impact statement annotations for mapped variants within a score set
+     * Get functional impact statement annotations for annotated variants within a score set
      * @description Retrieve functional impact statements for annotated variants in a score set.
      *
-     * This endpoint streams functional impact statements for all current mapped variants
+     * This endpoint streams functional impact statements for all current annotated variants
      * associated with a specific score set. The response is delivered as newline-delimited
      * JSON (NDJSON) format.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to an annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Functional impact statement details
      *         }
      *     }
      *     ```
+     *
+     *     `annotation` is null where the variant has no mapping data to annotate, or no functional impact statements apply
+     *     to it. A variant whose annotation could not be built is reported in-band rather than by
+     *     truncating the stream, and carries an additional `error` object:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the annotated variant>",
+     *         "annotation": null,
+     *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+     *     }
+     *     ```
+     *
+     *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+     *     body is a truncated one.
      *
      * Args:
      *     urn (str): The unique resource name (URN) identifying the score set.
@@ -926,41 +1075,57 @@ export interface paths {
      *
      * Returns:
      *     StreamingResponse: NDJSON stream containing functional impact statements for each
-     *         mapped variant. Response includes headers with total count, processing start time,
+     *         annotated variant. Response includes headers with total count, processing start time,
      *         and stream type information.
      *
      * Raises:
      *     HTTPException:
      *         - 404 if the score set with the given URN is not found
-     *         - 404 if no mapped variants are associated with the score set
+     *         - 404 if no annotated variants are associated with the score set
      *         - 403 if the user lacks READ permission for the score set
      *
      * Note:
-     *     Only current (non-historical) mapped variants are included in the response.
-     *     The function requires appropriate read permissions on the score set.
+     *     The function requires appropriate read permissions on the score set. Use the `as_of`
+     *     parameter to reconstruct the molecular layer as it stood at a specific instant, over
+     *     the variant's fixed score. The response is streamed to allow for efficient handling of
+     *     large datasets, and progress updates are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/study-result": {
     /**
-     * Get functional study result annotations for mapped variants within a score set
+     * Get functional study result annotations for annotated variants within a score set
      * @description Retrieve functional study results for annotated variants in a score set.
      *
-     * This endpoint streams functional study result annotations for all current mapped variants
+     * This endpoint streams functional study result annotations for all current annotated variants
      * associated with a specific score set. The results are returned as newline-delimited JSON
      * (NDJSON) format for efficient streaming of large datasets.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to a annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Functional study result details
      *         }
      *     }
      *     ```
+     *
+     *     `annotation` is null where the variant has no mapping data to annotate, or no study results apply
+     *     to it. A variant whose annotation could not be built is reported in-band rather than by
+     *     truncating the stream, and carries an additional `error` object:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the annotated variant>",
+     *         "annotation": null,
+     *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+     *     }
+     *     ```
+     *
+     *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+     *     body is a truncated one.
      *
      * Args:
      *     urn (str): The URN (Uniform Resource Name) of the score set to retrieve variants for.
@@ -970,7 +1135,7 @@ export interface paths {
      * Returns:
      *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
      *         Headers include:
-     *         - X-Total-Count: Total number of mapped variants being streamed
+     *         - X-Total-Count: Total number of annotated variants being streamed
      *         - X-Processing-Started: ISO timestamp when processing began
      *         - X-Stream-Type: Set to "functional-study-result"
      *         - Access-Control-Expose-Headers: Exposed headers for CORS
@@ -978,13 +1143,14 @@ export interface paths {
      * Raises:
      *     HTTPException:
      *         - 404 if the score set with the given URN is not found
-     *         - 404 if no mapped variants are associated with the score set
+     *         - 404 if no annotated variants are associated with the score set
      *         - 403 if the user lacks READ permission for the score set
      *
      * Notes:
-     *     - Only returns current mapped variants (MappedVariant.current == True)
-     *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
-     *     - Logs requests and errors for monitoring and debugging purposes
+     *     - The `as_of` parameter allows reconstruction of the molecular layer as it stood at a specific
+     *       instant, over the variant's fixed score. It is ISO 8601 formatted and ideally timezone-aware.
+     *     - The response is streamed to allow for efficient handling of large datasets, and progress updates
+     *       are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get"];
   };
@@ -1013,13 +1179,20 @@ export interface paths {
     /**
      * Get clinical control options for a score set
      * @description Fetch clinical control options for a given score set.
+     *
+     * Each ``(db_name, db_version)`` pair returned here was live at the moment of this call, but
+     * liveness is re-evaluated independently per request. A pair fetched here can have its backing
+     * ``ClinvarAlleleLink`` retired before a later call to ``GET /score-sets/{urn}/clinical-controls``
+     * filters on it, in which case that call 404s. Pin an explicit ``as_of`` on both calls to avoid this
+     * possibility.
      */
     get: operations["get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get"];
   };
   "/api/v1/score-sets/{urn}/gnomad-variants": {
     /**
      * Get gnomad variants for a score set
-     * @description Fetch relevant gnomad variants for a given score set.
+     * @description Fetch relevant gnomad variants for a given score set, each paired with the score-set variants (and
+     * annotated allele digests) it links to over the allele substrate.
      */
     get: operations["get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get"];
   };
@@ -1233,14 +1406,14 @@ export interface paths {
   "/api/v1/target-genes/names": {
     /**
      * List target gene names
-     * @description List distinct target gene names, in alphabetical order.
+     * @description List distinct target gene names from published score sets, in alphabetical order.
      */
     get: operations["list_target_gene_names_api_v1_target_genes_names_get"];
   };
   "/api/v1/target-genes/categories": {
     /**
      * List target gene categories
-     * @description List distinct target genes categories, in alphabetical order.
+     * @description List distinct target gene categories from published score sets, in alphabetical order.
      */
     get: operations["list_target_gene_categories_api_v1_target_genes_categories_get"];
   };
@@ -1348,19 +1521,50 @@ export interface paths {
      */
     put: operations["update_user_api_v1_users___id__put"];
   };
-  "/api/v1/variants/clingen-allele-id-lookups": {
+  "/api/v1/variants/vrs/{identifier}": {
     /**
-     * Lookup variants by ClinGen Allele IDs
-     * @description Lookup variants by ClinGen Allele IDs.
+     * Look up variants by VRS identifier
+     * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+     *
+     * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
+     * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+     * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
+     * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
+     * the response never reveals a private allele's existence.
      */
-    post: operations["lookup_variants_api_v1_variants_clingen_allele_id_lookups_post"];
+    get: operations["lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get"];
   };
   "/api/v1/variants/{urn}": {
     /**
-     * Fetch variant by URN
-     * @description Fetch a single variant by URN.
+     * Fetch assayed variant detail by URN
+     * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
+     *
+     * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
+     * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
+     * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
      */
     get: operations["get_variant_api_v1_variants__urn__get"];
+  };
+  "/api/v1/variants/{urn}/va/study-result": {
+    /**
+     * Construct a VA-Spec StudyResult for a variant
+     * @description Construct a single VA-Spec StudyResult for a variant by URN, from its mapping substrate.
+     */
+    get: operations["get_variant_study_result_api_v1_variants__urn__va_study_result_get"];
+  };
+  "/api/v1/variants/{urn}/va/functional-statement": {
+    /**
+     * Construct a VA-Spec functional-impact Statement for a variant
+     * @description Construct a single VA-Spec functional-impact Statement for a variant by URN.
+     */
+    get: operations["get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get"];
+  };
+  "/api/v1/variants/{urn}/va/pathogenicity-statement": {
+    /**
+     * Construct a VA-Spec pathogenicity Statement for a variant
+     * @description Construct a single VA-Spec pathogenicity Statement for a variant by URN.
+     */
+    get: operations["get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/variants/{urn}/csv-namespaces": {
     /**
@@ -1565,6 +1769,40 @@ export interface components {
       homology?: boolean | null;
     };
     /**
+     * AdjacencyConstraint
+     * @description Components that define a molecular adjacency of congruent elements.
+     */
+    AdjacencyConstraint: {
+      /**
+       * Type
+       * @description MUST be 'AdjacencyConstraint'
+       * @default AdjacencyConstraint
+       * @constant
+       */
+      type?: "AdjacencyConstraint";
+      /**
+       * Adjoinedelements
+       * @description The elements of the adjacency.
+       */
+      adjoinedElements: ({
+          type: "AdjacencyConstraint";
+        } & (components["schemas"]["UnspecifiedElement"] | components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | Omit<components["schemas"]["Location"], "type"> | components["schemas"]["Terminus"]))[];
+      /**
+       * Functionaldomains
+       * @description Functional domains whose presence or absence is required to satisfy the adjacency.
+       */
+      functionalDomains?: components["schemas"]["FunctionalDomain"][] | null;
+      /** @description The sequence found between the adjoined elements. */
+      linker?: {
+        type: "AdjacencyConstraint";
+      } & (Omit<components["schemas"]["SequenceExpression"], "type"> | null);
+      /**
+       * Orderknown
+       * @description When orderKnown is true, the order of adjoinedElements is assumed to denote the 5' partner first and the 3' partner second. If orderKnown is false, then the order of adjoinedElements assumed not in fact to be known, as in the case of a fusion where only one or both partners are known, but not their relative order. This field is redundant and may be set to true when using Sequence Locations and following the VRS 2 Adjacency model, as the order is implied by the usage of start and end on respective adjoinedElements.
+       */
+      orderKnown: boolean;
+    };
+    /**
      * AdminUser
      * @description User view model containing properties to return to admin clients.
      */
@@ -1701,16 +1939,142 @@ export interface components {
       state: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
     };
     /**
-     * AnnotationLayer
-     * @description Annotation layer for a variant mapping result.
+     * AlleleAnnotations
+     * @description The external annotations for one allele, sparse — each source absent unless it has data.
+     */
+    AlleleAnnotations: {
+      vep?: components["schemas"]["VepAnnotation"] | null;
+      gnomad?: components["schemas"]["GnomadAnnotation"] | null;
+      /**
+       * Clinvar
+       * @default []
+       */
+      clinvar?: components["schemas"]["ClinvarAnnotation"][];
+    };
+    /**
+     * AlleleDerivation
+     * @description How an allele's representation was arrived at, *relative to the focus allele*: the
+     * confidence/provenance axis, and the one the UI badges on.
      *
-     * Mirrors the ``AnnotationLayer`` enum produced by the dcd-mapping QC API.
-     * Values use full names so they round-trip readably through the database
-     * column; the dcd-mapping payload uses short single-character codes
-     * (``p`` / ``c`` / ``g``) which the worker translates via :func:`from_wire`.
+     * There is deliberately **no** ``authoritative`` value: the focus allele is marked by
+     * :attr:`AlleleIdentity.is_focus`, not by a derivation. That keeps the axis meaningful even when a
+     * variant was not explicitly measured. See the module docstring for why this axis is separate from
+     * the Cat-VRS ``relation``, and why neither may be inferred from the other.
      * @enum {string}
      */
-    AnnotationLayer: "protein" | "cdna" | "genomic";
+    AlleleDerivation: "projection" | "candidate" | "convergent";
+    /**
+     * AlleleDetail
+     * @description The allele-detail envelope (``GET /alleles/{digest|CAID}``).
+     *
+     * ``alleles`` is the full cross-layer equivalence class, keyed by VRS digest; ``isFocus`` marks
+     * the queried allele. ``annotations`` shares those same keys. Measurement-agnostic: no score,
+     * classification, or re-anchored Cat-VRS (those belong to ``GET /variants/{urn}``).
+     */
+    AlleleDetail: {
+      /** Digest */
+      digest: string;
+      /** Level */
+      level?: string | null;
+      /** Hgvs */
+      hgvs?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Vrs */
+      vrs?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Alleles
+       * @default {}
+       */
+      alleles?: {
+        [key: string]: components["schemas"]["AlleleIdentity"];
+      };
+      /**
+       * Annotations
+       * @default {}
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["AlleleAnnotations"];
+      };
+    };
+    /**
+     * AlleleIdentity
+     * @description One allele in a view's ``alleles`` map, keyed by VRS digest and labelled relative to the
+     * view's focus allele. ``isFocus`` marks the anchor; ``relation`` and ``derivation`` describe
+     * every other member's relationship to it and are absent on the focus itself.
+     */
+    AlleleIdentity: {
+      /** Level */
+      level?: string | null;
+      /** Hgvs */
+      hgvs?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Isfocus */
+      isFocus: boolean;
+      /** Relation */
+      relation?: string | null;
+      derivation?: components["schemas"]["AlleleDerivation"] | null;
+      /** Projectionof */
+      projectionOf?: string | null;
+    };
+    /**
+     * AlleleMeasurement
+     * @description One measurement in the queried ClinGen allele's cross-layer equivalence class.
+     *
+     * ``assayLevel`` is the level at which this measurement was actually assayed (``protein`` / ``cdna`` /
+     * ``genomic``) — always shown, since the measured level is the clinically load-bearing fact.
+     * ``relationship`` says how the measurement relates to the queried ClinGen id: ``direct`` (assayed at
+     * this allele), ``protein_consequence`` (a protein measurement of a nt query's consequence), or
+     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``classification`` is the readable
+     * functional classification for the variant (primary-first cascade), omitted when absent or gated. It comes
+     * from a research-use-only calibration only when the request sets ``include_research_use_only`` and the score
+     * set has no readable non-RUO calibration; ``classificationIsResearchUseOnly`` then marks it, and it must not
+     * be treated as clinical evidence. Ranking uses non-RUO calls alone. ``isCurrent`` /
+     * ``supersededByScoreSet`` let a superseded measurement (surfaced only under ``include_superseded``)
+     * self-describe; ``supersededByScoreSet`` is the superseding *score set*'s URN.
+     */
+    AlleleMeasurement: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Score */
+      score?: number | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      relationship: components["schemas"]["MeasurementRelationship"];
+      /** Assaylevelhgvs */
+      assayLevelHgvs?: string | null;
+      /** Submittedhgvs */
+      submittedHgvs?: string | null;
+      /** Scoreseturn */
+      scoreSetUrn: string;
+      /** Scoresettitle */
+      scoreSetTitle: string;
+      classification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      /**
+       * Classificationisresearchuseonly
+       * @default false
+       */
+      classificationIsResearchUseOnly?: boolean;
+      /** Iscurrent */
+      isCurrent: boolean;
+      /** Supersededbyscoreset */
+      supersededByScoreSet?: string | null;
+    };
+    /**
+     * AnchorOrientation
+     * @description Indicates which side of a discontinuous anchor on the sequenceReference is used
+     * as the reference point for interpreting offsetStart/offsetEnd. The anchor is an
+     * inter-residue coordinate on the sequenceReference. When that anchor corresponds to a
+     * boundary whose realization on a base sequence yields two distinct locations (e.g.,
+     * an exon junction), this property disambiguates which anchor side on the
+     * sequenceReference is intended. `left` denotes the side immediately preceding the
+     * anchor in sequenceReference coordinate order; `right` denotes the side immediately
+     * following the anchor in sequenceReference coordinate order.
+     * @enum {string}
+     */
+    AnchorOrientation: "left" | "right";
     /** ApiVersion */
     ApiVersion: {
       /** Name */
@@ -1735,6 +2099,11 @@ export interface components {
       group: components["schemas"]["CsvNamespaceGroup"];
       scoreSet?: components["schemas"]["ShorterScoreSet"] | null;
       /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /**
        * Selectedbydefault
        * @default true
        */
@@ -1748,10 +2117,15 @@ export interface components {
        */
       classes_file?: string | null;
       /**
-       * Item
+       * Controls File
+       * @description CSV file containing calibration controls. This file must contain a variant column (one of 'variant_urn', 'hgvs_nt', 'hgvs_pro') and a 'clinical_status' column.
+       */
+      controls_file?: string | null;
+      /**
+       * Calibration Json
        * @description JSON data for the request
        */
-      item?: string;
+      calibration_json?: string;
     };
     /** Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put */
     Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put: {
@@ -1761,10 +2135,15 @@ export interface components {
        */
       classes_file?: string | null;
       /**
-       * Item
+       * Controls File
+       * @description CSV file containing calibration controls. This file must contain a variant column (one of 'variant_urn', 'hgvs_nt', 'hgvs_pro') and a 'clinical_status' column. Replaces existing controls.
+       */
+      controls_file?: string | null;
+      /**
+       * Calibration Json
        * @description JSON data for the request
        */
-      item?: string;
+      calibration_json?: string;
     };
     /** Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch */
     Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch: {
@@ -1780,6 +2159,28 @@ export interface components {
       /** Scores File */
       scores_file?: string | null;
     };
+    /**
+     * CalibrationControlCreate
+     * @description Model used to create a calibration control.
+     *
+     * Carries no additional fields — only the modifiable fields are required for creation.
+     */
+    CalibrationControlCreate: {
+      /** Varianturn */
+      variantUrn: string;
+      clinicalStatus: components["schemas"]["CalibrationControlStatus"];
+    };
+    /**
+     * CalibrationControlStatus
+     * @description Clinical significance of a calibration control variant.
+     *
+     * Deliberately restricted to the two-tier ACMG poles used to anchor a calibration's
+     * thresholds. Intermediate tiers (VUS, likely pathogenic, likely benign) are excluded
+     * by design: a control's value as empirical ground truth comes from a confident, binary
+     * clinical call, not from a graded one.
+     * @enum {string}
+     */
+    CalibrationControlStatus: "pathogenic" | "benign";
     /**
      * CategoricalVariant
      * @description A representation of a categorically-defined domain for variation, in which
@@ -1885,33 +2286,6 @@ export interface components {
       /** @description An optional Sequence Reference on which all of the in-cis Alleles are found. When defined, this may be used to implicitly define the `sequenceReference` attribute for each of the CisPhasedBlock member Alleles. */
       sequenceReference?: components["schemas"]["SequenceReference"] | null;
     };
-    /**
-     * ClingenAlleleIdVariantLookupResponse
-     * @description Response model for a variant lookup by ClinGen allele ID
-     */
-    ClingenAlleleIdVariantLookupResponse: {
-      /** Clingenalleleid */
-      clingenAlleleId: string;
-      exactMatch?: components["schemas"]["Variant"] | null;
-      /**
-       * Equivalentnt
-       * @default []
-       */
-      equivalentNt?: components["schemas"]["Variant"][];
-      /**
-       * Equivalentaa
-       * @default []
-       */
-      equivalentAa?: components["schemas"]["Variant"][];
-    };
-    /**
-     * ClingenAlleleIdVariantLookupsRequest
-     * @description A request to search for variants matching a list of ClinGen allele IDs
-     */
-    ClingenAlleleIdVariantLookupsRequest: {
-      /** Clingenalleleids */
-      clingenAlleleIds: string[];
-    };
     /** ClinicalControlOptions */
     ClinicalControlOptions: {
       /** Dbname */
@@ -1919,8 +2293,8 @@ export interface components {
       /** Availableversions */
       availableVersions: string[];
     };
-    /** ClinicalControlWithMappedVariants */
-    ClinicalControlWithMappedVariants: {
+    /** ClinicalControlWithClinvarLinks */
+    ClinicalControlWithClinvarLinks: {
       /** Dbidentifier */
       dbIdentifier: string;
       /** Genesymbol */
@@ -1947,8 +2321,34 @@ export interface components {
       creationDate: string;
       /** Recordtype */
       recordType?: string;
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariantForClinicalControl"][];
+      /** Clinvarlinks */
+      clinvarLinks: components["schemas"]["ClinvarVariantLink"][];
+    };
+    /**
+     * ClinvarAnnotation
+     * @description One ClinVar assertion for an allele (an allele may carry one per release).
+     */
+    ClinvarAnnotation: {
+      /** Clinicalsignificance */
+      clinicalSignificance: string;
+      /** Clinicalreviewstatus */
+      clinicalReviewStatus: string;
+      /** Clinvarvariationid */
+      clinvarVariationId?: string | null;
+      /** Clinvaralleleid */
+      clinvarAlleleId: string;
+      /** Dbversion */
+      dbVersion: string;
+    };
+    /**
+     * ClinvarVariantLink
+     * @description One score-set variant a ClinVar control reaches, tagged with the annotated allele's digest.
+     */
+    ClinvarVariantLink: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Alleledigest */
+      alleleDigest?: string | null;
     };
     /**
      * Coding
@@ -1987,98 +2387,6 @@ export interface components {
        * @description A list of IRIs that are associated with the coding. This can be used to provide additional context or to link to additional information about the concept.
        */
       iris?: components["schemas"]["iriReference"][] | null;
-    };
-    /**
-     * CohortAlleleFrequencyStudyResult
-     * @description A StudyResult that reports measures related to the frequency of an Allele in a cohort
-     */
-    CohortAlleleFrequencyStudyResult: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'CohortAlleleFrequencyStudyResult'.
-       * @default CohortAlleleFrequencyStudyResult
-       * @constant
-       */
-      type?: "CohortAlleleFrequencyStudyResult";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Specifiedby
-       * @description A specification that describes all or part of the process that led to creation of the Information Entity
-       */
-      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Contributions
-       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
-       */
-      contributions?: components["schemas"]["Contribution"][] | null;
-      /**
-       * Reportedin
-       * @description A document in which the the Information Entity is reported.
-       */
-      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description The dataset from which the CohortAlleleFrequencyStudyResult was reported. */
-      sourceDataSet?: components["schemas"]["DataSet"] | null;
-      /**
-       * Ancillaryresults
-       * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
-       */
-      ancillaryResults?: Record<string, never> | null;
-      /**
-       * Qualitymeasures
-       * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
-       */
-      qualityMeasures?: Record<string, never> | null;
-      /**
-       * Focusallele
-       * @description The Allele for which frequency results are reported.
-       */
-      focusAllele: components["schemas"]["Allele"] | components["schemas"]["iriReference"];
-      /**
-       * Focusallelecount
-       * @description The number of occurrences of the focusAllele in the cohort.
-       */
-      focusAlleleCount: number;
-      /**
-       * Locusallelecount
-       * @description The number of occurrences of all alleles at the locus in the cohort.
-       */
-      locusAlleleCount: number;
-      /**
-       * Focusallelefrequency
-       * @description The frequency of the focusAllele in the cohort.
-       */
-      focusAlleleFrequency: number;
-      /** @description The cohort from which the frequency was derived. */
-      cohort: components["schemas"]["StudyGroup"];
-      /**
-       * Subcohortfrequency
-       * @description A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.
-       */
-      subCohortFrequency?: components["schemas"]["CohortAlleleFrequencyStudyResult"][] | null;
     };
     /** Collection */
     Collection: {
@@ -2223,32 +2531,108 @@ export interface components {
     };
     /**
      * Condition
-     * @description A single condition (disease, phenotype, or trait), or a set of conditions (ConditionSet).
+     * @description A specialization of MappableConcept representing a single condition (disease,
+     * phenotype, or trait).
+     *
+     * Allowed conceptType values include: Condition, Phenotype,
+     * Disease, Trait, Absent.
      */
-    Condition: components["schemas"]["ConditionSet"] | components["schemas"]["MappableConcept"];
-    /**
-     * ConditionSet
-     * @description A set of conditions (diseases, phenotypes, traits) that occur together or are
-     * related, depending on the membership operator, and may manifest together in the
-     * same patient or individually in a different subset of participants in a research
-     * study.
-     */
-    ConditionSet: {
+    Condition: {
       /**
        * Id
-       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
        */
       id?: string | null;
+      /**
+       * Type
+       * @description MUST be "MappableConcept".
+       * @default MappableConcept
+       * @constant
+       */
+      type?: "MappableConcept";
+      /**
+       * Name
+       * @description A primary name for the concept.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
       /**
        * Extensions
        * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Conditions
+       * Concepttype
+       * @description A term indicating the type of concept being represented by the MappableConcept.
+       * @default Condition
+       */
+      conceptType?: string;
+      /** @description A primary coding for the concept. */
+      primaryCoding?: components["schemas"]["Coding"] | null;
+      /**
+       * Mappings
+       * @description A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation.
+       */
+      mappings?: components["schemas"]["ConceptMapping"][] | null;
+    };
+    /**
+     * ConditionSet
+     * @description A specialization of ConceptSet representing a set of conditions (diseases,
+     * phenotypes, traits) that occur together or are related, depending on the membership
+     * operator. Concepts are restricted to Condition and ConditionSet members.
+     */
+    ConditionSet: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "ConceptSet".
+       * @default ConceptSet
+       * @constant
+       */
+      type?: "ConceptSet";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Conceptsettype
+       * @description A term indicating the type of concept being represented by the ConceptSet.
+       */
+      conceptSetType?: string | null;
+      /**
+       * Concepts
        * @description A list of conditions (diseases, phenotypes, traits) that are co-occurring or related, depending on the membership operator.
        */
-      conditions: (components["schemas"]["MappableConcept"] | components["schemas"]["ConditionSet"])[];
+      concepts: (components["schemas"]["Condition"] | components["schemas"]["ConditionSet"] | components["schemas"]["iriReference"])[];
       /** @description The logical relationship between members of the set, that indicates how they manifest in patients/research subjects. The value 'AND' indicates that all conditions in the set co-occur together in a given patient or subject. The value 'OR' indicates that only one condition in the set manifests in each participant interrogated in a given study. */
       membershipOperator: components["schemas"]["MembershipOperator"];
     };
@@ -2256,12 +2640,12 @@ export interface components {
      * Constraint
      * @description Constraints are used to construct an intensional semantics of categorical variant types.
      */
-    Constraint: components["schemas"]["DefiningAlleleConstraint"] | components["schemas"]["DefiningLocationConstraint"] | components["schemas"]["CopyCountConstraint"] | components["schemas"]["CopyChangeConstraint"] | components["schemas"]["FeatureContextConstraint"];
+    Constraint: components["schemas"]["DefiningAlleleConstraint"] | components["schemas"]["DefiningLocationConstraint"] | components["schemas"]["AdjacencyConstraint"] | components["schemas"]["FeatureContextConstraint"] | components["schemas"]["CopyCountConstraint"] | components["schemas"]["CopyChangeConstraint"] | components["schemas"]["FunctionConstraint"];
     /**
      * Contribution
      * @description An action taken by an agent in contributing to the creation, modification,
-     * assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
-     * DataSet, Publication, etc.)
+     * assessment, or deprecation of a particular entity (e.g. a Statement, DataSet,
+     * Publication, etc.)
      */
     Contribution: {
       /**
@@ -2296,8 +2680,11 @@ export interface components {
        * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
        */
       extensions?: components["schemas"]["Extension"][] | null;
-      /** @description The agent that made the contribution. */
-      contributor?: components["schemas"]["Agent"] | null;
+      /**
+       * Contributor
+       * @description The agent that made the contribution.
+       */
+      contributor?: components["schemas"]["Agent"] | components["schemas"]["iriReference"] | null;
       /**
        * Activitytype
        * @description The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).
@@ -2362,7 +2749,8 @@ export interface components {
     CopyChange: "complete genomic loss" | "high-level loss" | "low-level loss" | "loss" | "regional base ploidy" | "gain" | "low-level gain" | "high-level gain";
     /**
      * CopyChangeConstraint
-     * @description A representation of copy number change
+     * @description The relative assessment of the change in copies that members of this categorical
+     * variant satisfy.
      */
     CopyChangeConstraint: {
       /**
@@ -2538,6 +2926,68 @@ export interface components {
       email?: string | null;
     };
     /**
+     * DataItem
+     * @description An Information Entity representing an individual piece of data, generated or
+     * acquired through methods which reliably produce truthful information about
+     * something.
+     */
+    DataItem: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be "DataItem"
+       * @default DataItem
+       * @constant
+       */
+      type?: "DataItem";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /**
+       * Value
+       * @description The value of the data item (could be a structured value, a quantitative or qualitative value, or an IRI reference to either).
+       */
+      value?: {
+        [key: string]: unknown;
+      } | string | components["schemas"]["iriReference"] | null;
+    };
+    /**
      * DataSet
      * @description A collection of related data items or records that are organized together in a
      * common format or structure, to enable their computational manipulation as a unit.
@@ -2595,8 +3045,11 @@ export interface components {
        * @description The version of the DataSet, as assigned by its creator.
        */
       version?: string | null;
-      /** @description A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.) */
-      license?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * License
+       * @description A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.)
+       */
+      license?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /**
      * DatasetColumnMetadata
@@ -2726,12 +3179,6 @@ export interface components {
       circular?: boolean | null;
     };
     /**
-     * DiagnosticPredicate
-     * @description Define constraints for diagnostic predicate
-     * @enum {string}
-     */
-    DiagnosticPredicate: "isDiagnosticInclusionCriterionFor" | "isDiagnosticExclusionCriterionFor";
-    /**
      * Direction
      * @description A term indicating whether the Statement supports, disputes, or remains neutral
      * w.r.t. the validity of the Proposition it evaluates.
@@ -2819,6 +3266,42 @@ export interface components {
       identifier: string;
     };
     /**
+     * Entity
+     * @description Anything that exists, has existed, or will exist.
+     */
+    Entity: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description The name of the class that is instantiated by a data object representing the Entity.
+       */
+      type: string;
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+    };
+    /**
      * EvidenceLine
      * @description An independent, evidence-based argument that may support or refute the validity
      * of a specific Proposition. The strength and direction of this argument is based on
@@ -2877,27 +3360,29 @@ export interface components {
        * Targetproposition
        * @description The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.
        */
-      targetProposition?: {
-        type: "EvidenceLine";
-      } & (components["schemas"]["Proposition"] | Omit<components["schemas"]["SubjectVariantProposition"], "type"> | null);
+      targetProposition?: components["schemas"]["Proposition"] | components["schemas"]["iriReference"] | null;
       /**
        * Hasevidenceitems
        * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
        */
-      hasEvidenceItems?: {
-          type: "EvidenceLine";
-        }[] | null;
+      hasEvidenceItems?: ((components["schemas"]["InformationEntity"] | components["schemas"]["iriReference"])[]) | null;
       /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
       directionOfEvidenceProvided: components["schemas"]["Direction"];
-      /** @description The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value. */
-      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Strengthofevidenceprovided
+       * @description The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
+       */
+      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Scoreofevidenceprovided
        * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
        */
       scoreOfEvidenceProvided?: number | null;
-      /** @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition. */
-      evidenceOutcome?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Evidenceoutcome
+       * @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.
+       */
+      evidenceOutcome?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /** Experiment */
     Experiment: {
@@ -2910,7 +3395,9 @@ export interface components {
       /** Methodtext */
       methodText?: string | null;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Urn */
@@ -2987,7 +3474,9 @@ export interface components {
       /** Methodtext */
       methodText: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Contributors */
       contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Keywords */
@@ -3043,7 +3532,9 @@ export interface components {
       /** Methodtext */
       methodText: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Contributors */
       contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Keywords */
@@ -3056,69 +3547,6 @@ export interface components {
       secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Rawreadidentifiers */
       rawReadIdentifiers?: components["schemas"]["RawReadIdentifierCreate"][] | null;
-    };
-    /**
-     * ExperimentalVariantFunctionalImpactProposition
-     * @description A Proposition describing the impact of a variant on the function sequence feature
-     * (typically a gene or gene product).
-     */
-    ExperimentalVariantFunctionalImpactProposition: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'ExperimentalVariantFunctionalImpactProposition'.
-       * @default ExperimentalVariantFunctionalImpactProposition
-       * @constant
-       */
-      type?: "ExperimentalVariantFunctionalImpactProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "ExperimentalVariantFunctionalImpactProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Predicate
-       * @description The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.
-       * @default impactsFunctionOf
-       * @constant
-       */
-      predicate?: "impactsFunctionOf";
-      /**
-       * Objectsequencefeature
-       * @description The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.
-       */
-      objectSequenceFeature: components["schemas"]["iriReference"] | components["schemas"]["MappableConcept"];
-      /**
-       * Experimentalcontextqualifier
-       * @description An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.
-       */
-      experimentalContextQualifier?: components["schemas"]["iriReference"] | components["schemas"]["Document"] | Record<string, never> | null;
     };
     /**
      * ExperimentalVariantFunctionalImpactStudyResult
@@ -3172,25 +3600,32 @@ export interface components {
        * @description A document in which the the Information Entity is reported.
        */
       reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description The full data set that provided the reported the functional impact score. */
-      sourceDataSet?: components["schemas"]["DataSet"] | null;
+      /**
+       * Focus
+       * @description The genetic variant for which a functional impact score is generated.
+       */
+      focus: {
+        type: "ExperimentalVariantFunctionalImpactStudyResult";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["iriReference"]);
+      /**
+       * Sourcedataset
+       * @description The full data set that provided the reported the functional impact score.
+       */
+      sourceDataSet?: components["schemas"]["DataSet"] | components["schemas"]["iriReference"] | null;
       /**
        * Ancillaryresults
        * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
        */
-      ancillaryResults?: Record<string, never> | null;
+      ancillaryResults?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Qualitymeasures
        * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
        */
-      qualityMeasures?: Record<string, never> | null;
-      /**
-       * Focusvariant
-       * @description The genetic variant for which a functional impact score is generated.
-       */
-      focusVariant: {
-        type: "ExperimentalVariantFunctionalImpactStudyResult";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["iriReference"]);
+      qualityMeasures?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Functionalimpactscore
        * @description The score of the variant impact measured in the assay or study.
@@ -3274,7 +3709,9 @@ export interface components {
        * Value
        * @description The value of the Extension - can be any primitive or structured object
        */
-      value: number | string | boolean | Record<string, never> | unknown[] | null;
+      value: number | string | boolean | {
+        [key: string]: unknown;
+      } | unknown[] | null;
       /**
        * Description
        * @description A description of the meaning or utility of the Extension, to explain the type of information it is meant to hold.
@@ -3370,6 +3807,31 @@ export interface components {
       featureContext: components["schemas"]["MappableConcept"];
     };
     /**
+     * FunctionConstraint
+     * @description A classification of the protein functional consequence that characterizes members of this categorical variant.
+     */
+    FunctionConstraint: {
+      /**
+       * Type
+       * @description MUST be "FunctionConstraint"
+       * @default FunctionConstraint
+       * @constant
+       */
+      type?: "FunctionConstraint";
+      /** @description The functional consequence of members of this categorical variant, as defined by an external ontology. We recommend using one of the defined terms from [The Sequence Ontology](http://www.sequenceontology.org). See Implementation Guidance for more details. */
+      functionConsequence: components["schemas"]["MappableConcept"];
+      /**
+       * Description
+       * @description A free-text description of the function change.
+       */
+      description?: string | null;
+    };
+    /**
+     * FunctionalClassification
+     * @enum {string}
+     */
+    "FunctionalClassification-Input": "normal" | "abnormal" | "not_specified";
+    /**
      * FunctionalClassificationCreate
      * @description Model used to create a new functional range.
      */
@@ -3379,7 +3841,7 @@ export interface components {
       /** Description */
       description?: string | null;
       /** @default not_specified */
-      functionalClassification?: components["schemas"]["mavedb__models__enums__functional_classification__FunctionalClassification"];
+      functionalClassification?: components["schemas"]["FunctionalClassification-Input"];
       /** Range */
       range?: ([number | null, number | null]) | null;
       /** Class */
@@ -3407,6 +3869,54 @@ export interface components {
        */
       variants?: components["schemas"]["VariantEffectMeasurement"][];
     };
+    /**
+     * FunctionalDomain
+     * @description A sequence location whose presence or absence is used to define an adjacency.
+     */
+    FunctionalDomain: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be "FunctionalDomain"
+       * @default FunctionalDomain
+       * @constant
+       */
+      type?: "FunctionalDomain";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description A Sequence Location for the domain. */
+      location: components["schemas"]["Location"];
+      /** @description MUST be either "preserved" or "lost" */
+      status: components["schemas"]["FunctionalDomainStatus"];
+    };
+    /**
+     * FunctionalDomainStatus
+     * @description Define whether a functional domain is preserved or lost.
+     * @enum {string}
+     */
+    FunctionalDomainStatus: "lost" | "preserved";
     /** GeneResponse */
     GeneResponse: {
       /** Symbol */
@@ -3433,10 +3943,10 @@ export interface components {
       totalScoredVariants: number;
     };
     /**
-     * GnomADVariantWithMappedVariants
-     * @description GnomAD variant view model with mapped variants for non-admin clients.
+     * GnomADVariantWithVariantLinks
+     * @description GnomAD variant + its score-set variant links, for non-admin clients.
      */
-    GnomADVariantWithMappedVariants: {
+    GnomADVariantWithVariantLinks: {
       /** Dbname */
       dbName: string;
       /** Dbidentifier */
@@ -3467,8 +3977,39 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
+      /** Variantlinks */
+      variantLinks: components["schemas"]["GnomadVariantLink"][];
+    };
+    /**
+     * GnomadAnnotation
+     * @description gnomAD population frequency for an allele.
+     */
+    GnomadAnnotation: {
+      /** Allelefrequency */
+      alleleFrequency: number;
+      /** Allelecount */
+      alleleCount: number;
+      /** Allelenumber */
+      alleleNumber: number;
+      /** Faf95Max */
+      faf95Max?: number | null;
+      /** Dbversion */
+      dbVersion: string;
+      /** Dbidentifier */
+      dbIdentifier: string;
+    };
+    /**
+     * GnomadVariantLink
+     * @description One score-set variant a gnomAD frequency record reaches, tagged with the annotated allele's digest.
+     *
+     * Mirrors :class:`clinical_control.ClinvarVariantLink`: a gnomAD variant fans out to every allele that
+     * resolved to it, and each allele belongs to a score-set variant.
+     */
+    GnomadVariantLink: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Alleledigest */
+      alleleDigest?: string | null;
     };
     /**
      * GroupBy
@@ -3479,6 +4020,81 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components["schemas"]["ValidationError"][];
+    };
+    /**
+     * HgvsField
+     * @description An HGVS expression with its parsed substitution block riding alongside when representable.
+     *
+     * ``hgvs`` is always present; ``position``/``ref``/``alt`` appear only for a placeable simple
+     * substitution (the heatmap grid) and are omitted for splice/indels/multivariants.
+     */
+    HgvsField: {
+      /** Hgvs */
+      hgvs: string;
+      /** Position */
+      position?: number | null;
+      /** Ref */
+      ref?: string | null;
+      /** Alt */
+      alt?: string | null;
+    };
+    /** HgvsValidationRequest */
+    HgvsValidationRequest: {
+      /** Variant */
+      variant: string;
+    };
+    /**
+     * InformationEntity
+     * @description An abstract (non-physical) entity that represents 'information content' carried by
+     * physical or digital information artifacts such as books, web pages, data sets, or
+     * images.
+     */
+    InformationEntity: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description The name of the class that is instantiated by a data object representing the Entity.
+       */
+      type: string;
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
     };
     /**
      * JobRunDetail
@@ -3505,9 +4121,13 @@ export interface components {
       /** Id */
       id: number;
       /** Jobparams */
-      jobParams?: Record<string, never> | null;
+      jobParams?: {
+        [key: string]: unknown;
+      } | null;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /** Maxretries */
       maxRetries: number;
       /** Retrycount */
@@ -3606,6 +4226,35 @@ export interface components {
       special?: boolean | null;
       /** Description */
       description?: string | null;
+    };
+    /**
+     * LeanVariant
+     * @description One pre-chewed per-variant record feeding the score-set table, heatmap, and histograms.
+     *
+     * ``variantUrn`` is the universal selection key; ``assayLevelDigest`` bridges into the digest-keyed
+     * annotation dimensions. The submitted HGVS (``hgvsNt``/``hgvsPro``/``hgvsSplice``, target frame) carry
+     * the depositor's frame for the heatmap's raw↔mapped toggle. The mapped (reference) frame is the
+     * ``mapped`` :class:`MappedTriple` plus the ``assayLevel`` pointer (an ``SequenceLevel`` value) naming
+     * the measured/canonical slot: ``mapped[assayLevel]`` is the measured representation and ``mapped.cdna``
+     * the level-invariant search key. Fields are omitted when null.
+     */
+    LeanVariant: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Score */
+      score?: number | null;
+      /** Consequence */
+      consequence?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Assayleveldigest */
+      assayLevelDigest?: string | null;
+      hgvsNt?: components["schemas"]["HgvsField"] | null;
+      hgvsPro?: components["schemas"]["HgvsField"] | null;
+      hgvsSplice?: components["schemas"]["HgvsField"] | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      /** @default {} */
+      mapped?: components["schemas"]["MappedTriple"];
     };
     /**
      * LengthExpression
@@ -3723,15 +4372,42 @@ export interface components {
       sequence: components["schemas"]["sequenceString"];
     };
     /**
+     * Location
+     * @description A contiguous segment of a biological sequence.
+     */
+    Location: components["schemas"]["SequenceLocation"] | components["schemas"]["RelativeSequenceLocation"];
+    /**
      * MappableConcept
      * @description A concept based on a primaryCoding and/or name that may be mapped to one or more other `Codings`.
      */
     MappableConcept: {
       /**
        * Id
-       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
        */
       id?: string | null;
+      /**
+       * Type
+       * @description MUST be "MappableConcept".
+       * @default MappableConcept
+       * @constant
+       */
+      type?: "MappableConcept";
+      /**
+       * Name
+       * @description A primary name for the concept.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
       /**
        * Extensions
        * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
@@ -3742,11 +4418,6 @@ export interface components {
        * @description A term indicating the type of concept being represented by the MappableConcept.
        */
       conceptType?: string | null;
-      /**
-       * Name
-       * @description A primary name for the concept.
-       */
-      name?: string | null;
       /** @description A primary coding for the concept. */
       primaryCoding?: components["schemas"]["Coding"] | null;
       /**
@@ -3755,90 +4426,19 @@ export interface components {
        */
       mappings?: components["schemas"]["ConceptMapping"][] | null;
     };
-    /** MappedVariant */
-    MappedVariant: {
-      /** Premapped */
-      preMapped?: unknown;
-      /** Postmapped */
-      postMapped?: unknown;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Errormessage */
-      errorMessage?: string | null;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /**
-       * Mappeddate
-       * Format: date
-       */
-      mappedDate: string;
-      /** Mappingapiversion */
-      mappingApiVersion: string;
-      /** Current */
-      current: boolean;
-      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
-      /** Atmismatchedlocus */
-      atMismatchedLocus?: boolean | null;
-      /** Neargap */
-      nearGap?: boolean | null;
-      /** Varianturn */
-      variantUrn: string;
-      /** Id */
-      id: number;
-      /** Clingenalleleid */
-      clingenAlleleId?: string | null;
-      /** Recordtype */
-      recordType?: string;
-    };
-    /** MappedVariantForClinicalControl */
-    MappedVariantForClinicalControl: {
-      /** Varianturn */
-      variantUrn: string;
-    };
     /**
-     * MappedVariantWithMappingDetails
-     * @description Client-facing variant of :class:`SavedMappedVariantWithMappingDetails`.
+     * MappedTriple
+     * @description The mapped (reference-frame) HGVS keyed by level — the canonical projection of the measured change.
+     *
+     * One slot per level. A nucleotide assay populates all three (``mapped[assayLevel]`` is the measured
+     * slot; ``cdna`` is the level-invariant search key, present even when ``assayLevel`` is ``genomic``); a
+     * protein assay populates only ``protein`` (the ambiguous c/g fan-out is not fabricated). Null slots are
+     * omitted under ``response_model_exclude_none``.
      */
-    MappedVariantWithMappingDetails: {
-      /** Premapped */
-      preMapped?: unknown;
-      /** Postmapped */
-      postMapped?: unknown;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Errormessage */
-      errorMessage?: string | null;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /**
-       * Mappeddate
-       * Format: date
-       */
-      mappedDate: string;
-      /** Mappingapiversion */
-      mappingApiVersion: string;
-      /** Current */
-      current: boolean;
-      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
-      /** Atmismatchedlocus */
-      atMismatchedLocus?: boolean | null;
-      /** Neargap */
-      nearGap?: boolean | null;
-      /** Varianturn */
-      variantUrn: string;
-      /** Id */
-      id: number;
-      /** Clingenalleleid */
-      clingenAlleleId?: string | null;
-      /** Recordtype */
-      recordType?: string;
-      targetGeneMapping?: components["schemas"]["TargetGeneMapping"] | null;
+    MappedTriple: {
+      genomic?: components["schemas"]["HgvsField"] | null;
+      cdna?: components["schemas"]["HgvsField"] | null;
+      protein?: components["schemas"]["HgvsField"] | null;
     };
     /**
      * MappingState
@@ -3846,13 +4446,20 @@ export interface components {
      */
     MappingState: "incomplete" | "processing" | "failed" | "complete" | "pending_variant_processing" | "not_attempted" | "queued";
     /**
+     * MeasurementRelationship
+     * @description How a measurement relates to the queried ClinGen id, by the measurement's *measured* level.
+     * @enum {string}
+     */
+    MeasurementRelationship: "direct" | "protein_consequence" | "nucleotide_encoding";
+    /**
      * MembershipOperator
-     * @description The logical relationship between members of the set, that indicates how they
-     * manifest in patients/research subjects.
-     * The value 'AND' indicates that all conditions in the set co-occur together in a
-     * given patient or subject.
-     * The value 'OR' indicates that only one condition in the set manifests in each
-     * participant interrogated in a given study.
+     * @description The logical relationship between concepts in the set, in the context of some
+     * knowledge reported about them. The value 'AND' indicates that the concepts are
+     * dependent and occur together in this context - i.e. the reported assertion is not
+     * necessarily true for each concept on its own - only in combination with the
+     * other(s). The value 'OR' indicates that each concept applies independently in this
+     * context - i.e. the reported assertion is necessarily true for each concept on its
+     * own, independent of the presence of the other(s).
      * @enum {string}
      */
     MembershipOperator: "AND" | "OR";
@@ -3913,7 +4520,7 @@ export interface components {
      * MolecularVariation
      * @description A `variation` on a contiguous molecule.
      */
-    MolecularVariation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"];
+    MolecularVariation: components["schemas"]["Allele"] | components["schemas"]["RelativeAllele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"];
     /**
      * MoleculeType
      * @description Molecule types as `defined by RefSeq <https://www.ncbi.nlm.nih.gov/books/NBK21091/>`_ (see Table 1).
@@ -3985,7 +4592,9 @@ export interface components {
       /** Id */
       id: number;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /**
        * Createdat
        * Format: date-time
@@ -4037,12 +4646,6 @@ export interface components {
      */
     ProcessingState: "incomplete" | "processing" | "failed" | "success";
     /**
-     * PrognosticPredicate
-     * @description Define constraints for prognostic predicate
-     * @enum {string}
-     */
-    PrognosticPredicate: "associatedWithBetterOutcomeFor" | "associatedWithWorseOutcomeFor";
-    /**
      * Proposition
      * @description An abstract entity representing a possible fact that may be true or false. As
      * abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
@@ -4084,7 +4687,9 @@ export interface components {
        * Subject
        * @description The Entity or concept about which the Proposition is made.
        */
-      subject: Record<string, never>;
+      subject: {
+        [key: string]: unknown;
+      } | components["schemas"]["iriReference"];
       /**
        * Predicate
        * @description The relationship declared to hold between the subject and the object of the Proposition.
@@ -4094,7 +4699,9 @@ export interface components {
        * Object
        * @description An Entity or concept that is related to the subject of a Proposition via its predicate.
        */
-      object: Record<string, never>;
+      object: {
+        [key: string]: unknown;
+      } | components["schemas"]["iriReference"];
     };
     /** PublicationAuthors */
     PublicationAuthors: {
@@ -4210,7 +4817,7 @@ export interface components {
        * @description The number of residues in the expressed sequence.
        */
       length: components["schemas"]["Range"] | number;
-      /** @description the literal Sequence encoded by the Reference Length Expression. */
+      /** @description the literal sequence encoded by the Reference Length Expression. */
       sequence?: components["schemas"]["sequenceString"] | null;
       /**
        * Repeatsubunitlength
@@ -4328,6 +4935,121 @@ export interface components {
      */
     Relation: "closeMatch" | "exactMatch" | "broadMatch" | "narrowMatch" | "relatedMatch";
     /**
+     * RelativeAllele
+     * @description An Allele defined on a mapped location relative to a base location. Often used to describe intronic variants.
+     */
+    RelativeAllele: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "RelativeAllele"
+       * @default RelativeAllele
+       * @constant
+       */
+      type?: "RelativeAllele";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Mappedstate
+       * @description The state of the RelativeAllele as expressed on the mapped sequence. This will differ from the base state when mapping to a reverse complement sequence, commonly observed when representing the state on transcripts mapped to the "negative strand" of a chromosome.
+       */
+      mappedState: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
+      /**
+       * Basestate
+       * @description The state of the RelativeAllele as expressed on the base sequence.
+       */
+      baseState: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
+      /**
+       * Relativelocation
+       * @description The relative location at which the baseState and mappedState are expressed.
+       */
+      relativeLocation: components["schemas"]["RelativeSequenceLocation"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * RelativeSequenceLocation
+     * @description A location on a base sequence and its position relative to a boundary offset on a
+     * mapped sequence gap. Typically used to describe intronic locations that exist with
+     * respect to a mapped RNA transcript sequence.
+     */
+    RelativeSequenceLocation: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "RelativeSequenceLocation"
+       * @default RelativeSequenceLocation
+       * @constant
+       */
+      type?: "RelativeSequenceLocation";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /**
+       * Basesequencelocation
+       * @description An absolute location on a sequence.
+       */
+      baseSequenceLocation: components["schemas"]["SequenceLocation"] | components["schemas"]["iriReference"];
+      /**
+       * Mappedsequencelocation
+       * @description A location relative to an offset on a mapped sequence.
+       */
+      mappedSequenceLocation: components["schemas"]["SequenceOffsetLocation"] | components["schemas"]["iriReference"];
+    };
+    /**
      * ResidueAlphabet
      * @description The interpretation of the character codes referred to by the refget accession,
      * where "aa" specifies an amino acid character set, and "na" specifies a nucleic acid
@@ -4356,6 +5078,33 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+    };
+    /**
+     * SavedCalibrationControl
+     * @description Persisted calibration control, including identifier and audit metadata.
+     */
+    SavedCalibrationControl: {
+      /** Varianturn */
+      variantUrn: string;
+      clinicalStatus: components["schemas"]["CalibrationControlStatus"];
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /** Functionalclassificationid */
+      functionalClassificationId?: number | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      createdBy: components["schemas"]["SavedUser"];
+      modifiedBy: components["schemas"]["SavedUser"];
     };
     /** SavedDoiIdentifier */
     SavedDoiIdentifier: {
@@ -4438,9 +5187,13 @@ export interface components {
       /** Id */
       id: number;
       /** Jobparams */
-      jobParams?: Record<string, never> | null;
+      jobParams?: {
+        [key: string]: unknown;
+      } | null;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /** Maxretries */
       maxRetries: number;
       /** Retrycount */
@@ -4487,7 +5240,9 @@ export interface components {
       /** Id */
       id: number;
       /** Metadata */
-      metadata?: Record<string, never>;
+      metadata?: {
+        [key: string]: unknown;
+      };
       /**
        * Createdat
        * Format: date-time
@@ -4618,6 +5373,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["mavedb__view_models__score_calibration__FunctionalClassification"][] | null;
       /** Thresholdsources */
@@ -4627,7 +5384,9 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifier"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Id */
@@ -4648,6 +5407,12 @@ export interface components {
        * @default true
        */
       private?: boolean;
+      /**
+       * Controlscount
+       * @default 0
+       */
+      controlsCount?: number;
+      disease: components["schemas"]["MappableConcept"];
       createdBy?: components["schemas"]["User"] | null;
       modifiedBy?: components["schemas"]["User"] | null;
       /**
@@ -4660,6 +5425,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Controls
+       * @default []
+       */
+      controls?: components["schemas"]["SavedCalibrationControl"][];
     };
     /**
      * ScoreCalibrationCreate
@@ -4679,6 +5449,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["FunctionalClassificationCreate"][] | null;
       /** Thresholdsources */
@@ -4688,15 +5460,24 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Scoreseturn */
       scoreSetUrn?: string | null;
+      /** Controls */
+      controls?: components["schemas"]["CalibrationControlCreate"][] | null;
+      /**
+       * Disease
+       * @description The MONDO code (e.g. "MONDO:0015263") for this calibration's disease context; validated against OLS. Omitted or null resolves to the generic "disease or disorder" term.
+       */
+      disease?: string | null;
     };
     /**
-     * ScoreCalibrationWithScoreSetUrn
-     * @description Complete score calibration model returned by the API, with score_set_urn.
+     * ScoreCalibrationDetailWithScoreSetUrn
+     * @description Single-calibration detail response: adds the full controls list to the list model.
      */
-    ScoreCalibrationWithScoreSetUrn: {
+    ScoreCalibrationDetailWithScoreSetUrn: {
       /** Title */
       title: string;
       /**
@@ -4710,6 +5491,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
       /** Thresholdsources */
@@ -4719,7 +5502,9 @@ export interface components {
       /** Methodsources */
       methodSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Id */
@@ -4740,6 +5525,93 @@ export interface components {
        * @default true
        */
       private?: boolean;
+      /**
+       * Controlscount
+       * @default 0
+       */
+      controlsCount?: number;
+      disease: components["schemas"]["MappableConcept"];
+      createdBy?: components["schemas"]["SavedUser"] | null;
+      modifiedBy?: components["schemas"]["SavedUser"] | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Scoreseturn */
+      scoreSetUrn: string;
+      /**
+       * Controls
+       * @default []
+       */
+      controls?: components["schemas"]["SavedCalibrationControl"][];
+    };
+    /**
+     * ScoreCalibrationWithScoreSetUrn
+     * @description Score calibration model with score_set_urn, used for list/collection responses.
+     *
+     * Carries ``controls_count`` (from the base) but not the full controls list — see
+     * ``ScoreCalibrationDetailWithScoreSetUrn`` for the single-item detail representation.
+     */
+    ScoreCalibrationWithScoreSetUrn: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /** Baselinescore */
+      baselineScore?: number | null;
+      /** Baselinescoredescription */
+      baselineScoreDescription?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /** Controlsnotphi */
+      controlsNotPhi?: boolean | null;
+      /** Functionalclassifications */
+      functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
+      /** Thresholdsources */
+      thresholdSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Methodsources */
+      methodSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Calibrationmetadata */
+      calibrationMetadata?: {
+        [key: string]: unknown;
+      } | null;
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /** Urn */
+      urn: string;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Investigatorprovided */
+      investigatorProvided: boolean;
+      /**
+       * Primary
+       * @default false
+       */
+      primary?: boolean;
+      /**
+       * Private
+       * @default true
+       */
+      private?: boolean;
+      /**
+       * Controlscount
+       * @default 0
+       */
+      controlsCount?: number;
+      disease: components["schemas"]["MappableConcept"];
       createdBy?: components["schemas"]["SavedUser"] | null;
       modifiedBy?: components["schemas"]["SavedUser"] | null;
       /**
@@ -4756,6 +5628,25 @@ export interface components {
       scoreSetUrn: string;
     };
     /**
+     * ScoreDistribution
+     * @description Binned summary of a score set's scores, built by ``mavedb.lib.score_distribution.summarize_scores``.
+     *
+     * ``counts`` holds equal-width bins spanning ``[min, max]``; scores that are null or not finite are
+     * counted in ``null_count`` instead.
+     */
+    ScoreDistribution: {
+      /** Version */
+      version: number;
+      /** Min */
+      min: number;
+      /** Max */
+      max: number;
+      /** Counts */
+      counts: number[];
+      /** Nullcount */
+      nullCount: number;
+    };
+    /**
      * ScoreSet
      * @description Score set view model containing most properties visible to non-admin users, but no variant data.
      */
@@ -4769,7 +5660,9 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Datausagepolicy */
       dataUsagePolicy?: string | null;
       /** Recordtype */
@@ -4823,10 +5716,15 @@ export interface components {
       private: boolean;
       processingState?: components["schemas"]["ProcessingState"] | null;
       /** Processingerrors */
-      processingErrors?: Record<string, never> | null;
+      processingErrors?: {
+        [key: string]: unknown;
+      } | null;
       mappingState?: components["schemas"]["MappingState"] | null;
       /** Mappingerrors */
-      mappingErrors?: Record<string, never> | null;
+      mappingErrors?: {
+        [key: string]: unknown;
+      } | null;
+      scoreDistribution?: components["schemas"]["ScoreDistribution"] | null;
     };
     /**
      * ScoreSetCreate
@@ -4842,7 +5740,9 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Datausagepolicy */
       dataUsagePolicy?: string | null;
       /** Contributors */
@@ -4880,7 +5780,9 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Datausagepolicy */
       dataUsagePolicy?: string | null;
       /** Contributors */
@@ -4920,11 +5822,6 @@ export interface components {
       keywords?: components["schemas"]["ControlledKeywordSearch"][] | null;
       /** Text */
       text?: string | null;
-      /**
-       * Includeexperimentscoreseturnsandcount
-       * @default true
-       */
-      includeExperimentScoreSetUrnsAndCount?: boolean | null;
       /** Offset */
       offset?: number | null;
       /** Limit */
@@ -5001,6 +5898,25 @@ export interface components {
       seqrepo_dependency_version: string;
     };
     /**
+     * SequenceExpression
+     * @description An expression describing a `Sequence`.
+     */
+    SequenceExpression: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
+    /**
+     * SequenceLevel
+     * @description The molecular sequence level of a variant representation: genomic DNA, coding DNA, or protein.
+     *
+     * A single, duty-neutral closed set reused across several columns that each carry a different
+     * semantic meaning: the level a variant was *assayed* at (``assay_level``), the level dcd-mapping
+     * *aligned* it at (``alignment_level``), and the level of a stored allele (``level``).
+     *
+     * Values use full names so they round-trip readably through the database column; the dcd-mapping
+     * payload uses short single-character codes (``p`` / ``c`` / ``g``) which the worker translates via
+     * :func:`from_wire`.
+     * @enum {string}
+     */
+    SequenceLevel: "protein" | "cdna" | "genomic";
+    /**
      * SequenceLocation
      * @description A `Location` defined by an interval on a `Sequence`.
      */
@@ -5059,6 +5975,67 @@ export interface components {
       end?: components["schemas"]["Range"] | number | null;
       /** @description The literal sequence encoded by the `sequenceReference` at these coordinates. */
       sequence?: components["schemas"]["sequenceString"] | null;
+    };
+    /**
+     * SequenceOffsetLocation
+     * @description A location defined by an offset relative to an anchor on a mapped sequence
+     * reference.
+     */
+    SequenceOffsetLocation: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "SequenceOffsetLocation"
+       * @default SequenceOffsetLocation
+       * @constant
+       */
+      type?: "SequenceOffsetLocation";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Sequencereference
+       * @description A sequence reference that has been mapped from which a relative location is defined.
+       */
+      sequenceReference: components["schemas"]["SequenceReference"] | components["schemas"]["iriReference"];
+      /**
+       * Anchor
+       * @description The inter-residue position on the sequence reference from which the relative location offset is calculated.
+       */
+      anchor: number;
+      /** @description Indicates which side of a discontinuous anchor on the sequenceReference is used as the reference point for interpreting offsetStart/offsetEnd. The anchor is an inter-residue coordinate on the sequenceReference. When that anchor corresponds to a boundary whose realization on a base sequence yields two distinct locations (e.g., an exon junction), this property disambiguates which anchor side on the sequenceReference is intended. `left` denotes the side immediately preceding the anchor in sequenceReference coordinate order; `right` denotes the side immediately following the anchor in sequenceReference coordinate order. */
+      anchorOrientation: components["schemas"]["AnchorOrientation"];
+      /**
+       * Offsetstart
+       * @description The start offset, in inter-residue coordinates, from the anchor realization selected by anchorOrientation on the sequenceReference.
+       */
+      offsetStart?: number | components["schemas"]["Range"] | null;
+      /**
+       * Offsetend
+       * @description The end offset, in inter-residue coordinates, from the anchor realization selected by anchorOrientation on the sequenceReference.
+       */
+      offsetEnd?: number | components["schemas"]["Range"] | null;
     };
     /**
      * SequenceReference
@@ -5125,7 +6102,9 @@ export interface components {
       /** Methodtext */
       methodText?: string | null;
       /** Extrametadata */
-      extraMetadata?: Record<string, never> | null;
+      extraMetadata?: {
+        [key: string]: unknown;
+      } | null;
       /** Recordtype */
       recordType?: string;
       /** Urn */
@@ -5321,18 +6300,34 @@ export interface components {
        * Proposition
        * @description A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.
        */
-      proposition: components["schemas"]["ExperimentalVariantFunctionalImpactProposition"] | components["schemas"]["VariantDiagnosticProposition"] | components["schemas"]["VariantOncogenicityProposition"] | components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["VariantPrognosticProposition"] | components["schemas"]["VariantTherapeuticResponseProposition"];
+      proposition: components["schemas"]["Proposition"] | components["schemas"]["iriReference"];
       /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
-      direction: components["schemas"]["Direction"];
-      /** @description A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it. */
-      strength?: components["schemas"]["MappableConcept"] | null;
+      direction?: components["schemas"]["Direction"] | null;
+      /**
+       * Strength
+       * @description A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it.
+       */
+      strength?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Score
        * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
        */
       score?: number | null;
-      /** @description A single term or phrase summarizing the outcome of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject. */
-      classification?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Classification
+       * @description A single term or phrase summarizing the result of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject.
+       */
+      classification?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Quality
+       * @description A term used to report the quality of the assessment of a Proposition taking into consideration the reliability of the method, the contributor's self-reporting of the rigor of the evaluation, and the overall robustness of the supporting or disputing evidence. This is useful when there is a consistent policy and authority that manages and a governing framework for evaluating the quality of evidence. Also known as trust rating, review status or ranking.
+       */
+      quality?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Hasevidence
+       * @description An individual piece of information that was evaluated as evidence in assessing the validity of the Proposition put forth by the Statement.
+       */
+      hasEvidence?: ((components["schemas"]["Statement"] | components["schemas"]["StudyResult"] | components["schemas"]["DataItem"] | components["schemas"]["iriReference"])[]) | null;
       /**
        * Hasevidencelines
        * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
@@ -5346,13 +6341,12 @@ export interface components {
      */
     StrengthOfEvidenceProvided: "VERY_STRONG" | "STRONG" | "MODERATE_PLUS" | "MODERATE" | "SUPPORTING";
     /**
-     * StudyGroup
-     * @description A collection of individuals or specimens from the same taxonomic class, selected
-     * for analysis in a scientific study based on their exhibiting one or more common
-     * characteristics  (e.g. species, race, age, gender, disease state, income). May be
-     * referred to as a 'cohort' or 'population' in specific research settings.
+     * StudyResult
+     * @description A collection of data items from a single study that pertain to a particular
+     * subject or experimental unit in the study, along with optional provenance
+     * information describing how these data items were generated.
      */
-    StudyGroup: {
+    StudyResult: {
       /**
        * Id
        * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
@@ -5360,11 +6354,9 @@ export interface components {
       id?: string | null;
       /**
        * Type
-       * @description Must be 'StudyGroup'
-       * @default StudyGroup
-       * @constant
+       * @description The name of the class that is instantiated by a data object representing the Entity.
        */
-      type?: "StudyGroup";
+      type: string;
       /**
        * Name
        * @description A primary name for the entity.
@@ -5386,26 +6378,45 @@ export interface components {
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Membercount
-       * @description The total number of individual members in the StudyGroup.
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
        */
-      memberCount?: number | null;
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
       /**
-       * Characteristics
-       * @description A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
        */
-      characteristics?: components["schemas"]["MappableConcept"][] | null;
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /**
+       * Focus
+       * @description The specific participant, subject or experimental unit in a Study that data included in the StudyResult object is about - e.g. a particular variant in a population allele frequency dataset like ExAC or gnomAD.
+       */
+      focus: components["schemas"]["Entity"] | components["schemas"]["iriReference"];
+      /**
+       * Sourcedataset
+       * @description A larger DataSet from which the data included in the StudyResult was taken or derived.
+       */
+      sourceDataSet?: components["schemas"]["DataSet"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Ancillaryresults
+       * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
+       */
+      ancillaryResults?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Qualitymeasures
+       * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
+       */
+      qualityMeasures?: {
+        [key: string]: unknown;
+      } | null;
     };
-    /**
-     * StudyResult
-     * @description A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated.
-     */
-    StudyResult: components["schemas"]["CohortAlleleFrequencyStudyResult"] | components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
-    /**
-     * SubjectVariantProposition
-     * @description A `Proposition` that has a variant as the subject.
-     */
-    SubjectVariantProposition: components["schemas"]["ExperimentalVariantFunctionalImpactProposition"] | components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["VariantDiagnosticProposition"] | components["schemas"]["VariantPrognosticProposition"] | components["schemas"]["VariantOncogenicityProposition"] | components["schemas"]["VariantTherapeuticResponseProposition"];
     /**
      * Syntax
      * @description The syntax used to describe the variation. The value should be one of the
@@ -5475,69 +6486,6 @@ export interface components {
       externalIdentifiers: components["schemas"]["ExternalGeneIdentifierOffsetCreate"][];
       targetSequence?: components["schemas"]["TargetSequenceCreate"] | null;
       targetAccession?: components["schemas"]["TargetAccessionCreate"] | null;
-    };
-    /** TargetGeneMapping */
-    TargetGeneMapping: {
-      alignmentLevel: components["schemas"]["AnnotationLayer"];
-      /**
-       * Preferred
-       * @default false
-       */
-      preferred?: boolean;
-      /** Referenceassembly */
-      referenceAssembly?: string | null;
-      /** Referenceaccession */
-      referenceAccession?: string | null;
-      /** Referencesequenceid */
-      referenceSequenceId?: string | null;
-      /** Alignmentscore */
-      alignmentScore?: number | null;
-      /** Nextbestalignmentscore */
-      nextBestAlignmentScore?: number | null;
-      /** Alignmentlength */
-      alignmentLength?: number | null;
-      /** Alignmentstring */
-      alignmentString?: string | null;
-      /** Mismatchcount */
-      mismatchCount?: number | null;
-      /** Gapcount */
-      gapCount?: number | null;
-      /** Percentidentity */
-      percentIdentity?: number | null;
-      /** Totalvariants */
-      totalVariants?: number | null;
-      /** Variantsfailed */
-      variantsFailed?: number | null;
-      /** Variantswithalignmentwarnings */
-      variantsWithAlignmentWarnings?: number | null;
-      /** Variantsmappedcleanly */
-      variantsMappedCleanly?: number | null;
-      /** Toolname */
-      toolName: string;
-      /** Toolversion */
-      toolVersion: string;
-      /** Toolparameters */
-      toolParameters?: Record<string, never> | null;
-      /** Alignmentmetadata */
-      alignmentMetadata?: Record<string, never> | null;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Mappeddate */
-      mappedDate?: string | null;
-      /** Id */
-      id: number;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Recordtype */
-      recordType?: string;
     };
     /**
      * TargetGeneWithScoreSetUrn
@@ -5682,42 +6630,6 @@ export interface components {
       text?: string | null;
     };
     /**
-     * Therapeutic
-     * @description An individual therapy (drug, procedure, behavioral intervention, etc.), or group of therapies (TherapyGroup).
-     */
-    Therapeutic: components["schemas"]["TherapyGroup"] | components["schemas"]["MappableConcept"];
-    /**
-     * TherapeuticResponsePredicate
-     * @description Define constraints for therapeutic response predicate
-     * @enum {string}
-     */
-    TherapeuticResponsePredicate: "predictsSensitivityTo" | "predictsResistanceTo";
-    /**
-     * TherapyGroup
-     * @description A group of two or more therapies that are applied in combination to a single
-     * patient/subject, or applied individually to a different subset of participants in a
-     * research study
-     */
-    TherapyGroup: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Therapies
-       * @description A list of therapies that are applied to treat a condition.
-       */
-      therapies: components["schemas"]["MappableConcept"][];
-      /** @description The logical relationship between members of the group, that indicates how they were applied in treating participants in a study.  The value 'AND' indicates that all therapies in the group were applied in combination to a given patient or subject. The value 'OR' indicates that each therapy was applied individually to a distinct subset of participants in the cohort that was interrogated in a given study. */
-      membershipOperator: components["schemas"]["MembershipOperator"];
-    };
-    /**
      * TraversalBlock
      * @description A component used to describe the orientation of applicable molecular variation
      * within a DerivativeMolecule.
@@ -5761,6 +6673,44 @@ export interface components {
       component?: components["schemas"]["Adjacency"] | null;
     };
     /**
+     * UnspecifiedElement
+     * @description Represents an unspecified element that satisfies the described adjacency.
+     */
+    UnspecifiedElement: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be "UnspecifiedElement"
+       * @default UnspecifiedElement
+       * @constant
+       */
+      type?: "UnspecifiedElement";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+    };
+    /**
      * User
      * @description User view model containing properties visible to non-admin users.
      */
@@ -5787,79 +6737,106 @@ export interface components {
       msg: string;
       /** Error Type */
       type: string;
+      /** Input */
+      input?: unknown;
+      /** Context */
+      ctx?: Record<string, never>;
     };
     /**
-     * Variant
-     * @description View model for a variant, defined by its ClinGen allele id, with associated variant effect measurements
+     * VariantClassification
+     * @description A functional classification the variant falls into, tagged with its calibration context.
+     *
+     * A score set may carry several calibrations, so a variant has one classification per calibration;
+     * ``primary`` flags the UI default. The classifications are calibration-derived but as-of-invariant
+     * (calibrations carry no valid-time), so they are always the current calibration state.
      */
-    Variant: {
+    VariantClassification: {
+      /** Calibrationid */
+      calibrationId: number;
+      /** Primary */
+      primary: boolean;
+      classification: components["schemas"]["SavedFunctionalClassification"];
+    };
+    /**
+     * VariantDetail
+     * @description The assayed variant-detail envelope (``GET /variants/{urn}``).
+     *
+     * Two tiers: flat, UI-ergonomic assay fields (the ``targetHgvs``/``referenceHgvs`` coordinate pair
+     * is a client-side toggle, no refetch; the ``preMapped``/``postMapped`` raw VRS pair lets a
+     * VRS/bulk consumer read the assayed-level and measured VRS directly) plus the spec-pure GA4GH
+     * ``molecularRepresentation`` (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer
+     * rides alongside, keyed by VRS digest: the ``alleles`` identity sidecar (per-allele ``level`` /
+     * ``hgvs`` / ``clingenAlleleId`` / ``relation`` — one entry per linked allele, sharing keys with
+     * ``annotations``) and the ``annotations`` map. ``isCurrent``/``supersededByScoreSet`` let a
+     * superseded variant self-describe: ``supersededByScoreSet`` is the superseding *score set*'s URN,
+     * not a variant URN. Supersession is versioned at the score-set level, and a newer version may add,
+     * drop, or renumber variants — so there is no stable superseding-*variant* pointer to hand back; a
+     * consumer resolves the current measurement by looking this variant up within that score set.
+     *
+     * Unlike most MaveDB response models, this one serializes with ``exclude_none=False`` on both routes
+     * that emit it (``GET /variants/{urn}`` and the bulk ``GET /score-sets/{urn}/variant-details`` NDJSON
+     * stream): the shape is a stable, self-describing envelope, so every record carries the same key set
+     * and an unmapped variant reads ``preMapped``/``postMapped``/``molecularRepresentation`` as ``null``
+     * rather than dropping them. The two routes are kept in lockstep — the same object, one shape.
+     */
+    VariantDetail: {
+      /** Urn */
+      urn: string;
+      /** Scores */
+      scores?: {
+        [key: string]: unknown;
+      } | null;
+      /** Counts */
+      counts?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Classifications
+       * @default []
+       */
+      classifications?: components["schemas"]["VariantClassification"][];
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      /** Targethgvs */
+      targetHgvs?: string | null;
+      /** Referencehgvs */
+      referenceHgvs?: string | null;
+      /** Assayleveldigest */
+      assayLevelDigest?: string | null;
+      mapped?: components["schemas"]["MappedTriple"] | null;
       /** Clingenalleleid */
-      clingenAlleleId: string;
-      /** Varianteffectmeasurements */
-      variantEffectMeasurements: components["schemas"]["VariantEffectMeasurementWithShortScoreSet"][];
-    };
-    /**
-     * VariantDiagnosticProposition
-     * @description A Proposition about whether a variant is associated with a disease (a diagnostic
-     * inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
-     */
-    VariantDiagnosticProposition: {
+      clingenAlleleId?: string | null;
+      /** Premapped */
+      preMapped?: {
+        [key: string]: unknown;
+      } | null;
+      /** Postmapped */
+      postMapped?: {
+        [key: string]: unknown;
+      } | null;
+      /** Molecularrepresentation */
+      molecularRepresentation?: {
+        [key: string]: unknown;
+      } | null;
+      /** Mode */
+      mode?: string | null;
       /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       * Alleles
+       * @default {}
        */
-      id?: string | null;
+      alleles?: {
+        [key: string]: components["schemas"]["AlleleIdentity"];
+      };
       /**
-       * Type
-       * @description MUST be 'VariantDiagnosticProposition'.
-       * @default VariantDiagnosticProposition
-       * @constant
+       * Annotations
+       * @default {}
        */
-      type?: "VariantDiagnosticProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "VariantDiagnosticProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /** @description The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'isDiagnosticInclusionCriterionFor' or 'isDiagnosticExclusionCriterionFor'. */
-      predicate: components["schemas"]["DiagnosticPredicate"];
-      /**
-       * Objectcondition
-       * @description The disease that is evaluated for diagnosis.
-       */
-      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+      annotations?: {
+        [key: string]: components["schemas"]["AlleleAnnotations"];
+      };
+      /** Iscurrent */
+      isCurrent: boolean;
+      /** Supersededbyscoreset */
+      supersededByScoreSet?: string | null;
     };
     /**
      * VariantEffectMeasurement
@@ -5894,80 +6871,14 @@ export interface components {
       recordType?: string;
     };
     /**
-     * VariantEffectMeasurementWithScoreSet
-     * @description Variant effect measurement view model with mapped variants and score set
+     * VariantPathogenicityEvidenceLine
+     * @description An Evidence Line that describes how a specific type of information was
+     * interpreted as evidence for or against a variant's pathogenicity. In the ACMG
+     * Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
+     * with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
+     * adjusting the default strength based on the quality and abundance of evidence.
      */
-    VariantEffectMeasurementWithScoreSet: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-      scoreSet: components["schemas"]["ScoreSet"];
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
-    };
-    /**
-     * VariantEffectMeasurementWithShortScoreSet
-     * @description Variant effect measurement view model with mapped variants and a limited set of score set details
-     */
-    VariantEffectMeasurementWithShortScoreSet: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-      scoreSet: components["schemas"]["ShortScoreSet"];
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
-    };
-    /**
-     * VariantOncogenicityProposition
-     * @description A proposition describing the role of a variant in causing a tumor type.
-     */
-    VariantOncogenicityProposition: {
+    VariantPathogenicityEvidenceLine: {
       /**
        * Id
        * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
@@ -5975,11 +6886,11 @@ export interface components {
       id?: string | null;
       /**
        * Type
-       * @description MUST be 'VariantOncogenicityProposition'.
-       * @default VariantOncogenicityProposition
+       * @description MUST be 'EvidenceLine'.
+       * @default EvidenceLine
        * @constant
        */
-      type?: "VariantOncogenicityProposition";
+      type?: "EvidenceLine";
       /**
        * Name
        * @description A primary name for the entity.
@@ -6001,34 +6912,47 @@ export interface components {
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
+       * Specifiedby
+       * @description The guidelines or rubrics followed in interpreting evidence, to determine the strength and direction of support that it provides for or against a variant's pathogenicity. While the ACMG Criteria themselves provide minimal guidance, typically a more detailed, disease- or gene- specific rubric is followed to determine if a given criterion was met, and how strongly (e.g. the ClinGen Hearing Loss Expert Panel guidelines for ACMG interpretations).
        */
-      subjectVariant: {
-        type: "VariantOncogenicityProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
       /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
        */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      contributions?: components["schemas"]["Contribution"][] | null;
       /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
        */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
       /**
-       * Predicate
-       * @description The relationship the Proposition describes between the subject variant and object tumor type. MUST be 'isOncogenicFor'.
-       * @default isOncogenicFor
-       * @constant
+       * Targetproposition
+       * @description A Variant Pathogenicity Proposition against which a specific type of evidence was assessed, to determine the strength and direction of support this evidence provides for or against the proposition's validity.
        */
-      predicate?: "isOncogenicFor";
+      targetProposition?: components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["iriReference"] | null;
       /**
-       * Objecttumortype
-       * @description The tumor type for which the variant impact is evaluated.
+       * Hasevidenceitems
+       * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
        */
-      objectTumorType: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+      hasEvidenceItems?: ((components["schemas"]["InformationEntity"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
+      directionOfEvidenceProvided: components["schemas"]["Direction"];
+      /**
+       * Strengthofevidenceprovided
+       * @description The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute, and captured using a MappableConcept, whose nested 'code' field is bound to an enumerated set of values. Conditional requirement: if `directionOfEvidenceProvided` is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed.
+       */
+      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Scoreofevidenceprovided
+       * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
+       */
+      scoreOfEvidenceProvided?: number | null;
+      /**
+       * Evidenceoutcome
+       * @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition.
+       */
+      evidenceOutcome?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /**
      * VariantPathogenicityProposition
@@ -6068,22 +6992,12 @@ export interface components {
        */
       extensions?: components["schemas"]["Extension"][] | null;
       /**
-       * Subjectvariant
+       * Subject
        * @description A variant that is the subject of the Proposition.
        */
-      subjectVariant: {
+      subject: {
         type: "VariantPathogenicityProposition";
       } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Predicate
        * @description The relationship the Proposition describes between the subject variant and object condition. MUST be 'isCausalFor'.
@@ -6092,14 +7006,30 @@ export interface components {
        */
       predicate?: "isCausalFor";
       /**
-       * Objectcondition
-       * @description The Condition for which the variant impact is stated.
+       * Object
+       * @description The Condition or ConditionSet for which the variant impact is stated.
        */
-      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
-      /** @description Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition. */
-      penetranceQualifier?: components["schemas"]["MappableConcept"] | null;
-      /** @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance). */
-      modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | null;
+      object: components["schemas"]["Condition"] | components["schemas"]["ConditionSet"] | components["schemas"]["iriReference"];
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable "germline" variant, an acquired "somatic" variant in a tumor, or a post-zygotic "mosaic" variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. "maternal" vs "paternal" allele origin). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Penetrancequalifier
+       * @description Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition.
+       */
+      penetranceQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Modeofinheritancequalifier
+       * @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance).
+       */
+      modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
     };
     /**
      * VariantPathogenicityStatement
@@ -6153,160 +7083,74 @@ export interface components {
        * @description A document in which the the Information Entity is reported.
        */
       reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim. */
-      proposition: components["schemas"]["VariantPathogenicityProposition"];
+      /**
+       * Proposition
+       * @description A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.
+       */
+      proposition: components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["iriReference"];
       /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
-      direction: components["schemas"]["Direction"];
-      /** @description The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. */
-      strength?: components["schemas"]["MappableConcept"] | null;
+      direction?: components["schemas"]["Direction"] | null;
+      /**
+       * Strength
+       * @description The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength.
+       */
+      strength?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
       /**
        * Score
        * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
        */
       score?: number | null;
-      /** @description The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively. */
-      classification: components["schemas"]["MappableConcept"];
       /**
-       * Hasevidencelines
-       * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
+       * Classification
+       * @description The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively.
        */
-      hasEvidenceLines?: ((components["schemas"]["EvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
+      classification: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"];
+      /**
+       * Quality
+       * @description A term used to report the quality of the assessment of a Proposition taking into consideration the reliability of the method, the contributor's self-reporting of the rigor of the evaluation, and the overall robustness of the supporting or disputing evidence. This is useful when there is a consistent policy and authority that manages and a governing framework for evaluating the quality of evidence. Also known as trust rating, review status or ranking.
+       */
+      quality?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Hasevidence
+       * @description An individual piece of information that was evaluated as evidence in assessing the validity of the Proposition put forth by the Statement.
+       */
+      hasEvidence?: ((components["schemas"]["Statement"] | components["schemas"]["StudyResult"] | components["schemas"]["DataItem"] | components["schemas"]["iriReference"])[]) | null;
+      /** Hasevidencelines */
+      hasEvidenceLines?: ((components["schemas"]["VariantPathogenicityEvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
     };
     /**
-     * VariantPrognosticProposition
-     * @description A Proposition about whether a variant is associated with an improved or worse outcome for a disease.
+     * VariantVrsMatch
+     * @description One variant whose mapping links an allele bearing the queried VRS identifier.
+     *
+     * The ``GET /variants/vrs/{identifier}`` lookup result. The ClinGen id + level ride from the matched
+     * (deduplicated) allele; the URN from the variant it is linked to. Replaces the legacy MappedVariant VRS
+     * lookup on the new Allele substrate (#743, item 3.5).
      */
-    VariantPrognosticProposition: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'VariantPrognosticProposition'.
-       * @default VariantPrognosticProposition
-       * @constant
-       */
-      type?: "VariantPrognosticProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "VariantPrognosticProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /** @description The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'associatedWithBetterOutcomeFor' or 'associatedWithWorseOutcomeFor'. */
-      predicate: components["schemas"]["PrognosticPredicate"];
-      /**
-       * Objectcondition
-       * @description The disease that is evaluated for outcome.
-       */
-      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
-    };
-    /**
-     * VariantTherapeuticResponseProposition
-     * @description A Proposition about the role of a variant in modulating the response of a neoplasm to drug
-     * administration or other therapeutic procedures.
-     */
-    VariantTherapeuticResponseProposition: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'VariantTherapeuticResponseProposition'.
-       * @default VariantTherapeuticResponseProposition
-       * @constant
-       */
-      type?: "VariantTherapeuticResponseProposition";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Subjectvariant
-       * @description A variant that is the subject of the Proposition.
-       */
-      subjectVariant: {
-        type: "VariantTherapeuticResponseProposition";
-      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
-      /**
-       * Genecontextqualifier
-       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
-       */
-      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /**
-       * Alleleoriginqualifier
-       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
-       */
-      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
-      /** @description The relationship the Proposition describes between the subject variant and object theapeutic. MUST be one of 'predictsSensitivityTo' or 'predictsResistanceTo'. */
-      predicate: components["schemas"]["TherapeuticResponsePredicate"];
-      /**
-       * Objecttherapeutic
-       * @description A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.
-       */
-      objectTherapeutic: components["schemas"]["Therapeutic"] | components["schemas"]["iriReference"];
-      /**
-       * Conditionqualifier
-       * @description Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.
-       */
-      conditionQualifier: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+    VariantVrsMatch: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Vrsid */
+      vrsId?: string | null;
+      /** Level */
+      level?: string | null;
     };
     /**
      * Variation
      * @description A representation of the state of one or more biomolecules.
      */
-    Variation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
+    Variation: components["schemas"]["Allele"] | components["schemas"]["RelativeAllele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
+    /**
+     * VepAnnotation
+     * @description VEP molecular consequence for an allele and the Ensembl release it resolved under.
+     */
+    VepAnnotation: {
+      /** Consequence */
+      consequence?: string | null;
+      /** Sourceversion */
+      sourceVersion: string;
+    };
     /**
      * code
      * @description Indicates that the value is taken from a set of controlled strings defined elsewhere. Technically, a code is restricted to a string which has at least one character and no leading or  trailing whitespace, and where there is no whitespace other than single spaces in the contents.
@@ -6362,122 +7206,6 @@ export interface components {
      * @description A character string of Residues that represents a biological sequence using the conventional sequence order (5'-to-3' for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
      */
     sequenceString: string;
-    /**
-     * ACMGClassificationModify
-     * @description Model used to modify an existing ACMG classification.
-     */
-    ACMGClassificationModify: {
-      /** @default null */
-      criterion?: components["schemas"]["ACMGCriterion"] | null;
-      /** @default null */
-      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
-      /**
-       * Points
-       * @default null
-       */
-      points?: number | null;
-    };
-    /**
-     * FunctionalClassification
-     * @enum {string}
-     */
-    FunctionalClassification: "normal" | "abnormal" | "not_specified";
-    /**
-     * FunctionalClassificationModify
-     * @description Model used to modify an existing functional range.
-     */
-    FunctionalClassificationModify: {
-      /** Label */
-      label: string;
-      /**
-       * Description
-       * @default null
-       */
-      description?: string | null;
-      /** @default not_specified */
-      functionalClassification?: components["schemas"]["FunctionalClassification"];
-      /**
-       * Range
-       * @default null
-       */
-      range?: ([number | null, number | null]) | null;
-      /**
-       * Class
-       * @default null
-       */
-      class?: string | null;
-      /**
-       * Inclusivelowerbound
-       * @default null
-       */
-      inclusiveLowerBound?: boolean | null;
-      /**
-       * Inclusiveupperbound
-       * @default null
-       */
-      inclusiveUpperBound?: boolean | null;
-      /** @default null */
-      acmgClassification?: components["schemas"]["ACMGClassificationModify"] | null;
-      /**
-       * Oddspathsratio
-       * @default null
-       */
-      oddspathsRatio?: number | null;
-      /**
-       * Positivelikelihoodratio
-       * @default null
-       */
-      positiveLikelihoodRatio?: number | null;
-    };
-    /**
-     * ScoreCalibrationModify
-     * @description Model used to modify an existing score calibration.
-     */
-    ScoreCalibrationModify: {
-      /** Title */
-      title: string;
-      /**
-       * Researchuseonly
-       * @default false
-       */
-      researchUseOnly?: boolean;
-      /**
-       * Baselinescore
-       * @default null
-       */
-      baselineScore?: number | null;
-      /**
-       * Baselinescoredescription
-       * @default null
-       */
-      baselineScoreDescription?: string | null;
-      /**
-       * Notes
-       * @default null
-       */
-      notes?: string | null;
-      /**
-       * Functionalclassifications
-       * @default null
-       */
-      functionalClassifications?: components["schemas"]["FunctionalClassificationModify"][] | null;
-      /** Thresholdsources */
-      thresholdSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /** Evidencesources */
-      evidenceSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /** Methodsources */
-      methodSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /**
-       * Calibrationmetadata
-       * @default null
-       */
-      calibrationMetadata?: Record<string, never> | null;
-      /**
-       * Scoreseturn
-       * @default null
-       */
-      scoreSetUrn?: string | null;
-    };
   };
   responses: never;
   parameters: never;
@@ -6663,6 +7391,73 @@ export interface operations {
     };
   };
   /**
+   * Fetch allele detail by VRS digest, CAID, or PAID
+   * @description Fetch the detail envelope for a deduplicated allele, by any of its identifiers.
+   *
+   * The allele-grain counterpart of ``GET /variants/{urn}``. Flat anchor identity (digest, level, HGVS,
+   * ClinGen id, spec-pure VRS) plus the cross-layer equivalence class (each member labelled relative to
+   * the focus) and a digest-keyed annotation map. The ``identifier`` may be:
+   *
+   * - a **VRS digest** (``ga4gh:VA.…``) — focuses that one allele.
+   * - a **CAID** (``CA…``) — the nt-canonical change; The coding frame is the preferential focus,
+   *   falling back to the genomic frame if no coding frame exists.
+   * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
+   *   equivalents surface as reverse-translation candidates.
+   *
+   * The envelope carries no score-set-level information. No scores, classifications, measurements, or
+   * version standing. Only the allele's own identity, its cross-layer equivalence class, and public
+   * reference annotations (VEP / gnomAD / ClinVar).
+   *
+   * An allele is in MaveDB only because a score set's mapping produced it, so it is served only to
+   * callers who may read at least one such score set; otherwise the response is a 404, indistinguishable
+   * from an unknown identifier. The equivalence class is likewise limited to readable score sets.
+   */
+  get_allele_api_v1_alleles__identifier__get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (equivalence-class membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant. ISO 8601, ideally timezone-aware. The focus allele's own identity is content-addressed and immutable, so it is unaffected. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        /** @description A GA4GH VRS digest (one allele), or a ClinGen allele id: a nucleotide CAID (the nt-canonical change, its genomic + coding frames) or a protein PAID. */
+        identifier: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AlleleDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Show API version
    * @description Describe the API version and project.
    */
@@ -6677,6 +7472,62 @@ export interface operations {
       /** @description Resource not found. */
       404: {
         content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List measurements for a ClinGen allele's equivalence class
+   * @description List every measurement whose cross-layer equivalence class touches this ClinGen allele (a ``CA`` or
+   * ``PA``) — the direct measurements assayed at this change plus the reverse-translation-related ones,
+   * each labeled by its assayed level and relationship. This is the ClinGen-allele-centric variant page's
+   * entrypoint. A private score set's measurement is never included; its inline classification is withheld
+   * where the calibration is unreadable while the measurement still shows.
+   */
+  get_clingen_allele_measurements_api_v1_clingen_alleles__clingen_allele_id__measurements_get: {
+    parameters: {
+      query?: {
+        /** @description Include measurements from superseded score-set versions. Default false — superseded measurements are a deliberate power-user / citation path, never surfaced by discovery. */
+        include_superseded?: boolean;
+        /** @description Let a call from a research-use-only calibration stand in when the score set has no readable calibration that is not research use only. Such calls set classificationIsResearchUseOnly and are not clinical evidence. Default false; ordering never uses them. */
+        include_research_use_only?: boolean;
+        /** @description Reconstruct the equivalence class (which mapping records / allele links are live) as it stood at this instant. ISO 8601, ideally timezone-aware. Scores and classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        clingen_allele_id: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AlleleMeasurement"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal server error. */
       500: {
@@ -7306,6 +8157,54 @@ export interface operations {
     };
   };
   /**
+   * Search MONDO disease terms
+   * @description Typeahead search for MONDO disease terms, returned as GA4GH ``MappableConcept`` suggestions.
+   */
+  search_diseases_api_v1_diseases_search_get: {
+    parameters: {
+      query: {
+        /** @description Free-text query for a MONDO disease term. */
+        q: string;
+        /** @description Maximum number of results. */
+        limit?: number;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["MappableConcept"][];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Search DOI identifiers
    * @description Search DOI identifiers based on the provided text.
    */
@@ -7844,13 +8743,15 @@ export interface operations {
   /**
    * Validate a provided variant
    * @description Validate the provided HGVS variant string.
+   *
+   * Parsing and validation failures both stem from caller-supplied input, so any ``HGVSError`` — a syntactic
+   * parse failure, an inconsistent variant, an unknown accession — is surfaced as a 400 rather than escaping
+   * to the catch-all 500 handler.
    */
   hgvs_validate_api_v1_hgvs_validate_post: {
     requestBody: {
       content: {
-        "application/json": {
-          [key: string]: string;
-        };
+        "application/json": components["schemas"]["HgvsValidationRequest"];
       };
     };
     responses: {
@@ -7868,11 +8769,9 @@ export interface operations {
       404: {
         content: never;
       };
-      /** @description Validation Error */
+      /** @description Unprocessable entity. Validation failed. */
       422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content: never;
       };
       /** @description Internal server error. */
       500: {
@@ -7971,7 +8870,9 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Resource not found. */
@@ -8037,7 +8938,9 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Resource not found. */
@@ -8270,36 +9173,22 @@ export interface operations {
     };
   };
   /**
-   * Fetch mapped variant by URN
-   * @description Fetch a single mapped variant by URN.
+   * Moved to GET /variants/{urn}
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}`` instead.
    */
-  show_mapped_variant_api_v1_mapped_variants__urn__get: {
+  redirect_mapped_variant_api_v1_mapped_variants__urn__get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["MappedVariantWithMappingDetails"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8307,43 +9196,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Construct a VA-Spec StudyResult from a mapped variant
-   * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
+   * Moved to GET /variants/{urn}/va/study-result
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}/va/study-result`` instead.
    */
-  show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get: {
+  redirect_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8351,43 +9222,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Construct a VA-Spec Statement from a mapped variant
-   * @description Construct a single VA-Spec Statement from a mapped variant by URN.
+   * Moved to GET /variants/{urn}/va/functional-statement
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}/va/functional-statement`` instead.
    */
-  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
+  redirect_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["Statement"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8395,43 +9248,25 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Construct a VA-Spec EvidenceLine from a mapped variant
-   * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
+   * Moved to GET /variants/{urn}/va/pathogenicity-statement
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/{urn}/va/pathogenicity-statement`` instead.
    */
-  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
+  redirect_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["VariantPathogenicityStatement"];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
@@ -8439,24 +9274,19 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
     };
   };
   /**
-   * Fetch mapped variants by VRS identifier
-   * @description Fetch a single mapped variant by GA4GH identifier.
+   * Moved to GET /variants/vrs/{identifier}
+   * @deprecated
+   * @description This resource has moved. Use ``GET /variants/vrs/{identifier}`` instead.
+   *
+   * Note that the replacement's ``only_current`` boolean query parameter has been superseded by
+   * ``as_of``; a caller relying on ``only_current=false`` should switch to passing an explicit
+   * ``as_of`` timestamp rather than expecting it to carry over through this redirect.
    */
-  show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get: {
+  redirect_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get: {
     parameters: {
-      query?: {
-        only_current?: boolean;
-      };
-      header?: {
-        "x-active-roles"?: string | null;
-      };
       path: {
         /** @description String, a valid GA4GH digest based identifier. */
         identifier: string;
@@ -8464,32 +9294,16 @@ export interface operations {
     };
     responses: {
       /** @description Successful Response */
-      200: {
+      301: {
         content: {
-          "application/json": components["schemas"]["MappedVariant"][];
+          "application/json": unknown;
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
       };
       /** @description Validation Error */
       422: {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
       };
     };
   };
@@ -9218,7 +10032,10 @@ export interface operations {
   };
   /**
    * List my calibrations
-   * @description List all score calibrations created by the current user.
+   * @description List the score calibrations created by the current user that the user may still read.
+   *
+   * Calibrations on score sets the user can no longer read, for example after being removed as a
+   * contributor, are omitted.
    */
   list_my_calibrations_api_v1_score_calibrations_me_get: {
     parameters: {
@@ -9274,7 +10091,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9324,6 +10141,7 @@ export interface operations {
    * **Form Fields**:
    * - `calibration_json` (string, required): JSON string containing the calibration update data
    * - `classes_file` (file, optional): CSV file containing updated variant classifications
+   * - `controls_file` (file, optional): CSV file containing calibration controls (replaces existing)
    *
    * **Example**:
    * ```bash
@@ -9344,6 +10162,16 @@ export interface operations {
    * If provided, this will replace the existing classification data for the calibration.
    * The file should have appropriate headers and follow the expected format for variant
    * classifications within the associated score set.
+   *
+   * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+   * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+   * `benign`, case-insensitive). If provided, it replaces the calibration's existing controls.
+   * Controls may be supplied either via this file or inline in `calibration_json`, but not both;
+   * omitting both leaves existing controls unchanged.
+   *
+   * Controls are stored only while `controls_not_phi` is true. New controls must be submitted with
+   * `controls_not_phi: true` in the same request; setting it to false or null without new controls
+   * deletes the existing controls.
    *
    * ## Response
    * Returns the updated score calibration with all modifications applied and any new
@@ -9369,7 +10197,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9473,7 +10301,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9523,6 +10351,7 @@ export interface operations {
    * **Form Fields**:
    * - `calibration_json` (string, required): JSON string containing the calibration data
    * - `classes_file` (file, optional): CSV file containing variant classifications
+   * - `controls_file` (file, optional): CSV file containing calibration controls
    *
    * **Example**:
    * ```bash
@@ -9542,6 +10371,12 @@ export interface operations {
    * ## File Upload Details
    * The `classes_file` parameter accepts CSV files containing variant classification data.
    * The file should have appropriate headers and contain columns for variant urns and class names.
+   *
+   * The `controls_file` parameter accepts a CSV of calibration controls with a variant column
+   * (one of `variant_urn`, `hgvs_nt`, `hgvs_pro`) and a `clinical_status` column (`pathogenic` or
+   * `benign`, case-insensitive). Controls may be supplied either via this file or inline in
+   * `calibration_json`, but not both. Controls are accepted only with `controls_not_phi: true`, the
+   * submitter's affirmation that they contain no protected health information (PHI).
    *
    * ## Response
    * Returns the created score calibration with its generated URN and associated score set information.
@@ -9563,7 +10398,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9601,7 +10436,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9637,7 +10472,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -9659,6 +10494,8 @@ export interface operations {
   /**
    * Publish Score Calibration Route
    * @description Publish a score calibration, making it publicly visible.
+   *
+   * The calibration's score set must already be published.
    */
   publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post: {
     parameters: {
@@ -9673,7 +10510,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+          "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -10276,6 +11113,10 @@ export interface operations {
    */
   get_score_set_csv_namespaces_api_v1_score_sets__urn__csv_namespaces_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the offered namespaces as they stood at this instant, so discovery matches an `as_of` download. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10301,6 +11142,161 @@ export interface operations {
       /** @description Resource not found. */
       404: {
         content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get the lean whole-set variant view for a score set
+   * @description Return the lean whole-set view for a score set: one pre-chewed record per variant carrying the
+   * selection key (variant URN), score, a representative consequence, the bridge identifiers into the
+   * annotation dimensions (ClinGen allele id, assay-level digest), and the DNA + protein parsed
+   * position/ref/alt blocks that drive the heatmap's level toggle.
+   *
+   * The full set is returned in one payload — the score-set page bins/sorts/filters across every
+   * variant client-side. as_of time-travels the annotation layer only (scores are immutable); the
+   * resolved value is echoed in the X-As-Of response header so the content-time is a visible fact.
+   */
+  get_score_set_lean_variants_api_v1_score_sets__urn__variants_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the annotation layer (mapping, allele links, VEP consequence) as it stood at this instant, over the score set's fixed scores. ISO 8601, ideally timezone-aware. This is content valid-time only — it never re-selects a score-set version. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["LeanVariant"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Download a score set's variant details (VRS + Cat-VRS + annotations)
+   * @description Download the score set's variant details — the whole-set streaming pair of the single-variant
+   * ``GET /variants/{urn}`` detail endpoint, and the substrate-faithful replacement for the retired
+   * ``/mapped-variants`` export.
+   *
+   * One record per *mapped* variant (unmapped variants carry no VRS and are omitted): the same
+   * VariantDetail envelope the single-variant route serves — the flat ``preMapped``/``postMapped`` VRS
+   * pair for VRS consumers, plus the spec-pure GA4GH CategoricalVariant and the digest-keyed
+   * VEP/gnomAD/ClinVar annotation map for the full molecular picture.
+   *
+   * Streamed as NDJSON (like the annotated-variant exports) so a large score set downloads without
+   * materializing every envelope server-side and a client can process it line by line. ``as_of``
+   * time-travels the molecular layer only (scores/classifications are immutable); the resolved value is
+   * echoed in ``X-As-Of`` and the variant count in ``X-Total-Count``.
+   */
+  get_score_set_variant_details_api_v1_score_sets__urn__variant_details_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (VRS, Cat-VRS membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the score set's fixed scores. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Newline-delimited JSON: one VariantDetail per mapped variant — the same envelope the single-variant GET /variants/{urn} route serves, carrying the flat preMapped/postMapped VRS pair, the spec-pure GA4GH CategoricalVariant, and the digest-keyed VEP/gnomAD/ClinVar annotation map. */
+      200: {
+        content: {
+          "application/json": unknown;
+          "application/x-ndjson": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Removed; see GET /score-sets/{urn}/variant-details
+   * @deprecated
+   * @description This endpoint has been permanently removed.
+   *
+   * Its JSON-array response has been replaced by a streaming NDJSON payload with a different
+   * field shape (flat ``preMapped``/``postMapped`` VRS pair rather than a ``MappedVariant``-keyed
+   * record), so the two are not wire-compatible and this route does not redirect. Use
+   * ``GET /score-sets/{urn}/variant-details`` instead.
+   */
+  get_score_set_mapped_variants_removed_api_v1_score_sets__urn__mapped_variants_get: {
+    parameters: {
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Gone. This resource has been permanently removed. */
+      410: {
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {
@@ -10379,6 +11375,8 @@ export interface operations {
          * @description Deprecated: request the `scores_custom` namespace instead. Passing true here is equivalent to appending that namespace, whose columns are emitted under the `scores` prefix as before. It will be removed in a future release.
          */
         include_custom_columns?: boolean | null;
+        /** @description Reconstruct the annotation layer (post-mapped HGVS, VEP, gnomAD, ClinVar) as it stood at this instant, over the variant's immutable submitted HGVS/scores/counts. ISO 8601, ideally timezone-aware. No effect on the scores/counts namespaces. Defaults to current. */
+        as_of?: string | null;
       };
       header?: {
         "x-active-roles"?: string | null;
@@ -10611,68 +11609,38 @@ export interface operations {
     };
   };
   /**
-   * Get mapped variants from score set by URN
-   * @description Return mapped variants from a score set, identified by URN.
-   */
-  get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["MappedVariant"][];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Get pathogenicity statement annotations for mapped variants within a score set
+   * Get pathogenicity statement annotations for variants within a score set
    * @description Retrieve annotated variants with pathogenicity statements for a given score set.
    *
-   * This endpoint streams pathogenicity evidence lines for all current mapped variants
+   * This endpoint streams pathogenicity evidence lines for all current annotated variants
    * associated with a specific score set. The response is returned as newline-delimited
    * JSON (NDJSON) format for efficient processing of large datasets.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to an annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Pathogenicity evidence line details
    *         }
    *     }
    *     ```
+   *
+   *     `annotation` is null where the variant has no mapping data to annotate, or no pathogenicity statements apply
+   *     to it. A variant whose annotation could not be built is reported in-band rather than by
+   *     truncating the stream, and carries an additional `error` object:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the annotated variant>",
+   *         "annotation": null,
+   *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+   *     }
+   *     ```
+   *
+   *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+   *     body is a truncated one.
    *
    * Args:
    *     urn (str): The Uniform Resource Name (URN) of the score set to retrieve
@@ -10683,21 +11651,28 @@ export interface operations {
    *
    * Returns:
    *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
-   *         evidence lines for each mapped variant. Response includes headers with
+   *         evidence lines for each annotated variant. Response includes headers with
    *         total count, processing start time, and stream type information.
+   *
+   * A score set that exists but has no annotatable variants (never mapped, or none live at ``as_of``)
+   * streams an empty body with ``X-Total-Count: 0`` — an empty collection, not a 404.
    *
    * Raises:
    *     HTTPException: 404 error if the score set with the given URN is not found.
-   *     HTTPException: 404 error if no mapped variants are associated with the score set.
    *     HTTPException: 403 error if the user lacks READ permissions for the score set.
    *
    * Note:
    *     This function logs the request context and validates user permissions before
-   *     processing. Only current (non-historical) mapped variants are included in
-   *     the response.
+   *     processing. Use the `as_of` parameter to reconstruct the molecular layer as it stood at a specific
+   *     instant, over the variant's fixed score. The response is streamed to allow for efficient handling
+   *     of large datasets, and progress updates are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10706,7 +11681,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream pathogenicity statement annotations for mapped variants. */
+      /** @description Stream pathogenicity statement annotations for variants. */
       200: {
         content: {
           "application/json": {
@@ -10740,24 +11715,38 @@ export interface operations {
     };
   };
   /**
-   * Get functional impact statement annotations for mapped variants within a score set
+   * Get functional impact statement annotations for annotated variants within a score set
    * @description Retrieve functional impact statements for annotated variants in a score set.
    *
-   * This endpoint streams functional impact statements for all current mapped variants
+   * This endpoint streams functional impact statements for all current annotated variants
    * associated with a specific score set. The response is delivered as newline-delimited
    * JSON (NDJSON) format.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to an annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Functional impact statement details
    *         }
    *     }
    *     ```
+   *
+   *     `annotation` is null where the variant has no mapping data to annotate, or no functional impact statements apply
+   *     to it. A variant whose annotation could not be built is reported in-band rather than by
+   *     truncating the stream, and carries an additional `error` object:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the annotated variant>",
+   *         "annotation": null,
+   *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+   *     }
+   *     ```
+   *
+   *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+   *     body is a truncated one.
    *
    * Args:
    *     urn (str): The unique resource name (URN) identifying the score set.
@@ -10766,21 +11755,27 @@ export interface operations {
    *
    * Returns:
    *     StreamingResponse: NDJSON stream containing functional impact statements for each
-   *         mapped variant. Response includes headers with total count, processing start time,
+   *         annotated variant. Response includes headers with total count, processing start time,
    *         and stream type information.
    *
    * Raises:
    *     HTTPException:
    *         - 404 if the score set with the given URN is not found
-   *         - 404 if no mapped variants are associated with the score set
+   *         - 404 if no annotated variants are associated with the score set
    *         - 403 if the user lacks READ permission for the score set
    *
    * Note:
-   *     Only current (non-historical) mapped variants are included in the response.
-   *     The function requires appropriate read permissions on the score set.
+   *     The function requires appropriate read permissions on the score set. Use the `as_of`
+   *     parameter to reconstruct the molecular layer as it stood at a specific instant, over
+   *     the variant's fixed score. The response is streamed to allow for efficient handling of
+   *     large datasets, and progress updates are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10789,7 +11784,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream functional impact statement annotations for mapped variants. */
+      /** @description Stream functional impact statement annotations for annotated variants. */
       200: {
         content: {
           "application/json": {
@@ -10823,24 +11818,38 @@ export interface operations {
     };
   };
   /**
-   * Get functional study result annotations for mapped variants within a score set
+   * Get functional study result annotations for annotated variants within a score set
    * @description Retrieve functional study results for annotated variants in a score set.
    *
-   * This endpoint streams functional study result annotations for all current mapped variants
+   * This endpoint streams functional study result annotations for all current annotated variants
    * associated with a specific score set. The results are returned as newline-delimited JSON
    * (NDJSON) format for efficient streaming of large datasets.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to a annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Functional study result details
    *         }
    *     }
    *     ```
+   *
+   *     `annotation` is null where the variant has no mapping data to annotate, or no study results apply
+   *     to it. A variant whose annotation could not be built is reported in-band rather than by
+   *     truncating the stream, and carries an additional `error` object:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the annotated variant>",
+   *         "annotation": null,
+   *         "error": {"type": "<exception class>", "detail": "<exception message>"}
+   *     }
+   *     ```
+   *
+   *     Every line is a variant record: a response holds exactly `X-Total-Count` lines, so a shorter
+   *     body is a truncated one.
    *
    * Args:
    *     urn (str): The URN (Uniform Resource Name) of the score set to retrieve variants for.
@@ -10850,7 +11859,7 @@ export interface operations {
    * Returns:
    *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
    *         Headers include:
-   *         - X-Total-Count: Total number of mapped variants being streamed
+   *         - X-Total-Count: Total number of annotated variants being streamed
    *         - X-Processing-Started: ISO timestamp when processing began
    *         - X-Stream-Type: Set to "functional-study-result"
    *         - Access-Control-Expose-Headers: Exposed headers for CORS
@@ -10858,16 +11867,21 @@ export interface operations {
    * Raises:
    *     HTTPException:
    *         - 404 if the score set with the given URN is not found
-   *         - 404 if no mapped variants are associated with the score set
+   *         - 404 if no annotated variants are associated with the score set
    *         - 403 if the user lacks READ permission for the score set
    *
    * Notes:
-   *     - Only returns current mapped variants (MappedVariant.current == True)
-   *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
-   *     - Logs requests and errors for monitoring and debugging purposes
+   *     - The `as_of` parameter allows reconstruction of the molecular layer as it stood at a specific
+   *       instant, over the variant's fixed score. It is ISO 8601 formatted and ideally timezone-aware.
+   *     - The response is streamed to allow for efficient handling of large datasets, and progress updates
+   *       are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10876,7 +11890,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream functional study result annotations for mapped variants. */
+      /** @description Stream functional study result annotations for annotated variants. */
       200: {
         content: {
           "application/json": {
@@ -11018,6 +12032,8 @@ export interface operations {
   get_clinical_controls_for_score_set_api_v1_score_sets__urn__clinical_controls_get: {
     parameters: {
       query?: {
+        /** @description Reconstruct the allele → ClinVar link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
         db?: string | null;
         version?: string | null;
       };
@@ -11032,7 +12048,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ClinicalControlWithMappedVariants"][];
+          "application/json": components["schemas"]["ClinicalControlWithClinvarLinks"][];
         };
       };
       /** @description Authentication required. */
@@ -11062,9 +12078,19 @@ export interface operations {
   /**
    * Get clinical control options for a score set
    * @description Fetch clinical control options for a given score set.
+   *
+   * Each ``(db_name, db_version)`` pair returned here was live at the moment of this call, but
+   * liveness is re-evaluated independently per request. A pair fetched here can have its backing
+   * ``ClinvarAlleleLink`` retired before a later call to ``GET /score-sets/{urn}/clinical-controls``
+   * filters on it, in which case that call 404s. Pin an explicit ``as_of`` on both calls to avoid this
+   * possibility.
    */
   get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the allele → ClinVar link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -11105,11 +12131,14 @@ export interface operations {
   };
   /**
    * Get gnomad variants for a score set
-   * @description Fetch relevant gnomad variants for a given score set.
+   * @description Fetch relevant gnomad variants for a given score set, each paired with the score-set variants (and
+   * annotated allele digests) it links to over the allele substrate.
    */
   get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get: {
     parameters: {
       query?: {
+        /** @description Reconstruct the allele → gnomAD link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
         version?: string | null;
       };
       header?: {
@@ -11123,7 +12152,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["GnomADVariantWithMappedVariants"][];
+          "application/json": components["schemas"]["GnomADVariantWithVariantLinks"][];
         };
       };
       /** @description Authentication required. */
@@ -11994,7 +13023,7 @@ export interface operations {
   };
   /**
    * List target gene names
-   * @description List distinct target gene names, in alphabetical order.
+   * @description List distinct target gene names from published score sets, in alphabetical order.
    */
   list_target_gene_names_api_v1_target_genes_names_get: {
     responses: {
@@ -12016,7 +13045,7 @@ export interface operations {
   };
   /**
    * List target gene categories
-   * @description List distinct target genes categories, in alphabetical order.
+   * @description List distinct target gene categories from published score sets, in alphabetical order.
    */
   list_target_gene_categories_api_v1_target_genes_categories_get: {
     responses: {
@@ -12591,30 +13620,35 @@ export interface operations {
     };
   };
   /**
-   * Lookup variants by ClinGen Allele IDs
-   * @description Lookup variants by ClinGen Allele IDs.
+   * Look up variants by VRS identifier
+   * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+   *
+   * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
+   * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+   * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
+   * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
+   * the response never reveals a private allele's existence.
    */
-  lookup_variants_api_v1_variants_clingen_allele_id_lookups_post: {
+  lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ClingenAlleleIdVariantLookupsRequest"];
+      path: {
+        /** @description A valid GA4GH digest-based identifier for the mapped allele. */
+        identifier: string;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ClingenAlleleIdVariantLookupResponse"][];
+          "application/json": components["schemas"]["VariantVrsMatch"][];
         };
-      };
-      /** @description Bad request. Check parameters and payload. */
-      400: {
-        content: never;
       };
       /** @description Authentication required. */
       401: {
@@ -12641,11 +13675,19 @@ export interface operations {
     };
   };
   /**
-   * Fetch variant by URN
-   * @description Fetch a single variant by URN.
+   * Fetch assayed variant detail by URN
+   * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
+   *
+   * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
+   * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
+   * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
    */
   get_variant_api_v1_variants__urn__get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12657,7 +13699,151 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["VariantEffectMeasurementWithScoreSet"];
+          "application/json": components["schemas"]["VariantDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec StudyResult for a variant
+   * @description Construct a single VA-Spec StudyResult for a variant by URN, from its mapping substrate.
+   */
+  get_variant_study_result_api_v1_variants__urn__va_study_result_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec functional-impact Statement for a variant
+   * @description Construct a single VA-Spec functional-impact Statement for a variant by URN.
+   */
+  get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Statement"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec pathogenicity Statement for a variant
+   * @description Construct a single VA-Spec pathogenicity Statement for a variant by URN.
+   */
+  get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["VariantPathogenicityStatement"];
         };
       };
       /** @description Authentication required. */
@@ -12707,6 +13893,10 @@ export interface operations {
    */
   get_variant_csv_namespaces_api_v1_variants__urn__csv_namespaces_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the offered namespaces as they stood at this instant, so discovery matches an `as_of` download. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12779,6 +13969,8 @@ export interface operations {
       query?: {
         /** @description One or more groups of columns to include. Naming any group replaces the default set rather than adding to it, so list every group you want. Fixed groups: "scores", "scores_custom", "counts", "mavedb", "vep", "gnomad", "clingen", "score_set", "relationship". Versioned groups: "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01") for one ClinVar release, and "calibration.<calibration urn>" for one score calibration's functional and ACMG interpretation. Several ClinVar and calibration namespaces may be requested at once; each carries its release or URN in the column header. To discover which namespaces are available for a record, query the `csv-namespaces` endpoint. */
         namespaces?: string[] | null;
+        /** @description Reconstruct the mapping-derived columns (reference HGVS, VEP, gnomAD, ClinVar) as they stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
       };
       header?: {
         "x-active-roles"?: string | null;

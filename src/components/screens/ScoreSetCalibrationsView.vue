@@ -38,7 +38,7 @@
             />
           </div>
           <!-- Mobile: collapsed menu -->
-          <MvRowActionMenu class="tablet:hidden" :actions="headerActions" />
+          <MvRowActionMenu :actions="headerActions" class="tablet:hidden" />
         </template>
       </MvPageHeader>
     </template>
@@ -54,7 +54,7 @@
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
         <div class="flex flex-col gap-4 tablet:hidden">
-          <div v-for="cal in sortedCalibrations" :key="cal.id" class="relative overflow-hidden rounded-lg border border-border bg-white mave-gradient-bar">
+          <div v-for="cal in sortedCalibrations" :key="cal.id" class="mave-card relative overflow-hidden">
             <div class="px-4 py-4">
               <div class="mb-2 flex items-start gap-2">
                 <div class="min-w-0 flex-1">
@@ -77,14 +77,17 @@
                 classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
               </div>
 
-              <!-- Expandable classification ranges -->
-              <div v-if="cal.functionalClassifications && cal.functionalClassifications.length" class="mt-3">
+              <!-- Expandable calibration details (ranges, disease context, controls) -->
+              <div
+                v-if="cal.functionalClassifications?.length || diseaseLabel(cal) || cal.controls?.length"
+                class="mt-3"
+              >
                 <button
                   class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
                   @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
                 >
                   <i class="pi pi-list text-[11px]" />
-                  {{ expandedRanges[cal.id] ? 'Hide classification ranges' : 'Show classification ranges' }}
+                  {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
                 </button>
                 <div v-if="expandedRanges[cal.id]" class="mt-2">
                   <CalibrationTable :score-calibration="cal" :score-calibration-name="cal.title || ''" />
@@ -95,7 +98,7 @@
         </div>
 
         <!-- ── DESKTOP: DataTable layout ─────────────────── -->
-        <div class="cal-card mave-gradient-bar hidden tablet:block">
+        <div class="cal-card hidden tablet:block">
           <DataTable
             v-model:expanded-rows="expandedRows"
             class="cal-datatable"
@@ -160,12 +163,7 @@
                 <MvBadge :value="data.researchUseOnly ? 'research' : 'general'" />
               </template>
             </Column>
-            <Column
-              body-class="text-center"
-              header="Ranges"
-              header-style="width:3rem"
-              :sortable="true"
-            >
+            <Column body-class="text-center" header="Ranges" header-style="width:3rem" :sortable="true">
               <template #body="{data}">{{ data.functionalClassifications?.length ?? 0 }}</template>
             </Column>
             <Column header-style="width:3rem">
@@ -175,14 +173,7 @@
             </Column>
             <template #expansion="{data}">
               <div class="bg-[#f8faf9] px-6 py-5">
-                <CalibrationTable
-                  v-if="data.functionalClassifications && data.functionalClassifications.length"
-                  :score-calibration="data"
-                  :score-calibration-name="data.title || ''"
-                />
-                <div v-else class="text-sm text-text-secondary">
-                  No functional classifications defined for this calibration.
-                </div>
+                <CalibrationTable :score-calibration="data" :score-calibration-name="data.title || ''" />
               </div>
             </template>
           </DataTable>
@@ -231,6 +222,7 @@ import {
   deleteScoreCalibration,
   getScoreSetCalibrations
 } from '@/api/mavedb'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
@@ -245,6 +237,7 @@ import {describeRequestError} from '@/lib/errors'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import {diseaseDisplayLabel} from '@/lib/diseases'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import {ref, toRef} from 'vue'
 import PrimeDialog from 'primevue/dialog'
@@ -254,6 +247,7 @@ import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMe
 import {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
+type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
@@ -292,6 +286,9 @@ export default {
 
     const calibrationAuthorizations = ref<Record<string, CalibrationAuthorizations>>({})
 
+    const scoreSet = useItem<ScoreSet>({itemTypeName: 'scoreSet'})
+    useCanonicalUrn(scoreSet.item, urnRef)
+
     return {
       head,
       userIsAuthenticated,
@@ -300,7 +297,7 @@ export default {
       confirm,
       getScoreSetShortName,
       ...useCalibrationDialog(),
-      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
+      ...scoreSet,
       ...useScopedId()
     }
   },
@@ -352,7 +349,12 @@ export default {
     }
   },
   methods: {
-    calibrationSortKey(cal: components['schemas']['ScoreCalibration']): number {
+    /** The calibration's disease label, generic "disease or disorder" default included; null only when no concept is present. */
+    diseaseLabel(cal: ScoreCalibration): string | null {
+      return diseaseDisplayLabel(cal.disease)
+    },
+
+    calibrationSortKey(cal: ScoreCalibration): number {
       if (cal.primary) return 0
       if (cal.private) return 4
       if (cal.researchUseOnly) return 3
@@ -360,7 +362,7 @@ export default {
       return 2 // community
     },
 
-    calibrationActions(data: components['schemas']['ScoreCalibration']): RowAction[] {
+    calibrationActions(data: ScoreCalibration): RowAction[] {
       const actions: RowAction[] = [
         {
           label: 'View in score set',

@@ -28,7 +28,7 @@ MaveDB captures key facts about the experimental assay used to generate variant 
 :   Whether the assay is capable of detecting splicing variants. Based on assay design, and inferred based on a combination of the [variant library creation method](controlled-vocabulary.md#variant-library-creation-methods) and other terms.
 
 **Detects NMD variants**
-:   Whether the assay is capable of detecting NMD variants. Based on assay design, and inferred based on a combination of the [variant library creation method](controlled-vocabulary.md#variant-library-creation-methods) and other terms.
+:   Whether the assay is capable of detecting variants that trigger nonsense-mediated decay (NMD). Based on assay design, and inferred based on a combination of the [variant library creation method](controlled-vocabulary.md#variant-library-creation-methods) and other terms.
 
 **OddsPaths**
 :   The OddsPath score calculated for abnormal and normal functional readouts, if applicable. These OddsPaths are based on the framework described in [Brnich et al., 2019](https://doi.org/10.1186/s13073-019-0690-2).

@@ -53,10 +53,7 @@
       <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1000px">
         <!-- Score Sets -->
         <MvLoader v-if="scoreSetsLoading" text="Loading score sets..." />
-        <div
-          v-else-if="associatedScoreSets.length > 0"
-          class="overflow-hidden rounded-lg border border-border bg-white"
-        >
+        <div v-else-if="associatedScoreSets.length > 0" class="mave-card overflow-hidden">
           <div class="border-b border-border-light px-5 py-3.5">
             <span class="text-sm font-bold text-text-dark">Score Sets ({{ associatedScoreSets.length }})</span>
           </div>
@@ -88,7 +85,7 @@
         />
 
         <!-- Keywords -->
-        <div class="mave-gradient-bar relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-5">
+        <div class="mave-card relative mt-4 overflow-hidden p-5">
           <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-dark">Keywords</h3>
           <template v-if="item.keywords && item.keywords.length > 0">
             <div v-for="(kw, i) in item.keywords" :key="i" class="border-b border-border-light py-2.5 last:border-b-0">
@@ -120,7 +117,7 @@
         </div>
 
         <!-- Metadata card (abstract, method, publications) -->
-        <div class="mave-gradient-bar relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-6">
+        <div class="mave-card relative mt-4 overflow-hidden p-6">
           <div class="border-b border-border-light pb-4">
             <h3 class="mb-3 text-[15px] font-bold text-text-dark">Abstract</h3>
             <!-- eslint-disable vue/no-v-html -->
@@ -188,6 +185,7 @@ import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
+import {useCanonicalUrn} from '@/composables/use-canonical-urn'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {markdownToHtml} from '@/lib/form-helpers'
 import {components} from '@/schema/openapi'
@@ -229,9 +227,12 @@ export default defineComponent({
     const urnRef = toRef(props, 'itemId')
     const {permissions} = useDatasetPermissions('experiment', urnRef, ACTIONS)
 
+    const experiment = useItem<Experiment>({itemTypeName: 'experiment'})
+    useCanonicalUrn(experiment.item, urnRef)
+
     return {
       head,
-      ...useItem<Experiment>({itemTypeName: 'experiment'}),
+      ...experiment,
       permissions
     }
   },

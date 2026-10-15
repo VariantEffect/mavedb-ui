@@ -1,4 +1,4 @@
-import router from '@/router'
+import type {RouteLocationRaw} from 'vue-router'
 import {components} from '@/schema/openapi'
 import {hgvsSearchStringRegex} from './mave-hgvs'
 import {clinGenAlleleIdRegex, rsIdRegex} from './mavemd'
@@ -86,29 +86,27 @@ export function buildSearchParams(filters: SearchFilters) {
   }
 }
 
-/** If the search text looks like a variant identifier (ClinGen, dbSNP, or HGVS), navigate to MaveMD. Returns true if routed. */
-export function routeToVariantSearchIfVariantIsSearchable(searchText: string | null | undefined): boolean {
+/**
+ * The MaveMD route for search text that looks like a variant identifier (ClinGen allele ID, dbSNP rsID, or HGVS),
+ * or null when the text should stay a dataset search. MaveDB URNs are never treated as variant identifiers.
+ */
+export function variantSearchRouteFor(searchText: string | null | undefined): RouteLocationRaw | null {
   if (!searchText || searchText.trim() === '') {
-    return false
+    return null
   }
 
   searchText = searchText.trim()
 
-  // Don't intercept MaveDB URNs — let the normal text search handle them.
   if (/^urn:mavedb:/i.test(searchText)) {
-    return false
+    return null
   }
 
   if (clinGenAlleleIdRegex.test(searchText)) {
-    console.log(`Routing to mavemd with ClinGen Allele ID: ${searchText}`)
-    router.push({name: 'mavemd', query: {search: searchText, searchType: 'clinGenAlleleId'}})
-    return true
+    return {name: 'mavemd', query: {search: searchText, searchType: 'clinGenAlleleId'}}
   }
 
   if (rsIdRegex.test(searchText)) {
-    console.log(`Routing to mavemd with RS ID: ${searchText}`)
-    router.push({name: 'mavemd', query: {search: searchText, searchType: 'dbSnpRsId'}})
-    return true
+    return {name: 'mavemd', query: {search: searchText, searchType: 'dbSnpRsId'}}
   }
 
   const hgvsMatches = hgvsSearchStringRegex.exec(searchText)
@@ -119,52 +117,31 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
     // Regex for RefSeq/Ensembl transcript IDs
     const accessionRegex = /^(N[CMPR]_|X[MR]_|ENST|ENSMUST|ENSP)[0-9]+(\.[0-9]+)?$/gm
     if (accessionRegex.test(identifier)) {
-      // Transcript: treat as normal HGVS
-      console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
-      router.push({name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}})
-      return true
-    } else {
-      // Assume identifier is an HGNC gene symbol, parse description for guided search
-      // Example: BRCA1:c.123A>G or BRCA1:p.Arg123Gly
-      const gene = identifier
-      let variantType = ''
+      return {name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}}
+    }
+
+    // Assume identifier is an HGNC gene symbol, parse description for guided search
+    // Example: BRCA1:c.123A>G or BRCA1:p.Arg123Gly
+    const guidedMatch = /^(c\.|p\.)?([A-Za-z]+)?([0-9]+)([A-Za-z*-]+)?(?:>([A-Za-z*-]+))?$/gm.exec(description)
+    if (guidedMatch) {
+      const variantType = guidedMatch[1] || ''
       let variantPosition = ''
       let refAllele = ''
       let altAllele = ''
-
-      // Try to parse c. or p. notation
-      const guidedMatch = /^(c\.|p\.)?([A-Za-z]+)?([0-9]+)([A-Za-z*-]+)?(?:>([A-Za-z*-]+))?$/gm.exec(description)
-      if (guidedMatch) {
-        variantType = guidedMatch[1] || ''
-        if (variantType === 'c.') {
-          variantPosition = guidedMatch[3] || ''
-          refAllele = guidedMatch[4] || ''
-          altAllele = guidedMatch[5] || ''
-        } else if (variantType === 'p.') {
-          refAllele = guidedMatch[2] || ''
-          variantPosition = guidedMatch[3] || ''
-          altAllele = guidedMatch[4] || ''
-        }
-
-        router.push({
-          name: 'mavemd',
-          query: {
-            gene,
-            variantType,
-            variantPosition,
-            refAllele,
-            altAllele
-          }
-        })
-        return true
-      } else {
-        // The search looks like an HGVS string but with an invalid accession, and it's not a p. or c. string preceded by
-        // a gene name. Forward to the variant search screen, which will deal with the problem.
-        console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
-        router.push({name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}})
-        return true
+      if (variantType === 'c.') {
+        variantPosition = guidedMatch[3] || ''
+        refAllele = guidedMatch[4] || ''
+        altAllele = guidedMatch[5] || ''
+      } else if (variantType === 'p.') {
+        refAllele = guidedMatch[2] || ''
+        variantPosition = guidedMatch[3] || ''
+        altAllele = guidedMatch[4] || ''
       }
+      return {name: 'mavemd', query: {gene: identifier, variantType, variantPosition, refAllele, altAllele}}
     }
+
+    // Looks like HGVS but with an invalid accession and no gene-prefixed c./p. form; MaveMD reports the problem.
+    return {name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}}
   }
-  return false
+  return null
 }

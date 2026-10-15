@@ -12,11 +12,7 @@
     <div class="mx-auto flex max-w-[800px] flex-col gap-7 py-9">
       <!-- Channel cards -->
       <div class="grid md:grid-cols-3 gap-4">
-        <div
-          v-for="channel in channels"
-          :key="channel.title"
-          class="flex flex-col gap-2 rounded-lg border border-border bg-white px-5 pb-4.5 pt-5.5"
-        >
+        <div v-for="channel in channels" :key="channel.title" class="mave-card flex flex-col gap-2 px-5 pb-4.5 pt-5.5">
           <div class="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" :class="channel.iconBg">
             <FontAwesomeIcon class="text-lg" :icon="channel.icon" :style="{color: channel.iconColor}" />
           </div>
@@ -24,7 +20,7 @@
           <div class="flex-1 text-xs leading-relaxed text-text-muted">{{ channel.description }}</div>
           <component
             :is="channel.external ? 'a' : 'router-link'"
-            class="mt-1 inline-block text-sm font-semibold text-sage no-underline hover:underline"
+            class="mt-1 inline-block text-sm font-semibold text-sage-strong no-underline hover:underline"
             v-bind="
               channel.external
                 ? {
@@ -56,8 +52,8 @@
       </div>
 
       <!-- Clinical application -->
-      <div class="rounded-lg border border-border bg-white px-8 py-7">
-        <h2 class="mb-4 text-lg font-bold text-sage">Clinical application</h2>
+      <div class="mave-card px-8 py-7">
+        <h2 class="mb-4 text-lg font-bold text-sage-strong">Clinical application</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           The Alliance for Variant Effects (AVE) maintains a
           <a
@@ -73,8 +69,8 @@
       </div>
 
       <!-- Contact us -->
-      <div class="rounded-lg border border-border bg-white px-8 py-7">
-        <h2 class="mb-4 text-lg font-bold text-sage">Contact us</h2>
+      <div class="mave-card px-8 py-7">
+        <h2 class="mb-4 text-lg font-bold text-sage-strong">Contact us</h2>
         <p class="text-sm leading-relaxed text-text-secondary">
           For questions not covered above, general conversation and community support, chat with us on
           <a aria-label="Zulip (opens in new tab)" class="text-link" :href="ZULIP_CHAT" rel="noopener" target="_blank"

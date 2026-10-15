@@ -13,7 +13,7 @@
     <MvDecorativeBars class="mb-5" variant="trailing" />
     <h3 class="text-base font-bold text-text-secondary mb-1.5">{{ title }}</h3>
     <p v-if="description" class="text-xs-plus text-text-muted mb-5 leading-relaxed max-w-[400px]">{{ description }}</p>
-    <span v-if="actionLabel" class="text-xs-plus font-semibold text-sage">{{ actionLabel }}</span>
+    <span v-if="actionLabel" class="text-xs-plus font-semibold text-sage-strong">{{ actionLabel }}</span>
     <slot />
   </component>
 </template>

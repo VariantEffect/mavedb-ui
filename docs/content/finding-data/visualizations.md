@@ -50,6 +50,7 @@ The custom view gives users full control over the histogram. Available options i
 - **ClinVar version** -- Select which version of ClinVar annotations to use.
 - **Gold stars threshold** -- Filter ClinVar variants by their review status (star rating).
 - **Additional significance categories** -- Add series for classifications beyond pathogenic and benign, such as `Uncertain significance` and `Conflicting classifications`.
+- **Fold soft conflicts into their directional call** -- On by default. Counts a protein change whose encoding variants mix a pathogenic or benign call with an uncertain one under the directional call (see [inferred calls](external-integrations.md#how-inferred-calls-are-derived)). Turn it off to leave such variants out and show the uncertain and conflicting series.
 - **Protein effect filters** -- Limit series to variants with specific predicted protein effects, or add separate series for different effect types.
 - **Calibration overlays** -- When a score set has [score calibrations](../reference/score-calibrations.md), overlay functional classification ranges on the histogram.
 
@@ -62,7 +63,7 @@ The custom view gives users full control over the histogram. Available options i
 
 The heatmap provides a two-dimensional view of variant effect scores across the target sequence, with positions along the horizontal axis and substitutions along the vertical axis. This visualization is particularly useful for identifying positional patterns in variant effects.
 
-When variants are provided at the nucleotide level, users can toggle between nucleotide and amino acid views using the controls below the heatmap. In amino acid view, residues are ordered by hydrophobicity using the [Kyte-Doolittle scale](http://www.sciencedirect.com/science/article/pii/0022283682905150) and grouped by chemical class based on values from [Enrich2](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-017-1272-5/figures/1).
+The **Coordinate system** control in the heatmap's header switches between nucleotide and amino acid positions. The **Submitted variants / Reference variants** toggle at the top of the page chooses between the coordinates the researchers submitted, numbered against the assay's own target sequence, and the same variants mapped onto standard reference sequences; with reference variants shown, the heatmap can be drawn in cDNA, genomic, or amino acid coordinates. In amino acid view, residues are ordered by hydrophobicity using the [Kyte-Doolittle scale](http://www.sciencedirect.com/science/article/pii/0022283682905150) and grouped by chemical class based on values from [Enrich2](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-017-1272-5/figures/1).
 
 Each cell represents a specific variant at a given position. Color intensity indicates the variant effect score, and wild-type variants are shown in yellow. Hovering over a cell reveals the variant's score, classification (if applicable), and [HGVS](../submitting-data/data-formats.md) notation. For long target sequences, you can scroll horizontally to explore the full heatmap.
 
@@ -75,7 +76,7 @@ When a baseline score is available from a [score calibration](../reference/score
 
 ## Protein structure viewer
 
-The protein structure viewer provides an interactive 3D view of variant effect scores mapped onto a protein structure using [Mol\*](https://molstar.org/). This visualization is available when the score set's target can be linked to a UniProt accession — either because the target was defined with a UniProt identifier, or because MaveDB was able to match the target sequence to a UniProt entry during [variant mapping](../reference/variant-mapping.md). If you don't see the structure viewer for your score set, the target may not have a matching UniProt record.
+The protein structure viewer provides an interactive 3D view of variant effect scores mapped onto a protein structure using [Mol\*](https://molstar.org/). This visualization is available when the score set's target can be linked to a UniProt accession — either because the target was defined with a UniProt identifier, or because MaveDB was able to match the target sequence to a UniProt entry during [variant mapping](../reference/variant-mapping.md). Open it with **View on protein structure** below the heatmap. If you don't see that link for your score set, the target may not have a matching UniProt record.
 
 The viewer displays a side-by-side heatmap and 3D structure sourced from the [AlphaFold Protein Structure Database](https://alphafold.ebi.ac.uk/), with a color gradient applied based on the mean variant effect score at each position. Users can:
 

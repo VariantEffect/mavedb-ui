@@ -1,10 +1,7 @@
 <template>
   <div v-if="!scoreSet.publishedDate" class="flex flex-col gap-3">
     <!-- Processing status -->
-    <MvStatusMessage
-      v-if="processingReady"
-      severity="success"
-    >
+    <MvStatusMessage v-if="processingReady" severity="success">
       Scores and/or counts have been successfully processed. This score set is ready to be published.
     </MvStatusMessage>
 
@@ -32,13 +29,13 @@
       </MvStatusMessage>
 
       <MvStatusMessage v-else-if="scoreSet.mappingState === 'incomplete'" severity="info">
-        Variant mapping completed, but some variants did not map successfully. The mapped variants file available on this
-        page includes specific error messages for each failed variant mapping. Score set is still publishable.
+        Variant mapping completed, but some variants did not map successfully. Variants that did not map have no
+        reference-level coordinates or annotations. Score set is still publishable.
       </MvStatusMessage>
 
       <MvStatusMessage v-else-if="scoreSet.mappingState === 'failed'" severity="info">
-        Variants could not be mapped to reference: {{ scoreSet.mappingErrors?.error_message }}.
-        This score set is still publishable.
+        Variants could not be mapped to reference: {{ scoreSet.mappingErrors?.error_message }}. This score set is still
+        publishable.
       </MvStatusMessage>
     </template>
   </div>
@@ -59,14 +56,16 @@ const props = defineProps({
   }
 })
 
-const mappingInProgress = computed(() =>
-  props.scoreSet.processingState === 'success' &&
-  MAPPING_IN_PROGRESS_STATES.includes(props.scoreSet.mappingState ?? '')
+const mappingInProgress = computed(
+  () =>
+    props.scoreSet.processingState === 'success' &&
+    MAPPING_IN_PROGRESS_STATES.includes(props.scoreSet.mappingState ?? '')
 )
 
-const processingReady = computed(() =>
-  props.scoreSet.processingState === 'success' &&
-  !MAPPING_IN_PROGRESS_STATES.includes(props.scoreSet.mappingState ?? '')
+const processingReady = computed(
+  () =>
+    props.scoreSet.processingState === 'success' &&
+    !MAPPING_IN_PROGRESS_STATES.includes(props.scoreSet.mappingState ?? '')
 )
 
 function scrollToVariants() {

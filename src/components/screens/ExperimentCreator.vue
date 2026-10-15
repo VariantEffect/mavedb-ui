@@ -6,14 +6,19 @@
   <MvLayout :require-auth="true">
     <template #header>
       <MvPageHeader max-width="1280px" title="Create a new experiment" variant="toolbar">
+        <template #subtitle>
+          <p class="text-sm text-text-muted">
+            Fields marked <span class="font-bold text-danger">*</span> are required.
+          </p>
+        </template>
         <template #actions>
-          <PButton severity="secondary" size="small" @click="resetForm">Clear</PButton>
+          <PButton severity="secondary" size="small" @click="confirmReset">Clear</PButton>
           <PButton severity="warn" size="small" @click="backDashboard">Cancel</PButton>
         </template>
       </MvPageHeader>
     </template>
 
-    <div class="mx-auto max-w-screen-xl py-6 w-full">
+    <div class="mx-auto max-w-screen-xl py-6 w-full" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
       <Stepper v-model:value="activeWizardStep">
         <StepList>
           <Step :value="1">Experiment information</Step>
@@ -87,7 +92,6 @@
             <!-- Step controls -->
             <div class="flex justify-end bg-bg px-2.5 pt-4 pb-2">
               <PButton
-                :disabled="maxWizardStepValidated < activeWizardStep"
                 icon="pi pi-arrow-right"
                 icon-pos="right"
                 label="Next"
@@ -177,8 +181,9 @@ import {getErrorResponse} from '@/lib/errors'
 import useAuth from '@/composition/auth'
 import {useKeywordOptions} from '@/composables/use-keyword-options'
 import {normalizeDoiArray, normalizeRawReadArray, normalizeContributorArray} from '@/lib/form-helpers'
+import {useUnsavedChangesGuard} from '@/composables/use-unsaved-changes-guard'
 import {useValidationErrors} from '@/composables/use-validation-errors'
-import {parseApiValidationErrors} from '@/lib/form-validation'
+import {missingRequiredFieldErrors, parseApiValidationErrors, scrollToFirstError} from '@/lib/form-validation'
 import type {components} from '@/schema/openapi'
 
 type DoiIdentifier = components['schemas']['DoiIdentifier']
@@ -230,7 +235,10 @@ export default defineComponent({
     // Extra metadata
     const extraMetadataField = useJsonFileField('extraMetadata')
 
+    const unsavedChanges = useUnsavedChangesGuard()
+
     return {
+      unsavedChanges,
       userProfile,
       ...useScopedId(),
       ...validation,
@@ -287,12 +295,30 @@ export default defineComponent({
     }
   },
 
+  watch: {
+    // Required-field errors raised by Next clear as soon as the field is filled.
+    title(value) {
+      if (value) this.clearClientError('title')
+    },
+    shortDescription(value) {
+      if (value) this.clearClientError('shortDescription')
+    },
+    abstractText(value) {
+      if (value) this.clearClientError('abstractText')
+    },
+    methodText(value) {
+      if (value) this.clearClientError('methodText')
+    },
+  },
+
   mounted() {
     this.loadAllKeywordOptions()
   },
 
   methods: {
     fileCleared(inputName: string) {
+      // File drops and dialog edits never reach the form root as input/change events.
+      this.unsavedChanges.markDirty()
       if (inputName === 'extraMetadataFile') {
         this.extraMetadataField.onClear()
         this.clearClientError('extraMetadata')
@@ -300,6 +326,7 @@ export default defineComponent({
     },
 
     async fileSelected(inputName: string, event: FileUploadSelectEvent) {
+      this.unsavedChanges.markDirty()
       if (inputName === 'extraMetadataFile') {
         await this.extraMetadataField.onSelect(event)
         if (this.extraMetadataField.error.value) {
@@ -339,7 +366,45 @@ export default defineComponent({
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
         navigate(this.activeWizardStep + 1)
+      } else {
+        this.showStepRequirements()
       }
+    },
+
+    /**
+     * Explain why Next didn't advance: inline errors on empty required fields, or a toast for steps whose
+     * requirements live in child components.
+     */
+    showStepRequirements() {
+      const errors = missingRequiredFieldErrors(this.requiredFieldsForStep(this.activeWizardStep))
+      for (const [key, message] of Object.entries(errors)) {
+        this.setClientError(key, message ?? '')
+      }
+      if (Object.keys(errors).length > 0) {
+        scrollToFirstError()
+      } else {
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'Complete the required fields in this step before continuing.',
+          life: 5000
+        })
+      }
+    },
+
+    requiredFieldsForStep(step: number): Record<string, unknown> {
+      if (step === 1) {
+        return {
+          title: this.title,
+          shortDescription: this.shortDescription,
+          abstractText: this.abstractText,
+          methodText: this.methodText
+        }
+      }
+      return {}
+    },
+
+    async confirmReset() {
+      if (await this.unsavedChanges.confirmDiscard()) this.resetForm()
     },
 
     resetForm() {
@@ -361,6 +426,7 @@ export default defineComponent({
       this.clearPublications()
       this.extraMetadataField.onClear()
       this.clearValidationState()
+      this.unsavedChanges.markClean()
     },
 
     async save() {
@@ -390,6 +456,7 @@ export default defineComponent({
       if (response.status === 200) {
         const savedItem = response.data
         this.clearValidationState()
+        this.unsavedChanges.markClean()
         this.$router.replace({path: `/experiments/${savedItem.urn}`})
         this.$toast.add({severity: 'success', summary: 'The new experiment was saved.', life: 3000})
       } else if (response.data?.detail) {

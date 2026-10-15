@@ -3,7 +3,6 @@ import type {RouteLocationNormalized, RouteRecordRaw} from 'vue-router'
 
 import AboutView from '@/components/screens/AboutView.vue'
 import CollectionView from '@/components/screens/CollectionView.vue'
-import CollectionsView from '@/components/screens/CollectionsView.vue'
 import DashboardView from '@/components/screens/DashboardView.vue'
 import DocumentationView from '@/components/screens/DocumentationView.vue'
 import ExperimentCreator from '@/components/screens/ExperimentCreator.vue'
@@ -162,10 +161,10 @@ const routes: RouteRecordRaw[] = [
     })
   },
   {
+    // Collections moved into the dashboard; keep old bookmarks working.
     path: '/collections',
     name: 'collections',
-    component: CollectionsView,
-    meta: {requiresAuth: true}
+    redirect: {name: 'dashboard', query: {tab: 'collections'}}
   },
   {
     path: '/collections/:urn',
@@ -178,7 +177,9 @@ const routes: RouteRecordRaw[] = [
     name: 'variant',
     component: VariantScreen,
     props: (route) => ({
-      clingenAlleleId: route.params.clingenAlleleId
+      clingenAlleleId: route.params.clingenAlleleId,
+      // `?variant=` highlights a specific measurement without changing the CAID/PAID anchor.
+      highlightVariantUrn: (Array.isArray(route.query.variant) ? route.query.variant[0] : route.query.variant) || null
     })
   },
   {
@@ -190,16 +191,22 @@ const routes: RouteRecordRaw[] = [
     async beforeEnter(to) {
       const urn = Array.isArray(to.params.urn) ? to.params.urn[0] : to.params.urn
       try {
+        // The detail envelope carries the assay-level ClinGen id as a flat field (the URN→allele
+        // bridge), so resolving a legacy measurement URN to its allele page is a direct read.
         const detail = await getVariantDetail(urn)
-        const mapped = detail.mappedVariants.find((m) => m.current)
-        if (mapped?.clingenAlleleId) {
-          return {name: 'variant', params: {clingenAlleleId: mapped.clingenAlleleId}}
+
+        // Carry the measurement URN as the `?variant=` highlight so the redirect preserves which
+        // measurement the cited link pointed at.
+        if (detail.clingenAlleleId) {
+          return {name: 'variant', params: {clingenAlleleId: detail.clingenAlleleId}, query: {variant: urn}}
         }
       } catch {
         // Fall through to 404 if the variant can't be resolved
       }
+      return {name: 'notFound'}
     },
-    redirect: {name: 'notFound'}
+    // Never rendered: the guard always redirects. A `redirect` here would bypass the guard entirely.
+    component: NotFoundView
   },
   {
     name: 'pubmedPublicationIdentifier',

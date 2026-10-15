@@ -83,6 +83,7 @@ export default ({stateNamespace: initialStateNamespace = null, options: initialO
       remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureDataLoaded`, payload) : null,
     loadData: (payload) =>
       remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadData`, payload) : null,
+    reloadData: () => (remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/reloadData`) : null),
     setDataUrl: (payload) =>
       remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/setDataUrl`, payload) : null
   }

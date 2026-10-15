@@ -2,6 +2,7 @@ import _ from 'lodash'
 
 import type {components} from '@/schema/openapi'
 import {getTargetGeneName} from '@/lib/target-genes'
+import {getPublicationUrl as getPublicationUrlForPublication} from '@/lib/publication'
 
 type ScoreSet = components['schemas']['ScoreSet']
 type PublicationIdentifier = components['schemas']['ScoreSet']['primaryPublicationIdentifiers'][0]
@@ -74,6 +75,17 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
   const year = scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
   const parts = [authors, gene, year?.toString()].filter((x) => x != null)
   return parts.length > 0 ? parts.join(' ') : (scoreSet.title ?? scoreSet.shortDescription ?? 'Score set')
+}
+
+/**
+ * Resolve an external URL for a score set's primary publication.
+ *
+ * @param scoreSet A score set.
+ * @returns An external publication URL, or null if there is no primary publication or it carries no resolvable link.
+ */
+export function getPublicationUrl(scoreSet: ScoreSet): string | null {
+  const publication = scoreSet.primaryPublicationIdentifiers[0]
+  return publication ? getPublicationUrlForPublication(publication) : null
 }
 
 /**

@@ -5,6 +5,19 @@ export interface ScoresOrCountsRow {
   [key: string]: any
 }
 
+/** Significant figures used to display a functional score, app-wide. */
+export const SCORE_DISPLAY_PRECISION = 4
+
+/**
+ * Format a functional score for display — the single source of truth for the score's significant-figure
+ * precision, so every surface (search rows, histogram/heatmap tooltips, the detail panel, the variant
+ * page) reads it the same way. Returns null for a non-numeric (NA/absent) score, leaving each caller to
+ * decide how to render its absence (hide the field, "Not scored", a dash, …).
+ */
+export function formatScore(score: number | null | undefined): string | null {
+  return typeof score === 'number' ? score.toPrecision(SCORE_DISPLAY_PRECISION) : null
+}
+
 /**
  * Transform flat namespaced columns into nested objects.
  * Converts columns like "namespace.colname" into nested structure { namespace: { colname: value } }

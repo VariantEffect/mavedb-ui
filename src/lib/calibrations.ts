@@ -7,6 +7,7 @@ import axios from 'axios'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
+import type {DraftScoreCalibration} from '@/lib/calibration-types'
 import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
@@ -407,6 +408,27 @@ export function getClassificationOddsPath(
   return range?.oddspathsRatio != null ? range.oddspathsRatio.toFixed(precision) : null
 }
 
+/** A calibration create or update payload, as built from an editor draft. */
+export type CalibrationPayload = Omit<DraftScoreCalibration, 'disease' | 'controls' | 'controlsCount'> & {
+  disease: string | null
+  controls?: components['schemas']['CalibrationControlCreate'][]
+}
+
+/**
+ * Converts a calibration editor draft into a calibration write payload.
+ *
+ * Drops editor-only fields and sends the disease as its bare MONDO code: the editor holds it as a
+ * {code, label} selection, and null resolves to the generic disease server-side. The loaded `controls` are
+ * SavedCalibrationControl rows, never a write payload, so they are always omitted.
+ *
+ * @param draft - The calibration draft held by the editor.
+ * @returns A payload for a calibration create or update request.
+ */
+export function toCalibrationPayload(draft: DraftScoreCalibration & {__original?: unknown}): CalibrationPayload {
+  const {__original: _original, controls: _controls, controlsCount: _controlsCount, disease, ...payload} = draft
+  return {...payload, disease: disease?.code ?? null}
+}
+
 export type CalibrationSaveResult =
   | {success: true; data: any}
   | {success: false; error: 'email_required'}
@@ -432,7 +454,7 @@ export type CalibrationSaveResult =
  *                             omit for a new calibration (POST).
  */
 export async function saveCalibration(params: {
-  draft: any
+  draft: DraftScoreCalibration & {__original?: unknown}
   classesFile?: File | null
   controlsFile?: File | null
   controlsCleared?: boolean
@@ -440,22 +462,10 @@ export async function saveCalibration(params: {
 }): Promise<CalibrationSaveResult> {
   const {draft, classesFile, controlsFile, controlsCleared, existingUrn} = params
 
-  // Strip read-only/internal fields, then decide how controls are conveyed: via file, cleared to an
-  // empty list, or left unchanged (omitted). The loaded `controls` are SavedCalibrationControl rows,
-  // never a write payload, so they are never sent inline.
-  const payload = {...draft}
-  delete payload.__original
-  delete payload.controlsCount
-
-  // Disease is sent as the bare MONDO code (the server resolves the canonical term); the editor holds
-  // it as a {code, label} selection for display only. Null defaults to the generic disease server-side.
-  payload.disease = draft.disease?.code ?? null
-  if (controlsFile) {
-    delete payload.controls
-  } else if (controlsCleared) {
+  // Controls are conveyed via file, cleared to an empty list, or left unchanged (omitted).
+  const payload = toCalibrationPayload(draft)
+  if (!controlsFile && controlsCleared) {
     payload.controls = []
-  } else {
-    delete payload.controls
   }
 
   const formData = new FormData()

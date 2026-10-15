@@ -1,9 +1,11 @@
 import {describe, expect, it} from 'vitest'
 
+import type {DraftScoreCalibration} from '@/lib/calibration-types'
 import {
   buildControlPlacements,
   isClassBasedCalibration,
   orderCalibrationOptions,
+  toCalibrationPayload,
   unclassifiedCallLabel,
   type ScoreCalibration
 } from '@/lib/calibrations'
@@ -129,5 +131,37 @@ describe('unclassifiedCallLabel', () => {
   it('treats a calibration with no classifications, or mixed ones, as range-based', () => {
     expect(isClassBasedCalibration(withClasses())).toBe(false)
     expect(isClassBasedCalibration(withClasses('A', null))).toBe(false)
+  })
+})
+
+describe('toCalibrationPayload', () => {
+  const draft = {
+    title: 'Investigator calibration',
+    disease: {code: 'MONDO:0015263', label: 'Brugada syndrome'},
+    controls: [{variantUrn: 'urn:mavedb:00000001-a-1#1', clinicalStatus: 'pathogenic'}],
+    controlsCount: 1,
+    __original: {title: ''}
+  } as never as DraftScoreCalibration & {__original: unknown}
+
+  it('sends the disease as its MONDO code', () => {
+    expect(toCalibrationPayload(draft).disease).toBe('MONDO:0015263')
+  })
+
+  it('sends a null disease when none is selected', () => {
+    expect(toCalibrationPayload({...draft, disease: null}).disease).toBeNull()
+  })
+
+  it('omits editor-only fields and loaded controls', () => {
+    const payload = toCalibrationPayload(draft)
+    expect(payload).not.toHaveProperty('__original')
+    expect(payload).not.toHaveProperty('controlsCount')
+    expect(payload).not.toHaveProperty('controls')
+    expect(payload.title).toBe('Investigator calibration')
+  })
+
+  it('leaves the draft unchanged', () => {
+    toCalibrationPayload(draft)
+    expect(draft.disease).toEqual({code: 'MONDO:0015263', label: 'Brugada syndrome'})
+    expect(draft.controls).toHaveLength(1)
   })
 })

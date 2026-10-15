@@ -428,6 +428,7 @@ import {type VariantScoreFieldsRef} from '@/components/forms/VariantScoreFields.
 import {suggestionsForAutocomplete, normalizeDoiArray, normalizeContributorArray} from '@/lib/form-helpers'
 import {missingRequiredFieldErrors, parseScoreSetValidationErrors, scrollToFirstError} from '@/lib/form-validation'
 import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {toCalibrationPayload} from '@/lib/calibrations'
 import {components} from '@/schema/openapi'
 
 type Contributor = components['schemas']['Contributor']
@@ -903,7 +904,9 @@ export default {
           countColumnsMetadata: this.countColumnsMetadata || {}
         },
         scoreCalibrations:
-          this.investigatorIsProvidingScoreCalibrations && this.calibrationDraft ? [this.calibrationDraft] : [],
+          this.investigatorIsProvidingScoreCalibrations && this.calibrationDraft
+            ? [toCalibrationPayload(this.calibrationDraft)]
+            : [],
         targetGenes: ((this.$refs.targetEditors as TargetEditorRef[]) || []).map((editor) =>
           editor.getPayload({isBaseEditor: this.isBaseEditor})
         ),

@@ -203,8 +203,10 @@ const routes: RouteRecordRaw[] = [
       } catch {
         // Fall through to 404 if the variant can't be resolved
       }
+      return {name: 'notFound'}
     },
-    redirect: {name: 'notFound'}
+    // Never rendered: the guard always redirects. A `redirect` here would bypass the guard entirely.
+    component: NotFoundView
   },
   {
     name: 'pubmedPublicationIdentifier',

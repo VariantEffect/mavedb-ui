@@ -537,7 +537,8 @@ export default defineComponent({
 
     selectedVariant: function () {
       return this.externalSelection
-        ? this.heatmapData.filter((variant) => variant.instance?.variantUrn == this.externalSelection!.variantUrn)[0]
+        ? (this.heatmapData.find((variant) => variant.instance?.variantUrn == this.externalSelection!.variantUrn) ??
+            null)
         : null
     },
 
@@ -877,19 +878,17 @@ export default defineComponent({
 
     selectedVariant: {
       handler: function (newValue) {
-        if (newValue === null) {
-          this.heatmap ? this.heatmap.clearSelection() : null
-          this.stackedHeatmap ? this.stackedHeatmap.clearSelection() : null
-          return
+        // A selection with no cell on a chart clears that chart, so a previous variant's highlight
+        // doesn't linger after switching to one that isn't shown.
+        if (newValue && (this.xCoord(newValue) || this.yCoord(newValue))) {
+          this.heatmap?.selectDatum(newValue)
+        } else {
+          this.heatmap?.clearSelection()
         }
-
-        // Protect heatmap selection methosd from cases where the selected variant does not
-        // exist as heatmap content.
-        if (this.xCoord(newValue) || this.yCoord(newValue)) {
-          this.heatmap ? this.heatmap.selectDatum(newValue) : null
-        }
-        if (this.xCoord(newValue) || this.vRank(newValue)) {
-          this.stackedHeatmap ? this.stackedHeatmap.selectDatum(newValue) : null
+        if (newValue && (this.xCoord(newValue) || this.vRank(newValue))) {
+          this.stackedHeatmap?.selectDatum(newValue)
+        } else {
+          this.stackedHeatmap?.clearSelection()
         }
       },
       immediate: true

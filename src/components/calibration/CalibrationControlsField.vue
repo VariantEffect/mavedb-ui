@@ -58,7 +58,7 @@
           <PMessage v-for="(err, i) in previewErrors" :key="i" :closable="false" severity="warn" size="small">
             {{ err }}
           </PMessage>
-          <MvFieldError :error="validationErrors['controls']" />
+          <MvFieldError :error="controlsError" />
         </template>
 
         <!-- Hidden while a CSV is staged: the staged panel's own action is the way back out. -->
@@ -66,7 +66,7 @@
           v-else
           accept="text/csv"
           :empty-text="dropzoneText"
-          :error="validationErrors['controls']"
+          :error="controlsError"
           :label="mode === 'loaded' ? 'Replace controls' : 'Controls file'"
           :show-label="false"
           @select="$emit('controls-file-selected', $event)"
@@ -170,6 +170,11 @@ export default defineComponent({
   },
 
   computed: {
+    // A rejected controls CSV is reported against the uploaded file, inline controls against the field.
+    controlsError(): string | null | undefined {
+      return this.validationErrors['controlsFile'] ?? this.validationErrors['controls']
+    },
+
     mode(): ControlsMode {
       if (this.controlsFileName) return 'new-file'
       if (this.cleared) return 'cleared'

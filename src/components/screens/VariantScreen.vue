@@ -419,6 +419,7 @@ import {hasFunctionalCalibrations, hasPathogenicityCalibrations, unclassifiedCal
 import {groupAlleles, mergeDetailAlleles, titleMember, type AlleleGroup} from '@/lib/allele-grouping'
 import {indirectMeasurementNotice, shortHgvs} from '@/lib/measurement-groups'
 import {clingenAlleleUrlFromCanonicalId} from '@/lib/clingen'
+import {variantPageQuery, type VariantPageQueryState} from '@/lib/router'
 
 /** One entry in a download control: a label and the download it triggers. */
 interface DownloadOption {
@@ -521,12 +522,7 @@ export default defineComponent({
     calibrationChoice(): {scoreSet: string | null; calibration: string | null} {
       return {scoreSet: this.lookup.selectedScoreSetUrn.value, calibration: this.lookup.selectedCalibration.value}
     },
-    queryAxisState(): {
-      includeSuperseded: boolean
-      includeResearchUseOnly: boolean
-      asOf: string | null
-      selectedVariantUrn: string | null
-    } {
+    queryAxisState(): VariantPageQueryState {
       return {
         includeSuperseded: this.lookup.includeSuperseded.value,
         includeResearchUseOnly: this.lookup.includeResearchUseOnly.value,
@@ -713,26 +709,8 @@ export default defineComponent({
   },
 
   watch: {
-    queryAxisState({
-      includeSuperseded,
-      includeResearchUseOnly,
-      asOf,
-      selectedVariantUrn
-    }: {
-      includeSuperseded: boolean
-      includeResearchUseOnly: boolean
-      asOf: string | null
-      selectedVariantUrn: string | null
-    }) {
-      const query = {...this.$route.query}
-      if (includeSuperseded) query.include_superseded = 'true'
-      else delete query.include_superseded
-      if (includeResearchUseOnly) delete query.include_research_use_only
-      else query.include_research_use_only = 'false'
-      if (asOf) query.as_of = asOf
-      else delete query.as_of
-      if (selectedVariantUrn) query.variant = selectedVariantUrn
-      else delete query.variant
+    queryAxisState(state: VariantPageQueryState) {
+      const query = variantPageQuery(this.$route.query, state)
       if (JSON.stringify(query) !== JSON.stringify(this.$route.query)) this.$router.replace({query})
     },
     '$route.query'(query: Record<string, string | string[] | null | undefined>) {

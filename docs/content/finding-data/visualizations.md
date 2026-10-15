@@ -50,6 +50,7 @@ The custom view gives users full control over the histogram. Available options i
 - **ClinVar version** -- Select which version of ClinVar annotations to use.
 - **Gold stars threshold** -- Filter ClinVar variants by their review status (star rating).
 - **Additional significance categories** -- Add series for classifications beyond pathogenic and benign, such as `Uncertain significance` and `Conflicting classifications`.
+- **Fold soft conflicts into their directional call** -- On by default. Counts a protein change whose encoding variants mix a pathogenic or benign call with an uncertain one under the directional call (see [inferred calls](external-integrations.md#how-inferred-calls-are-derived)). Turn it off to leave such variants out and show the uncertain and conflicting series.
 - **Protein effect filters** -- Limit series to variants with specific predicted protein effects, or add separate series for different effect types.
 - **Calibration overlays** -- When a score set has [score calibrations](../reference/score-calibrations.md), overlay functional classification ranges on the histogram.
 

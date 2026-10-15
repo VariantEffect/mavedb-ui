@@ -31,7 +31,7 @@ flowchart LR
 Mapping and annotation run automatically when a score set's variant data is [uploaded](../submitting-data/upload-guide.md). Results are visible on the score set page. A score set can also be re-mapped later; when that happens, the earlier results are superseded and the new ones take their place.
 
 !!! warning "Review your mapping results"
-    Some variants may not map — because of ambiguous target sequences, complex variant types, or discrepancies between the target and reference genome. Mapping failures do not prevent publication, but mapped variants are required for [variant search](../mavemd/variant-search.md), some [external integrations](../finding-data/external-integrations.md), and inclusion in [MaveMD](../mavemd/index.md). **Contributors are strongly encouraged to review mapping results after upload**; MaveDB flags failures and provides a downloadable report.
+    Some variants may not map — because of ambiguous target sequences, complex variant types, or discrepancies between the target and reference genome. Mapping failures do not prevent publication, but mapped variants are required for [variant search](../mavemd/variant-search.md), some [external integrations](../finding-data/external-integrations.md), and inclusion in [MaveMD](../mavemd/index.md). **Contributors are strongly encouraged to review mapping results after upload**; until publication, the score set page shows whether all, some, or none of the variants mapped.
 
 ## See also
 

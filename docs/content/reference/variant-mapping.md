@@ -26,7 +26,7 @@ flowchart LR
 
 1. **Target sequence alignment**: The target sequence provided with the score set is aligned to the GRCh38 human genome assembly using [BLAT](https://genome.ucsc.edu/FAQ/FAQblat.html). This determines the genomic location of the target sequence and identifies candidate transcripts. For targets specified at the amino acid level, BLAT aligns to the protein reference space; for nucleotide targets, alignment is performed directly against the genome.
 
-2. **Transcript selection**: From the candidate alignments, MaveDB selects a representative RefSeq transcript. The selection prioritizes [MANE Select](https://www.ncbi.nlm.nih.gov/refseq/MANE/) transcripts (the community standard for reporting clinical variants), followed by RefSeq Select transcripts, and then the longest matching transcript. An offset is computed to determine the precise location of the MAVE sequence within the selected reference sequence. This step applies to sequence-based targets. A score set with an [accession-based target](../submitting-data/targets.md#accession-based-targets) on a transcript keeps that transcript, even when it is not the MANE Select transcript.
+2. **Transcript selection**: From the candidate alignments, MaveDB selects a representative RefSeq transcript. The selection prioritizes [MANE Select](https://www.ncbi.nlm.nih.gov/refseq/MANE/) transcripts (the community standard for reporting clinical variants), followed by MANE Plus Clinical transcripts, and then the longest compatible transcript. An offset is computed to determine the precise location of the MAVE sequence within the selected reference sequence. This step applies to sequence-based targets. A score set with an [accession-based target](../submitting-data/targets.md#accession-based-targets) on a transcript keeps that transcript, even when it is not the MANE Select transcript.
 
 3. **Variant translation**: Each variant in the score and count data tables is converted from [MAVE-HGVS](../submitting-data/data-formats.md#variant-columns) format to standard HGVS format and translated with respect to the selected transcript. This step accounts for any offset between the target sequence and the transcript.
 
@@ -37,7 +37,7 @@ flowchart LR
 
     Although some mapping failures represent true limitations of the data, others can be addressed by correcting errors in the submitted variants or target sequences.
 
-    **It is highly recommended that data contributors review the mapping results after uploading a score set to ensure that variants have been accurately mapped.** Contributors can view mapping results on the score set page and download a report of mapped and unmapped variants.
+    **It is highly recommended that data contributors review the mapping results after uploading a score set to ensure that variants have been accurately mapped.** Until a score set is published, its page shows the mapping status: whether all variants mapped, some did not, or mapping failed, with the error message for a failed mapping.
 
     Mapping failures do not prevent datasets from being published in MaveDB, but mapped variants are required for certain features such as [variant search](../mavemd/variant-search.md), linkages with certain [external resources](../finding-data/external-integrations.md), and inclusion in [MaveMD](../mavemd/index.md).
 
@@ -77,7 +77,7 @@ These integrations also enable the [MaveMD](../mavemd/index.md) clinical interfa
 
 ## Programmatic access
 
-Mapped variants are available through the [MaveDB API](../programmatic-access/api-quickstart.md) via the `/variant-details` endpoint, which streams one NDJSON record per mapped variant, each carrying the pre-mapped and post-mapped VRS pair alongside its categorical variant and annotations. (This replaces the removed `/mapped-variants` endpoint, which now returns `410 Gone`.) The same records are downloadable from individual score set pages in [VRS JSON format](data-standards.md#vrs-variant-representation).
+Mapped variants are available through the [MaveDB API](../programmatic-access/api-quickstart.md) via the `/variant-details` endpoint, which streams one NDJSON record per mapped variant, each carrying the pre-mapped and post-mapped VRS pair alongside its categorical variant and annotations. The `/score-sets/{urn}/mapped-variants` endpoint returns `410 Gone`. The same records are downloadable from individual score set pages in [VRS JSON format](data-standards.md#vrs-variant-representation).
 
 ## See also
 

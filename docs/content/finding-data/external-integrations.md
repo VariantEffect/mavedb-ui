@@ -28,6 +28,25 @@ Using the ClinGen Allele IDs obtained during the mapping process, MaveDB cross-r
 
 MaveDB displays ClinVar significance classifications and **star** status alongside variant effect scores and provides direct links to ClinVar entries.
 
+ClinVar describes nucleotide variants, so MaveDB links ClinVar records to nucleotide variants only. A protein change has no ClinVar record of its own. For a protein-level measurement, MaveDB shows the classification of the nucleotide variants encoding that change, marked as an *inferred* call.
+
+### How inferred calls are derived
+
+A protein-level measurement is linked to every nucleotide variant that can encode its protein change, found by [reverse translation](../mapping/reverse-translation.md). MaveDB reduces the ClinVar records on those variants to one call:
+
+- **Own record first.** A record on the measured variant itself always takes precedence. Only protein-level measurements fall back to encoding variants. A nucleotide-level measurement without its own record shows *No ClinVar record* and never borrows a related variant's call.
+- **Unclassified records are ignored.** Records with no germline classification never become a call.
+- **One direction.** When the records agree (for example, Benign and Likely benign), the call with the most review stars is shown as representative of the concordant records.
+- **Soft conflict.** When a pathogenic or benign call appears alongside a VUS or a ClinVar *Conflicting* record, the directional call is shown with a note that a related variant is uncertain or conflicting.
+- **Hard conflict.** When the records include both a pathogenic or likely pathogenic call and a benign or likely benign call, no call is shown. The measurement reads *Conflicting classifications* and is excluded from clinical controls.
+
+Inferred calls list the records they were drawn from. Surfaces use these rules as follows:
+
+- **Score set variant panel and histogram tooltips** show the derived call, labelled *inferred*.
+- **Histogram clinical view** counts soft conflicts under their directional call and leaves out hard conflicts. Series that contain inferred calls say so in the legend. In the [custom view](visualizations.md#custom-view), soft conflicts can instead be left out, which allows separate uncertain and conflicting series.
+- **Variant page** *Clinical & population data* table gives each nucleotide variant its own row with only its own record, so it shows no inferred calls.
+- **CSV downloads** report ClinVar only for the measured variant, so protein-level score sets have no ClinVar values.
+
 !!! note
     A future version of this software will allow users to submit variant interpretations back to ClinVar directly from MaveDB, streamlining the process of sharing functional evidence with the clinical genomics community.
 
@@ -37,7 +56,7 @@ Mapped variants in MaveDB are cross-referenced with the [gnomAD database](https:
 
 A variant's frequency is displayed on its [variant page](../mavemd/variant-page.md), and is available in bulk through the `gnomad` namespace of the variant data download. Each frequency is matched by ClinGen allele ID, so it is a direct assertion about that variant rather than an aggregate over related variants. Variants absent from gnomAD show no frequency.
 
-A protein change has no gnomAD record of its own. For a protein-level measurement, the score set's variant panel shows the record of the nucleotide variant encoding that change with the highest FAF95, the frequency ACMG BA1/BS1 thresholds apply to. The record is labelled with that variant, and every encoding variant's record is listed alongside it. Frequencies are shown exactly as gnomAD records them and are never summed.
+A protein change has no gnomAD record of its own. For a protein-level measurement, the score set's variant panel shows the record of the nucleotide variant encoding that change with the highest FAF95, the frequency ACMG BA1/BS1 thresholds apply to. The record is labelled with that variant, and every encoding variant's record is listed alongside it. Frequencies are shown exactly as gnomAD records them and are never summed or pooled. A nucleotide-level measurement without its own record shows none, even when related variants have one. The variant page's *Clinical & population data* table and the CSV `gnomad` columns report only each variant's own record, so protein-level score sets have no gnomAD values in the CSV.
 
 ## Ensembl VEP
 

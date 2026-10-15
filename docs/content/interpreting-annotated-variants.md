@@ -60,7 +60,7 @@ MaveDB shows the full set for a reason: most clinically relevant external databa
 
 Not every protein change can be reverse-translated. Simple **substitutions** (and single-residue deletions) can be; more complex edits — insertions, delins, and frameshifts — cannot, so a protein-only measurement of one of these shows **no** derived coding or genomic variants.
 
-For the mechanism behind candidate generation — codon enumeration, synonymous handling, transcript selection, and the intronic/exon-spanning flags — see [Reverse Translation & Projection](mapping/reverse-translation.md).
+For the mechanism behind candidate generation — codon enumeration, synonymous handling, and transcript selection — see [Reverse Translation & Projection](mapping/reverse-translation.md).
 
 ## Where you will (and won't) see candidates
 
@@ -76,6 +76,8 @@ So a variant that appears to have no coding or genomic coordinate in a search re
 External annotations (ClinVar, gnomAD, Ensembl VEP) attach at the level where those resources describe variants — almost always DNA. Because a measured level and its derived siblings are different molecular descriptions, they can occasionally carry **different** annotations. When that happens, MaveDB shows them per-level rather than merging them.
 
 When annotations diverge, weigh the annotation on the **measured** level most heavily — it describes the variant that was actually assayed. A sibling representation's annotation is supporting context, not the primary signal.
+
+A DNA measurement's coding and protein descriptions can also appear as plain HGVS, with no allele of their own and so no identifier or annotations. This happens where VRS cannot represent the change at that level, such as an intronic or UTR coding coordinate, which has no transcript sequence to place it on. An intronic or UTR change has no protein description at all.
 
 How annotations are attached, and how divergence is handled, is covered in [Annotation](mapping/annotation.md); for what each external resource provides, see [External Integrations](finding-data/external-integrations.md).
 

@@ -50,12 +50,14 @@ So a candidate reflects *uncertainty about a single measurement*, whereas a conv
 
 ## Transcript selection
 
-Reverse translation places a protein change onto a coding transcript. MaveDB chooses that transcript to stay consistent with forward mapping:
+Reverse translation and projection place a variant onto a coding transcript. MaveDB chooses that transcript to stay consistent with forward mapping, taking the first of these that applies:
 
-1. Where forward mapping already selected a coding transcript for the variant, reverse translation uses that **same transcript**, so the derived coordinates line up with the mapped ones.
-2. For a protein-only measurement with no coding mapping, MaveDB resolves the protein accession (`NP_`/`XP_`) to a coding transcript through UTA, preferring `NM_` over `XM_` over `ENST`, then the highest version.
+1. Where forward mapping selected a coding transcript for the variant, MaveDB uses that **same transcript**, so the derived coordinates line up with the mapped ones.
+2. For a genomic measurement whose target sequence is itself a transcript (an `NM_` or `ENST` accession), MaveDB uses that transcript.
+3. For a genomic measurement in a protein-coding gene, MaveDB uses the **MANE Select** transcript at the variant's locus.
+4. For a protein-only measurement with no coding mapping, MaveDB resolves the protein accession (`NP_`/`XP_`) to a coding transcript through UTA, preferring `NM_` over `XM_` over `ENST`, then the highest version.
 
-If no transcript can be resolved, the variant is not reverse-translated.
+If no transcript can be resolved, the variant is not reverse-translated, and a genomic measurement keeps only its genomic representation.
 
 ## Reference data and reproducibility
 

@@ -271,7 +271,7 @@ List and search endpoints support pagination using `limit` and `offset` query pa
 
 The API accepts up to 1,500 requests per IP address in any 5-minute window. Requests over the limit receive `429 Too Many Requests` with a `Retry-After` header giving the number of seconds to wait, and go through again once your request rate drops back under the limit. The limit applies per IP address, so requests from everyone behind a shared address, such as a campus network, count together.
 
-Score set data downloads (`/scores`, `/counts`, `/variants/data` and `/mapped-variants`) have a lower limit of 100 requests per IP address in any 5-minute window, because each one reads a whole score set. Requests over it receive the same `429` response and `Retry-After` header. When paging through a score set with `start` and `limit`, each page counts as one request, so use large pages.
+Score set CSV downloads (`/scores`, `/counts` and `/variants/data`) have a lower limit of 100 requests per IP address in any 5-minute window, because each one reads a whole score set. Requests over it receive the same `429` response and `Retry-After` header. When paging through a score set with `start` and `limit`, each page counts as one request, so use large pages. To fetch mapped variants in bulk, use [`/variant-details`](#download-variant-details-vrs-format), which streams a whole score set as one request, rather than calling `/variants/{urn}` once per variant.
 
 The API can also return `503 Service Unavailable` while it is busy, for example when other large score set downloads are being built. These responses usually include a `Retry-After` header; when one does not, wait a minute before retrying.
 

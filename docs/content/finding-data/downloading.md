@@ -15,7 +15,7 @@ Each [score set](../getting-started/key-concepts.md#score-sets) page in MaveDB i
 
 MaveDB allows users to download variant effect score data along with associated count data in **CSV** (Comma-Separated Values) format.
 
-The downloaded file contains the same data that was uploaded by the submitter, with an additional column for variant [URNs](../reference/accession-numbers.md) that uniquely identify each variant in MaveDB. Using the **Custom Data** option, users may also choose to include other MaveDB-generated columns in this output, such as mapped variant HGVS strings and VRS identifiers, and — where available — annotation columns for gnomAD allele frequency, Ensembl VEP consequence, ClinGen allele IDs, and ClinVar clinical significance.
+The downloaded file contains the same data that was uploaded by the submitter, with an additional column for variant [URNs](../reference/accession-numbers.md) that uniquely identify each variant in MaveDB. Using the **Custom CSV** option, users may also choose to include other MaveDB-generated columns in this output, such as mapped variant HGVS strings and VRS identifiers, and — where available — annotation columns for gnomAD allele frequency, Ensembl VEP consequence, ClinGen allele IDs, and ClinVar clinical significance.
 
 !!! warning
     Score and count columns are non-prescriptive and may vary between datasets. Columns may mean different things between datasets, so users should refer to the dataset methods section for details on the specific columns included in each download.
@@ -51,6 +51,8 @@ The archive contains:
 
 - A single JSON document called `main.json` that provides the structured metadata for every [experiment set, experiment, and score set](../getting-started/key-concepts.md).
 - Score set data in `.csv` format, with separate score and count files for each record as appropriate. Each file is named using the score set URN.
+- For mapped score sets, an annotations CSV (mapped HGVS, VRS identifiers, and VEP, gnomAD, ClinGen, ClinVar, and score calibration columns), a [VRS](../reference/data-standards.md#vrs-variant-representation) NDJSON file, and a [VA-Spec](../reference/data-standards.md) NDJSON file.
+- A `README.md` describing every file and column, and a `CHANGELOG.md` recording what changed between archive versions.
 
 ### Who should use bulk downloads?
 

@@ -37,7 +37,7 @@ flowchart LR
 
     Although some mapping failures represent true limitations of the data, others can be addressed by correcting errors in the submitted variants or target sequences.
 
-    **It is highly recommended that data contributors review the mapping results after uploading a score set to ensure that variants have been accurately mapped.** Contributors can view mapping results on the score set page and download a report of mapped and unmapped variants.
+    **It is highly recommended that data contributors review the mapping results after uploading a score set to ensure that variants have been accurately mapped.** Until a score set is published, its page shows the mapping status: whether all variants mapped, some did not, or mapping failed, with the error message for a failed mapping.
 
     Mapping failures do not prevent datasets from being published in MaveDB, but a successful mapping is required for certain features such as [variant search](../mavemd/variant-search.md), linkages with certain [external resources](../finding-data/external-integrations.md), and inclusion in [MaveMD](../mavemd/index.md).
 
@@ -65,7 +65,7 @@ These differences are expected, not errors. They arise from legitimate differenc
 Not every submitted variant yields a mapped representation, and an absence is not always a failure. MaveDB distinguishes two cases:
 
 - **Benign absences** — variants that legitimately have no reference-level representation, recorded but with no mapped allele. The main case is a **submitted intronic variant**: an intronic position has no protein consequence and cannot be represented at the levels MaveDB serves. Other changes with no protein consequence are treated the same way.
-- **Failures** — variants that *should* map but didn't: ambiguous alignments, complex or malformed variant descriptions, or discrepancies between the target and reference genome. These are surfaced in the mapping report for the contributor to review.
+- **Failures** — variants that *should* map but didn't: ambiguous alignments, complex or malformed variant descriptions, or discrepancies between the target and reference genome. These are reflected in the mapping status on the score set page for the contributor to review.
 
 Only genuine failures count against a score set's mapping; benign absences do not, and neither blocks publication.
 

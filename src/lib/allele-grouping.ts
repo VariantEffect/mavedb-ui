@@ -13,6 +13,7 @@ import type {components} from '@/schema/openapi'
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type VariantDetail = components['schemas']['VariantDetail']
+type MappedTriple = components['schemas']['MappedTriple']
 
 // ── DERIVATION: how a group's coordinate was established ──
 
@@ -27,9 +28,13 @@ const DERIVATION_RANK: Record<string, number> = {projection: 0, convergent: 1, c
 // Level display order (genomic → coding → protein) so a group reads bottom-up through the layer stack.
 const LEVEL_ORDER: Record<string, number> = {genomic: 0, cdna: 1, protein: 2}
 
-/** A member of an allele group: a single level's identity, its annotations, and whether it is the page root. */
+/**
+ * A member of an allele group: a single level's identity, its annotations, and whether it is the page root.
+ * A null `digest` marks a string-only member: a level of the measured variant's `mapped` triple with no VRS
+ * allele (e.g. an intronic or UTR coding projection), so it has HGVS but no annotations, CAID or derivation.
+ */
 export interface AlleleMember extends AlleleIdentity {
-  digest: string
+  digest: string | null
   annotations: AlleleAnnotations | null
   // Whether this allele is the CAID/PAID the page is anchored on.
   pageRoot: boolean
@@ -60,12 +65,13 @@ export interface AlleleGroup {
 /**
  * The member whose HGVS titles a group. A group holds one change in several coordinate frames; lead with
  * cDNA (community-preferred), then protein, then genomic. Among cDNA members, the first in `members` wins,
- * which {@link groupAlleles} orders by preference.
+ * which {@link groupAlleles} orders by preference. A string-only protein member never titles: it only rides
+ * along on a nucleotide group.
  */
 export function titleMember(group: Pick<AlleleGroup, 'members'>): AlleleMember | null {
   return (
     group.members.find((m) => m.level === 'cdna') ??
-    group.members.find((m) => m.level === 'protein') ??
+    group.members.find((m) => m.level === 'protein' && m.digest != null) ??
     group.members[0] ??
     null
   )
@@ -82,6 +88,8 @@ export interface GroupAllelesInput {
   measuredHgvs?: string[]
   /** MANE transcript accessions (e.g. `NM_007294.4`); other groups lead with a cDNA on one of these. */
   maneTranscripts?: string[]
+  /** The measured variant at every level it has; levels with no allele join the measured group string-only. */
+  mapped?: MappedTriple | null
 }
 
 /**
@@ -160,6 +168,30 @@ function makeMember(
   }
 }
 
+// Members for the `mapped` levels the measured group can't show from an allele. Protein is skipped when any
+// protein allele exists: the apex is its own group, so that level is already on display.
+function stringOnlyMembers(
+  members: AlleleMember[],
+  mapped: MappedTriple,
+  alleles: Record<string, AlleleIdentity>
+): AlleleMember[] {
+  const hasProteinAllele = Object.values(alleles).some((a) => a.level === 'protein')
+  return (['genomic', 'cdna', 'protein'] as const)
+    .filter((level) => mapped[level]?.hgvs && !members.some((m) => m.level === level))
+    .filter((level) => level !== 'protein' || !hasProteinAllele)
+    .map((level) => ({
+      digest: null,
+      level,
+      hgvs: mapped[level]!.hgvs,
+      clingenAlleleId: null,
+      isFocus: false,
+      relation: null,
+      derivation: null,
+      annotations: null,
+      pageRoot: false
+    }))
+}
+
 /**
  * Collapse the detail envelope's `alleles` sidecar into rendered groups, joining alleles linked by
  * `projectionOf` into one entry and deduplicating their annotations. `derivation` labels the group's
@@ -169,6 +201,9 @@ function makeMember(
  * When a group holds the change on several transcripts, the page allele's group leads with its measured
  * form (`measuredHgvs`) and the others with the MANE transcript (`maneTranscripts`). Neither depends on the
  * selected measurement, so titles stay put as the selection moves.
+ *
+ * The measured group also gains a string-only member (see {@link AlleleMember}) for each `mapped` level it
+ * has no allele for; an allele at that level always wins.
  */
 export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
   const {alleles, annotations, pageClingenAlleleId} = input
@@ -194,6 +229,9 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
         }
       }
     }
+    if (input.mapped && members.some((m) => m.isFocus)) {
+      members.push(...stringOnlyMembers(members, input.mapped, alleles))
+    }
     const pageRoot = members.some((m) => m.pageRoot)
     const preference = (m: AlleleMember) =>
       pageRoot && m.hgvs != null && measuredHgvs.has(m.hgvs)
@@ -207,19 +245,22 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
       (a, b) => (LEVEL_ORDER[a.level ?? ''] ?? 99) - (LEVEL_ORDER[b.level ?? ''] ?? 99) || preference(a) - preference(b)
     )
 
+    const alleleMembers = members.filter((m) => m.digest != null)
     // See coalesceAnnotations for the present-wins/conflict rule.
-    const {merged, conflict} = coalesceAnnotations(members)
+    const {merged, conflict} = coalesceAnnotations(alleleMembers)
 
     groups.push({
-      key: members[0].digest,
+      key: alleleMembers[0].digest!,
       members,
       measured: members.some((m) => m.isFocus),
       pageRoot,
-      derivation: pickDerivation(members),
+      derivation: pickDerivation(alleleMembers),
       annotationsMatch: !conflict,
       coalescedAnnotations: merged,
       clingenLinks: _.uniq(
-        members.map((m) => m.clingenAlleleId).filter((id): id is string => id != null && id !== pageClingenAlleleId)
+        alleleMembers
+          .map((m) => m.clingenAlleleId)
+          .filter((id): id is string => id != null && id !== pageClingenAlleleId)
       )
     })
   }
@@ -239,13 +280,17 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
  * Every allele across a page's loaded variant details, so page-wide tables don't change with the selection.
  *
  * An identity's `derivation`, `relation` and `projectionOf` are relative to its own envelope's focus, so an allele
- * the selected detail carries takes the selected detail's identity; others keep the first-seen one. Focus comes
- * from the selected detail alone.
+ * the selected detail carries takes the selected detail's identity; others keep the first-seen one. Focus, and so
+ * the `mapped` triple that fills the measured group, comes from the selected detail alone.
  */
 export function mergeDetailAlleles(
   details: VariantDetail[],
   selected: VariantDetail | null
-): {alleles: Record<string, AlleleIdentity>; annotations: Record<string, AlleleAnnotations>} {
+): {
+  alleles: Record<string, AlleleIdentity>
+  annotations: Record<string, AlleleAnnotations>
+  mapped: MappedTriple | null
+} {
   const alleles: Record<string, AlleleIdentity> = {}
   const annotations: Record<string, AlleleAnnotations> = {}
   for (const detail of [...(selected ? [selected] : []), ...details]) {
@@ -256,7 +301,7 @@ export function mergeDetailAlleles(
       annotations[digest] ??= annotation
     }
   }
-  return {alleles, annotations}
+  return {alleles, annotations, mapped: selected?.mapped ?? null}
 }
 
 /**

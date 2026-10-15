@@ -250,6 +250,74 @@ describe('groupAlleles — one change on several transcripts', () => {
   })
 })
 
+describe('groupAlleles — mapped levels with no allele', () => {
+  // A genomic assay whose coding projection is intronic: the c. form has no VRS allele, only a mapped string.
+  const genomicFocus: Record<string, AlleleIdentity> = {
+    g: {level: 'genomic', hgvs: 'NC_x:g.100T>G', clingenAlleleId: 'CA1', isFocus: true},
+    p: {level: 'protein', hgvs: 'NP_x:p.Leu2Phe', clingenAlleleId: 'PA1', isFocus: false, derivation: 'projection'},
+    o: {
+      level: 'genomic',
+      hgvs: 'NC_x:g.200C>T',
+      clingenAlleleId: 'CA2',
+      isFocus: false,
+      derivation: 'candidate'
+    }
+  }
+  const mapped = {
+    genomic: {hgvs: 'NC_x:g.100T>G'},
+    cdna: {hgvs: 'NM_x:c.123+5A>G'},
+    protein: {hgvs: 'NP_x:p.Leu2Phe'}
+  }
+
+  it('adds a string-only member to the measured group and titles it by that cDNA', () => {
+    const [measured, ...others] = run({alleles: genomicFocus, mapped})
+    expect(measured.measured).toBe(true)
+    expect(measured.members.map((m) => [m.level, m.digest])).toEqual([
+      ['genomic', 'g'],
+      ['cdna', null]
+    ])
+    expect(measured.key).toBe('g')
+    expect(titleMember(measured)?.hgvs).toBe('NM_x:c.123+5A>G')
+    // Candidate and apex groups are untouched.
+    expect(others.every((g) => g.members.every((m) => m.digest != null))).toBe(true)
+  })
+
+  it('does not duplicate a level the measured group already has an allele for', () => {
+    const [measured] = run({
+      alleles: {
+        ...genomicFocus,
+        g: {...genomicFocus.g, projectionOf: 'c'},
+        c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', isFocus: false, derivation: 'projection', projectionOf: 'g'}
+      },
+      mapped
+    })
+    expect(measured.members.map((m) => m.digest)).toEqual(['g', 'c'])
+  })
+
+  it('adds a protein string only when no protein allele exists, and never titles by it', () => {
+    const [measured] = run({alleles: {g: genomicFocus.g}, mapped: {genomic: mapped.genomic, protein: mapped.protein}})
+    expect(measured.members.map((m) => [m.level, m.digest])).toEqual([
+      ['genomic', 'g'],
+      ['protein', null]
+    ])
+    expect(titleMember(measured)?.hgvs).toBe('NC_x:g.100T>G')
+  })
+
+  it('leaves string-only members out of annotations and ClinGen links', () => {
+    const [measured] = run({alleles: genomicFocus, annotations: {g: vep('intron_variant')}, mapped})
+    const stringOnly = measured.members.find((m) => m.digest == null)!
+    expect(stringOnly).toMatchObject({annotations: null, clingenAlleleId: null, pageRoot: false, derivation: null})
+    expect(measured.annotationsMatch).toBe(true)
+    expect(measured.coalescedAnnotations).toEqual(vep('intron_variant'))
+    expect(measured.clingenLinks).toEqual(['CA1'])
+  })
+
+  it('is unchanged without a mapped triple', () => {
+    expect(run({alleles: genomicFocus, mapped: null})).toEqual(run({alleles: genomicFocus}))
+    expect(run({alleles: genomicFocus})[0].members.map((m) => m.digest)).toEqual(['g'])
+  })
+})
+
 describe('titleMember', () => {
   it('leads a projection pair with its cDNA member', () => {
     const [pair] = run({
@@ -287,6 +355,12 @@ describe('mergeDetailAlleles', () => {
       derivation: 'projection',
       isFocus: true
     })
+  })
+
+  it('takes the mapped triple from the selected detail alone', () => {
+    const other = {...detail({}), mapped: {cdna: {hgvs: 'NM_x:c.1A>G'}}} as VariantDetail
+    expect(mergeDetailAlleles([other], null).mapped).toBeNull()
+    expect(mergeDetailAlleles([], other).mapped).toEqual({cdna: {hgvs: 'NM_x:c.1A>G'}})
   })
 
   it('takes focus from the selected detail alone', () => {

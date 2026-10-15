@@ -549,7 +549,8 @@ export default defineComponent({
       return groupAlleles({
         alleles: detail.alleles ?? {},
         annotations: detail.annotations ?? {},
-        pageClingenAlleleId: this.clingenAlleleId
+        pageClingenAlleleId: this.clingenAlleleId,
+        mapped: detail.mapped
       })
     },
     // Every allele across all loaded measurements, so the clinical table's rows don't change with the selection.

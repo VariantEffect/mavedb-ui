@@ -244,12 +244,14 @@ export default defineComponent({
         query: this.variantUrn ? {variant: this.variantUrn} : {}
       }
     },
+    // String-only members have no allele, so no records to resolve.
     digestsOf(group: AlleleGroup): string[] {
-      return group.members.map((m) => m.digest)
+      return group.members.flatMap((m) => (m.digest != null ? [m.digest] : []))
     },
-    // The representative level for a group's stat resolution — the title member's level (cDNA-preferred).
+    // The representative level for a group's stat resolution — the title allele's level (cDNA-preferred).
     groupLevel(group: AlleleGroup): SequenceLevel | null {
-      return (this.titleMember(group)?.level ?? null) as SequenceLevel | null
+      const members = group.members.filter((m) => m.digest != null)
+      return (titleMember({members})?.level ?? null) as SequenceLevel | null
     },
     titleMember,
     allHgvsTitle(group: AlleleGroup): string {

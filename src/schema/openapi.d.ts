@@ -6802,6 +6802,7 @@ export interface components {
       referenceHgvs?: string | null;
       /** Assayleveldigest */
       assayLevelDigest?: string | null;
+      mapped?: components["schemas"]["MappedTriple"] | null;
       /** Clingenalleleid */
       clingenAlleleId?: string | null;
       /** Premapped */

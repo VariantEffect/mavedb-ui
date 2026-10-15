@@ -270,7 +270,8 @@ export default defineComponent({
       return groupAlleles({
         alleles: this.detail.alleles,
         annotations: this.detail.annotations ?? {},
-        pageClingenAlleleId: this.detail.clingenAlleleId ?? null
+        pageClingenAlleleId: this.detail.clingenAlleleId ?? null,
+        mapped: this.detail.mapped
       }).filter((group) => group.derivation === 'candidate').length
     },
     // A distinct underlying nucleotide coordinate — an alternate spelling worth keeping the identity line for,

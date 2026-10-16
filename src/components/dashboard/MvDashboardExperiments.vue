@@ -36,7 +36,7 @@
       description="No experiments match your current filters. Try adjusting or clearing your filters."
       title="No matching experiments"
     >
-      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="$emit('update:experimentFilter', ['all']); $emit('update:experimentSearch', '')" />
+      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="($emit('update:experimentFilter', ['all']), $emit('update:experimentSearch', ''))" />
     </MvEmptyState>
 
     <div v-else class="mave-card overflow-hidden">

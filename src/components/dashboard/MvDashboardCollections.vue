@@ -36,7 +36,7 @@
       description="No collections match your current filters. Try adjusting or clearing your filters."
       title="No matching collections"
     >
-      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="$emit('update:collectionFilter', ['all']); $emit('update:collectionSearch', '')" />
+      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="($emit('update:collectionFilter', ['all']), $emit('update:collectionSearch', ''))" />
     </MvEmptyState>
 
     <div v-else class="mave-card overflow-hidden">

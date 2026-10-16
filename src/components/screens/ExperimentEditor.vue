@@ -52,7 +52,7 @@
                 size="small"
                 @click="resetKeywords(item?.keywords)"
               />
-              <PButton icon="pi pi-times" label="Clear all" severity="danger" size="small" @click="unsavedChanges.markDirty(); clearKeywords()" />
+              <PButton icon="pi pi-times" label="Clear all" severity="danger" size="small" @click="(unsavedChanges.markDirty(), clearKeywords())" />
             </div>
           </div>
           <KeywordFields

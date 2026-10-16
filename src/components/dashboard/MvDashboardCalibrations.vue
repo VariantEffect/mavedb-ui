@@ -36,7 +36,7 @@
       description="No calibrations match your current filters. Try adjusting or clearing your filters."
       title="No matching calibrations"
     >
-      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="$emit('update:calibrationFilter', ['all']); $emit('update:calibrationSearch', '')" />
+      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="($emit('update:calibrationFilter', ['all']), $emit('update:calibrationSearch', ''))" />
     </MvEmptyState>
 
     <div v-else class="mave-card overflow-hidden">

@@ -1,10 +1,10 @@
 # Organizing Your Study
 
-Before you upload, decide how your study maps onto MaveDB's records: [experiment sets, experiments, and score sets](../getting-started/key-concepts.md#data-model-overview). This page gives the rules for each.
+Before you upload, decide how your study maps onto MaveDB's records: [experiment sets, experiments, and score sets](../getting-started/key-concepts.md#data-model-overview). Experiment sets are flexible; the experiment and score set guidance matters more, because it shapes how others read your data.
 
-## Experiment sets: one per target
+## Experiment sets: group however makes sense
 
-An experiment set should contain data for a single target. Group the experiments a publication performed on that target into one set. A publication that studied several targets needs one experiment set per target.
+An experiment set is a container for related experiments. Group them in whatever way best organizes your data: for example, one set per publication, or one set per target.
 
 You don't create experiment sets directly. MaveDB creates one when you save its first experiment. To add another experiment to an existing set, use the **Add an experiment** button on the experiment set page.
 
@@ -34,7 +34,7 @@ For imputed or normalized results, upload a rawer form of the scores (e.g., enri
 
 ## Example
 
-The *BRCA1* study [urn:mavedb:00000003](https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/) tested one variant library in two assays, yeast complementation and phage display. It is one experiment set (one target) with two experiments (two assays), and each experiment has two score sets (two scoring methods).
+The *BRCA1* study [urn:mavedb:00000003](https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/) tested one variant library in two assays, yeast complementation and phage display. It is one experiment set with two experiments (two assays), and each experiment has two score sets (two scoring methods).
 
 <figure markdown="span">
   ![Data model diagram](../images/brca1_mavedb_cartoon.svg)

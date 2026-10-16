@@ -15,6 +15,7 @@
   "scripts": {
     "build": "./scripts/build-docs.sh && vite build --mode=${MODE=live}",
     "dev": "./scripts/build-docs.sh && vite --mode=${MODE=dev}",
+    "dev:agent": "vite --config vite.agent.config.js --mode=${MODE=dev}",
     "docs": "mkdocs serve -f docs/mkdocs.yml",
     "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}",
     "test:unit": "vitest run",

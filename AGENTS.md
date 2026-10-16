@@ -8,6 +8,7 @@ The MaveDB web app: Vue 3, TypeScript and Vite, with PrimeVue 4 and Tailwind 4, 
 
 - `npm ci`, on Node 20 (what CI uses).
 - `npm run dev` serves https://127.0.0.1:8081 against a local api on port 8002; `MODE=prodapi npm run dev` uses the live api. Ports 8081 and 8082 are strict because ORCID only redirects to them, and the dev server uses a self-signed certificate because ORCID requires HTTPS.
+- `npm run dev:agent` serves plain HTTP on 127.0.0.1:8090 (or `PORT`) and skips the docs build, for agents and embedded browser panes that reject the self-signed certificate. ORCID sign-in doesn't work there, and `/docs/mavedb/` is only as fresh as your last `npm run dev` or build.
 
 ## Commands
 

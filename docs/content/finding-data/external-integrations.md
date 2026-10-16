@@ -1,8 +1,6 @@
 # External integrations
 
-MaveDB integrates with several external resources to enrich hosted datasets and facilitate data sharing, interpretation, and clinical use.
-
-Many of these integrations rely on [variant mapping](../reference/variant-mapping.md) to link MAVE variants to genomic coordinates and transcripts. Through this mapping process and the adoption of GA4GH data standards, MAVE data from MaveDB is now accessible across a range of widely used genomic platforms.
+MaveDB exchanges data with the external resources below. Most of these integrations depend on [variant mapping](../mapping/forward-mapping.md), which places MAVE variants on the human reference genome and represents them with GA4GH standards.
 
 ## ClinGen
 
@@ -68,7 +66,7 @@ MaveDB is integrated with the [Impact of Genetic Variation on Function (IGVF) Co
 
 ## Sequence resolution services
 
-MaveDB relies on two open-source services to resolve and validate sequences for [accession-based targets](../submitting-data/targets.md#accession-based-targets) and [variant mapping](../reference/variant-mapping.md).
+MaveDB relies on three open-source services to resolve and validate sequences for [accession-based targets](../submitting-data/targets.md#accession-based-targets) and [variant mapping](../mapping/forward-mapping.md).
 
 ### CDOT
 
@@ -76,7 +74,7 @@ MaveDB relies on two open-source services to resolve and validate sequences for 
 
 ### UTA
 
-The [Universal Transcript Archive (UTA)](https://github.com/biocommons/uta) provides a comprehensive database of transcript alignments and annotations. MaveDB uses UTA to resolve transcript-to-genome alignments during [variant mapping](../reference/variant-mapping.md).
+The [Universal Transcript Archive (UTA)](https://github.com/biocommons/uta) provides a comprehensive database of transcript alignments and annotations. MaveDB uses UTA to resolve transcript-to-genome alignments during [variant mapping](../mapping/forward-mapping.md).
 
 ### SeqRepo
 
@@ -84,7 +82,7 @@ The [Universal Transcript Archive (UTA)](https://github.com/biocommons/uta) prov
 
 ## See also
 
-- [Variant mapping](../reference/variant-mapping.md) -- The mapping process that enables these external integrations
+- [Variant mapping](../mapping/forward-mapping.md) -- The mapping process that enables these external integrations
 - [Score calibrations](../reference/score-calibrations.md) -- How functional scores are calibrated using ClinVar pathogenic and benign variant data
 - [Visualizations](visualizations.md) -- How ClinVar and VEP data appear in histograms and other charts
 - [Downloading data](downloading.md) -- Download annotated variant data in VRS and VA-Spec formats

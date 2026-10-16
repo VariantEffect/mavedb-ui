@@ -4,28 +4,30 @@ When first created, records are given a [temporary accession number](../referenc
 
 Temporary records are only visible to the uploader and to any [contributors](metadata-guide.md#contributors) that have been added to the record. If you want to access these datasets via the [API](../programmatic-access/api-quickstart.md), you can create an API key on your [user profile page](../getting-started/accounts.md#api-access-tokens) to enable authentication.
 
-When the record is ready to be made public, click on the padlock icon to **publish** the record.
+When a score set is ready to be made public, click **Publish** on the score set page. Only the score set's owner can publish it.
 
 !!! warning
-    Once a record is published, it cannot be unpublished. If you need to fix errors in a dataset after publication, see [Deprecating score sets](#deprecating-score-sets) below.
+    Once a record is published, it cannot be unpublished. If you need to fix errors in a dataset after publication, see [Superseding a score set](#superseding-a-score-set) below.
 
 Once the data is published, several fields (including the [target](targets.md), [scores, and counts](data-formats.md)) will become un-editable. However, most [free-text metadata](metadata-guide.md#free-text-metadata) can still be revised after the dataset becomes public, and changes to these fields are tracked.
 
 !!! note
     Score sets are the only record type that can be published. The experiment and experiment set records containing a score set are automatically made public when any score set within them is published. You cannot publish an experiment or experiment set without publishing at least one score set within it.
 
-## Data licensing
+Published score sets carry the [license](metadata-guide.md#licenses) selected during upload.
 
-Score sets are published under a [Creative Commons license](metadata-guide.md#licenses) selected during upload. The default is CC0 (public domain). The license can be changed after publication, but previously downloaded copies retain the license they were downloaded under.
+## Superseding a score set
 
-For full details on available licenses and data usage policies, see the [Licenses](metadata-guide.md#licenses) section of the Metadata Guide.
+Published score sets cannot be deleted. To correct an error in a published score set's data, upload a corrected score set that supersedes it:
 
-## Deprecating score sets
+1. In the first step of the [score set form](upload-guide.md#uploading-a-score-set), answer yes to "Does this score set correct errors in and replace a score set previously published on MaveDB that you created?"
+2. Enter the URN of the score set you are replacing and select it from the list.
+3. Complete and publish the new score set as usual.
 
-If you need to fix an error after a dataset becomes public and is no longer editable, MaveDB supports the deprecation of score sets. When [creating a new score set](upload-guide.md#uploading-a-score-set), the user can specify an existing score set to replace.
+The original score set keeps its URN, so existing links and citations still resolve. Its page shows a notice linking to the newer version, and it is hidden from search results in favor of the replacement.
 
 !!! warning
-    The deprecation mechanism is intended solely for correcting errors in published data, not for making routine edits or updates. If you have new analyses or improved scores for the same data, upload them as a separate score set rather than deprecating the original.
+    Superseding is only for correcting errors in published data. If you have new analyses or improved scores for the same data, upload them as a separate score set instead.
 
 ## See also
 

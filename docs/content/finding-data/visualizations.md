@@ -76,7 +76,7 @@ When a baseline score is available from a [score calibration](../reference/score
 
 ## Protein structure viewer
 
-The protein structure viewer provides an interactive 3D view of variant effect scores mapped onto a protein structure using [Mol\*](https://molstar.org/). This visualization is available when the score set's target can be linked to a UniProt accession — either because the target was defined with a UniProt identifier, or because MaveDB was able to match the target sequence to a UniProt entry during [variant mapping](../reference/variant-mapping.md). Open it with **View on protein structure** below the heatmap. If you don't see that link for your score set, the target may not have a matching UniProt record.
+The protein structure viewer provides an interactive 3D view of variant effect scores mapped onto a protein structure using [Mol\*](https://molstar.org/). This visualization is available when the score set's target can be linked to a UniProt accession — either because the target was defined with a UniProt identifier, or because MaveDB was able to match the target sequence to a UniProt entry during [variant mapping](../mapping/forward-mapping.md). Open it with **View on protein structure** below the heatmap. If you don't see that link for your score set, the target may not have a matching UniProt record.
 
 The viewer displays a side-by-side heatmap and 3D structure sourced from the [AlphaFold Protein Structure Database](https://alphafold.ebi.ac.uk/), with a color gradient applied based on the mean variant effect score at each position. Users can:
 

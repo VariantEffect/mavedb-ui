@@ -40,7 +40,7 @@ graph LR
     When you first create records, they are assigned [temporary accession numbers](../reference/accession-numbers.md#temporary-accession-numbers) (beginning with `tmp:`) and are only visible to you and any [contributors](metadata-guide.md#contributors) you add. You can continue editing until you are ready to publish.
 
 !!! warning
-    Once a record is published, certain fields (including the target, scores, and counts) become un-editable. Make sure everything is correct before publishing. If you need to fix errors after publication, you can [deprecate and replace](publishing.md) the score set.
+    Once a record is published, certain fields (including the target, scores, and counts) become un-editable. Make sure everything is correct before publishing. If you need to fix errors after publication, you can [supersede](publishing.md#superseding-a-score-set) the score set with a corrected one.
 
 ## What you will need
 

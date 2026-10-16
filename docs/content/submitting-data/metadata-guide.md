@@ -76,13 +76,13 @@ The owner can add additional users to the record by editing the record and speci
 
     For instance, contributors added to an experiment will not automatically be added as contributors to associated score sets, nor will contributors added to a score set be added to the associated experiment.
 
-Contributors have the same permissions on the dataset as the owner, with the exception that users added to a record as contributors will not be able to delete the record. This permission is reserved for the record owner and MaveDB administrators only.
+Contributors can view, edit, and upload data to a record, but only the owner can publish or delete it. See [Permissions](../reference/permissions.md) for the full rules.
 
 ### Optional structured metadata
 
 Datasets also support the inclusion of optional [JSON](https://www.json.org/)-formatted metadata. This field is intended for machine-readable information that doesn't fit into other metadata fields — for example, experimental parameters like drug concentrations or selection timepoints, mappings between data column names and experimental conditions, or quality control thresholds used during analysis.
 
-If optional metadata is included, the uploader should describe it in the score set methods.
+If optional metadata is included, the uploader should describe it in the record's methods.
 
 ## Experiment-specific metadata
 
@@ -108,7 +108,7 @@ Experiments may be tagged with optional, controlled keywords from the [controlle
 These keywords improve searchability of the records within MaveDB and facilitate the generation of [assay facts](../reference/assay-facts.md) summaries.
 
 !!! note
-    While keywords are optional, we strongly encourage you to include them when uploading an experiment or score set given the contextual benefits they provide.
+    While keywords are optional, we strongly encourage you to include them when uploading an experiment.
 
     In a future release, providing a minimal set of controlled keywords may become a requirement for uploading new records.
 
@@ -133,11 +133,7 @@ Users also have the option of adding a free-text data usage policy to a score se
 
 ### Score set targets
 
-All variants in a MaveDB score set are described relative to a target. This target should describe the sequence that was mutagenized to create the variant library. MaveDB supports two types of targets: [sequence-based targets](targets.md) and [accession-based targets](targets.md).
-
-Each score set in MaveDB must be associated with at least one target. Certain experiments may describe variants relative to two or more distinct sequences, such as protein-protein interaction assays that measure the effects of variants in both interacting proteins. In these cases, multiple targets may be associated with a single score set.
-
-For detailed information about target types, metadata, and multi-target score sets, see the [Targets](targets.md) page.
+Every score set needs at least one target: the sequence or genomic locus its variants are described against. See [Targets](targets.md) for choosing between sequence-based and accession-based targets, their metadata, and multi-target score sets.
 
 ### Calibrations
 
@@ -155,31 +151,7 @@ For detailed formatting requirements — including variant column descriptions, 
 
 ## Metadata checklist
 
-### Required for all experiments and score sets
-
-- [Free text metadata](#free-text-metadata), including a title, short description, abstract, and methods.
-
-### Recommended for all experiments and score sets
-
-- [Digital Object Identifiers (DOIs)](#digital-object-identifiers-dois) for any digital resources associated with the dataset.
-- [Publication details](#publication-details) for the study reference(s) and any related publications.
-
-### Recommended for experiments
-
-- [Raw data accessions](#raw-data-accessions) for any raw sequencing data associated with the experiment.
-- [Keywords](#keywords) to improve searchability and facilitate generation of [assay facts](../reference/assay-facts.md) summaries.
-
-### Additionally required for score sets
-
-- [Targets](#score-set-targets) associated with the score set, including their sequences or accessions and any related metadata.
-- [License](#licenses) and data usage guidelines (if needed) for the score set.
-- [Variant data](#variant-data), including a score CSV file with variant scores. See [Data Formats](data-formats.md) for detailed requirements.
-
-### Additionally recommended for score sets
-
-- [Calibrations](#calibrations) to provide additional context for interpreting the scores.
-- Count CSV file containing the variant counts (if available). See [Data Formats](data-formats.md#count-table-columns).
-- Column metadata JSON files describing score and count table columns. See [Data Formats](data-formats.md#metadata-files).
+The [Before You Start](before-you-start.md#what-you-will-need) checklist lists which of these fields are required and recommended for each record type.
 
 ## See also
 

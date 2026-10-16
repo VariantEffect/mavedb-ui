@@ -42,9 +42,7 @@ If your collection is private, you can allow other MaveDB users to access it by 
 
 ## Official collections
 
-Some collections in MaveDB are designated as **official** collections. These collections are curated by the MaveDB team and contain high-quality, well-annotated data sets that are of particular interest to the community.
-
-You can identify official collections by a special badge on their collection page, and they are often highlighted in MaveDB communications and promotions. These collections are also linked from any data set page that is included in the official collection.
+Some collections in MaveDB are designated as **official** collections. These collections are curated by the MaveDB team. Official collections show a badge on their collection page, and every score set in an official collection links to it from its own page.
 
 ## See also
 

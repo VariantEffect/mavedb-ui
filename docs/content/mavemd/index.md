@@ -17,7 +17,7 @@ MaveMD eliminates these barriers by centralizing curated data with clinical-grad
 
 ## What's in MaveMD?
 
-MaveMD currently contains **82 curated MAVE datasets** spanning **39 disease-associated genes**, including 12 genes on the ACMG secondary findings list. These datasets encompass:
+As of February 2026, MaveMD contains **82 curated MAVE datasets** spanning **39 disease-associated genes**, including 12 genes on the ACMG secondary findings list. These datasets encompass:
 
 - **476,076 variant effect measurements** (268,862 unique variants)
 - **251,573** measurements with OddsPath evidence strength assignments
@@ -100,5 +100,5 @@ If you use MaveMD in your research or clinical practice, please cite both MaveMD
 
 - [Score Calibrations](../reference/score-calibrations.md) -- How functional scores are calibrated to clinical evidence strength
 - [Assay Facts](../reference/assay-facts.md) -- Structured summaries of experimental assay properties
-- [Variant Mapping](../reference/variant-mapping.md) -- How MaveDB maps variants to genomic coordinates
+- [Variant Mapping](../mapping/forward-mapping.md) -- How MaveDB maps variants to genomic coordinates
 - [External Integrations](../finding-data/external-integrations.md) -- Connections to ClinVar, gnomAD, ClinGen, and other resources

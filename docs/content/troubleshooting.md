@@ -14,7 +14,7 @@ Every variant must use a prefix that matches its column and is consistent across
     All variants in a single column must use the same prefix. You cannot mix `c.` and `n.` variants in the same `hgvs_nt` column, for example. Pick one prefix and use it for all rows.
 
 ??? failure "is not a transcript variant. The accepted transcript variant prefixes are 'c.', 'n.'"
-    The `hgvs_nt` column only accepts coding (`c.`) or non-coding (`n.`) transcript prefixes. If you have genomic variants (`g.`), they belong in the `hgvs_nt` column only when splice variants are also defined.
+    Without an `hgvs_splice` column, the `hgvs_nt` column accepts only coding (`c.`) or non-coding (`n.`) transcript prefixes. Genomic (`g.`) variants are accepted in `hgvs_nt` only when the dataset also has an `hgvs_splice` column.
 
 ??? failure "is not a protein variant. The accepted protein variant prefix is 'p.'"
     The `hgvs_pro` column only accepts the `p.` prefix. If you see this error, check whether you accidentally placed nucleotide-level variants in the protein column.
@@ -59,7 +59,6 @@ Every variant must use a prefix that matches its column and is consistent across
 ??? failure "invalid variant string at row N"
     The variant at the specified row is not valid MAVE-HGVS. Common causes:
 
-    - Missing or extra parentheses in protein variants (e.g., `p.Met1Val` should be `p.Met1Val` or `p.(Met1Val)` depending on whether the effect was experimentally determined or predicted).
     - Using three-letter amino acid codes inconsistently with one-letter codes in the same file.
     - Malformed insertion, deletion, or substitution syntax.
 

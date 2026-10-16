@@ -1,6 +1,8 @@
 # Derived files
 /dist/
 /src/schema/openapi.d.ts
+# Sphinx output from the mavehgvs and MaveTools projects, committed as built
+/public/docs/
 
 # MkDocs documentation (Prettier breaks admonitions and collapsible syntax)
 /docs/

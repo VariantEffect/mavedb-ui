@@ -7,7 +7,8 @@
       <div class="wizard-help">
         <label>How will you define this target?</label>
         <p class="wizard-help-detail">
-          Choose "Sequence" to upload a FASTA reference sequence, or "Coordinates" to reference a genomic accession.
+          Choose "Sequence" if the variant library was built by mutagenizing a construct, even one that matches a
+          reference exactly. Choose "Coordinates" if variants were edited into the genome at their native locus.
         </p>
       </div>
       <div class="wizard-field">

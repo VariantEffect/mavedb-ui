@@ -4,7 +4,12 @@
       Created {{ formatDate(creationDate) }}
       <template v-if="createdBy">
         by
-        <MvOrcidLink :first-name="createdBy.firstName" :last-name="createdBy.lastName" :orcid-id="createdBy.orcidId" size="sm" />
+        <MvOrcidLink
+          :first-name="createdBy.firstName"
+          :last-name="createdBy.lastName"
+          :orcid-id="createdBy.orcidId"
+          size="sm"
+        />
       </template>
     </span>
     <span v-if="creationDate && modificationDate" class="mx-1 hidden text-border tablet:inline">&middot;</span>
@@ -20,7 +25,9 @@
         />
       </template>
     </span>
-    <span v-if="publishedDate && (creationDate || modificationDate)" class="mx-1 hidden text-border tablet:inline">&middot;</span>
+    <span v-if="publishedDate && (creationDate || modificationDate)" class="mx-1 hidden text-border tablet:inline"
+      >&middot;</span
+    >
     <span v-if="publishedDate" class="block tablet:inline"> Published {{ formatDate(publishedDate) }} </span>
     <button
       v-if="jumpToId"

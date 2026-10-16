@@ -2,7 +2,13 @@
   <div class="flex flex-col h-full">
     <div class="flex items-center flex-wrap">
       <span class="ml-2">Color by:</span>
-      <SelectButton v-model="colorBy" class="ml-2 mb-2" option-label="name" option-value="value" :options="colorByOptions" />
+      <SelectButton
+        v-model="colorBy"
+        class="ml-2 mb-2"
+        option-label="name"
+        option-value="value"
+        :options="colorByOptions"
+      />
       <span v-if="showStructureSelector">
         <span class="ml-4">Segment:</span>
         <PSelect
@@ -36,7 +42,10 @@
     <div id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <ul class="list-disc text-xs italic text-gray-400 ml-5 px-2 py-1">
       <li>Jumper, J et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> (2021)</li>
-      <li>Fleming J. et al. AlphaFold Protein Structure Database and 3D-Beacons: New Data and Capabilities. <em>Journal of Molecular Biology</em> (2025)</li>
+      <li>
+        Fleming J. et al. AlphaFold Protein Structure Database and 3D-Beacons: New Data and Capabilities.
+        <em>Journal of Molecular Biology</em> (2025)
+      </li>
     </ul>
   </div>
 </template>
@@ -123,7 +132,7 @@ export default {
     viewerInstance: null,
     allStructureModels: [],
     selectedModelId: null,
-    userPickedModel: false,
+    userPickedModel: false
   }),
 
   computed: {
@@ -175,10 +184,7 @@ export default {
       if (!range) {
         return this.allStructureModels
       }
-      return _.filter(
-        this.allStructureModels,
-        (model) => this.modelScoresetOverlap(model, range) > 0
-      )
+      return _.filter(this.allStructureModels, (model) => this.modelScoresetOverlap(model, range) > 0)
     },
     // Show the structure selector whenever we're displaying a fragment of the protein — even a single
     // one, so the displayed region is clear. A single full-length model (AlphaFold) needs no selector.
@@ -214,7 +220,11 @@ export default {
         {label: 'ChimeraX command file (.cxc)', faIcons: ['fa-solid fa-palette'], command: () => this.downloadCxc()},
         {separator: true},
         {label: 'Model + Coloring', class: 'protein-download-menu-header', disabled: true},
-        {label: 'MolViewSpec JSON (.mvsj)', faIcons: ['fa-solid fa-cube', 'fa-solid fa-palette'], command: () => this.downloadMvsj()}
+        {
+          label: 'MolViewSpec JSON (.mvsj)',
+          faIcons: ['fa-solid fa-cube', 'fa-solid fa-palette'],
+          command: () => this.downloadMvsj()
+        }
       ]
     },
     currentColorByLabel: function () {
@@ -230,10 +240,13 @@ export default {
         return 'structure'
       }
       if (model.provider === 'AlphaFold DB') {
-        return model.url.split('/').pop().replace(/\.[^.]+$/, '')
+        return model.url
+          .split('/')
+          .pop()
+          .replace(/\.[^.]+$/, '')
       }
       return `${this.uniprotId}_${model.start}-${model.end}`
-    },
+    }
   },
 
   watch: {
@@ -291,7 +304,7 @@ export default {
   },
 
   methods: {
-    modelScoresetOverlap: function(model, range) {
+    modelScoresetOverlap: function (model, range) {
       return Math.max(0, Math.min(model.end, range.high) - Math.max(model.start, range.low))
     },
     clickedResidue: function (e) {
@@ -352,7 +365,11 @@ export default {
               end: canonical.uniprotEnd,
               fullLength: true,
               label: `AlphaFold · ${canonical.uniprotStart}–${canonical.uniprotEnd}`,
-              downloads: this.structureDownloads({pdb: canonical.pdbUrl, cif: canonical.cifUrl, bcif: canonical.bcifUrl})
+              downloads: this.structureDownloads({
+                pdb: canonical.pdbUrl,
+                cif: canonical.cifUrl,
+                bcif: canonical.bcifUrl
+              })
             }
           ]
         }

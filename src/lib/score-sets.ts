@@ -119,30 +119,3 @@ export function matchSources(
   }
   return matchedSources.length > 0 ? matchedSources : null
 }
-
-/** * Determine whether a score set has any score calibrations with evidence strengths.
- *
- * @param scoreSet A score set.
- * @param excludeResearchUseOnly If true, score calibrations marked as research-use-only are ignored.
- * @returns True if the score set has at least one score calibration with odds paths (and not marked as research-use-only, if specified).
- */
-export function scoreSetHasCalibrationWithEvidenceStrengths(
-  scoreSet: ScoreSet,
-  excludeResearchUseOnly: boolean
-): boolean {
-  if (!scoreSet.scoreCalibrations) {
-    return false
-  }
-
-  for (const calibration of scoreSet.scoreCalibrations) {
-    if (excludeResearchUseOnly && calibration.researchUseOnly) {
-      continue
-    }
-    if (
-      calibration.functionalRanges &&
-      calibration.functionalRanges.some((range) => range.acmgClassification != null)
-    ) {
-      return true
-    }
-  }
-}

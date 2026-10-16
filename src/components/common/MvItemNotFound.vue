@@ -13,7 +13,11 @@
         does not exist, or you do not have permission to view it.
         <template v-if="!userIsAuthenticated">
           If it's a private record,
-          <button class="cursor-pointer border-none bg-transparent p-0 font-semibold text-sage-strong underline" type="button" @click="signIn">
+          <button
+            class="cursor-pointer border-none bg-transparent p-0 font-semibold text-sage-strong underline"
+            type="button"
+            @click="signIn"
+          >
             sign in
           </button>
           to view it.

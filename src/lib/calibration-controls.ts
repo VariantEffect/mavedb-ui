@@ -110,8 +110,7 @@ export function parseControlsCsv(csvText: string): ControlsCsvPreview {
     errors.push(`Missing required column: ${CALIBRATION_CONTROL_STATUS_COLUMN}.`)
   }
 
-  const variantColumn =
-    CALIBRATION_CONTROL_VARIANT_COLUMNS.find((c) => lowerToActual.has(c)) ?? null
+  const variantColumn = CALIBRATION_CONTROL_VARIANT_COLUMNS.find((c) => lowerToActual.has(c)) ?? null
   if (!variantColumn) {
     errors.push(`Missing a variant column — provide one of: ${CALIBRATION_CONTROL_VARIANT_COLUMNS.join(', ')}.`)
   }

@@ -25,7 +25,7 @@ function referenceMismatch() {
 
 /** The HGVS strings axios was asked to resolve, in order. */
 function queriedHgvs() {
-  return mockedAxiosGet.mock.calls.map((call) => call[1]?.params?.hgvs)
+  return mockedAxiosGet.mock.calls.map((call) => (call[1]?.params as {hgvs?: string} | undefined)?.hgvs)
 }
 
 describe('getAlleleByGnomad', () => {

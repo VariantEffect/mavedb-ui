@@ -61,7 +61,9 @@ export default defineComponent({
 
   methods: {
     optionTitle(calibration: Partial<Omit<ScoreCalibration, 'urn'>>): string {
-      return this.markClassBased && isClassBasedCalibration(calibration) ? `${calibration.title}*` : (calibration.title ?? '')
+      return this.markClassBased && isClassBasedCalibration(calibration)
+        ? `${calibration.title}*`
+        : (calibration.title ?? '')
     }
   }
 })

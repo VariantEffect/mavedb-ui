@@ -410,6 +410,7 @@ import MvFloatField from '@/components/forms/MvFloatField.vue'
 import MvRequiredMarker from '@/components/forms/MvRequiredMarker.vue'
 import MvTagField from '@/components/forms/MvTagField.vue'
 import MvUploadField from '@/components/forms/MvUploadField.vue'
+import type {PublicationIdentifier as PublicationSuggestion} from '@/composables/use-publication-identifiers'
 import {calibrationDescriptions} from '@/data/field-descriptions'
 import {clearAutoCompleteInput, pubOptionLabel} from '@/lib/form-helpers'
 import type {DraftDisease} from '@/lib/diseases'
@@ -461,7 +462,7 @@ export default defineComponent({
     methodSources: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
     thresholdSources: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
     evidenceSources: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
-    publicationSuggestions: {type: Array as PropType<PublicationIdentifier[]>, default: () => []},
+    publicationSuggestions: {type: Array as PropType<PublicationSuggestion[]>, default: () => []},
     publicationSearchLoading: {type: Boolean, default: false},
     editableScoreSets: {type: Array as PropType<MinimalScoreSet[]>, default: () => []},
     selectedScoreSet: {type: Object as PropType<MinimalScoreSet | null>, default: null},

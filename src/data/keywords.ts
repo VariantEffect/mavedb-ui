@@ -111,4 +111,3 @@ export function initKeywordState() {
     keywordTextVisible: _.fromPairs(KEYWORDS.map((kw) => [kw.key, false])) as Record<string, boolean>
   }
 }
-

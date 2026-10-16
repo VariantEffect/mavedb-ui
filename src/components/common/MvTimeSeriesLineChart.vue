@@ -115,7 +115,7 @@ export default defineComponent({
     },
 
     datasetTooltipHtml(d: BarLineChartDatum | null) {
-      let parts = []
+      const parts = []
 
       if (d) {
         if (this.$props.level === 'year') {

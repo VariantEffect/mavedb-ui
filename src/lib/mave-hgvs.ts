@@ -31,7 +31,7 @@ export interface SimpleProteinVariation {
   target: null | string
 }
 
-export interface SimpleDnaVariation extends SimpleProteinVariation {
+export interface SimpleDnaVariation extends Omit<SimpleProteinVariation, 'position'> {
   /**
    * The numeric position from a MaveHGVS-nt string where the position is a simple numeral.
    *

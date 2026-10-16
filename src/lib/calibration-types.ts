@@ -125,11 +125,7 @@ export function createClassificationHelper(
     lastClassificationState: fr.acmgClassification != null ? (fr.acmgClassification as DraftAcmgClassification) : null,
     lastLowerInclusiveState: classBased ? null : (fr.inclusiveLowerBound ?? null),
     lastUpperInclusiveState: classBased ? null : (fr.inclusiveUpperBound ?? null),
-    lastRangeState: classBased
-      ? null
-      : fr.range != null
-        ? [fr.range[0] ?? null, fr.range[1] ?? null]
-        : null,
+    lastRangeState: classBased ? null : fr.range != null ? [fr.range[0] ?? null, fr.range[1] ?? null] : null,
     lastClassState: classBased ? (fr.class ?? null) : null
   }
 }

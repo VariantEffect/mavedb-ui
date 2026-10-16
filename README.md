@@ -38,6 +38,16 @@ npm install
 
 to install all project dependencies.
 
+### Checks and tests
+
+`bin/check` runs the type check, ESLint and the Prettier check; CI runs it on every push. `bin/t` runs the unit tests. Once per clone, so `git blame` skips formatting-only commits:
+
+```
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+Conventions for contributors and coding agents are in [AGENTS.md](AGENTS.md).
+
 ### Running locally in development
 
 In development, this Vue.js application is served by Vite, which supports hot reload of updated components.

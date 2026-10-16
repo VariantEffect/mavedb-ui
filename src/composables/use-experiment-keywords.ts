@@ -40,7 +40,9 @@ export interface UseExperimentKeywordsReturn {
   /** Update a keyword selection, clearing its description when set to null. */
   updateKeywordKey: (field: string, val: string | null) => void
   /** Populate keyword state from an API response's keywords array. */
-  resetKeywords: (keywords?: Array<{keyword: {key: string; label?: string | null}; description?: string | null}>) => void
+  resetKeywords: (
+    keywords?: Array<{keyword: {key: string; label?: string | null}; description?: string | null}>
+  ) => void
   /** Reset all keyword state to null/false defaults. */
   clearKeywords: () => void
   /** Build the keywords payload object for API submission. */
@@ -85,7 +87,9 @@ export function useExperimentKeywords(): UseExperimentKeywordsReturn {
    * an experiment from the API). Falls back to clearing all keywords when the
    * array is empty or missing.
    */
-  function resetKeywords(keywords?: Array<{keyword: {key: string; label?: string | null}; description?: string | null}>) {
+  function resetKeywords(
+    keywords?: Array<{keyword: {key: string; label?: string | null}; description?: string | null}>
+  ) {
     if (keywords && keywords.length !== 0) {
       const setKeyword = (key: string) => {
         const keywordObj = keywords.find((kw) => kw.keyword.key === key)

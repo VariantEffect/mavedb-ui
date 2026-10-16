@@ -11,20 +11,19 @@ const store = createStore({
   state: {
     routeProps: {
       galaxyUrl: localStorage.getItem('galaxyUrl'),
-      toolId: localStorage.getItem('toolId'), 
-      requestFromGalaxy: localStorage.getItem('requestFromGalaxy'), 
-    },
+      toolId: localStorage.getItem('toolId'),
+      requestFromGalaxy: localStorage.getItem('requestFromGalaxy')
+    }
   },
   mutations: {
     setRouteProps(state: any, props: any) {
-      state.routeProps = props;
-      localStorage.setItem('galaxyUrl', props.galaxyUrl);
-      localStorage.setItem('toolId', props.toolId);
-      localStorage.setItem('requestFromGalaxy', props.requestFromGalaxy);
-    },
+      state.routeProps = props
+      localStorage.setItem('galaxyUrl', props.galaxyUrl)
+      localStorage.setItem('toolId', props.toolId)
+      localStorage.setItem('requestFromGalaxy', props.requestFromGalaxy)
+    }
   },
-  actions: {
-  },
+  actions: {},
   modules: {
     auth: authModule,
     toast: toastModule

@@ -6,20 +6,23 @@
     :style="{width: '30rem'}"
     :visible="visible"
     @show="load()"
-    @update:visible="$emit('update:visible', $event)">
+    @update:visible="$emit('update:visible', $event)"
+  >
     <MvLoader v-if="loading" />
     <MvErrorState
       v-else-if="error"
       description="The list of available columns could not be loaded."
       title="Could not load download options"
-      @retry="load()" />
+      @retry="load()"
+    />
     <div v-else class="flex flex-col gap-4 py-2">
       <div class="flex items-center justify-between border-b border-border-light pb-2">
         <span class="text-sm text-text-muted">{{ selectionSummary }}</span>
         <button
           class="cursor-pointer border-none bg-transparent text-xs-plus font-semibold text-sage-strong hover:underline"
           type="button"
-          @click="toggleAll()">
+          @click="toggleAll()"
+        >
           {{ allSelected ? 'Select none' : 'Select all' }}
         </button>
       </div>
@@ -36,7 +39,8 @@
             v-for="entry in subsection.namespaces"
             :key="entry.namespace"
             class="flex cursor-pointer items-center gap-2 text-sm"
-            :class="{'pl-3': subsection.label}">
+            :class="{'pl-3': subsection.label}"
+          >
             <Checkbox v-model="selected" :value="entry.namespace" />
             {{ entry.label }}
             <span v-if="entry.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
@@ -49,7 +53,8 @@
         <label
           v-for="option in formattingExtraOptions"
           :key="option.value"
-          class="flex cursor-pointer items-center gap-2 text-sm">
+          class="flex cursor-pointer items-center gap-2 text-sm"
+        >
           <Checkbox v-model="selectedExtras" :value="option.value" />
           {{ option.label }}
         </label>
@@ -63,7 +68,8 @@
         icon="pi pi-download"
         label="Download"
         size="small"
-        @click="confirm" />
+        @click="confirm"
+      />
     </template>
   </PDialog>
 </template>

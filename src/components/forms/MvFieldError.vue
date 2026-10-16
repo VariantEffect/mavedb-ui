@@ -1,5 +1,10 @@
 <template>
-  <span v-if="error" :id="id || undefined" :class="['mv-field-error-msg', {warn: severity === 'warn'}]" :role="severity === 'error' ? 'alert' : undefined">
+  <span
+    v-if="error"
+    :id="id || undefined"
+    :class="['mv-field-error-msg', {warn: severity === 'warn'}]"
+    :role="severity === 'error' ? 'alert' : undefined"
+  >
     <i :class="severity === 'warn' ? 'pi pi-exclamation-triangle' : 'pi pi-exclamation-circle'" />
     {{ error }}
   </span>

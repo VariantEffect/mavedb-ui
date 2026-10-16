@@ -8,6 +8,25 @@ on:
   pull_request:
 
 jobs:
+  check:
+    name: Checks (bin/check) and app build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: bin/check
+
+      # vue-tsc doesn't compile templates the way the Vue plugin does, so some template errors only fail the build.
+      # The docs build (scripts/build-docs.sh) is skipped; it needs MkDocs.
+      - run: node_modules/.bin/vite build --mode=live
+
   test:
     runs-on: ubuntu-latest
     steps:

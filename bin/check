@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Fast static checks: types, lint and format. Tests run through bin/t.
+# Runs every check before exiting so one invocation reports all failures.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+status=0
+node_modules/.bin/vue-tsc --noEmit || status=1
+node_modules/.bin/eslint src || status=1
+node_modules/.bin/prettier --check . || status=1
+exit $status

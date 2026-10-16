@@ -1,0 +1,5 @@
+# Formatting-only commits, skipped by `git blame` once you run:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format the tree with Prettier 3.6.2
+9adb05d5cd029c914d8329a704d4159126bac9ca

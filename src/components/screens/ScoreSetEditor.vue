@@ -26,7 +26,12 @@
       </MvPageHeader>
     </template>
 
-    <div v-if="itemId && itemStatus === 'Loaded' && item" class="mx-auto max-w-[1000px] py-7" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
+    <div
+      v-if="itemId && itemStatus === 'Loaded' && item"
+      class="mx-auto max-w-[1000px] py-7"
+      @change="unsavedChanges.markDirty"
+      @input="unsavedChanges.markDirty"
+    >
       <div class="space-y-5">
         <!-- Parent experiment and context -->
         <div class="editor-card">

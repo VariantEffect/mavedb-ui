@@ -24,18 +24,18 @@ export type PublicationIdentifier = components['schemas']['SavedPublicationIdent
  * @returns A concise citation string prioritizing first author last name and year, or the title if necessary.
  */
 export function shortCitationForPublication(publication: PublicationIdentifier): string {
-    const firstAuthorName = publicationFirstAuthor(publication)?.name
-    const firstAuthorLastName = !firstAuthorName || _.isEmpty(firstAuthorName) ? undefined : firstAuthorName.split(',')[0]
-    const numAuthors = publication.authors.length
-    const authors = firstAuthorLastName
-        ? numAuthors > 1
-            ? `${firstAuthorLastName} et al.`
-            : firstAuthorLastName
-        : undefined
-    // TODO VariantEffect/mavedb-api#450
-    const year = publication.publicationYear
-    const parts = [authors, `(${year?.toString()})`].filter((x) => x != null)
-    return parts.length > 0 ? parts.join(' ') : (publication.title)
+  const firstAuthorName = publicationFirstAuthor(publication)?.name
+  const firstAuthorLastName = !firstAuthorName || _.isEmpty(firstAuthorName) ? undefined : firstAuthorName.split(',')[0]
+  const numAuthors = publication.authors.length
+  const authors = firstAuthorLastName
+    ? numAuthors > 1
+      ? `${firstAuthorLastName} et al.`
+      : firstAuthorLastName
+    : undefined
+  // TODO VariantEffect/mavedb-api#450
+  const year = publication.publicationYear
+  const parts = [authors, `(${year?.toString()})`].filter((x) => x != null)
+  return parts.length > 0 ? parts.join(' ') : publication.title
 }
 
 /**
@@ -45,7 +45,7 @@ export function shortCitationForPublication(publication: PublicationIdentifier):
  * @returns The author object marked as primary, or `undefined` if none is found.
  */
 export function publicationFirstAuthor(publication: PublicationIdentifier): PublicationAuthor | undefined {
-    return publication.authors.find((author) => author.primary)
+  return publication.authors.find((author) => author.primary)
 }
 
 /**
@@ -59,14 +59,14 @@ export function publicationFirstAuthor(publication: PublicationIdentifier): Publ
  * @returns An external publication URL, or null if the publication carries no resolvable link.
  */
 export function getPublicationUrl(publication: PublicationIdentifier): string | null {
-    if (publication.url) {
-        return publication.url
-    }
-    if (publication.doi) {
-        return `https://doi.org/${normalizeDoi(publication.doi)}`
-    }
-    if (publication.dbName === 'PubMed' && /^[0-9]+$/.test(publication.identifier)) {
-        return `https://pubmed.ncbi.nlm.nih.gov/${publication.identifier}/`
-    }
-    return null
+  if (publication.url) {
+    return publication.url
+  }
+  if (publication.doi) {
+    return `https://doi.org/${normalizeDoi(publication.doi)}`
+  }
+  if (publication.dbName === 'PubMed' && /^[0-9]+$/.test(publication.identifier)) {
+    return `https://pubmed.ncbi.nlm.nih.gov/${publication.identifier}/`
+  }
+  return null
 }

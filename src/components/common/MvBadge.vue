@@ -1,5 +1,8 @@
 <template>
-  <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-0.5 text-xs font-bold" :class="config.classes">
+  <span
+    class="inline-flex items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-0.5 text-xs font-bold"
+    :class="config.classes"
+  >
     <span class="inline-block size-1.5 rounded-full" :class="config.dotClass" />
     {{ config.label }}
   </span>

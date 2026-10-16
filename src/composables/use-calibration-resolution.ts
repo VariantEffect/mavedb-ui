@@ -6,7 +6,8 @@ import {functionalClassificationContainsVariant, isClassBasedCalibration} from '
 import type {components} from '@/schema/openapi'
 
 type ScoreCalibration = components['schemas']['ScoreCalibration']
-type FunctionalClassification = components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+type FunctionalClassification =
+  components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 
 export interface UseCalibrationResolutionReturn {
@@ -70,9 +71,7 @@ export function useCalibrationResolution(
         const found = fcVariants.variants?.some((v) => v.urn === urn)
         if (found) {
           // Match back to the functional classification on the calibration object
-          return (
-            cal.functionalClassifications.find((fc) => fc.id === fcVariants.functionalClassificationId) || null
-          )
+          return cal.functionalClassifications.find((fc) => fc.id === fcVariants.functionalClassificationId) || null
         }
       }
       return null

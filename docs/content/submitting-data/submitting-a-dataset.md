@@ -36,7 +36,7 @@ Saving the experiment also creates its experiment set.
 2. **Score set details.** Enter the free text metadata, license, publications, and contributors. Publications from the experiment are filled in for you; remove any that don't apply. Describe read filtering, the scoring model, and any extra data columns in the methods.
 3. **Targets.** Say whether the variant library was built from a mutagenized construct (see [Choosing a target type](targets.md#choosing-a-target-type)), whether this is base editor data, and whether the score set has more than one target.
 4. **Target details** (one step per target). Enter the target's sequence or accession and its metadata. See [Targets](targets.md).
-5. **Score calibration.** Optionally add a [score calibration](../reference/score-calibrations.md). You can also add one later from the score set page.
+5. **Score calibration.** Optionally add a [score calibration](../reference/score-calibrations.md). You can also add one later from the score set page. [Calibration controls](../reference/score-calibrations.md#calibration-controls) can only be added afterward, by editing the calibration once the scores are processed.
 6. **Variant scores.** Upload the score CSV file, and optionally the count CSV file and column metadata files. MaveDB validates every variant against the target; see [Troubleshooting](../troubleshooting.md) if validation fails.
 
 ## After saving

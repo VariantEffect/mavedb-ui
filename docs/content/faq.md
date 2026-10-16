@@ -69,7 +69,7 @@
     No. Published datasets cannot be deleted because other users or systems may have referenced them. If the data contains errors, [supersede](submitting-data/publishing.md#superseding-a-score-set) the score set with a corrected replacement.
 
 ??? question "What is variant mapping and when does it happen?"
-    [Variant mapping](mapping/forward-mapping.md) is an automatic process that translates each variant from coordinates on the score set's target to the human reference genome (GRCh38), and represents it with [GA4GH VRS](reference/data-standards.md#vrs-variant-representation). It runs in the background after a score set with a human target is uploaded, for both sequence-based and [accession-based targets](submitting-data/targets.md#accession-based-targets). Mapped variants can be looked up by genomic position and are used by [external integrations](finding-data/external-integrations.md) such as ClinGen and gnomAD.
+    [Variant mapping](mapping/forward-mapping.md) is an automatic process that translates each variant from coordinates on the score set's target to the human reference genome (GRCh38), and represents it with [GA4GH VRS](reference/data-standards.md#vrs-variant-representation). It runs in the background after a score set with a human target is uploaded, for both sequence-based and [accession-based targets](submitting-data/targets.md#accession-based-targets). Reference variants can be looked up by genomic position and are used by [external integrations](finding-data/external-integrations.md) such as ClinGen and gnomAD.
 
 ## General
 

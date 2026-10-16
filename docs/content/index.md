@@ -18,7 +18,7 @@ As of February 2026, MaveDB hosts over **2,700 datasets** covering more than **7
 
     ---
 
-    Search for MAVE datasets by gene, target, organism, or publication. Download scores, counts, and [mapped variants](mapping/forward-mapping.md) in multiple formats.
+    Search for MAVE datasets by gene, target, organism, or publication. Download scores, counts, and [reference variants](mapping/forward-mapping.md#submitted-and-reference-variants) in multiple formats.
 
     [:octicons-arrow-right-24: Finding data](finding-data/searching.md)
 

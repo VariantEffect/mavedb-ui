@@ -29,6 +29,18 @@ The measurement table groups measurements by what they assayed relative to your 
 
 When you select a measurement from one of the other groups, a notice at the top of the functional evidence section states what was measured instead and what that can miss. For example, a protein-level measurement may not capture nucleotide-level effects such as splicing.
 
+## How measurements are ordered
+
+Within each group, measurements are listed in this order:
+
+1. Current score sets before [superseded](../submitting-data/publishing.md#superseding-a-score-set) ones, when superseded score sets are shown.
+2. Measurements with a clinical call before those without one.
+3. Stronger evidence first, by ACMG points, then OddsPath. At equal strength, pathogenic evidence comes before benign.
+4. Score sets whose experiment provides more [assay facts](#assay-facts) first.
+5. The most recently published score set first.
+
+Research-use-only (RUO) calls are left out of the ranking. A measurement whose only call comes from an RUO calibration is ranked as if it had no call, so it sits below measurements with a clinical call and switching **RUO evidence** on or off never changes the order. The call itself still appears on the row, tagged **RUO**.
+
 ## View options
 
 The **View options** button in the page header holds two settings that change which measurements are shown: **MaveDB as of**, which shows the molecular and annotation layer as MaveDB held it on a past date (scores never change), and a **Superseded score sets** switch. The button shows a count when either is set. The **Key** button beside it opens a glossary of the terms on this page.
@@ -97,7 +109,7 @@ Below the histogram, the variant page displays evidence calibration information 
 
 The calibration table shows score ranges alongside their functional classifications (normal, abnormal, intermediate), ACMG/AMP evidence codes (e.g., PS3 Strong, BS3 Moderate), and OddsPath values when available. If the selected variant falls within a calibrated score range, the corresponding evidence strength is highlighted.
 
-In the functional evidence section, the functional impact, ACMG code, and OddsPath ratio are read from the calibration chosen above them, set apart from the score itself; when a score set has more than one calibration, you can switch between them there as well as above the histogram, and the two stay in sync. **View score set** opens the score set page with this measurement and calibration already selected. Calibrations marked **Research use only** are not intended for clinical or diagnostic use and are tagged as such wherever their calls appear. Research-use-only calls never affect the measurement table's order.
+In the functional evidence section, the functional impact, ACMG code, and OddsPath ratio are read from the calibration chosen above them, set apart from the score itself; when a score set has more than one calibration, you can switch between them there as well as above the histogram, and the two stay in sync. **View score set** opens the score set page with this measurement and calibration already selected. Calibrations marked **Research use only** are not intended for clinical or diagnostic use and are tagged as such wherever their calls appear. Research-use-only calls [never affect the measurement table's order](#how-measurements-are-ordered).
 
 For details on calibration methods, how calibrations are uploaded, and how primary calibrations are selected, see [Score Calibrations](../reference/score-calibrations.md).
 

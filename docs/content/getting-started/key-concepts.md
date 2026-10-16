@@ -24,10 +24,10 @@ graph TD
     SS1 -.->|"combines"| MA
     SS3 -.->|"combines"| MA
 
-    classDef expset fill:#3d7ebd,color:#fff,stroke:#2d5f8e,stroke-width:1.5px
-    classDef exp fill:#78B793,color:#fff,stroke:#5a9375,stroke-width:1.5px
-    classDef ss fill:#F8971D,color:#fff,stroke:#c97814,stroke-width:1.5px
-    classDef meta fill:#8e7cc3,color:#fff,stroke:#6e5fa3,stroke-width:1.5px
+    classDef expset fill:#4a80c4,color:#fff,stroke:#4a80c4,stroke-width:1.5px
+    classDef exp fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    classDef ss fill:#f8971d,color:#fff,stroke:#d97510,stroke-width:1.5px
+    classDef meta fill:#7e5daf,color:#fff,stroke:#7e5daf,stroke-width:1.5px
 
     class ES expset
     class E1,E2 exp

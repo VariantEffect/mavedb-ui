@@ -68,9 +68,9 @@ graph LR
     FISR -->|"evidence for"| FIS
     FIS -->|"evidence for"| VPS
 
-    classDef base fill:#78B793,color:#fff,stroke:#5a9375,stroke-width:1.5px
-    classDef mid fill:#3d7ebd,color:#fff,stroke:#2d5f8e,stroke-width:1.5px
-    classDef top fill:#8e7cc3,color:#fff,stroke:#6e5fa3,stroke-width:1.5px
+    classDef base fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    classDef mid fill:#4a80c4,color:#fff,stroke:#4a80c4,stroke-width:1.5px
+    classDef top fill:#7e5daf,color:#fff,stroke:#7e5daf,stroke-width:1.5px
 
     class FISR base
     class FIS mid

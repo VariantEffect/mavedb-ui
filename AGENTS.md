@@ -11,14 +11,15 @@ The MaveDB web app: Vue 3, TypeScript and Vite, with PrimeVue 4 and Tailwind 4, 
 
 ## Commands
 
-| Task                                               | Command                                             |
-| -------------------------------------------------- | --------------------------------------------------- |
-| Types, lint, format check                          | `bin/check`                                         |
-| Unit tests                                         | `bin/t` or `bin/t src/lib/calibrations.test.ts`     |
-| Format                                             | `node_modules/.bin/prettier --write .`              |
-| Shrink the lint baseline after fixing old findings | `node_modules/.bin/eslint src --prune-suppressions` |
+| Task                                                | Command                                             |
+| --------------------------------------------------- | --------------------------------------------------- |
+| Types, lint, format check                           | `bin/check`                                         |
+| Unit tests                                          | `bin/t` or `bin/t src/lib/calibrations.test.ts`     |
+| App build (catches template errors the checks miss) | `node_modules/.bin/vite build --mode=live`          |
+| Format                                              | `node_modules/.bin/prettier --write .`              |
+| Shrink the lint baseline after fixing old findings  | `node_modules/.bin/eslint src --prune-suppressions` |
 
-- Run `bin/check` after every edit, and `bin/t` before handing work back. The whole suite takes a few seconds.
+- Run `bin/check` after every edit. Before handing work back, run `bin/t` (the whole suite takes a few seconds), plus the app build if you changed a template.
 - There's no pre-commit hook, so `bin/check` is the only gate before CI.
 - `eslint-suppressions.json` holds the findings that predate the lint gate. Fix new findings; never add to the file.
 - Suppress a type error only with `@ts-expect-error` and a reason, never `@ts-ignore`. The heatmap's markers are tracked debt (#745).

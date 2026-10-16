@@ -58,6 +58,7 @@ Calibration metadata provides additional context about the score calibration, in
 - A description of the methods used to determine the baseline score and functional classifications.
 - Any additional notes or comments that may be useful for users interpreting the calibration, especially with regard to the baseline score and functional classifications.
 - Whether the calibration should be marked as **research use only**, indicating that it is not intended for clinical or diagnostic purposes.
+- The **disease or disorder** the calibration's evidence applies to, as a [MONDO](https://www.ebi.ac.uk/ols4/ontologies/mondo) term. Every calibration starts with the generic "disease or disorder" term; choose a more specific one if the calibration applies to a particular condition.
 
 In addition, users may provide three types of publication references (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) to support the calibration:
 
@@ -67,14 +68,28 @@ In addition, users may provide three types of publication references (e.g., a DO
 
 ## Calibration controls
 
-Calibration controls are the variants of known clinical significance used to derive a calibration. Each control is a variant in the calibration's score set, labeled `pathogenic` or `benign`. They are shown with the calibration, alongside the functional classification each one falls into.
+Calibration controls are the variants of known clinical significance used to derive a calibration. Each control is a variant in the calibration's score set, labeled `pathogenic` or `benign`. Controls show how well a calibration's ranges separate variants whose clinical significance is already known.
 
-Controls are uploaded as a CSV file with two columns:
+### Adding controls
+
+To add controls, edit an existing calibration and upload a controls CSV file with two columns:
 
 - One of `variant_urn`, `hgvs_nt`, or `hgvs_pro`: the URN or HGVS notation of a variant in the score set. Use `variant_urn` when an HGVS string matches more than one variant.
 - `clinical_status`: `pathogenic` or `benign` (case-insensitive).
 
 Uploading a new file replaces all of a calibration's existing controls. Controls can only be added when editing an existing calibration, not while creating a score set, because they refer to the score set's variants and those don't exist until its scores have been processed.
+
+Controls are visible to everyone who can see the calibration. Once the calibration is [published](#calibration-privacy), its controls are public.
+
+### Reading controls
+
+Wherever a calibration's table appears (on the score set page, the calibrations page, and the variant page), a calibration with controls adds two rows under its ranges, **Pathogenic controls** and **Benign controls**. Each cell counts the controls the calibration places in that range, by score or, for a class-based calibration, by class:
+
+- **Green** counts agree with the range: pathogenic controls in an abnormal range, or benign controls in a normal range.
+- **Orange** counts contradict it: pathogenic controls in a normal range, or benign controls in an abnormal range.
+- **Gray** counts fall in a range that is neither abnormal nor normal, such as an indeterminate one.
+
+A summary line below the table totals the controls and how many are **concordant** (green) or **discordant** (orange), plus any that fall in an unclassified range or in no range at all.
 
 ### Protected health information
 

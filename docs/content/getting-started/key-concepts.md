@@ -46,7 +46,7 @@ This experiment set describes two distinct assays performed on a single *BRCA1* 
 
 ## Experiment sets
 
-An experiment set groups the experiments performed on one target. It has no data or metadata of its own and is created automatically with its first experiment.
+An experiment set is a container for related experiments, grouped however best organizes the data. It has no data or metadata of its own and is created automatically with its first experiment.
 
 ## Experiments
 

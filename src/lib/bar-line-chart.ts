@@ -5,7 +5,9 @@ const DEFAULT_DATUM_COLOR = d3.color('#f8971c')!
 const DEFAULT_BAR_COLOR = d3.color('#3f51b5')!
 
 export type BarLineChartDatum = any
-type Accessor<T, Self> = (value?: T) => T | Self
+// Called with no argument an accessor reads its value; with one it sets it and returns the chart for chaining. Each
+// implementation is one function with an optional argument, so the chart object is asserted to its interface.
+type Accessor<T, Self> = {(): T; (value: T): Self}
 
 export interface BarLineChartMargins {
   bottom: number
@@ -220,7 +222,7 @@ export default function makeBarLineChart(): BarLineChart {
     }
   }
 
-  const chart: BarLineChart = {
+  const chart = {
     destroy: () => {
       if (svg) {
         svg.remove()
@@ -602,7 +604,7 @@ export default function makeBarLineChart(): BarLineChart {
       barLegendLabel = value
       return chart
     }
-  }
+  } as BarLineChart
 
   return chart
 }

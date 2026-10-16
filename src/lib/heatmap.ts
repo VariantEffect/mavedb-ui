@@ -4,7 +4,9 @@ import {v4 as uuidv4} from 'uuid'
 
 type FieldGetter<T> = (d: HeatmapDatum) => T
 type Getter<T> = () => T
-type Accessor<T, Self> = (value?: T) => T | Self
+// Called with no argument an accessor reads its value; with one it sets it and returns the chart for chaining. Each
+// implementation is one function with an optional argument, so the chart object is asserted to its interface.
+type Accessor<T, Self> = {(): T; (value: T): Self}
 
 export const DEFAULT_MINIMUM_COLOR = '#3F51B5'
 export const DEFAULT_PIVOT_COLOR = '#FFFFFF'
@@ -1008,7 +1010,7 @@ export default function makeHeatmap(): Heatmap {
     }
   }
 
-  const chart: Heatmap = {
+  const chart = {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Chart lifecyle methods
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1681,7 +1683,7 @@ export default function makeHeatmap(): Heatmap {
     filteredData: () => filteredData,
 
     content: () => content
-  }
+  } as Heatmap
 
   return chart
 }

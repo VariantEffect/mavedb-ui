@@ -41,6 +41,8 @@ plugins:
   - redirects:
       redirect_maps:
         reference/variant-mapping.md: mapping/forward-mapping.md
+        submitting-data/before-you-start.md: submitting-data/submitting-a-dataset.md
+        submitting-data/upload-guide.md: submitting-data/submitting-a-dataset.md
 
 markdown_extensions:
   - admonition
@@ -82,11 +84,11 @@ nav:
       - External Integrations: finding-data/external-integrations.md
   - Submitting Data:
       - submitting-data/index.md
-      - Before You Start: submitting-data/before-you-start.md
+      - Organizing Your Study: submitting-data/organizing-your-study.md
+      - Submitting a Dataset: submitting-data/submitting-a-dataset.md
       - Data Formats: submitting-data/data-formats.md
       - Metadata Guide: submitting-data/metadata-guide.md
       - Targets: submitting-data/targets.md
-      - Upload Guide: submitting-data/upload-guide.md
       - Publishing: submitting-data/publishing.md
   - Interpreting Annotated Variants: interpreting-annotated-variants.md
   - Variant Mapping & Annotation:

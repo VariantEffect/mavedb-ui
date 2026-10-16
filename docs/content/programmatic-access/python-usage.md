@@ -196,7 +196,7 @@ except Exception as e:
 
 - See the [API Quickstart](api-quickstart.md) for direct REST API usage with curl, Python, and R examples
 - Read about [data formats](../submitting-data/data-formats.md) to prepare your score and count CSV files
-- Review the [upload guide](../submitting-data/upload-guide.md) for the full submission workflow
+- Review the [submission guide](../submitting-data/submitting-a-dataset.md) for the full submission workflow
 - Learn about [targets](../submitting-data/targets.md) and how to define them for your score sets
 - Browse the [mavedb-api source code](https://github.com/VariantEffect/mavedb-api/tree/main/src/mavedb/view_models) for the full list of available view models
 - Check the [troubleshooting](../troubleshooting.md) page if you run into issues

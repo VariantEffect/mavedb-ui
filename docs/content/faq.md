@@ -9,7 +9,7 @@
     MaveDB accounts are created automatically the first time you log in using your [ORCID iD](https://orcid.org/). Simply click the **Log in** button on the MaveDB website and authenticate through ORCID. See [User Accounts](getting-started/accounts.md) for more details.
 
 ??? question "Do I need an account to browse or download public data?"
-    No. All published datasets in MaveDB are publicly accessible without an account. You only need to log in if you want to [submit data](submitting-data/before-you-start.md), access private (unpublished) datasets, or use the [API with authentication](programmatic-access/api-quickstart.md#authentication).
+    No. All published datasets in MaveDB are publicly accessible without an account. You only need to log in if you want to [submit data](submitting-data/index.md), access private (unpublished) datasets, or use the [API with authentication](programmatic-access/api-quickstart.md#authentication).
 
 ## Searching for data
 
@@ -25,7 +25,7 @@
     MaveDB accepts variant score and count data in **CSV format**. Score tables must contain a `score` column and at least one variant identifier column (`hgvs_nt`, `hgvs_splice`, or `hgvs_pro`). All variants must be described using [MAVE-HGVS](https://www.mavedb.org/docs/mavehgvs/index.html) notation. See the [Data Formats](submitting-data/data-formats.md) page for detailed requirements and examples.
 
 ??? question "What metadata is required when uploading a dataset?"
-    At a minimum, every experiment and score set requires a **title**, **short description**, **abstract**, and **methods** section. Score sets additionally require at least one **target** (sequence or accession), a **license** selection, and a **score CSV file**. See the [Before You Start](submitting-data/before-you-start.md) checklist for a full overview of required and recommended metadata.
+    At a minimum, every experiment and score set requires a **title**, **short description**, **abstract**, and **methods** section. Score sets additionally require at least one **target** (sequence or accession), a **license** selection, and a **score CSV file**. See [What to have ready](submitting-data/submitting-a-dataset.md#what-to-have-ready) for the full list of required and recommended items.
 
 ??? question "Can I update my data after publishing?"
     After publication, most free-text metadata (title, short description, abstract, methods) can still be revised, and changes are tracked. However, certain fields -- including the target, scores, and counts -- become un-editable after publication. To correct the data itself, [supersede](submitting-data/publishing.md#superseding-a-score-set) the score set with a corrected replacement.

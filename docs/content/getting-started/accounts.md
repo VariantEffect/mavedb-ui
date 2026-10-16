@@ -14,7 +14,7 @@ Your MaveDB account is created automatically the first time you log in to MaveDB
 
 ## Setting an email address
 
-MaveDB can only view public email addresses associated with your [ORCID iD](https://orcid.org/). If you do not have a public email address set and would like to receive emails from MaveDB, you can provide one on the [Profile settings page](https://www.mavedb.org/#/settings/) (requires login). To [upload datasets](../submitting-data/before-you-start.md), you must provide an email address.
+MaveDB can only view public email addresses associated with your [ORCID iD](https://orcid.org/). If you do not have a public email address set and would like to receive emails from MaveDB, you can provide one on the [Profile settings page](https://www.mavedb.org/#/settings/) (requires login). To [upload datasets](../submitting-data/index.md), you must provide an email address.
 
 !!! question "Why is an email address required for uploading?"
     The MaveDB team may need to contact dataset uploaders if issues are discovered with their data, such as mapping problems, metadata inconsistencies, or questions during curation.
@@ -35,4 +35,4 @@ Only one API key can be active for a given account. Generating a new key will in
 - [Key concepts](key-concepts.md) -- understand the MaveDB data model before submitting or accessing data.
 - [API quickstart](../programmatic-access/api-quickstart.md) -- get started with programmatic access to MaveDB.
 - [Python usage](../programmatic-access/python-usage.md) -- use the `mavedb` package for local validation and programmatic submission.
-- [Before you start](../submitting-data/before-you-start.md) -- prerequisites for submitting data to MaveDB.
+- [Submitting data](../submitting-data/index.md) -- prerequisites for submitting data to MaveDB.

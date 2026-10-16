@@ -1,14 +1,36 @@
 # Submitting Data
 
-MaveDB accepts MAVE datasets from the research community. Depositing your data in MaveDB makes it discoverable, citable, and accessible to other researchers and clinicians through the MaveDB web interface, API, and [external integrations](../finding-data/external-integrations.md).
+MaveDB accepts MAVE datasets from the research community. Published datasets get a permanent accession number and are available through the MaveDB website, the [API](../programmatic-access/api-quickstart.md), and [external integrations](../finding-data/external-integrations.md).
 
-## In this section
+## Before you begin
 
-- **[Before You Start](before-you-start.md)** -- Prerequisites and preparation steps for submitting data to MaveDB.
-- **[Data Formats](data-formats.md)** -- Specifications for score and count data files, including variant representation with MAVE-HGVS.
-- **[Metadata Guide](metadata-guide.md)** -- How to provide descriptive metadata, keywords, and contributor information for your records.
-- **[Targets](targets.md)** -- How to define sequence-based and accession-based targets for your score sets.
-- **[Upload Guide](upload-guide.md)** -- Step-by-step walkthrough of the score set creation process using the web interface.
-- **[Publishing](publishing.md)** -- How to publish your datasets, making them publicly accessible with stable accession numbers.
+1. **Sign in with ORCID.** MaveDB uses [ORCID](https://orcid.org/) for authentication. If you do not have an ORCID iD, you can [register for free](https://orcid.org/register). See [User Accounts](../getting-started/accounts.md).
+2. **Set an email address** on the [Profile settings page](https://www.mavedb.org/#/settings/). MaveDB requires one before you can upload. See [User Accounts](../getting-started/accounts.md#setting-an-email-address).
 
-New to MaveDB? Start with [Before You Start](before-you-start.md) to understand what you'll need, then follow the [Upload Guide](upload-guide.md) to create your first score set.
+!!! danger
+    **Do not submit patient data or anything that could be used to identify individuals to MaveDB.**
+
+## How submission works
+
+```mermaid
+graph LR
+    A["Create<br/>experiment"] --> B["Create<br/>score set"]
+    B --> C["Review &<br/>publish"]
+
+    style A fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    style B fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    style C fill:#f8971d,color:#fff,stroke:#d97510,stroke-width:1.5px
+```
+
+1. **Create an experiment** describing the assay. MaveDB creates its experiment set automatically.
+2. **Create one or more score sets** under that experiment, each with its target and score data.
+3. **Publish** each score set when it is ready.
+
+New records get a [temporary accession number](../reference/accession-numbers.md#temporary-accession-numbers) beginning with `tmp:` and are visible only to you and any [contributors](metadata-guide.md#contributors) you add. You can keep editing until you [publish](publishing.md), which assigns a permanent `urn:mavedb:` accession number and makes the record public.
+
+## Where to start
+
+- **Planning how to split a study into records?** Read [Organizing Your Study](organizing-your-study.md).
+- **Ready to fill in the forms?** Follow [Submitting a Dataset](submitting-a-dataset.md), which lists what to have ready and walks through each form step.
+- **Need details on a specific field or file?** See the [Metadata Guide](metadata-guide.md), [Targets](targets.md), and [Data Formats](data-formats.md).
+- **Ready to make it public, or need to correct a published score set?** See [Publishing](publishing.md).

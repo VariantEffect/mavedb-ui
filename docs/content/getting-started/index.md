@@ -28,7 +28,7 @@ Download variant scores and counts in CSV format from individual score set pages
 
 ### Upload experiments and score sets
 
-Researchers can [deposit their MAVE data](../submitting-data/before-you-start.md) into MaveDB using a step-by-step upload wizard. Uploaded datasets can be kept private during review and then published to make them accessible to the community.
+Researchers can [deposit their MAVE data](../submitting-data/index.md) into MaveDB using a step-by-step upload wizard. Uploaded datasets can be kept private during review and then published to make them accessible to the community.
 
 ### Use the API
 
@@ -41,7 +41,7 @@ Already know what you want to do? Jump directly to the relevant guide:
 | I want to...                                | Go to                                                      |
 |---------------------------------------------|--------------------------------------------------------------|
 | Find data for a specific gene               | [Searching datasets](../finding-data/searching.md)           |
-| Upload my MAVE data                         | [Before you start](../submitting-data/before-you-start.md)   |
+| Upload my MAVE data                         | [Submitting data](../submitting-data/index.md)   |
 | Look up a variant's clinical significance   | [MaveMD](../mavemd/index.md)                                 |
 | Download data programmatically              | [API quickstart](../programmatic-access/api-quickstart.md)   |
 | Understand the MaveDB data model            | [Key concepts](key-concepts.md)                              |

@@ -1,0 +1,76 @@
+{
+  "id": "mavedb.cat-vrs:ube2i-leu6gly",
+  "type": "CategoricalVariant",
+  "name": "UBE2I p.Leu6Gly",
+  "description": "A UBE2I variant measured by a multiplexed assay at the protein level. The categorical variant spans every equivalent change across levels; the defining constraint carries the measured allele so the original level and its score keep their provenance, while members expose the coding and genomic changes that satisfy it.",
+  "extensions": [
+    {
+      "name": "mavedbMeasuredMolecularLevel",
+      "value": "protein"
+    }
+  ],
+  "constraints": [
+    {
+      "type": "DefiningAlleleConstraint",
+      "relations": [
+        "translates_from"
+      ],
+      "allele": {
+        "id": "ga4gh:VA.P39KFBT8kdyfg79JH7IBX-4JKXGrzCxb",
+        "type": "Allele",
+        "state": {
+          "type": "LiteralSequenceExpression",
+          "sequence": "G"
+        },
+        "digest": "P39KFBT8kdyfg79JH7IBX-4JKXGrzCxb",
+        "location": {
+          "id": "ga4gh:SL.o4bho24Xqm_HS5mD8-HDjtmtLCZ5XLez",
+          "end": 6,
+          "type": "SequenceLocation",
+          "start": 5,
+          "digest": "o4bho24Xqm_HS5mD8-HDjtmtLCZ5XLez",
+          "sequenceReference": {
+            "type": "SequenceReference",
+            "label": "NP_003336.1",
+            "refgetAccession": "SQ.hy5ErT-cGJovsPYIgzchb3BvYQ2MkKB3"
+          }
+        },
+        "extensions": [
+          {
+            "name": "vrs_ref_allele_seq",
+            "type": "Extension",
+            "value": "L"
+          }
+        ],
+        "expressions": [
+          {
+            "value": "NP_003336.1:p.Leu6Gly",
+            "syntax": "hgvs.p"
+          }
+        ]
+      }
+    }
+  ],
+  "members": [
+    {
+      "type": "Allele",
+      "description": "Coding-level member (illustrative). Reverse translation enumerates the coding changes encoding this protein consequence; the pipeline computes each members location and digest.",
+      "expressions": [
+        {
+          "syntax": "hgvs.c",
+          "value": "NM_003345.4:c.16_17delinsGG"
+        }
+      ]
+    },
+    {
+      "type": "Allele",
+      "description": "Genomic-level member (illustrative), the same change projected to the reference genome.",
+      "expressions": [
+        {
+          "syntax": "hgvs.g",
+          "value": "NC_000016.10:g.1314000_1314001delinsGG"
+        }
+      ]
+    }
+  ]
+}

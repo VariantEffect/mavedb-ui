@@ -20,4 +20,15 @@ echo "Copying docs to $DEST..."
 rm -rf "$DEST"
 cp -r "$REPO_ROOT/docs/site" "$DEST"
 
-echo "Done. Documentation will be served at /docs/mavedb/."
+# --- GA4GH GKS vignettes (standalone preview site, served at /docs/gks-vignettes/) ---
+# Built from its own dir so its `base_path: ["."]` snippet config resolves the
+# starter-kit-style includes; same toolchain (mkdocs-material) as the main docs.
+GKS_DIR="$REPO_ROOT/docs-gks-vignettes"
+GKS_DEST="$REPO_ROOT/public/docs/gks-vignettes"
+echo "Building GKS vignettes documentation..."
+( cd "$GKS_DIR" && mkdocs build )
+echo "Copying GKS vignettes to $GKS_DEST..."
+rm -rf "$GKS_DEST"
+cp -r "$GKS_DIR/site" "$GKS_DEST"
+
+echo "Done. Documentation will be served at /docs/mavedb/ and /docs/gks-vignettes/."

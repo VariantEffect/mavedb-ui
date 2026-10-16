@@ -24,7 +24,7 @@ Each score set page provides a detailed view of the data, including metadata abo
 
 ### Download data
 
-Download variant scores and counts in CSV format from individual score set pages. [Mapped variants](../mapping/forward-mapping.md) are available in GA4GH VRS JSON format, and annotated variants are available in VA-Spec format. For large-scale analyses, a [bulk download archive](../finding-data/downloading.md) is available on Zenodo.
+Download variant scores and counts in CSV format from individual score set pages. [Reference variants](../mapping/forward-mapping.md#submitted-and-reference-variants) are available in GA4GH VRS JSON format, and annotated variants are available in VA-Spec format. For large-scale analyses, a [bulk download archive](../finding-data/downloading.md) is available on Zenodo.
 
 ### Upload experiments and score sets
 

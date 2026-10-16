@@ -15,14 +15,14 @@ Each [score set](../getting-started/key-concepts.md#score-sets) page in MaveDB i
 
 MaveDB allows users to download variant effect score data along with associated count data in **CSV** (Comma-Separated Values) format.
 
-The downloaded file contains the same data that was uploaded by the submitter, with an additional column for variant [URNs](../reference/accession-numbers.md) that uniquely identify each variant in MaveDB. Using the **Custom CSV** option, users may also choose to include other MaveDB-generated columns in this output, such as mapped variant HGVS strings and VRS identifiers, and — where available — annotation columns for gnomAD allele frequency, Ensembl VEP consequence, ClinGen allele IDs, and ClinVar clinical significance.
+The downloaded file contains the same data that was uploaded by the submitter, with an additional column for variant [URNs](../reference/accession-numbers.md) that uniquely identify each variant in MaveDB. Using the **Custom CSV** option, users may also choose to include other MaveDB-generated columns in this output, such as reference variant HGVS strings and VRS identifiers, and — where available — annotation columns for gnomAD allele frequency, Ensembl VEP consequence, ClinGen allele IDs, and ClinVar clinical significance.
 
 !!! warning
     Score and count columns are non-prescriptive and may vary between datasets. Columns may mean different things between datasets, so users should refer to the dataset methods section for details on the specific columns included in each download.
 
 ### Variant details (VRS JSON)
 
-MaveDB represents [mapped variants](../mapping/forward-mapping.md) using the [GA4GH VRS](https://vrs.ga4gh.org/) standard. For datasets that have been mapped, the **Variant Details** button downloads a [newline-delimited JSON](https://jsonlines.org/) (NDJSON) file — one record per mapped variant, the bulk counterpart of a single variant's detail page. Each record carries the [assay-level (`preMapped`) and reference-level (`postMapped`)](../mapping/forward-mapping.md#how-a-mapped-variant-is-represented) VRS objects, the full [GA4GH Cat-VRS](https://vrs.ga4gh.org/) categorical variant (the variant's equivalence class of related alleles), and its gnomAD, Ensembl VEP, and ClinVar annotations.
+MaveDB represents [submitted and reference variants](../mapping/forward-mapping.md#submitted-and-reference-variants) using the [GA4GH VRS](https://vrs.ga4gh.org/) standard. For datasets that have been mapped, the **Variant Details** button downloads a [newline-delimited JSON](https://jsonlines.org/) (NDJSON) file — one record per variant that mapped, the bulk counterpart of a single variant's detail page. Each record carries the submitted (`preMapped`) and reference (`postMapped`) VRS objects, the full [GA4GH Cat-VRS](https://vrs.ga4gh.org/) categorical variant (the variant's equivalence class of related alleles), and its gnomAD, Ensembl VEP, and ClinVar annotations.
 
 ### Annotated variants (VA-Spec)
 
@@ -32,7 +32,7 @@ There are three types of VA-Spec objects that MaveDB can provide. Each object ty
 
 Availability is determined per-variant:
 
-- **Functional Impact Study Results** are available for any variant that has been successfully mapped (i.e., has a reference-level representation).
+- **Functional Impact Study Results** are available for any variant that has been successfully mapped (i.e., has a reference variant).
 - **Functional Impact Statements** additionally require [score calibrations](../reference/score-calibrations.md) on the score set and a non-null score for the variant.
 - **Variant Pathogenicity Statements** additionally require calibrations with [ACMG/AMP evidence strengths](../reference/score-calibrations.md) and a non-null score.
 

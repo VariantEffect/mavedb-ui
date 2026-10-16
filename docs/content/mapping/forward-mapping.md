@@ -41,18 +41,18 @@ flowchart LR
 
     Mapping failures do not prevent datasets from being published in MaveDB, but a successful mapping is required for certain features such as [variant search](../mavemd/variant-search.md), linkages with certain [external resources](../finding-data/external-integrations.md), and inclusion in [MaveMD](../mavemd/index.md).
 
-## How a mapped variant is represented
+## Submitted and reference variants
 
-A mapped variant is not stored as a single object but as a small **set of representations**:
+Mapping turns each **submitted variant** into one or more **reference variants**:
 
-- The original **assay-level** (target-relative) form is retained, so the experimental context is never lost.
-- Each **reference-level** representation — genomic, coding, and protein, wherever the biology allows — is stored as a distinct allele, each carrying its own GA4GH VRS object and stable digest.
+- The **submitted variant** is the variant as uploaded, described against the score set's target. MaveDB keeps it, so the experimental context is never lost.
+- The **reference variants** describe the same change on the human reference, at the genomic, coding, and protein levels wherever the biology allows. Each is stored as a distinct allele with its own GA4GH VRS object and stable digest.
 
-This unified, per-level representation is what lets a variant be expressed consistently across molecular levels and matched against external resources. The [reverse translation and projection](reverse-translation.md) stage fills in the levels a given assay did not measure. [Interpreting Annotated Variants](../interpreting-annotated-variants.md) explains how to read the resulting multi-level view.
+This per-level representation is what lets a variant be expressed consistently across molecular levels and matched against external resources. The [reverse translation and projection](reverse-translation.md) stage fills in the levels a given assay did not measure. [Interpreting Annotated Variants](../interpreting-annotated-variants.md) explains how to read the resulting multi-level view.
 
 ## Assay target vs. human reference
 
-Because an assay's target sequence is often not identical to the human reference, the assay-level representation and its mapped reference-level counterpart can **differ**. Keeping both lets users see exactly how the assay relates to the human reference, so clinical users can judge whether the experimental evidence fits their interpretation context.
+Because an assay's target sequence is often not identical to the human reference, a submitted variant and its reference variants can **differ**. Keeping both lets users see exactly how the assay relates to the human reference, so clinical users can judge whether the experimental evidence fits their interpretation context.
 
 These differences are expected, not errors. They arise from legitimate differences between experimental and reference sequences:
 
@@ -62,20 +62,20 @@ These differences are expected, not errors. They arise from legitimate differenc
 
 ## What isn't mapped
 
-Not every submitted variant yields a mapped representation, and an absence is not always a failure. MaveDB distinguishes two cases:
+Not every submitted variant yields a reference variant, and an absence is not always a failure. MaveDB distinguishes two cases:
 
-- **Benign absences** — variants that legitimately have no reference-level representation, recorded but with no mapped allele. The main case is a **submitted intronic variant**: an intronic position has no protein consequence and cannot be represented at the levels MaveDB serves. Other changes with no protein consequence are treated the same way.
+- **Benign absences** — variants that legitimately have no reference variant. The main case is a **submitted intronic variant**: an intronic position has no protein consequence and cannot be represented at the levels MaveDB serves. Other changes with no protein consequence are treated the same way.
 - **Failures** — variants that *should* map but didn't: ambiguous alignments, complex or malformed variant descriptions, or discrepancies between the target and reference genome. These are reflected in the mapping status on the score set page for the contributor to review.
 
 Only genuine failures count against a score set's mapping; benign absences do not, and neither blocks publication.
 
 ## Downstream integrations
 
-Mapped variants are what connect MaveDB to [external resources](../finding-data/external-integrations.md): ClinGen Allele Registry identifiers, ClinGen Linked Data Hub submissions, ClinVar classifications, gnomAD allele frequencies, and Ensembl VEP consequences. They also power [MaveMD](../mavemd/index.md), including [variant search](../mavemd/variant-search.md) and [score calibrations](../reference/score-calibrations.md).
+Reference variants are what connect MaveDB to [external resources](../finding-data/external-integrations.md): ClinGen Allele Registry identifiers, ClinGen Linked Data Hub submissions, ClinVar classifications, gnomAD allele frequencies, and Ensembl VEP consequences. They also power [MaveMD](../mavemd/index.md), including [variant search](../mavemd/variant-search.md) and [score calibrations](../reference/score-calibrations.md).
 
 ## Programmatic access
 
-The [MaveDB API](../programmatic-access/api-quickstart.md)'s `/score-sets/{urn}/variant-details` endpoint streams one NDJSON record per mapped variant. In each record, the assay-level and reference-level VRS representations are the `preMapped` and `postMapped` fields, alongside the variant's categorical variant and annotations. The same records are downloadable from individual score set pages in [VRS and VA-Spec JSON formats](../reference/data-standards.md#vrs-variant-representation). The older `/score-sets/{urn}/mapped-variants` endpoint returns `410 Gone`.
+The [MaveDB API](../programmatic-access/api-quickstart.md)'s `/score-sets/{urn}/variant-details` endpoint streams one NDJSON record per variant that mapped. In each record, the submitted and reference variants' VRS objects are the `preMapped` and `postMapped` fields, alongside the variant's categorical variant and annotations. The same records are downloadable from individual score set pages in [VRS and VA-Spec JSON formats](../reference/data-standards.md#vrs-variant-representation). The older `/score-sets/{urn}/mapped-variants` endpoint returns `410 Gone`.
 
 ## See also
 

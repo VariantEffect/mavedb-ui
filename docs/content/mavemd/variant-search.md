@@ -24,7 +24,7 @@ This means you can search using a ClinVar Variation ID from a clinical report an
 
 GA4GH VRS identifier search works differently from all other search types. Rather than routing through the ClinGen Allele Registry, it queries MaveDB directly using the [VRS digest](../reference/data-standards.md#vrs-variant-representation) assigned during variant mapping. This makes it useful in workflows where you already have a GA4GH-compatible identifier — for example, from a MaveDB data export, a GA4GH-compliant pipeline, or another VRS-enabled database.
 
-The search matches both forms of a variant's VRS identifier: the reference-level alleles MaveDB holds for it (the mapped allele and the alleles derived from it at other levels), and the assay-level form on the submitted target sequence. An assay-level match is reported with the variant's mapped allele, or with no allele if the variant did not map.
+The search matches both forms of a variant's VRS identifier: its [reference variants](../mapping/forward-mapping.md#submitted-and-reference-variants) (the one mapping produced and those derived from it at other levels), and its submitted variant on the target sequence. A match on the submitted variant is reported with the variant's reference variant, or with none if the variant did not map.
 
 Alleles (`ga4gh:VA.*`) and cis-phased blocks (`ga4gh:CPB.*`) are supported.
 

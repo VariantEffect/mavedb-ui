@@ -18,7 +18,7 @@ VRS objects are available for download as JSON from any score set that has been 
 - A globally unique **GA4GH identifier** (e.g., `ga4gh:VA.abc123...`) that can be used to reference the variant across databases.
 - A **sequence location** specifying the reference sequence and coordinates.
 - The **variant state** (the alternate allele).
-- **HGVS expressions** for both the [assay-level and reference-level](../mapping/forward-mapping.md#how-a-mapped-variant-is-represented) forms: relative to the target, and relative to the human reference.
+- **HGVS expressions** for both the [submitted variant](../mapping/forward-mapping.md#submitted-and-reference-variants) (relative to the target) and the reference variant (relative to the human reference).
 
 ??? example "Example VRS object for a single amino acid substitution"
 
@@ -77,13 +77,13 @@ graph LR
     class VPS top
 ```
 
-Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has a reference-level representation). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
+Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has a reference variant). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
 
 The table below summarizes the **highest** layer a variant qualifies for. Higher layers nest the layers beneath them (a Study Result sits inside a Functional Impact Statement, which sits inside a Variant Pathogenicity Statement), so a variant that qualifies for a higher layer is also represented at every lower one.
 
 | Variant state | Highest VA-Spec layer |
 |---|---|
-| Not successfully mapped (no reference-level representation) | *None* — excluded from VRS and VA-Spec output |
+| Not successfully mapped (no reference variant) | *None* — excluded from VRS and VA-Spec output |
 | Mapped, but no score value | Functional Impact Study Result |
 | Mapped and scored, but the score set has no eligible calibration | Functional Impact Study Result |
 | Mapped and scored, with an eligible functional calibration | Functional Impact Statement |
@@ -305,7 +305,7 @@ VRS and VA-Spec objects exported from MaveDB are self-contained but reference ot
 
 ### Downloading variant details
 
-Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the assay-level (`preMapped`) and reference-level (`postMapped`) VRS objects, the GA4GH categorical variant, and the annotation map. The categorical variant's `mappings` cross-reference its members' ClinGen, gnomAD and ClinVar identifiers; frequencies and classifications are in the annotation map. Only mapped variants appear; a variant with no VRS is omitted.
+Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the submitted variant (`preMapped`) and reference variant (`postMapped`) as VRS objects, the GA4GH categorical variant, and the annotation map. The categorical variant's `mappings` cross-reference its members' ClinGen, gnomAD and ClinVar identifiers; frequencies and classifications are in the annotation map. Only variants that mapped appear; a variant with no VRS is omitted.
 
 !!! note "Replaces `/mapped-variants`"
 
@@ -494,7 +494,7 @@ Each VRS object has a globally unique GA4GH identifier (e.g., `ga4gh:VA.2JOqpLMF
 
 ### HGVS expressions
 
-VRS objects include HGVS expressions in the `expressions` array for human readability. MaveDB typically includes HGVS strings for both the assay-level form (relative to the target sequence) and the reference-level form (relative to the human reference). The `syntax` field indicates the type — `hgvs.p` for protein, `hgvs.g` for genomic, or `hgvs.c` for coding DNA.
+VRS objects include HGVS expressions in the `expressions` array for human readability. MaveDB typically includes HGVS strings for both the submitted variant (relative to the target sequence) and the reference variant (relative to the human reference). The `syntax` field indicates the type — `hgvs.p` for protein, `hgvs.g` for genomic, or `hgvs.c` for coding DNA.
 
 ## See also
 

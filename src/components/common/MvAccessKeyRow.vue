@@ -7,9 +7,9 @@
       role="status"
     >
       <span
-        class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
         :aria-hidden="!revealed"
         aria-live="polite"
+        class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
         >{{ revealed ? keyId : maskedKey }}</span
       >
       <span v-if="!revealed" class="sr-only">Key hidden. Use the reveal button to show it.</span>

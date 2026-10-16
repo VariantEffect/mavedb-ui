@@ -240,10 +240,10 @@ export default function makeHeatmap(): Heatmap {
 
   // Selection
   let selectedDatum: HeatmapDatum | null = null
-  let selectionStartDatum: HeatmapDatum | null = null
-  let selectionEndDatum: HeatmapDatum | null = null
+  const selectionStartDatum: HeatmapDatum | null = null
+  const selectionEndDatum: HeatmapDatum | null = null
   // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
-  let selectedRows: number[] | null = null
+  const selectedRows: number[] | null = null
 
   let selectionStartPoint: DOMPoint | null = null
 
@@ -345,7 +345,7 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const color = function (d: HeatmapDatum) {
-    let classification: number | d3.Color = colorClassifier(d)
+    const classification: number | d3.Color = colorClassifier(d)
     return typeof classification === 'number' ? (colorScale ? colorScale(classification) : null) : classification
   }
 

@@ -15,7 +15,7 @@ These differences mean that MAVE variant descriptions cannot be directly compare
 
 ## Mapping process
 
-Mapping runs when a score set's variant data is [uploaded](../submitting-data/upload-guide.md). It involves the following steps:
+Mapping runs when a score set's variant data is [uploaded](../submitting-data/submitting-a-dataset.md). It involves the following steps:
 
 ```mermaid
 flowchart LR

@@ -1,6 +1,6 @@
 # Metadata Guide
 
-MaveDB [experiment and score set](../getting-started/key-concepts.md) records include required and optional metadata fields to describe the data being deposited. This page describes these metadata fields in detail, along with formatting guidelines and a checklist of required information.
+MaveDB [experiment and score set](../getting-started/key-concepts.md) records include required and optional metadata fields to describe the data being deposited. This page describes these metadata fields in detail, along with formatting guidelines. For which fields are required, see [What to have ready](submitting-a-dataset.md#what-to-have-ready).
 
 ## Shared metadata fields
 
@@ -131,31 +131,10 @@ By default, new score sets will have the CC0 license. The license can be changed
 
 Users also have the option of adding a free-text data usage policy to a score set, such as terms that dictate use of pre-publication data. For example, data producers may wish to assert their right to publish the results of certain analyses first. The data usage policy will be added to the header of any downloaded data files if one is present.
 
-### Score set targets
-
-Every score set needs at least one target: the sequence or genomic locus its variants are described against. See [Targets](targets.md) for choosing between sequence-based and accession-based targets, their metadata, and multi-target score sets.
-
-### Calibrations
-
-Score calibrations provide a way to give additional context to variant effect scores by mapping them to known reference points. This helps users interpret the scores in a biologically meaningful way.
-
-For detailed information about score calibrations, including baseline scores, functional classifications, evidence strengths, and calibration metadata, see the [Score Calibrations](../reference/score-calibrations.md) page.
-
-### Variant data
-
-You must upload at least one variant **score** CSV file when creating a new score set. Optionally, you may also upload a variant **count** CSV file and JSON metadata files describing the columns in each table.
-
-Variants are described using [MAVE-HGVS](https://www.mavedb.org/docs/mavehgvs/index.html) notation and are validated against the score set's [target](targets.md) sequence. The score table must include a column named `score`; count tables have no required columns.
-
-For detailed formatting requirements — including variant column descriptions, index column selection, base editor data, and score table examples — see the [Data Formats](data-formats.md) page.
-
-## Metadata checklist
-
-The [Before You Start](before-you-start.md#what-you-will-need) checklist lists which of these fields are required and recommended for each record type.
-
 ## See also
 
-- [Before You Start](before-you-start.md) -- A checklist of everything you need before beginning the upload process.
-- [Data Formats](data-formats.md) -- Detailed formatting requirements for score and count CSV files.
-- [Upload Guide](upload-guide.md) -- Step-by-step instructions for creating experiments and score sets.
+- [Submitting a Dataset](submitting-a-dataset.md) -- What to have ready and how to fill in each form.
+- [Targets](targets.md) -- Choosing and describing score set targets.
+- [Data Formats](data-formats.md) -- Formatting requirements for score and count CSV files.
+- [Score Calibrations](../reference/score-calibrations.md) -- Adding calibrations to a score set.
 - [Publishing](publishing.md) -- How to make your records publicly accessible and manage licensing.

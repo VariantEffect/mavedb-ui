@@ -28,7 +28,7 @@ As of February 2026, MaveDB hosts over **2,700 datasets** covering more than **7
 
     Deposit your MAVE experiment results into MaveDB. Organize your data as [experiments and score sets](getting-started/key-concepts.md) with rich metadata.
 
-    [:octicons-arrow-right-24: Submitting data](submitting-data/before-you-start.md)
+    [:octicons-arrow-right-24: Submitting data](submitting-data/index.md)
 
 -   :material-stethoscope:{ .lg .middle } **Interpret functional data**
 

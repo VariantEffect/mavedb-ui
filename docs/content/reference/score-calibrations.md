@@ -1,6 +1,6 @@
 # Score calibrations
 
-Score calibrations in MaveDB provide a way to give additional context to variant effect scores by mapping them to known reference points. This helps users interpret the scores in a biologically meaningful way. A score calibration is associated with a [score set](../getting-started/key-concepts.md) and consists of four parts: a baseline score, a set of classifications, a set of evidence strengths, and calibration metadata.
+Score calibrations in MaveDB provide a way to give additional context to variant effect scores by mapping them to known reference points. A score calibration is associated with a [score set](../getting-started/key-concepts.md) and consists of four parts: a baseline score, a set of classifications, a set of evidence strengths, and calibration metadata.
 
 You can add a calibration to a score set from multiple places in the MaveDB interface: from the score set page, from the dedicated calibrations page, or during score set creation in the upload form. Calibrations can also be created and managed via the [API](../programmatic-access/api-quickstart.md).
 
@@ -20,7 +20,7 @@ The baseline score should be provided as a numeric value along with a descriptio
 
 ## Functional classifications
 
-Functional classifications provide a way to categorize variants based on their effect scores. These classifications help users understand the biological significance of the scores and facilitate comparisons between different variants. MaveDB supports a controlled vocabulary for functional classifications, which includes the following terms:
+Functional classifications provide a way to categorize variants based on their effect scores. MaveDB supports a controlled vocabulary for functional classifications, which includes the following terms:
 
 - **Normal**: Indicates that the variant has no significant effect on the phenotype.
 - **Abnormal**: Indicates that the variant has a significant effect on the phenotype.
@@ -94,7 +94,7 @@ If you upload new scores for a score set, MaveDB carries each calibration's cont
 
 ## Calibration privacy
 
-By default, score calibrations are not visible to all MaveDB users. However, you may choose to [publish](../submitting-data/publishing.md) a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set. Published calibrations are visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.
+New score calibrations are private. A private calibration is visible to the user who uploaded it and, for an [investigator calibration](#investigator-and-community-calibrations), to the score set's contributors (see [Permission differences](#permission-differences)). Once published, a calibration is visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.
 
 !!! note
     Unlike experiments and experiment sets, calibrations are **not** automatically published when their associated score set is published. Each calibration must be published separately.
@@ -111,8 +111,6 @@ Research use only calibrations:
 - Are displayed with a prominent RUO label to distinguish them from calibrations intended for clinical interpretation.
 - May not be designated as [primary calibrations](#primary-calibrations).
 - Are still visible to all users when published, but the RUO label signals that they should not be used as the sole basis for clinical variant classification.
-
-The RUO designation is set when the calibration is created and cannot be changed after publication.
 
 ## Primary calibrations
 

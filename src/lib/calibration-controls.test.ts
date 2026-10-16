@@ -30,7 +30,9 @@ describe('CALIBRATION_CONTROL_STATUS_OPTIONS', () => {
 
 describe('parseControlsCsv', () => {
   it('parses a variant_urn CSV', () => {
-    const preview = parseControlsCsv('variant_urn,clinical_status\nurn:mavedb:00000001-a-1#1,pathogenic\nurn:mavedb:00000001-a-1#2,benign\n')
+    const preview = parseControlsCsv(
+      'variant_urn,clinical_status\nurn:mavedb:00000001-a-1#1,pathogenic\nurn:mavedb:00000001-a-1#2,benign\n'
+    )
     expect(preview.errors).toEqual([])
     expect(preview.variantColumn).toBe('variant_urn')
     expect(preview.rows).toEqual([

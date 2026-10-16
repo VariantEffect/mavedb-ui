@@ -49,7 +49,10 @@ export interface UseAutocompleteReturn<T = unknown> {
  * await search('human')  // items.value now contains matching taxonomies
  * ```
  */
-export function useAutocomplete<T = unknown>(path: string, options: UseAutocompleteOptions<T> = {}): UseAutocompleteReturn<T> {
+export function useAutocomplete<T = unknown>(
+  path: string,
+  options: UseAutocompleteOptions<T> = {}
+): UseAutocompleteReturn<T> {
   const {method = 'GET', limit = 500, url: urlOverride, extract} = options
 
   const items = ref<T[]>([]) as Ref<T[]>

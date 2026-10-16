@@ -1,7 +1,11 @@
 <template>
   <div>
     <div class="mb-4 space-y-2.5">
-      <MvFilterChips :filters="filters" :model-value="calibrationFilter" @update:model-value="$emit('update:calibrationFilter', $event)" />
+      <MvFilterChips
+        :filters="filters"
+        :model-value="calibrationFilter"
+        @update:model-value="$emit('update:calibrationFilter', $event)"
+      />
       <FloatLabel variant="on">
         <InputText
           id="calibration-search"
@@ -36,7 +40,13 @@
       description="No calibrations match your current filters. Try adjusting or clearing your filters."
       title="No matching calibrations"
     >
-      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="($emit('update:calibrationFilter', ['all']), $emit('update:calibrationSearch', ''))" />
+      <PButton
+        class="mt-2"
+        label="Clear filters"
+        severity="warn"
+        size="small"
+        @click="($emit('update:calibrationFilter', ['all']), $emit('update:calibrationSearch', ''))"
+      />
     </MvEmptyState>
 
     <div v-else class="mave-card overflow-hidden">
@@ -44,7 +54,12 @@
       <table class="hidden w-full table-fixed border-collapse text-sm tablet:table">
         <thead>
           <tr class="border-b border-border bg-bg">
-            <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted" style="width: 46%">Calibration</th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted"
+              style="width: 46%"
+            >
+              Calibration
+            </th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Status</th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Score Set</th>
             <th class="w-20 px-4 py-2.5" />
@@ -134,7 +149,17 @@ type ScoreCalibration = components['schemas']['ScoreCalibrationWithScoreSetUrn']
 export default defineComponent({
   name: 'MvDashboardCalibrations',
 
-  components: {FloatLabel, InputText, PButton, MvFilterChips, MvBadge, MvEmptyState, MvErrorState, MvLoader, MvRowActionMenu},
+  components: {
+    FloatLabel,
+    InputText,
+    PButton,
+    MvFilterChips,
+    MvBadge,
+    MvEmptyState,
+    MvErrorState,
+    MvLoader,
+    MvRowActionMenu
+  },
 
   props: {
     filteredCalibrations: {type: Array as PropType<ScoreCalibration[]>, required: true},
@@ -145,7 +170,14 @@ export default defineComponent({
     hasData: {type: Boolean, required: true}
   },
 
-  emits: ['update:calibrationFilter', 'update:calibrationSearch', 'createCalibration', 'editCalibration', 'deleteCalibration', 'retry'],
+  emits: [
+    'update:calibrationFilter',
+    'update:calibrationSearch',
+    'createCalibration',
+    'editCalibration',
+    'deleteCalibration',
+    'retry'
+  ],
 
   computed: {
     filters() {

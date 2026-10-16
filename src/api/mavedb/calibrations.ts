@@ -18,7 +18,9 @@ export async function getScoreCalibration(urn: string): Promise<ScoreCalibration
  * Fetch all calibrations for a score set.
  */
 export async function getScoreSetCalibrations(scoreSetUrn: string) {
-  const response = await axios.get(`${config.apiBaseUrl}/score-calibrations/score-set/${encodeURIComponent(scoreSetUrn)}`)
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-calibrations/score-set/${encodeURIComponent(scoreSetUrn)}`
+  )
   return response.data
 }
 
@@ -36,11 +38,9 @@ export async function createScoreCalibration(formData: FormData) {
  * Update an existing score calibration via multipart form data.
  */
 export async function updateScoreCalibration(urn: string, formData: FormData) {
-  const response = await axios.put(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}`,
-    formData,
-    {headers: {'Content-Type': 'multipart/form-data'}}
-  )
+  const response = await axios.put(`${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}`, formData, {
+    headers: {'Content-Type': 'multipart/form-data'}
+  })
   return response.data
 }
 
@@ -48,9 +48,7 @@ export async function updateScoreCalibration(urn: string, formData: FormData) {
  * Publish a score calibration.
  */
 export async function publishScoreCalibration(urn: string) {
-  const response = await axios.post(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}/publish`
-  )
+  const response = await axios.post(`${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}/publish`)
   return response.data
 }
 
@@ -78,9 +76,7 @@ export async function demoteScoreCalibration(urn: string) {
  * Delete a score calibration.
  */
 export async function deleteScoreCalibration(urn: string) {
-  const response = await axios.delete(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}`
-  )
+  const response = await axios.delete(`${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}`)
   return response.data
 }
 
@@ -119,7 +115,8 @@ export async function getScoreCalibrationVariants(
     .get(`${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`)
     .then((response) => response.data)
     .finally(() => {
-      if (inFlightCalibrationVariants.get(calibrationUrn) === promise) inFlightCalibrationVariants.delete(calibrationUrn)
+      if (inFlightCalibrationVariants.get(calibrationUrn) === promise)
+        inFlightCalibrationVariants.delete(calibrationUrn)
     })
   inFlightCalibrationVariants.set(calibrationUrn, promise)
   return promise

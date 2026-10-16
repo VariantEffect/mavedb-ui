@@ -6,17 +6,14 @@
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="leading-relaxed text-text-secondary" v-html="pub.referenceHtml"></div>
         <div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
-          <a class="text-link" :href="`${appBaseUrl}/publication-identifiers/${pub.dbName}/${encodeURIComponent(pub.identifier)}`">{{
-            pub.identifier
-          }}</a>
+          <a
+            class="text-link"
+            :href="`${appBaseUrl}/publication-identifiers/${pub.dbName}/${encodeURIComponent(pub.identifier)}`"
+            >{{ pub.identifier }}</a
+          >
           <template v-if="getPublicationUrl(pub)">
             <span class="text-border">&middot;</span>
-            <a
-              class="text-link"
-              :href="getPublicationUrl(pub)!"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
+            <a class="text-link" :href="getPublicationUrl(pub)!" rel="noopener noreferrer" target="_blank">
               View article on the web
             </a>
           </template>

@@ -136,9 +136,13 @@ export default defineComponent({
       )
     )
 
-    watch(editor.isValid, (val) => {
-      emit('update:valid', val)
-    }, {immediate: true})
+    watch(
+      editor.isValid,
+      (val) => {
+        emit('update:valid', val)
+      },
+      {immediate: true}
+    )
 
     return {...editor, identifierSearchLoadingMap}
   },

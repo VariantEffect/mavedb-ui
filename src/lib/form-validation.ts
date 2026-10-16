@@ -60,7 +60,9 @@ export function missingRequiredFieldErrors(
   const errors: ValidationErrors = {}
   for (const [key, value] of Object.entries(fields)) {
     const empty =
-      value == null || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0)
+      value == null ||
+      (typeof value === 'string' && value.trim() === '') ||
+      (Array.isArray(value) && value.length === 0)
     if (empty) errors[key] = message
   }
   return errors

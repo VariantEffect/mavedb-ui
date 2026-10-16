@@ -142,7 +142,11 @@ export interface UseTargetGeneEditorReturn {
   /** Autofill form state from an existing target gene selection. */
   onAutofillFromExisting: (event: AutoCompleteSelectEvent) => void
   /** Update an external identifier field (identifier or offset). */
-  onExternalIdentifierUpdate: (dbName: string, field: string, value: EditableIdentifierOffset['identifier'] | number | null) => void
+  onExternalIdentifierUpdate: (
+    dbName: string,
+    field: string,
+    value: EditableIdentifierOffset['identifier'] | number | null
+  ) => void
   /** Validate and normalize an external identifier on blur. */
   onIdentifierBlur: (dbName: string) => void
   /** Handle AutoComplete change for an external identifier. */
@@ -272,12 +276,7 @@ export function useTargetGeneEditor(props: TargetGeneEditorProps): UseTargetGene
         taxonomy.value?.id
       )
     } else {
-      return !!(
-        tg.name &&
-        tg.category &&
-        tg.targetAccession.accession &&
-        (assembly.value || geneName.value)
-      )
+      return !!(tg.name && tg.category && tg.targetAccession.accession && (assembly.value || geneName.value))
     }
   })
 
@@ -348,7 +347,9 @@ export function useTargetGeneEditor(props: TargetGeneEditorProps): UseTargetGene
     const linkedAccs: Record<string, boolean> = {}
     for (const dbName of EXTERNAL_GENE_DATABASES) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const ids = (tg as any).externalIdentifiers as Array<{identifier?: {dbName?: string}; offset?: number}> | undefined
+      const ids = (tg as any).externalIdentifiers as
+        | Array<{identifier?: {dbName?: string}; offset?: number}>
+        | undefined
       const found = (ids || []).find((ei) => ei.identifier?.dbName === dbName)
       autopopulatedExternalIds[dbName] = found
         ? {identifier: found.identifier as EditableIdentifierOffset['identifier'], offset: found.offset ?? null}
@@ -360,7 +361,11 @@ export function useTargetGeneEditor(props: TargetGeneEditorProps): UseTargetGene
     targetGene.value = tg
   }
 
-  function onExternalIdentifierUpdate(dbName: string, field: string, value: EditableIdentifierOffset['identifier'] | number | null) {
+  function onExternalIdentifierUpdate(
+    dbName: string,
+    field: string,
+    value: EditableIdentifierOffset['identifier'] | number | null
+  ) {
     if (field === 'identifier') {
       targetGene.value.externalIdentifiers[dbName].identifier = value as EditableIdentifierOffset['identifier']
     } else if (field === 'offset') {
@@ -525,7 +530,8 @@ export function useTargetGeneEditor(props: TargetGeneEditorProps): UseTargetGene
       .map((dbName: string) => {
         const identifierOffset = target.externalIdentifiers[dbName]
         if (identifierOffset.identifier != null || (identifierOffset != null && (identifierOffset.offset ?? 0) > 0)) {
-          const id = typeof identifierOffset.identifier === 'object' ? identifierOffset.identifier?.identifier : undefined
+          const id =
+            typeof identifierOffset.identifier === 'object' ? identifierOffset.identifier?.identifier : undefined
           return {
             offset: identifierOffset.offset,
             identifier: {

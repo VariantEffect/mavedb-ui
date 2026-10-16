@@ -957,7 +957,9 @@ export default function makeHistogram(): Histogram {
             (enter) => {
               const g = enter.append('g').attr('class', 'histogram-legend-item')
               g.append('circle').attr('r', legendCircleWidth).attr('cx', legendX)
-              g.append('text').attr('x', legendX + legendCircleWidth + legendSpacing).style('font-size', legendFontSize)
+              g.append('text')
+                .attr('x', legendX + legendCircleWidth + legendSpacing)
+                .style('font-size', legendFontSize)
               return g
             },
             (update) => update,

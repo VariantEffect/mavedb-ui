@@ -3,15 +3,8 @@ import {describe, expect, it} from 'vitest'
 import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
 import type {HgvsField, LeanVariant} from '@/lib/variants'
 
-const {
-  coordinateFor,
-  getHgvsNt,
-  getHgvsPro,
-  labelForVariant,
-  levelAvailable,
-  sequenceTypeOptions,
-  resolveLevel
-} = useVariantCoordinates()
+const {coordinateFor, getHgvsNt, getHgvsPro, labelForVariant, levelAvailable, sequenceTypeOptions, resolveLevel} =
+  useVariantCoordinates()
 
 function field(hgvs: string, position?: number, ref?: string, alt?: string): HgvsField {
   return {hgvs, position, ref, alt}

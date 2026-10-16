@@ -138,7 +138,10 @@ describe('consequenceExemplars', () => {
   })
 
   it('ignores unscored variants', () => {
-    const variants = [v('unscored', null, {consequence: 'missense_variant'}), v('scored', 1, {consequence: 'stop_gained'})]
+    const variants = [
+      v('unscored', null, {consequence: 'missense_variant'}),
+      v('scored', 1, {consequence: 'stop_gained'})
+    ]
     expect(consequenceExemplars(variants).map((r) => r.variantUrn)).toEqual(['scored'])
   })
 })
@@ -147,7 +150,11 @@ describe('scoreExtremes', () => {
   it('returns the n variants furthest from the median, both tails', () => {
     const variants = [v('a', 0), v('b', 1), v('c', 2), v('d', 10), v('e', -8)]
     // Median 1; distances: e=9, d=9, a=1, c=1, b=0. Top 2 are the two tails.
-    expect(scoreExtremes(variants, 2).map((r) => r.variantUrn).sort()).toEqual(['d', 'e'])
+    expect(
+      scoreExtremes(variants, 2)
+        .map((r) => r.variantUrn)
+        .sort()
+    ).toEqual(['d', 'e'])
   })
 
   it('caps at the requested count and ignores unscored variants', () => {

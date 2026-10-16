@@ -93,10 +93,7 @@ export function normalizeRawReadArray(
     .filter((x): x is RawReadIdentifierCreate => x !== null)
 }
 
-export function normalizeContributorArray(
-  items: (Contributor | string)[],
-  toast?: ToastServiceMethods
-): Contributor[] {
+export function normalizeContributorArray(items: (Contributor | string)[], toast?: ToastServiceMethods): Contributor[] {
   return items
     .map((item) => {
       if (typeof item === 'string') {

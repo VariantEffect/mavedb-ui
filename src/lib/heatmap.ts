@@ -600,7 +600,12 @@ export default function makeHeatmap(): Heatmap {
     if (svg) {
       svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
       // if start.x or end.x is outside content xMin/xMax, do not draw selection rectangle
-      if (!content.xMin || !content.xMax || !_.inRange(start.x, content.xMin, content.xMax + 1) || !_.inRange(end.x, content.xMin, content.xMax + 1)) {
+      if (
+        !content.xMin ||
+        !content.xMax ||
+        !_.inRange(start.x, content.xMin, content.xMax + 1) ||
+        !_.inRange(end.x, content.xMin, content.xMax + 1)
+      ) {
         return
       }
       const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement

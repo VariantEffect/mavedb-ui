@@ -5,14 +5,7 @@
     </span>
     <span class="mv-file-status-name">{{ label }} uploaded successfully</span>
     <div class="mv-file-status-actions">
-      <PButton
-        v-if="viewable"
-        label="View"
-        severity="secondary"
-        size="small"
-        type="button"
-        @click="$emit('view')"
-      />
+      <PButton v-if="viewable" label="View" severity="secondary" size="small" type="button" @click="$emit('view')" />
       <PButton label="Delete" severity="danger" size="small" type="button" @click="$emit('delete')" />
     </div>
   </div>

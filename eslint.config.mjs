@@ -8,12 +8,8 @@ export default defineConfigWithVueTs(
   skipFormatting,
   {
     rules: {
-      'vue/attributes-order': [
-        'error', {alphabetical: true}
-      ],
-      '@typescript-eslint/no-unused-vars': [
-        'error', {argsIgnorePattern: '^_', varsIgnorePattern: '^_'}
-      ]
+      'vue/attributes-order': ['error', {alphabetical: true}],
+      '@typescript-eslint/no-unused-vars': ['error', {argsIgnorePattern: '^_', varsIgnorePattern: '^_'}]
     }
   },
   {
@@ -21,7 +17,8 @@ export default defineConfigWithVueTs(
     ignores: ['src/lib/form-helpers.ts'],
     rules: {
       'no-restricted-imports': [
-        'error', {paths: [{name: 'marked', message: 'Use markdownToHtml from @/lib/form-helpers, which sanitizes the output.'}]}
+        'error',
+        {paths: [{name: 'marked', message: 'Use markdownToHtml from @/lib/form-helpers, which sanitizes the output.'}]}
       ]
     }
   }

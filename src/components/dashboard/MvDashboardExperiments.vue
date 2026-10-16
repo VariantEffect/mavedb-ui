@@ -1,7 +1,11 @@
 <template>
   <div>
     <div class="mb-4 space-y-2.5">
-      <MvFilterChips :filters="filters" :model-value="experimentFilter" @update:model-value="$emit('update:experimentFilter', $event)" />
+      <MvFilterChips
+        :filters="filters"
+        :model-value="experimentFilter"
+        @update:model-value="$emit('update:experimentFilter', $event)"
+      />
       <FloatLabel variant="on">
         <InputText
           id="experiment-search"
@@ -36,7 +40,13 @@
       description="No experiments match your current filters. Try adjusting or clearing your filters."
       title="No matching experiments"
     >
-      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="($emit('update:experimentFilter', ['all']), $emit('update:experimentSearch', ''))" />
+      <PButton
+        class="mt-2"
+        label="Clear filters"
+        severity="warn"
+        size="small"
+        @click="($emit('update:experimentFilter', ['all']), $emit('update:experimentSearch', ''))"
+      />
     </MvEmptyState>
 
     <div v-else class="mave-card overflow-hidden">
@@ -44,7 +54,12 @@
       <table class="hidden w-full table-fixed border-collapse text-sm tablet:table">
         <thead>
           <tr class="border-b border-border bg-bg">
-            <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted" style="width: 40%">Experiment</th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted"
+              style="width: 40%"
+            >
+              Experiment
+            </th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Score Sets</th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Role</th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Status</th>
@@ -59,7 +74,10 @@
             class="group border-b border-border-light transition-colors last:border-b-0 hover:bg-bg"
           >
             <td class="px-4 py-2.5 [overflow-wrap:anywhere]">
-              <router-link class="line-clamp-1 text-sm font-semibold leading-snug text-sage-strong hover:underline" :to="{name: 'experiment', params: {urn: exp.urn}}">
+              <router-link
+                class="line-clamp-1 text-sm font-semibold leading-snug text-sage-strong hover:underline"
+                :to="{name: 'experiment', params: {urn: exp.urn}}"
+              >
                 {{ exp.title }}
               </router-link>
               <div v-if="exp.shortDescription" class="line-clamp-2 text-xs leading-tight text-text-muted">
@@ -111,7 +129,12 @@
       </div>
 
       <div class="flex justify-end border-t border-border bg-bg px-4 py-3">
-        <PButton label="+ Add Experiment" severity="warn" size="small" @click="$router.push({name: 'createExperiment'})" />
+        <PButton
+          label="+ Add Experiment"
+          severity="warn"
+          size="small"
+          @click="$router.push({name: 'createExperiment'})"
+        />
       </div>
     </div>
   </div>
@@ -135,7 +158,17 @@ import {formatDate} from '@/lib/formats'
 export default defineComponent({
   name: 'MvDashboardExperiments',
 
-  components: {FloatLabel, InputText, PButton, MvFilterChips, MvBadge, MvEmptyState, MvErrorState, MvLoader, MvRowActionMenu},
+  components: {
+    FloatLabel,
+    InputText,
+    PButton,
+    MvFilterChips,
+    MvBadge,
+    MvEmptyState,
+    MvErrorState,
+    MvLoader,
+    MvRowActionMenu
+  },
 
   props: {
     filteredExperiments: {type: Array as PropType<ExperimentWithMeta[]>, required: true},
@@ -174,7 +207,12 @@ export default defineComponent({
         actions.push(
           {label: 'Edit', description: 'Edit experiment', to: {name: 'editExperiment', params: {urn: exp.urn}}},
           {separator: true},
-          {label: 'Delete', description: 'Permanently delete this experiment', danger: true, handler: () => this.confirmDeleteExperiment(exp)}
+          {
+            label: 'Delete',
+            description: 'Permanently delete this experiment',
+            danger: true,
+            handler: () => this.confirmDeleteExperiment(exp)
+          }
         )
       }
       return actions

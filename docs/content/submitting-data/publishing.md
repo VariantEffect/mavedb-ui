@@ -20,7 +20,7 @@ Published score sets carry the [license](metadata-guide.md#licenses) selected du
 
 Published score sets cannot be deleted. To correct an error in a published score set's data, upload a corrected score set that supersedes it:
 
-1. In the first step of the [score set form](upload-guide.md#uploading-a-score-set), answer yes to "Does this score set correct errors in and replace a score set previously published on MaveDB that you created?"
+1. In the first step of the [score set form](submitting-a-dataset.md#creating-a-score-set), answer yes to "Does this score set correct errors in and replace a score set previously published on MaveDB that you created?"
 2. Enter the URN of the score set you are replacing and select it from the list.
 3. Complete and publish the new score set as usual.
 
@@ -31,7 +31,7 @@ The original score set keeps its URN, so existing links and citations still reso
 
 ## See also
 
-- [Upload Guide](upload-guide.md) -- Step-by-step instructions for creating experiments and score sets.
+- [Submitting a Dataset](submitting-a-dataset.md) -- Step-by-step instructions for creating experiments and score sets.
 - [Metadata Guide](metadata-guide.md) -- Details on all metadata fields, including editable free-text fields.
 - [Accession Numbers](../reference/accession-numbers.md) -- How temporary and permanent URNs are assigned to records.
 - [Downloading Data](../finding-data/downloading.md) -- How published data can be accessed and downloaded by other users.

@@ -114,7 +114,7 @@ The metadata files should contain a JSON object where each key is a column name 
 ## See also
 
 - [Targets](targets.md) -- How to define sequence-based and accession-based targets for your score set.
-- [Upload Guide](upload-guide.md) -- Step-by-step instructions for creating experiments and score sets.
+- [Submitting a Dataset](submitting-a-dataset.md) -- Step-by-step instructions for creating experiments and score sets.
 - [Metadata Guide](metadata-guide.md) -- Detailed descriptions of all metadata fields, including free-text methods where you should describe your column naming conventions.
 - [Downloading Data](../finding-data/downloading.md) -- How users can download the data you upload, including CSV and VRS formats.
 - [Variant Mapping](../mapping/forward-mapping.md) -- How MaveDB maps your uploaded variants to genomic coordinates.

@@ -124,6 +124,6 @@ For example, if a score set has two targets labeled `TP53` and `MDM2`, a variant
 ## See also
 
 - [Data Formats](data-formats.md) -- Formatting requirements for variant columns and fully-qualified variants.
-- [Upload Guide](upload-guide.md) -- Step-by-step instructions for creating score sets and specifying targets.
+- [Submitting a Dataset](submitting-a-dataset.md) -- Step-by-step instructions for creating score sets and specifying targets.
 - [Variant Mapping](../mapping/forward-mapping.md) -- How MaveDB maps target-relative variants to genomic coordinates.
 - [Accession Numbers](../reference/accession-numbers.md) -- How MaveDB URNs identify experiment sets, experiments, and score sets.

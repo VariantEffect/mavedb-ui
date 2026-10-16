@@ -146,6 +146,6 @@ The rank restriction means that community calibration providers cannot promote t
 
 - [Visualizations](../finding-data/visualizations.md) -- How calibrations influence the histogram and heatmap displays.
 - [Downloading Data](../finding-data/downloading.md#annotated-variants-va-spec) -- How calibration data is included in VA-Spec annotated variant downloads.
-- [Upload Guide](../submitting-data/upload-guide.md) -- Step-by-step instructions for creating score sets, including adding calibrations.
+- [Submitting a Dataset](../submitting-data/submitting-a-dataset.md) -- Step-by-step instructions for creating score sets, including adding calibrations.
 - [External Integrations](../finding-data/external-integrations.md) -- How MaveDB connects with ClinVar, ClinGen, and other resources that use calibration-informed classifications.
 - [Accession Numbers](accession-numbers.md#urns-for-other-resources) -- How calibration URNs are structured in MaveDB.

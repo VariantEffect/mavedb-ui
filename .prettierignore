@@ -3,6 +3,8 @@
 /src/schema/openapi.d.ts
 # Sphinx output from the mavehgvs and MaveTools projects, committed as built
 /public/docs/
+# Written by eslint --suppress-all and --prune-suppressions
+/eslint-suppressions.json
 
 # MkDocs documentation (Prettier breaks admonitions and collapsible syntax)
 /docs/

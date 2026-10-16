@@ -34,8 +34,6 @@ MaveDB captures key facts about the experimental assay used to generate variant 
 :   The OddsPath score calculated for abnormal and normal functional readouts, if applicable. These OddsPaths are based on the framework described in [Brnich et al., 2019](https://doi.org/10.1186/s13073-019-0690-2).
 
     !!! note
-        OddsPath calculations are provided when available.
-
         For some assays, MaveDB maintainers may have selected OddsPaths other than those submitted by the data contributor, based on updated [calibrations](score-calibrations.md) or reanalyses of the data. In these cases, the source of the OddsPath scores will be indicated on the score set page.
 
 ## See also

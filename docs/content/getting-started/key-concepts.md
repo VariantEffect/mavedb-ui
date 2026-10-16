@@ -48,9 +48,7 @@ This experiment set describes two distinct assays performed on a single *BRCA1* 
 
 Experiment sets group related experiments together. They do not have their own data or metadata -- they exist purely as an organizational container.
 
-**When to use a single experiment set:** Group experiments that describe different functional assays performed on the same target and described in the same publication. For example, if a study performed both a yeast complementation assay and a phage display assay on the same variant library, these would be two experiments under one experiment set ([example](https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/)).
-
-**When to create multiple experiment sets:** In general, an experiment set should contain data for a single target. It is not necessary to include all data from a single publication or research project under one experiment set.
+**What belongs in one experiment set:** An experiment set should contain data for a single target. Group the experiments a publication performed on that target into one set. For example, if a study performed both a yeast complementation assay and a phage display assay on the same variant library, these would be two experiments under one experiment set ([example](https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/)). A publication that studied several targets needs one experiment set per target.
 
 Experiment sets are created automatically when the first associated experiment is saved. To add another experiment to an existing experiment set, use the **Add an experiment** button on the experiment set page.
 
@@ -67,11 +65,9 @@ Experiments also store publication references. MaveDB supports PubMed IDs, bioRx
 
 **Replicates:** Replicate assays should not be reported as separate experiments. Instead, the number and nature of the replicates should be clearly stated in the experiment's methods section.
 
-To assign a new experiment to an existing experiment set, use the **Add an experiment** button on the experiment set page.
-
 ## Score sets
 
-Score sets are the records that describe the scores generated from the raw data described in their associated experiment. They are the primary way that users interact with the data deposited into MaveDB. This includes all steps following the high-throughput sequencing step, including read filtering, read counting, and score calculations ([example](https://www.mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/)). For details on the expected file formats, see [Data formats](../submitting-data/data-formats.md).
+Score sets are the records that describe the scores generated from the raw data described in their associated experiment. They are the primary way that users interact with the data deposited into MaveDB. ([example](https://www.mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/)). For details on the expected file formats, see [Data formats](../submitting-data/data-formats.md).
 
 All score sets must be associated with an existing experiment.
 
@@ -86,7 +82,7 @@ A score set contains:
 - **Target information** -- Details about the [target sequence](#targets) that was mutagenized.
 - **Methods** -- A description of how scores were calculated from the raw sequencing data.
 
-**When to create multiple score sets:** Use multiple score sets when distinct methods were used to calculate scores for raw data described by the experiment. Common examples include producing both abundance-based and activity-based scores from the same experiment, or reanalyzing existing data with updated scoring methods.
+**When to create multiple score sets:** Use multiple score sets when distinct methods were used to calculate scores for raw data described by the experiment. Common examples include producing both abundance-based and activity-based scores from the same experiment, or rescoring the experiment's raw data with an updated method. When the new analysis starts from existing scores rather than raw data, use a [meta-analysis score set](#meta-analysis-score-sets) instead.
 
 **Imputed or normalized scores:** When uploading results based on imputation or complex normalization, it is recommended to upload a more raw form of the scores (e.g., enrichment ratios) as a normal score set, and then use a [meta-analysis score set](#meta-analysis-score-sets) to describe the imputed or normalized results. This preserves the original scores and ensures they remain discoverable for users who want to evaluate their own methods or build models that may be sensitive to data normalization.
 
@@ -98,7 +94,7 @@ Meta-analysis score sets have all the same attributes as a regular score set, bu
 
 - Combining scores across multiple experiments
 - Applying imputation or advanced normalization methods to existing scores
-- Re-scoring data using updated methods or models
+- Re-scoring existing score sets with updated models
 
 For example, [urn:mavedb:00000055-0-1](https://www.mavedb.org/#/score-sets/urn:mavedb:00000055-0-1/) is a meta-analysis score set for the gene *NUDT15* that combines the results of two separate functional assays into a single composite *function score* summarizing performance across both assays.
 
@@ -144,7 +140,7 @@ Variants in MaveDB score sets are described using [MAVE-HGVS](../submitting-data
 
 For score sets with [accession-based targets](#targets) (such as those from saturation genome editing experiments), variants can be defined with respect to a transcript accession or human genome reference, with validation handled by a local sequence database.
 
-After upload, human-targeting score sets are automatically processed through [variant mapping](../reference/variant-mapping.md), which translates variants to standard genomic coordinates and [GA4GH VRS](https://vrs.ga4gh.org/) format for interoperability with clinical and research databases.
+After upload, human-targeting score sets are automatically processed through [variant mapping](../mapping/forward-mapping.md), which translates variants to standard genomic coordinates and [GA4GH VRS](https://vrs.ga4gh.org/) format for interoperability with clinical and research databases.
 
 ## Data licensing
 
@@ -156,4 +152,4 @@ MaveDB supports [Creative Commons](https://creativecommons.org/) licenses for sc
 - [Visualizations](../finding-data/visualizations.md) -- explore variant effect data through histograms, heatmaps, and 3D structure views.
 - [Score calibrations](../reference/score-calibrations.md) -- learn how functional scores are calibrated for clinical interpretation.
 - [Controlled vocabulary](../reference/controlled-vocabulary.md) -- definitions of terms used in MaveDB metadata.
-- [Variant mapping](../reference/variant-mapping.md) -- how MAVE variants are mapped to genomic coordinates.
+- [Variant mapping](../mapping/forward-mapping.md) -- how MAVE variants are mapped to genomic coordinates.

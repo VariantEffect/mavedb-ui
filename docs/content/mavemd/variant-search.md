@@ -16,7 +16,7 @@ You can search for variants using any of the following identifier types:
 
 ## How search works
 
-Most MaveMD searches are powered by the [ClinGen Allele Registry](https://reg.clinicalgenome.org/). When MaveDB [maps variants](../reference/variant-mapping.md) to human genomic coordinates, it registers them with the ClinGen Allele Registry and obtains ClinGen Allele IDs (CAIDs). These stable, universal identifiers allow MaveMD to match your search query — regardless of which identifier type you use — to the correct variant across all datasets.
+Most MaveMD searches are powered by the [ClinGen Allele Registry](https://reg.clinicalgenome.org/). When MaveDB [maps variants](../mapping/forward-mapping.md) to human genomic coordinates, it registers them with the ClinGen Allele Registry and obtains ClinGen Allele IDs (CAIDs). These stable, universal identifiers allow MaveMD to match your search query — regardless of which identifier type you use — to the correct variant across all datasets.
 
 This means you can search using a ClinVar Variation ID from a clinical report and find the same variant in MAVE datasets that originally used HGVS notation on a different transcript, as long as both resolve to the same genomic variant.
 
@@ -24,7 +24,7 @@ This means you can search using a ClinVar Variation ID from a clinical report an
 
 GA4GH VRS identifier search works differently from all other search types. Rather than routing through the ClinGen Allele Registry, it queries MaveDB directly using the [VRS digest](../reference/data-standards.md#vrs-variant-representation) assigned during variant mapping. This makes it useful in workflows where you already have a GA4GH-compatible identifier — for example, from a MaveDB data export, a GA4GH-compliant pipeline, or another VRS-enabled database.
 
-The search matches both forms of a variant's VRS identifier: the reference-level alleles MaveDB holds for it (the mapped allele and the alleles derived from it at other levels), and the pre-mapped form on the submitted target sequence. A pre-mapped match is reported with the variant's mapped allele, or with no allele if the variant did not map.
+The search matches both forms of a variant's VRS identifier: the reference-level alleles MaveDB holds for it (the mapped allele and the alleles derived from it at other levels), and the assay-level form on the submitted target sequence. An assay-level match is reported with the variant's mapped allele, or with no allele if the variant did not map.
 
 Alleles (`ga4gh:VA.*`) and cis-phased blocks (`ga4gh:CPB.*`) are supported.
 
@@ -59,4 +59,4 @@ MaveMD variants are accessible from external platforms through the ClinGen Linke
 
 - [Variant page](variant-page.md) -- Detailed view of functional evidence for a variant
 - [External Integrations](../finding-data/external-integrations.md) -- How MaveDB connects with ClinGen, ClinVar, and other resources
-- [Variant Mapping](../reference/variant-mapping.md) -- How MAVE variants are mapped to genomic coordinates and registered with ClinGen
+- [Variant Mapping](../mapping/forward-mapping.md) -- How MAVE variants are mapped to genomic coordinates and registered with ClinGen

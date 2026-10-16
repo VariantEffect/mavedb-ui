@@ -38,6 +38,9 @@ extra_css:
 plugins:
   - search
   - glightbox
+  - redirects:
+      redirect_maps:
+        reference/variant-mapping.md: mapping/forward-mapping.md
 
 markdown_extensions:
   - admonition
@@ -88,6 +91,7 @@ nav:
   - Interpreting Annotated Variants: interpreting-annotated-variants.md
   - Variant Mapping & Annotation:
       - Overview: mapping/index.md
+      - Forward Mapping: mapping/forward-mapping.md
       - Reverse Translation & Projection: mapping/reverse-translation.md
       - Annotation: mapping/annotation.md
   - MaveMD:
@@ -105,7 +109,6 @@ nav:
       - Accession Numbers: reference/accession-numbers.md
       - Controlled Vocabulary: reference/controlled-vocabulary.md
       - Permissions: reference/permissions.md
-      - Variant Mapping: reference/variant-mapping.md
       - Assay Facts: reference/assay-facts.md
       - Collections: reference/collections.md
   - Troubleshooting: troubleshooting.md

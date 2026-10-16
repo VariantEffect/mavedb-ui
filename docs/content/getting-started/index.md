@@ -8,9 +8,9 @@
 - **Massively Parallel Reporter Assays (MPRA)** -- tests the effect of sequence variants on gene regulatory elements such as promoters and enhancers.
 - **Saturation Genome Editing (SGE)** -- uses CRISPR-based editing to introduce variants directly into the endogenous genomic locus, measuring their functional effects in the native regulatory and chromatin context.
 
-These experiments generate large datasets that associate individual variants with quantitative functional scores, providing valuable evidence for understanding gene function and interpreting variants of uncertain significance in clinical genomics.
+These experiments generate large datasets that associate individual variants with quantitative functional scores. These scores are used to study gene function and to help interpret variants of uncertain significance in clinical genomics.
 
-**MaveDB** is the public repository for these datasets. It stores the experimental metadata, variant scores, and count data from MAVE studies, organized in a structured hierarchy of [experiment sets, experiments, and score sets](key-concepts.md). MaveDB also supports [variant mapping](../reference/variant-mapping.md) to genomic coordinates, [score calibrations](../reference/score-calibrations.md) for clinical interpretation, and integration with [external resources](../finding-data/external-integrations.md) such as ClinVar, gnomAD, and ClinGen.
+**MaveDB** is the public repository for these datasets. It stores the experimental metadata, variant scores, and count data from MAVE studies, organized in a structured hierarchy of [experiment sets, experiments, and score sets](key-concepts.md). MaveDB also supports [variant mapping](../mapping/forward-mapping.md) to genomic coordinates, [score calibrations](../reference/score-calibrations.md) for clinical interpretation, and integration with [external resources](../finding-data/external-integrations.md) such as ClinVar, gnomAD, and ClinGen.
 
 ## What can you do with MaveDB?
 
@@ -24,7 +24,7 @@ Each score set page provides a detailed view of the data, including metadata abo
 
 ### Download data
 
-Download variant scores and counts in CSV format from individual score set pages. [Mapped variants](../reference/variant-mapping.md) are available in GA4GH VRS JSON format, and annotated variants are available in VA-Spec format. For large-scale analyses, a [bulk download archive](../finding-data/downloading.md) is available on Zenodo.
+Download variant scores and counts in CSV format from individual score set pages. [Mapped variants](../mapping/forward-mapping.md) are available in GA4GH VRS JSON format, and annotated variants are available in VA-Spec format. For large-scale analyses, a [bulk download archive](../finding-data/downloading.md) is available on Zenodo.
 
 ### Upload experiments and score sets
 

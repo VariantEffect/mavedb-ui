@@ -12,10 +12,7 @@ This installs the core package without server dependencies. The view models, val
 
 ## Authentication
 
-To perform write operations, you need an API key. Generate one from your [Profile settings page](https://www.mavedb.org/#/settings/) after logging in. See [User Accounts](../getting-started/accounts.md#api-access-tokens) for details.
-
-!!! warning "Keep your API key secret"
-    Your API key grants full access to your MaveDB account. Do not commit it to version control, share it publicly, or include it in client-side code. Use environment variables or a secrets manager to store it securely.
+To perform write operations, you need an API key. See [Authentication](api-quickstart.md#authentication) for how to generate one and keep it secret.
 
 ```python
 import os

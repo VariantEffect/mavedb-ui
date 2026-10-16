@@ -4,7 +4,7 @@ MaveDB uses a role-based permission model to control who can view, edit, publish
 
 ## Roles
 
-MaveDB recognizes three user-level roles for datasets (experiment sets, experiments, and score sets):
+MaveDB recognizes four user-level roles for datasets (experiment sets, experiments, and score sets):
 
 - **Owner**: The user who created the resource. Each resource has exactly one owner.
 - **Contributor**: A user added to the resource by the owner. Contributors are identified by [ORCID iD](../getting-started/accounts.md) and share most of the owner's permissions, with some exceptions noted below. See the [Contributors](../submitting-data/metadata-guide.md#contributors) section of the Metadata Guide for details on adding contributors.
@@ -30,7 +30,7 @@ Experiment sets, experiments, and score sets share the same permission model. Th
 
 Key points:
 
-- **Published resources cannot be deleted** by anyone. If a published score set contains errors, it can be [superseded](../submitting-data/publishing.md) by a corrected replacement.
+- **Published resources cannot be deleted** by anyone. If a published score set contains errors, it can be [superseded](../submitting-data/publishing.md#superseding-a-score-set) by a corrected replacement.
 - **Only the owner can publish** a score set. Contributors cannot publish on the owner's behalf.
 - **Only the owner can delete** a private resource. Contributors cannot delete resources they are added to.
 - **Any authenticated user** can add a score set to a published experiment or add a [calibration](score-calibrations.md) to a published score set.

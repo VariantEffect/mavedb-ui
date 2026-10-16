@@ -2,7 +2,7 @@
 
 All variants in a MaveDB [score set](../getting-started/key-concepts.md) are described relative to a target. This target should describe the sequence that was mutagenized to create the variant library. MaveDB supports two types of targets: [sequence-based targets](#sequence-based-targets) and [accession-based targets](#accession-based-targets).
 
-Each score set in MaveDB must be associated with at least one target. Certain experiments may describe variants relative to two or more distinct sequences, such as protein-protein interaction assays that measure the effects of variants in both interacting proteins. In these cases, multiple targets may be associated with a single score set.
+Each score set in MaveDB must be associated with at least one target. Some score sets have [more than one](#multi-target-score-sets).
 
 ## Choosing a target type
 
@@ -21,7 +21,7 @@ The target type records *how your variants were introduced*, not just what seque
 
 - **It shows the context the variant was measured in.** A construct assays variants without their native genomic surroundings, such as introns, splice sites, native regulatory elements, and endogenous expression levels. A genome-edited variant is assayed in place. People reusing your data, for example when weighing it as clinical evidence, rely on the target type to know which effects your assay could have detected.
 - **It records exactly what you assayed.** The uploaded sequence is a permanent record of the sequence you mutagenized. A reference accession describes a sequence held by another database, and it says nothing about how your construct was built.
-- **Nothing is lost by choosing it.** A linked accession, with an offset if needed, still relates your coordinates to the reference. Human targets are also [mapped](../reference/variant-mapping.md) to the reference genome either way.
+- **Nothing is lost by choosing it.** A linked accession, with an offset if needed, still relates your coordinates to the reference. Human targets are also [mapped](../mapping/forward-mapping.md) to the reference genome either way.
 
 ## Sequence-based targets
 
@@ -86,14 +86,12 @@ Do not use an accession-based target only because your mutagenized construct mat
 
     For instance, while you might describe a variant as `c.79A>T` in a sequence-based target, the same variant would need to be described as `NM_000546.6:c.79A>T` if the target is accession-based using the RefSeq ID `NM_000546.6`.
 
-    This requirement allows users to better understand the context of the variants in your score set, especially when they are viewed from outside MaveDB.
-
 When uploading an accession-based target to MaveDB, you may supply either a [RefSeq](https://www.ncbi.nlm.nih.gov/refseq/) or [Ensembl](https://www.ensembl.org) identifier. MaveDB will automatically retrieve the corresponding sequence and metadata from the appropriate external database. These identifiers may refer to either full chromosomes or to individual transcripts/genes.
 
-MaveDB uses both [CDOT](https://cdot.cc) and [SeqRepo](https://github.com/biocommons/seqrepo) to retrieve and cache sequences and metadata for accession-based targets. For more information about how we use these services, see the [external integrations](../finding-data/external-integrations.md) section. After upload, MaveDB performs [variant mapping](../reference/variant-mapping.md) using the target information to link variants to genomic coordinates.
+MaveDB uses both [CDOT](https://cdot.cc) and [SeqRepo](https://github.com/biocommons/seqrepo) to retrieve and cache sequences and metadata for accession-based targets. For more information about how we use these services, see the [external integrations](../finding-data/external-integrations.md) section. After upload, MaveDB performs [variant mapping](../mapping/forward-mapping.md) using the target information to link variants to genomic coordinates.
 
 !!! info "See also"
-    [Base editor score sets](data-formats.md#base-editor-data) use the same accession-based target format as other score sets. However, even though you will be providing an `hgvs_nt` column for your variants, a special `guide_sequence` column in your uploaded scores and counts files that indicates the guide sequence used for each variant will be the index column and should be unique.
+    [Base editor score sets](data-formats.md#base-editor-data) use accession-based targets. Their score and count files also need a `guide_sequence` column, which replaces `hgvs_nt` as the index column.
 
 ### Accession-based target metadata
 
@@ -119,15 +117,13 @@ Some experiments may describe variants relative to two or more distinct sequence
 
 Each target should be described using either the sequence-based or accession-based target format described above. A single score set may not mix sequence-based and accession-based targets; all targets associated with a given score set must use the same target format.
 
-When describing variants in a multi-target score set, each variant must indicate which target it is relative to. This is done by including a label for each target (e.g., "Target 1", "Target 2") and including this label in the variant notation as if it were a prefix to the variant.
+In a multi-target score set, each variant must say which target it is relative to. Give each target a **Label** in the score set form (no spaces or colons), and prefix each variant with that label. The label is optional for single-target score sets and required for multi-target ones.
 
-For example, if a score set includes two targets labeled "TP53" and "MDM2", a variant affecting TP53 might be described as `TP53:p.R175H`, while a variant affecting MDM2 might be described as `MDM2:p.G58S`.
-
-While optional in single-target score sets, this label is a required field in multi-target score sets to ensure that each variant can be unambiguously mapped to the correct target.
+For example, if a score set has two targets labeled `TP53` and `MDM2`, a variant in TP53 might be written `TP53:p.Arg175His` and a variant in MDM2 `MDM2:p.Gly58Ser`.
 
 ## See also
 
 - [Data Formats](data-formats.md) -- Formatting requirements for variant columns and fully-qualified variants.
 - [Upload Guide](upload-guide.md) -- Step-by-step instructions for creating score sets and specifying targets.
-- [Variant Mapping](../reference/variant-mapping.md) -- How MaveDB maps target-relative variants to genomic coordinates.
+- [Variant Mapping](../mapping/forward-mapping.md) -- How MaveDB maps target-relative variants to genomic coordinates.
 - [Accession Numbers](../reference/accession-numbers.md) -- How MaveDB URNs identify experiment sets, experiments, and score sets.

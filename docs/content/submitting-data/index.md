@@ -17,9 +17,9 @@ graph LR
     A["Create<br/>experiment"] --> B["Create<br/>score set"]
     B --> C["Review &<br/>publish"]
 
-    style A fill:#4a90d9,color:#fff
-    style B fill:#4a90d9,color:#fff
-    style C fill:#7ab648,color:#fff
+    style A fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    style B fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    style C fill:#f8971d,color:#fff,stroke:#d97510,stroke-width:1.5px
 ```
 
 1. **Create an experiment** describing the assay. MaveDB creates its experiment set automatically.

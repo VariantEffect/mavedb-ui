@@ -18,7 +18,11 @@
       </MvPageHeader>
     </template>
 
-    <div class="mx-auto max-w-screen-xl py-6 w-full" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
+    <div
+      class="mx-auto max-w-screen-xl py-6 w-full"
+      @change="unsavedChanges.markDirty"
+      @input="unsavedChanges.markDirty"
+    >
       <Stepper v-model:value="activeWizardStep">
         <StepList>
           <Step :value="1">Experiment information</Step>
@@ -308,7 +312,7 @@ export default defineComponent({
     },
     methodText(value) {
       if (value) this.clearClientError('methodText')
-    },
+    }
   },
 
   mounted() {

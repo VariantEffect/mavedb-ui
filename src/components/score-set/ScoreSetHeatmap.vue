@@ -1158,12 +1158,15 @@ export default defineComponent({
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle('Functional Score')
         .drawYGroups(this.sequenceType === 'protein')
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .accessorField(this.variantKey)
         .tooltipHtml(this.tooltipHtmlGetter)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .tooltipTickLabelHtml(this.sequenceType == 'protein' ? this.tooltipTickLabelHtmlGetter : null)
         .pivotColor('#e0e0e0')
         .lowerBoundColor('#762a83')
@@ -1180,6 +1183,7 @@ export default defineComponent({
           .columnRangesSelected(this.variantColumnRangesSelected)
           .axisSelectionMode('y')
           .rowSelected(this.variantRowSelected)
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .rowGroupSelected(this.variantRowGroupSelected)
       }
 
@@ -1192,8 +1196,10 @@ export default defineComponent({
       }
       this.heatmap
         .data(this.heatmapData)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .valueField((v: VariantClassHeatmapDatum) => v.meanScore)
         // WT color was previously #ddbb00.
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color(WILD_TYPE_COLOR) : v.meanScore))
         .refresh()
 
@@ -1208,11 +1214,14 @@ export default defineComponent({
       this.stackedHeatmap = makeHeatmap()
         .margins({top: 20, bottom: 25, left: 20, right: 20})
         .drawYGroups(this.sequenceType === 'protein')
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .render(this.$refs.simpleVariantsStackedHeatmapContainer)
         .rows(this.heatmapRows)
         .nodeSize({width: 20, height: 1})
         .xCoordinate(this.xCoord)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .yCoordinate(this.vRank)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .accessorField(this.variantKey)
         .drawY(false)
         .drawLegend(false)
@@ -1231,8 +1240,10 @@ export default defineComponent({
       }
       this.stackedHeatmap
         .data(this.heatmapData)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .valueField((v: VariantClassHeatmapDatum) => v.meanScore)
         // WT color was previously #ddbb00.
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color(WILD_TYPE_COLOR) : v.meanScore))
         .refresh()
 
@@ -1248,6 +1259,7 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     scrollToPosition: function (position: number) {
+      // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
       this.$refs.heatmapScrollContainer.scrollTo({
         left: position,
         behavior: 'smooth'
@@ -1259,12 +1271,14 @@ export default defineComponent({
         svg: () =>
           saveChartAsSvg(
             this.$refs.heatmapContainer as HTMLElement,
+            // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
             `${this.scoreSet.urn}-scores-heatmap`,
             'mavedb-heatmap-container'
           ),
         png: () =>
           saveChartAsPng(
             this.$refs.heatmapContainer as HTMLElement,
+            // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
             `${this.scoreSet.urn}-scores-heatmap`,
             'mavedb-heatmap-container'
           )

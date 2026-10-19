@@ -66,11 +66,7 @@
       />
     </MvCollapsible>
     <MvCollapsible :open="false" title="Keywords">
-      <div
-        v-for="group in groupedControlledKeywordOptions"
-        :key="group.key"
-        class="mb-3"
-      >
+      <div v-for="group in groupedControlledKeywordOptions" :key="group.key" class="mb-3">
         <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
           {{ group.key }}
         </div>
@@ -137,7 +133,7 @@ export default defineComponent({
   },
 
   computed: {
-    groupedControlledKeywordOptions(): { key: string; options: FilterOption[] }[] {
+    groupedControlledKeywordOptions(): {key: string; options: FilterOption[]}[] {
       const groups: Record<string, FilterOption[]> = {}
       for (const opt of this.controlledKeywordOptions) {
         const key = opt.groupKey || 'Other'
@@ -146,7 +142,9 @@ export default defineComponent({
         }
         groups[key].push(opt)
       }
-      return Object.entries(groups).sort(([aKey], [bKey]) => aKey.localeCompare(bKey)).map(([key, options]) => ({key, options}))
+      return Object.entries(groups)
+        .sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
+        .map(([key, options]) => ({key, options}))
     }
   },
 

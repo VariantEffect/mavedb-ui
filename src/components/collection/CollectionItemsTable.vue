@@ -47,7 +47,6 @@ import {DATA_SET_TYPE_LABELS} from '@/lib/collections'
 import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 
-
 export default defineComponent({
   name: 'CollectionItemsTable',
   components: {
@@ -77,7 +76,7 @@ export default defineComponent({
     }
   },
   emits: ['reorder', 'remove', 'add'],
-  
+
   computed: {
     entityTypeLabel() {
       return DATA_SET_TYPE_LABELS[this.entityType as keyof typeof DATA_SET_TYPE_LABELS] ?? this.entityType

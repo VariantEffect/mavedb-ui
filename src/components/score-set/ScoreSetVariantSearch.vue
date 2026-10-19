@@ -11,8 +11,8 @@
           dropdown
           fluid
           :input-style="hasSelection ? {paddingRight: '2.25rem'} : undefined"
-          option-group-label="label"
           option-group-children="items"
+          option-group-label="label"
           :option-label="variantOptionLabel"
           :scroll-height="variantSearchQuery ? '175px' : '320px'"
           select-on-focus

@@ -8,7 +8,7 @@ import {createApp} from 'vue'
 import {createHead} from '@unhead/vue/client'
 import {TemplateParamsPlugin} from 'unhead/plugins'
 import Aura from '@primevue/themes/aura'
-import { definePreset, palette } from '@primeuix/themes'
+import {definePreset, palette} from '@primeuix/themes'
 
 import App from '@/App.vue'
 import config from '@/config'
@@ -90,163 +90,163 @@ const infoPalette = palette('#4A80C4')
 const helpPalette = palette('#7E5DAF')
 
 const MaveDbTheme = definePreset(Aura, {
-    semantic: {
-        primary: {
-            50: sagePalette[50],
-            100: sagePalette[100],
-            200: sagePalette[200],
-            300: sagePalette[300],
-            400: sagePalette[400],
-            500: sagePalette[500],
-            600: sagePalette[600],
-            700: sagePalette[700],
-            800: sagePalette[800],
-            900: sagePalette[900],
-            950: sagePalette[950],
-        },
-        colorScheme: {
-            light: {
-                surface: {
-                    0: '#ffffff',
-                    50: '#fafafa',
-                    100: '#f5f5f5',
-                    200: '#eeeeee',
-                    300: '#e0e0e0',
-                    400: '#bdbdbd',
-                    500: '#9e9e9e',
-                    600: '#757575',
-                    700: '#616161',
-                    800: '#424242',
-                    900: '#212121',
-                    950: '#121212',
-                },
-            },
-        },
+  semantic: {
+    primary: {
+      50: sagePalette[50],
+      100: sagePalette[100],
+      200: sagePalette[200],
+      300: sagePalette[300],
+      400: sagePalette[400],
+      500: sagePalette[500],
+      600: sagePalette[600],
+      700: sagePalette[700],
+      800: sagePalette[800],
+      900: sagePalette[900],
+      950: sagePalette[950]
     },
-    components: {
-        togglebutton: {
-          colorScheme: {
-            light: {
-              root: {
-                background: '{surface.100}',
-                checkedBackground: sagePalette[500],
-                checkedBorderColor: sagePalette[500],
-                checkedColor: '#ffffff',
-                hoverBackground: '{surface.200}',
-                hoverColor: '{surface.800}',
-                borderColor: '{surface.100}',
-                color: '{surface.600}',
-              },
-              content: {
-                checkedBackground: sagePalette[500],
-                checkedShadow: 'none',
-              },
-              icon: {
-                checkedColor: '#ffffff',
-              },
+    colorScheme: {
+      light: {
+        surface: {
+          0: '#ffffff',
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#eeeeee',
+          300: '#e0e0e0',
+          400: '#bdbdbd',
+          500: '#9e9e9e',
+          600: '#757575',
+          700: '#616161',
+          800: '#424242',
+          900: '#212121',
+          950: '#121212'
+        }
+      }
+    }
+  },
+  components: {
+    togglebutton: {
+      colorScheme: {
+        light: {
+          root: {
+            background: '{surface.100}',
+            checkedBackground: sagePalette[500],
+            checkedBorderColor: sagePalette[500],
+            checkedColor: '#ffffff',
+            hoverBackground: '{surface.200}',
+            hoverColor: '{surface.800}',
+            borderColor: '{surface.100}',
+            color: '{surface.600}'
+          },
+          content: {
+            checkedBackground: sagePalette[500],
+            checkedShadow: 'none'
+          },
+          icon: {
+            checkedColor: '#ffffff'
+          }
+        }
+      }
+    },
+    button: {
+      colorScheme: {
+        light: {
+          root: {
+            // Warn — amber/orange for CTA and cancel actions
+            warn: {
+              background: orangePalette[400],
+              borderColor: orangePalette[400],
+              color: '#222',
+              hoverColor: '#222',
+              hoverBackground: orangePalette[500],
+              hoverBorderColor: orangePalette[500],
+              activeColor: '#222',
+              activeBackground: orangePalette[600],
+              activeBorderColor: orangePalette[600]
+            },
+            // Danger — softer red for destructive actions
+            danger: {
+              background: dangerPalette[400],
+              borderColor: dangerPalette[400],
+              color: '#fff',
+              hoverColor: '#fff',
+              hoverBackground: dangerPalette[500],
+              hoverBorderColor: dangerPalette[500],
+              activeColor: '#fff',
+              activeBackground: dangerPalette[600],
+              activeBorderColor: dangerPalette[600]
+            },
+            // Success — sage green for positive/save actions
+            success: {
+              background: sagePalette[400],
+              borderColor: sagePalette[400],
+              color: '#fff',
+              hoverColor: '#fff',
+              hoverBackground: sagePalette[500],
+              hoverBorderColor: sagePalette[500],
+              activeColor: '#fff',
+              activeBackground: sagePalette[600],
+              activeBorderColor: sagePalette[600]
+            },
+            // Info — dusty blue for informational actions
+            info: {
+              background: infoPalette[400],
+              borderColor: infoPalette[400],
+              color: '#fff',
+              hoverColor: '#fff',
+              hoverBackground: infoPalette[500],
+              hoverBorderColor: infoPalette[500],
+              activeColor: '#fff',
+              activeBackground: infoPalette[600],
+              activeBorderColor: infoPalette[600]
+            },
+            // Help — soft purple for calibration/contextual help
+            help: {
+              background: helpPalette[400],
+              borderColor: helpPalette[400],
+              color: '#fff',
+              hoverColor: '#fff',
+              hoverBackground: helpPalette[500],
+              hoverBorderColor: helpPalette[500],
+              activeColor: '#fff',
+              activeBackground: helpPalette[600],
+              activeBorderColor: helpPalette[600]
+            },
+            // Secondary — neutral surface tones
+            secondary: {
+              background: '{surface.100}',
+              borderColor: '{surface.300}',
+              color: '{surface.700}',
+              hoverColor: '{surface.800}',
+              hoverBackground: '{surface.200}',
+              hoverBorderColor: '{surface.400}',
+              activeColor: '{surface.800}',
+              activeBackground: '{surface.300}',
+              activeBorderColor: '{surface.400}'
             }
           }
-        },
-        button: {
-          colorScheme: {
-            light: {
-              root: {
-                // Warn — amber/orange for CTA and cancel actions
-                warn: {
-                  background: orangePalette[400],
-                  borderColor: orangePalette[400],
-                  color: '#222',
-                  hoverColor: '#222',
-                  hoverBackground: orangePalette[500],
-                  hoverBorderColor: orangePalette[500],
-                  activeColor: '#222',
-                  activeBackground: orangePalette[600],
-                  activeBorderColor: orangePalette[600],
-                },
-                // Danger — softer red for destructive actions
-                danger: {
-                  background: dangerPalette[400],
-                  borderColor: dangerPalette[400],
-                  color: '#fff',
-                  hoverColor: '#fff',
-                  hoverBackground: dangerPalette[500],
-                  hoverBorderColor: dangerPalette[500],
-                  activeColor: '#fff',
-                  activeBackground: dangerPalette[600],
-                  activeBorderColor: dangerPalette[600],
-                },
-                // Success — sage green for positive/save actions
-                success: {
-                  background: sagePalette[400],
-                  borderColor: sagePalette[400],
-                  color: '#fff',
-                  hoverColor: '#fff',
-                  hoverBackground: sagePalette[500],
-                  hoverBorderColor: sagePalette[500],
-                  activeColor: '#fff',
-                  activeBackground: sagePalette[600],
-                  activeBorderColor: sagePalette[600],
-                },
-                // Info — dusty blue for informational actions
-                info: {
-                  background: infoPalette[400],
-                  borderColor: infoPalette[400],
-                  color: '#fff',
-                  hoverColor: '#fff',
-                  hoverBackground: infoPalette[500],
-                  hoverBorderColor: infoPalette[500],
-                  activeColor: '#fff',
-                  activeBackground: infoPalette[600],
-                  activeBorderColor: infoPalette[600],
-                },
-                // Help — soft purple for calibration/contextual help
-                help: {
-                  background: helpPalette[400],
-                  borderColor: helpPalette[400],
-                  color: '#fff',
-                  hoverColor: '#fff',
-                  hoverBackground: helpPalette[500],
-                  hoverBorderColor: helpPalette[500],
-                  activeColor: '#fff',
-                  activeBackground: helpPalette[600],
-                  activeBorderColor: helpPalette[600],
-                },
-                // Secondary — neutral surface tones
-                secondary: {
-                  background: '{surface.100}',
-                  borderColor: '{surface.300}',
-                  color: '{surface.700}',
-                  hoverColor: '{surface.800}',
-                  hoverBackground: '{surface.200}',
-                  hoverBorderColor: '{surface.400}',
-                  activeColor: '{surface.800}',
-                  activeBackground: '{surface.300}',
-                  activeBorderColor: '{surface.400}',
-                },
-              }
-            },
-          },
-        },
-        tooltip: {
-          root: {
-            borderRadius: '6px',
-            padding: '0.5rem 0.75rem',
-            maxWidth: '18rem',
-          },
-          colorScheme: {
-            // Solid brand sage (--color-sage-dark), white text, matching sage
-            // arrow (it follows the background token). Same in light and dark.
-            light: {root: {background: '#5a9375', color: '#ffffff'}},
-            dark: {root: {background: '#5a9375', color: '#ffffff'}},
-          },
-          // font-family isn't a token, so the brand body font rides along here.
-          css: () => `
+        }
+      }
+    },
+    tooltip: {
+      root: {
+        borderRadius: '6px',
+        padding: '0.5rem 0.75rem',
+        maxWidth: '18rem'
+      },
+      colorScheme: {
+        // Solid brand sage (--color-sage-dark), white text, matching sage
+        // arrow (it follows the background token). Same in light and dark.
+        light: {root: {background: '#5a9375', color: '#ffffff'}},
+        dark: {root: {background: '#5a9375', color: '#ffffff'}}
+      },
+      // font-family isn't a token, so the brand body font rides along here.
+      css: () => `
             .p-tooltip-text {
               font-family: var(--font-body);
             }
-          `,
-        },
-    },
+          `
+    }
+  }
 })
 
 createApp(App)
@@ -256,12 +256,12 @@ createApp(App)
   .use(head)
   .use(PrimeVue, {
     theme: {
-        preset: MaveDbTheme,
-        options: {
-            prefix: 'p',
-            darkModeSelector: '.dark-mode',
-            cssLayer: false,
-        }
+      preset: MaveDbTheme,
+      options: {
+        prefix: 'p',
+        darkModeSelector: '.dark-mode',
+        cssLayer: false
+      }
     }
   })
   .use(ConfirmationService)

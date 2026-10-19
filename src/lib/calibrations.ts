@@ -216,10 +216,7 @@ export interface ControlPlacements {
  * Performance: O(controls), plus one pass over the ranges to index them by id.
  */
 export function buildControlPlacements(
-  controls:
-    | {clinicalStatus: CalibrationControlStatus; functionalClassificationId?: number | null}[]
-    | null
-    | undefined,
+  controls: {clinicalStatus: CalibrationControlStatus; functionalClassificationId?: number | null}[] | null | undefined,
   functionalClassifications: ScoreCalibrationFunctionalClassification[] | null | undefined
 ): ControlPlacements {
   const ranges = functionalClassifications ?? []
@@ -341,7 +338,9 @@ export function getPrimaryCalibration(
 }
 
 /** Whether a calibration classifies by class membership rather than by score range. */
-export function isClassBasedCalibration(calibration: Partial<Pick<ScoreCalibration, 'functionalClassifications'>>): boolean {
+export function isClassBasedCalibration(
+  calibration: Partial<Pick<ScoreCalibration, 'functionalClassifications'>>
+): boolean {
   const fcs = calibration.functionalClassifications
   return !!fcs && fcs.length > 0 && fcs.every((fc) => fc.class != null)
 }
@@ -350,7 +349,9 @@ export function isClassBasedCalibration(calibration: Partial<Pick<ScoreCalibrati
  * The display-only label for a variant a calibration leaves unclassified. Not a classification: it must not be
  * shown as a classification tag or treated as an indeterminate call.
  */
-export function unclassifiedCallLabel(calibration: Partial<Pick<ScoreCalibration, 'functionalClassifications'>>): string {
+export function unclassifiedCallLabel(
+  calibration: Partial<Pick<ScoreCalibration, 'functionalClassifications'>>
+): string {
   return isClassBasedCalibration(calibration) ? 'Not in a calibrated class' : 'Outside calibrated ranges'
 }
 

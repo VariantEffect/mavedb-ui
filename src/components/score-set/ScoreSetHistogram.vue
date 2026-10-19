@@ -1301,7 +1301,8 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: DisplayVariant) => variant?.score)
+          // NaN rather than null for a missing score: the histogram drops NaN values before binning.
+          .valueField((variant: DisplayVariant) => variant?.score ?? NaN)
           .accessorField((variant: DisplayVariant) => variant?.variantUrn)
           .tooltipHtml(this.tooltipHtmlGetter)
           .selectionChanged(this.onHistogramSelectionChanged)
@@ -1313,10 +1314,11 @@ export default defineComponent({
       }
 
       let seriesClassifier: ((d: HistogramDatum) => number[]) | null = null
-      if (this.series) {
-        const seriesIndices = _.range(0, this.series.length)
+      const series = this.series
+      if (series) {
+        const seriesIndices = _.range(0, series.length)
         seriesClassifier = (d: HistogramDatum) =>
-          seriesIndices.filter((seriesIndex) => this.series[seriesIndex].classifier(d))
+          seriesIndices.filter((seriesIndex) => series[seriesIndex].classifier(d))
       }
 
       this.assureActiveVizIsAvailable()

@@ -58,7 +58,9 @@ export interface UsePublicationIdentifiersReturn {
 
 export function usePublicationIdentifiers(): UsePublicationIdentifiersReturn {
   const pubSearch = useAutocomplete<PublicationIdentifier>('/publication-identifiers/search', {method: 'POST'})
-  const externalPubSearch = useAutocomplete<ExternalPublicationIdentifier>('/publication-identifiers/search-external', {method: 'POST'})
+  const externalPubSearch = useAutocomplete<ExternalPublicationIdentifier>('/publication-identifiers/search-external', {
+    method: 'POST'
+  })
 
   const publicationIdentifiers: Ref<PublicationIdentifier[]> = ref([])
   const primaryPublicationIdentifiers: Ref<PublicationIdentifier[]> = ref([])
@@ -101,16 +103,11 @@ export function usePublicationIdentifiers(): UsePublicationIdentifiersReturn {
    * Merges them into the flat publicationIdentifiers list and restores the
    * primary selection.
    */
-  function loadPublications(
-    primary: PublicationIdentifier[],
-    secondary: PublicationIdentifier[]
-  ) {
+  function loadPublications(primary: PublicationIdentifier[], secondary: PublicationIdentifier[]) {
     const merged = _.concat(primary, secondary)
     // Set primary first (before publicationIdentifiers) to prevent the watcher
     // from clearing it when the list changes.
-    primaryPublicationIdentifiers.value = primary.filter((pub) =>
-      merged.some((pi) => pi.identifier === pub.identifier)
-    )
+    primaryPublicationIdentifiers.value = primary.filter((pub) => merged.some((pi) => pi.identifier === pub.identifier))
     publicationIdentifiers.value = merged
   }
 

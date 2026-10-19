@@ -129,9 +129,7 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
   async function streamVariantDetails(label = 'Variant details') {
     const urn = scoreSet.value?.urn
     if (!urn) return
-    return await withIndicator(label, () =>
-      streamNdjsonInto(urn, 'variant-details', `${urn}_variant_details.ndjson`)
-    )
+    return await withIndicator(label, () => streamNdjsonInto(urn, 'variant-details', `${urn}_variant_details.ndjson`))
   }
 
   /** Resolves to what the stream contained, so the caller can report partial failures. */

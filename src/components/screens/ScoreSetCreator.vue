@@ -18,7 +18,11 @@
       </MvPageHeader>
     </template>
 
-    <div class="mx-auto w-full max-w-screen-xl py-6" @change="unsavedChanges.markDirty" @input="unsavedChanges.markDirty">
+    <div
+      class="mx-auto w-full max-w-screen-xl py-6"
+      @change="unsavedChanges.markDirty"
+      @input="unsavedChanges.markDirty"
+    >
       <Stepper v-model:value="activeWizardStep">
         <StepList>
           <Step :value="1">Experiment &amp; context</Step>
@@ -481,7 +485,7 @@ export default {
     const extractPublicScoreSets = (data: unknown): ShortScoreSet[] => {
       const record = data as Record<string, unknown>
       const raw = (record.scoreSets as ShortScoreSet[]) || []
-      return raw.filter(sc => sc.private === false)
+      return raw.filter((sc) => sc.private === false)
     }
     const supersededSearch = useAutocomplete<ShortScoreSet>('/me/score-sets/search', {
       method: 'POST',

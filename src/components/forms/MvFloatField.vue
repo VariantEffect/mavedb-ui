@@ -33,7 +33,10 @@ export default defineComponent({
   },
 
   setup(props) {
-    return useFieldId(() => props.label, () => props.id)
+    return useFieldId(
+      () => props.label,
+      () => props.id
+    )
   }
 })
 </script>

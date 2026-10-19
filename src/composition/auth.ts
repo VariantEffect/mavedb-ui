@@ -13,7 +13,9 @@ import _ from 'lodash'
 import {computed, watch} from 'vue'
 // @ts-expect-error It's troublesome to get types for useStore; see store/index.ts for more details.
 import {useStore} from 'vuex'
-import {useRouter} from 'vue-router'
+// Kept for its type effect only: without it, vue-tsc loses the global component properties ($toast and
+// others) in about 100 components.
+import 'vue-router'
 
 import {
   beginAuthentication as orcidBeginAuthentication,

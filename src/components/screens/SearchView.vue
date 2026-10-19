@@ -263,12 +263,7 @@ import {useHead} from '@unhead/vue'
 
 import {textForTargetGeneCategory, type TargetGeneCategory} from '@/lib/target-genes'
 import {extractQueryParam} from '@/lib/router'
-import {
-  variantSearchRouteFor,
-  buildSearchParams,
-  SEARCH_RESULT_LIMIT,
-  SORT_OPTIONS
-} from '@/lib/search'
+import {variantSearchRouteFor, buildSearchParams, SEARCH_RESULT_LIMIT, SORT_OPTIONS} from '@/lib/search'
 import type {FilterOption, ExperimentGroup, ActiveFilter, SortValue} from '@/lib/search'
 import type {components} from '@/schema/openapi'
 
@@ -289,7 +284,17 @@ import type {ScoreSetsSearchFilterOptionsResponse} from '@/api/mavedb'
 export default defineComponent({
   name: 'SearchView',
 
-  components: {InputText, Message, MvEmptyState, MvErrorState, MvLayout, MvLoader, MvScoreSetRow, MvSearchFilters, PSelect},
+  components: {
+    InputText,
+    Message,
+    MvEmptyState,
+    MvErrorState,
+    MvLayout,
+    MvLoader,
+    MvScoreSetRow,
+    MvSearchFilters,
+    PSelect
+  },
 
   setup: () => {
     useHead({title: 'Search data sets'})

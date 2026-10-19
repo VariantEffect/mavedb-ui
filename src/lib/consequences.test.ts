@@ -1,11 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {
-  consequenceBucket,
-  humanReadableConsequence,
-  EFFECT_BUCKETS,
-  type EffectBucketName
-} from '@/lib/consequences'
+import {consequenceBucket, humanReadableConsequence, EFFECT_BUCKETS, type EffectBucketName} from '@/lib/consequences'
 
 // The full VEP consequence set the API can emit.
 const ALL_CONSEQUENCES = [

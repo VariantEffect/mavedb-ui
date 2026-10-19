@@ -6,9 +6,7 @@ import config from '@/config'
  * Maps to: GET /permissions/user-is-permitted/{modelName}/{urn}/{action}
  */
 export async function checkPermission(modelName: string, urn: string, action: string): Promise<boolean> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/permissions/user-is-permitted/${modelName}/${urn}/${action}`
-  )
+  const response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/${modelName}/${urn}/${action}`)
   return response.data
 }
 

@@ -161,13 +161,16 @@
                       </li>
                     </ul>
                     <p class="mt-2">
-                      Choose yes even if your construct matches a reference exactly. You can still link that accession to
-                      the target.
+                      Choose yes even if your construct matches a reference exactly. You can still link that accession
+                      to the target.
                     </p>
                   </div>
                 </div>
                 <div class="wizard-field flex items-center">
-                  <ToggleSwitch v-model="isTargetSequence" aria-label="Variant library built from a mutagenized construct" />
+                  <ToggleSwitch
+                    v-model="isTargetSequence"
+                    aria-label="Variant library built from a mutagenized construct"
+                  />
                   <div class="ml-3 text-sm">
                     {{
                       isTargetSequence

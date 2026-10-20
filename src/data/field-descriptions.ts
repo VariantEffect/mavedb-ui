@@ -454,13 +454,13 @@ interface ScoreSetContextDescriptions {
 }
 
 export function scoreSetContextDescriptions(): ScoreSetContextDescriptions {
-  const docsUrl = `${config.appBaseUrl}/docs/mavedb/getting-started/key-concepts.html`
+  const docsUrl = `${config.appBaseUrl}/docs/mavedb/submitting-data/organizing-your-study.html`
   return {
     fixedExperiment: {
       hint: 'The experiment this score set belongs to.',
       help: 'Experiment',
       detail:
-        'To add a score set to a different experiment, supercede a score set or add a score set to meta-analysis, ' +
+        'To add a score set to a different experiment, supersede a score set or add a score set to meta-analysis, ' +
         'please navigate to "New score set". For more on the relationship between score sets and experiments, see the ' +
         `<a href="${docsUrl}" target="_blank">documentation</a>.`
     },

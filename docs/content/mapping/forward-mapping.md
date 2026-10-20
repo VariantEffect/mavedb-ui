@@ -5,7 +5,7 @@ Forward mapping is the first stage of the [mapping and annotation pipeline](inde
 !!! note
     Mapping is only performed for datasets with a **human** target sequence.
 
-This method was developed by [Arbesfeld et al. (2025)](https://doi.org/10.1186/s13059-025-03647-x) and is described in detail in the linked publication. The sections below give a mechanical overview of the pipeline and surface the notable choices behind it — the ones a reader might reasonably contest.
+This method was developed by [Arbesfeld et al. (2025)](https://doi.org/10.1186/s13059-025-03647-x) and is described in detail in the linked publication. The sections below give an overview of the pipeline.
 
 ## Why mapping is needed
 
@@ -15,7 +15,7 @@ These differences mean that MAVE variant descriptions cannot be directly compare
 
 ## Mapping process
 
-Mapping runs when a score set's variant data is [uploaded](../submitting-data/upload-guide.md). It involves the following steps:
+Mapping runs when a score set's variant data is [uploaded](../submitting-data/submitting-a-dataset.md). It involves the following steps:
 
 ```mermaid
 flowchart LR
@@ -24,9 +24,9 @@ flowchart LR
     C --> D["VRS<br>translation<br>(HGVS → VRS)"]
 ```
 
-1. **Target sequence alignment**: The target sequence is aligned to the GRCh38 assembly with [BLAT](https://genome.ucsc.edu/FAQ/FAQblat.html) — nucleotide targets directly against the genome, amino-acid targets in protein space instead. The alignment fixes the target's genomic location and candidate transcripts, and the **gene is taken from the locus the target aligns to**, not from a submitter-declared gene name. *(A deliberate choice: alignment is the objective signal, but it means a target that aligns unexpectedly resolves to whatever gene sits at that locus.)*
+1. **Target sequence alignment**: The target sequence is aligned to the GRCh38 assembly with [BLAT](https://genome.ucsc.edu/FAQ/FAQblat.html) — nucleotide targets directly against the genome, amino-acid targets in protein space instead. The alignment fixes the target's genomic location and candidate transcripts, and the **gene is taken from the locus the target aligns to**, not from a submitter-declared gene name. Alignment is the objective signal, so a target that aligns somewhere unexpected resolves to whatever gene sits at that locus.
 
-2. **Transcript selection**: MaveDB maps to a **single representative transcript** per target rather than to every overlapping transcript, prioritizing [MANE Select](https://www.ncbi.nlm.nih.gov/refseq/MANE/) (the clinical-reporting standard), then MANE Plus Clinical, and falling back to the longest compatible transcript when no MANE transcript applies. An offset is computed to locate the MAVE sequence within the selected reference. *(A deliberate choice: one stable, standard coordinate system, at the cost of not representing alternate transcripts.)* This step applies to sequence-based targets. A score set with an [accession-based target](../submitting-data/targets.md#accession-based-targets) on a transcript keeps that transcript, even when it is not the MANE Select transcript.
+2. **Transcript selection**: MaveDB maps to a **single representative transcript** per target rather than to every overlapping transcript, prioritizing [MANE Select](https://www.ncbi.nlm.nih.gov/refseq/MANE/) (the clinical-reporting standard), then MANE Plus Clinical, and falling back to the longest compatible transcript when no MANE transcript applies. An offset is computed to locate the MAVE sequence within the selected reference. This gives one stable, standard coordinate system; alternate transcripts are not represented. This step applies to sequence-based targets. A score set with an [accession-based target](../submitting-data/targets.md#accession-based-targets) on a transcript keeps that transcript, even when it is not the MANE Select transcript.
 
 3. **Variant translation**: Each variant in the score and count data tables is converted from [MAVE-HGVS](../submitting-data/data-formats.md#variant-columns) format to standard HGVS format and translated with respect to the selected transcript. This step accounts for any offset between the target sequence and the transcript.
 
@@ -41,18 +41,18 @@ flowchart LR
 
     Mapping failures do not prevent datasets from being published in MaveDB, but a successful mapping is required for certain features such as [variant search](../mavemd/variant-search.md), linkages with certain [external resources](../finding-data/external-integrations.md), and inclusion in [MaveMD](../mavemd/index.md).
 
-## How a mapped variant is represented
+## Submitted and reference variants
 
-A mapped variant is not stored as a single object but as a small **set of representations**:
+Mapping turns each **submitted variant** into one or more **reference variants**:
 
-- The original **assay-level** (target-relative) form is retained, so the experimental context is never lost.
-- Each **reference-level** representation — genomic, coding, and protein, wherever the biology allows — is stored as a distinct allele, each carrying its own GA4GH VRS object and stable digest.
+- The **submitted variant** is the variant as uploaded, described against the score set's target. MaveDB keeps it, so the experimental context is never lost.
+- The **reference variants** describe the same change on the human reference, at the genomic, coding, and protein levels wherever the biology allows. Each is stored as a distinct allele with its own GA4GH VRS object and stable digest.
 
-This unified, per-level representation is what lets a variant be expressed consistently across molecular levels and matched against external resources. The [reverse translation and projection](reverse-translation.md) stage fills in the levels a given assay did not measure. [Interpreting Annotated Variants](../interpreting-annotated-variants.md) explains how to read the resulting multi-level view. *(A deliberate choice: per-level VRS alleles plus the retained assay-level form give cross-level identity and provenance, rather than collapsing a variant to a single canonical representation.)*
+This per-level representation is what lets a variant be expressed consistently across molecular levels and matched against external resources. The [reverse translation and projection](reverse-translation.md) stage fills in the levels a given assay did not measure. [Interpreting Annotated Variants](../interpreting-annotated-variants.md) explains how to read the resulting multi-level view.
 
 ## Assay target vs. human reference
 
-Because an assay's target sequence is often not identical to the human reference, the assay-level representation and its mapped reference-level counterpart can **differ**. Retaining both (as above) keeps that difference visible rather than flattening it away — which is a core provenance goal of mapping: the original experimental context is never lost, downstream users can see exactly how the assay relates to the human reference, and clinical users can judge whether the experimental evidence is appropriate for their interpretation context.
+Because an assay's target sequence is often not identical to the human reference, a submitted variant and its reference variants can **differ**. Keeping both lets users see exactly how the assay relates to the human reference, so clinical users can judge whether the experimental evidence fits their interpretation context.
 
 These differences are expected, not errors. They arise from legitimate differences between experimental and reference sequences:
 
@@ -62,16 +62,20 @@ These differences are expected, not errors. They arise from legitimate differenc
 
 ## What isn't mapped
 
-Not every submitted variant yields a mapped representation, and an absence is not always a failure. MaveDB distinguishes two cases:
+Not every submitted variant yields a reference variant, and an absence is not always a failure. MaveDB distinguishes two cases:
 
-- **Benign absences** — variants that legitimately have no reference-level representation, recorded but with no mapped allele. The main case is a **submitted intronic variant**: an intronic position has no protein consequence and cannot be represented at the levels MaveDB serves. Other changes with no protein consequence are treated the same way.
+- **Benign absences** — variants that legitimately have no reference variant. The main case is a **submitted intronic variant**: an intronic position has no protein consequence and cannot be represented at the levels MaveDB serves. Other changes with no protein consequence are treated the same way.
 - **Failures** — variants that *should* map but didn't: ambiguous alignments, complex or malformed variant descriptions, or discrepancies between the target and reference genome. These are reflected in the mapping status on the score set page for the contributor to review.
 
 Only genuine failures count against a score set's mapping; benign absences do not, and neither blocks publication.
 
+## Downstream integrations
+
+Reference variants are what connect MaveDB to [external resources](../finding-data/external-integrations.md): ClinGen Allele Registry identifiers, ClinGen Linked Data Hub submissions, ClinVar classifications, gnomAD allele frequencies, and Ensembl VEP consequences. They also power [MaveMD](../mavemd/index.md), including [variant search](../mavemd/variant-search.md) and [score calibrations](../reference/score-calibrations.md).
+
 ## Programmatic access
 
-Mapped representations are available through the [MaveDB API](../programmatic-access/api-quickstart.md) and are downloadable from individual score set pages in [VRS and VA-Spec JSON formats](../reference/data-standards.md#vrs-variant-representation).
+The [MaveDB API](../programmatic-access/api-quickstart.md)'s `/score-sets/{urn}/variant-details` endpoint streams one NDJSON record per variant that mapped. In each record, the submitted and reference variants' VRS objects are the `preMapped` and `postMapped` fields, alongside the variant's categorical variant and annotations. The same records are downloadable from individual score set pages in [VRS and VA-Spec JSON formats](../reference/data-standards.md#vrs-variant-representation). The older `/score-sets/{urn}/mapped-variants` endpoint returns `410 Gone`.
 
 ## See also
 

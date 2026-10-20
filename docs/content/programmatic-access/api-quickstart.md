@@ -1,6 +1,6 @@
 # API Quickstart
 
-The MaveDB REST API provides programmatic access to all public data in MaveDB. You can use it to search for datasets, download scores, and retrieve [variant mappings](../reference/variant-mapping.md) without using the web interface.
+The MaveDB REST API provides programmatic access to all public data in MaveDB. You can use it to search for datasets, download scores, and retrieve [variant mappings](../mapping/forward-mapping.md) without using the web interface.
 
 
 !!! info "API documentation"
@@ -134,7 +134,8 @@ The search endpoint uses POST with a JSON body:
     )
     results = response.json()
 
-    for score_set in results:
+    print(f"{results['numScoreSets']} matching score sets")
+    for score_set in results["scoreSets"]:
         print(f"{score_set['urn']}: {score_set['title']}")
     ```
 
@@ -151,7 +152,7 @@ The search endpoint uses POST with a JSON body:
     )
     results <- content(response, as = "parsed")
 
-    for (score_set in results) {
+    for (score_set in results$scoreSets) {
       cat(score_set$urn, ": ", score_set$title, "\n")
     }
     ```
@@ -166,7 +167,7 @@ The search endpoint uses POST with a JSON body:
 
 ### Download variant details (VRS format)
 
-For datasets with human targets, the mapped [variant details](../reference/variant-mapping.md) are available in [GA4GH VRS](https://vrs.ga4gh.org/) format. The `/variant-details` endpoint is the bulk pair of `GET /variants/{urn}`: it streams [newline-delimited JSON](https://jsonlines.org/) (NDJSON), one `VariantDetail` per mapped variant, each carrying the flat `preMapped`/`postMapped` VRS pair, the full [GA4GH Cat-VRS](https://vrs.ga4gh.org/) categorical variant (its equivalence class of related alleles), and the VEP, gnomAD, and ClinVar annotations:
+For datasets with human targets, `/variant-details` returns every variant in a score set that mapped, with its submitted and reference forms, as [newline-delimited JSON](https://jsonlines.org/) (NDJSON), one record per line. Each record is the same `VariantDetail` that `GET /variants/{urn}` returns for a single variant. See [Downloading variant details](../reference/data-standards.md#downloading-variant-details) for what each record contains and how to work with it.
 
 === "Python"
 
@@ -234,7 +235,7 @@ For datasets with human targets, the mapped [variant details](../reference/varia
 
 ## Pagination
 
-List and search endpoints support pagination using `limit` and `offset` query parameters:
+Search endpoints page their results with `limit` and `offset` fields in the request body. The response's `numScoreSets` gives the total number of matches. (Score set CSV downloads page differently, with `start` and `limit` query parameters.)
 
 === "Python"
 
@@ -271,7 +272,7 @@ List and search endpoints support pagination using `limit` and `offset` query pa
 
 The API accepts up to 1,500 requests per IP address in any 5-minute window. Requests over the limit receive `429 Too Many Requests` with a `Retry-After` header giving the number of seconds to wait, and go through again once your request rate drops back under the limit. The limit applies per IP address, so requests from everyone behind a shared address, such as a campus network, count together.
 
-Score set CSV downloads (`/scores`, `/counts` and `/variants/data`) have a lower limit of 100 requests per IP address in any 5-minute window, because each one reads a whole score set. Requests over it receive the same `429` response and `Retry-After` header. When paging through a score set with `start` and `limit`, each page counts as one request, so use large pages. To fetch mapped variants in bulk, use [`/variant-details`](#download-variant-details-vrs-format), which streams a whole score set as one request, rather than calling `/variants/{urn}` once per variant.
+Score set CSV downloads (`/scores`, `/counts` and `/variants/data`) have a lower limit of 100 requests per IP address in any 5-minute window, because each one reads a whole score set. Requests over it receive the same `429` response and `Retry-After` header. When paging through a score set with `start` and `limit`, each page counts as one request, so use large pages. To fetch reference variants in bulk, use [`/variant-details`](#download-variant-details-vrs-format), which streams a whole score set as one request, rather than calling `/variants/{urn}` once per variant.
 
 The API can also return `503 Service Unavailable` while it is busy, for example when other large score set downloads are being built. These responses usually include a `Retry-After` header; when one does not, wait a minute before retrying.
 

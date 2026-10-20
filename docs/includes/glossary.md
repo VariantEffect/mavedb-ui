@@ -1,5 +1,11 @@
 *[DMS]: Deep Mutational Scanning
 *[MPRA]: Massively Parallel Reporter Assay
+*[MAVE]: Multiplexed Assay of Variant Effect
+*[SGE]: Saturation Genome Editing
+*[HGVS]: Human Genome Variation Society (variant nomenclature)
+*[URN]: Uniform Resource Name (MaveDB accession number)
+*[CC0]: Creative Commons public domain dedication
+*[ORCID]: Open Researcher and Contributor ID
 *[VRS]: Variant Representation Specification (GA4GH standard)
 *[ACMG]: American College of Medical Genetics and Genomics
 *[AMP]: Association for Molecular Pathology

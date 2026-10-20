@@ -11,14 +11,14 @@ Together, these standards allow MAVE data from MaveDB to be consumed by downstre
 
 ## VRS — Variant Representation
 
-The [GA4GH Variation Representation Specification (VRS)](https://vrs.ga4gh.org/) is a standard for unambiguously representing genetic variants. MaveDB uses VRS as its preferred method of representing variation — while [HGVS notation](../submitting-data/data-formats.md) is used for data submission and display, VRS provides the canonical, machine-readable identity for each variant internally and in all exported data. After [variant mapping](variant-mapping.md), MaveDB produces a structured VRS JSON object for each variant that includes its genomic coordinates, alleles, and reference sequences.
+The [GA4GH Variation Representation Specification (VRS)](https://vrs.ga4gh.org/) is a standard for unambiguously representing genetic variants. MaveDB uses VRS as its preferred method of representing variation — while [HGVS notation](../submitting-data/data-formats.md) is used for data submission and display, VRS provides the canonical, machine-readable identity for each variant internally and in all exported data. After [variant mapping](../mapping/forward-mapping.md), MaveDB produces a structured VRS JSON object for each variant that includes its genomic coordinates, alleles, and reference sequences.
 
 VRS objects are available for download as JSON from any score set that has been successfully mapped. Each object includes:
 
 - A globally unique **GA4GH identifier** (e.g., `ga4gh:VA.abc123...`) that can be used to reference the variant across databases.
 - A **sequence location** specifying the reference sequence and coordinates.
 - The **variant state** (the alternate allele).
-- **HGVS expressions** for both pre-mapped (relative to the target) and post-mapped (relative to the genomic reference) coordinates.
+- **HGVS expressions** for both the [submitted variant](../mapping/forward-mapping.md#submitted-and-reference-variants) (relative to the target) and the reference variant (relative to the human reference).
 
 ??? example "Example VRS object for a single amino acid substitution"
 
@@ -48,7 +48,7 @@ VRS objects are available for download as JSON from any score set that has been 
     ```
 
 !!! note
-    VRS objects are only available for variants that have been successfully [mapped](variant-mapping.md). Variants that could not be mapped (e.g., because they are intronic or involve frameshifts at the protein level) will not have VRS representations.
+    VRS objects are only available for variants that have been successfully [mapped](../mapping/forward-mapping.md). Variants that could not be mapped (e.g., because they are intronic or involve frameshifts at the protein level) will not have VRS representations.
 
 ## VA-Spec — Variant Annotation
 
@@ -68,22 +68,22 @@ graph LR
     FISR -->|"evidence for"| FIS
     FIS -->|"evidence for"| VPS
 
-    classDef base fill:#78B793,color:#fff,stroke:#5a9375,stroke-width:1.5px
-    classDef mid fill:#3d7ebd,color:#fff,stroke:#2d5f8e,stroke-width:1.5px
-    classDef top fill:#8e7cc3,color:#fff,stroke:#6e5fa3,stroke-width:1.5px
+    classDef base fill:#78b793,color:#fff,stroke:#5a9375,stroke-width:1.5px
+    classDef mid fill:#4a80c4,color:#fff,stroke:#4a80c4,stroke-width:1.5px
+    classDef top fill:#7e5daf,color:#fff,stroke:#7e5daf,stroke-width:1.5px
 
     class FISR base
     class FIS mid
     class VPS top
 ```
 
-Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has post-mapped genomic coordinates). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
+Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has a reference variant). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
 
 The table below summarizes the **highest** layer a variant qualifies for. Higher layers nest the layers beneath them (a Study Result sits inside a Functional Impact Statement, which sits inside a Variant Pathogenicity Statement), so a variant that qualifies for a higher layer is also represented at every lower one.
 
 | Variant state | Highest VA-Spec layer |
 |---|---|
-| Not successfully mapped (no post-mapped genomic coordinates) | *None* — excluded from VRS and VA-Spec output |
+| Not successfully mapped (no reference variant) | *None* — excluded from VRS and VA-Spec output |
 | Mapped, but no score value | Functional Impact Study Result |
 | Mapped and scored, but the score set has no eligible calibration | Functional Impact Study Result |
 | Mapped and scored, with an eligible functional calibration | Functional Impact Statement |
@@ -293,7 +293,7 @@ Not all variants in a score set can be represented in VRS. Variants are excluded
 
 - Are intronic (fall outside coding regions).
 - Involve frameshifts at the protein level.
-- Could not be resolved to a genomic location during [variant mapping](variant-mapping.md).
+- Could not be resolved to a genomic location during [variant mapping](../mapping/forward-mapping.md).
 
 These variants remain available in the score and count CSV downloads but will not appear in VRS JSON or VA-Spec exports.
 
@@ -305,7 +305,7 @@ VRS and VA-Spec objects exported from MaveDB are self-contained but reference ot
 
 ### Downloading variant details
 
-Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the `preMapped`/`postMapped` VRS pair, the GA4GH categorical variant, and the annotation map. The categorical variant's `mappings` cross-reference its members' ClinGen, gnomAD and ClinVar identifiers; frequencies and classifications are in the annotation map. Only mapped variants appear; a variant with no VRS is omitted.
+Start by fetching the variant details for a score set. The response is [NDJSON](https://github.com/ndjson/ndjson-spec) — one JSON record per line, so a large score set can be processed a line at a time rather than held in memory. Each record carries the submitted variant (`preMapped`) and reference variant (`postMapped`) as VRS objects, the GA4GH categorical variant, and the annotation map. The categorical variant's `mappings` cross-reference its members' ClinGen, gnomAD and ClinVar identifiers; frequencies and classifications are in the annotation map. Only variants that mapped appear; a variant with no VRS is omitted.
 
 !!! note "Replaces `/mapped-variants`"
 
@@ -494,12 +494,12 @@ Each VRS object has a globally unique GA4GH identifier (e.g., `ga4gh:VA.2JOqpLMF
 
 ### HGVS expressions
 
-VRS objects include HGVS expressions in the `expressions` array for human readability. MaveDB typically includes both pre-mapped (relative to the target sequence) and post-mapped (relative to a genomic reference) HGVS strings. The `syntax` field indicates the type — `hgvs.p` for protein, `hgvs.g` for genomic, or `hgvs.c` for coding DNA.
+VRS objects include HGVS expressions in the `expressions` array for human readability. MaveDB typically includes HGVS strings for both the submitted variant (relative to the target sequence) and the reference variant (relative to the human reference). The `syntax` field indicates the type — `hgvs.p` for protein, `hgvs.g` for genomic, or `hgvs.c` for coding DNA.
 
 ## See also
 
 - [Score calibrations](score-calibrations.md) -- the calibration data that powers functional and clinical classifications.
-- [Variant mapping](variant-mapping.md) -- how variants are mapped to genomic coordinates before VRS representation.
+- [Variant mapping](../mapping/forward-mapping.md) -- how variants are mapped to genomic coordinates before VRS representation.
 - [Downloading data](../finding-data/downloading.md) -- download VRS and VA-Spec data from score set pages.
 - [External integrations](../finding-data/external-integrations.md) -- how VA-Spec objects are shared with ClinGen and other platforms.
 - [Controlled vocabulary](controlled-vocabulary.md) -- terms used in MaveDB metadata and annotations.

@@ -1,14 +1,11 @@
 # Reverse translation & projection
 
-[Forward mapping](../reference/variant-mapping.md) describes a variant at the level the assay measured. **Reverse translation and projection** fill in the *other* molecular levels, so that every variant can be expressed at the genomic, coding, and amino acid levels wherever the biology allows:
+[Forward mapping](forward-mapping.md) describes a variant at the level the assay measured. **Reverse translation and projection** fill in the *other* molecular levels, so that every variant can be expressed at the genomic, coding, and amino acid levels wherever the biology allows:
 
 - **Reverse translation** works *downward*, from a measured **protein** change to the **DNA** changes that could produce it.
 - **Projection** works between the coding and genomic levels, and *upward* from a measured DNA change to its **protein** consequence.
 
 This is the stage that produces the **resolved**, **convergent**, and **candidate** representations described in [Interpreting Annotated Variants](../interpreting-annotated-variants.md). That page explains what those labels *mean*; this page explains the mechanism that produces them.
-
-!!! info "Rolling out"
-    Reverse translation and projection of protein-only variants are still being deployed across MaveDB. Some published datasets may not yet show the full set of derived representations.
 
 ## Why reverse translation is needed
 
@@ -16,7 +13,7 @@ Protein-level assays measure amino-acid changes, but the clinical resources Mave
 
 ## From one protein change to DNA candidates
 
-For a measured amino-acid substitution, MaveDB enumerates every single-nucleotide change to the affected codon that produces it. Because the genetic code is redundant, there is often more than one.
+For a measured amino-acid change, MaveDB enumerates the codon-level DNA changes that produce it: every single-nucleotide change, plus small codon-local indels described [below](#what-can-and-cant-be-reverse-translated). Because the genetic code is redundant, there is often more than one.
 
 The enumeration is exhaustive over these codon-level changes, which is why a protein change can fan out to several DNA candidates ([worked example](../interpreting-annotated-variants.md#why-one-protein-change-can-produce-several-candidates)). Surfacing the complete set is what lets a protein-level measurement match against *any* of the DNA descriptions those changes might appear under in an external database. Collapsing to a single arbitrary spelling would assert functional data exists for a DNA variant that was never measured.
 
@@ -61,10 +58,10 @@ If no transcript can be resolved, the variant is not reverse-translated, and a g
 
 ## Reference data and reproducibility
 
-Reverse translation runs on the transcript chosen during [mapping](../reference/variant-mapping.md) and against a pinned transcript-database (UTA) snapshot, used for transcript resolution and codon lookups. If that reference data changes, some candidates can change. All coordinates are relative to the **GRCh38** assembly.
+Reverse translation runs on the transcript chosen during [mapping](forward-mapping.md) and against a pinned transcript-database (UTA) snapshot, used for transcript resolution and codon lookups. If that reference data changes, some candidates can change. All coordinates are relative to the **GRCh38** assembly.
 
 ## See also
 
 - [Interpreting Annotated Variants](../interpreting-annotated-variants.md) — what Measured, Resolved, Convergent, and Candidate mean
-- [Variant mapping](../reference/variant-mapping.md) — the forward mapping that precedes this stage
+- [Variant mapping](forward-mapping.md) — the forward mapping that precedes this stage
 - [External Integrations](../finding-data/external-integrations.md) — the DNA-level resources candidates are matched against

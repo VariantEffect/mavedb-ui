@@ -15,7 +15,7 @@ For both score and count data tables, there are three variant columns:
 !!! tip
     You must supply at least one of `hgvs_nt` or `hgvs_pro` for each variant, but you can include both if you have them.
 
-All variants must be described in [MAVE-HGVS](https://www.mavedb.org/docs/mavehgvs/index.html) format, which is a subset of the [HGVS](https://varnomen.hgvs.org/) format. This includes using the appropriate prefix (`c.` for coding DNA, `n.` for non-coding DNA, `p.` for protein) and using brackets for complex variants that affect multiple positions (e.g., `c.[123A>G;125_T>C]`).
+All variants must be described in [MAVE-HGVS](https://www.mavedb.org/docs/mavehgvs/index.html) format, which is a subset of the [HGVS](https://varnomen.hgvs.org/) format. This includes using the appropriate prefix (`c.` for coding DNA, `n.` for non-coding DNA, `p.` for protein, and `g.` for genomic DNA when the dataset has an `hgvs_splice` column) and using brackets for complex variants that affect multiple positions (e.g., `c.[123A>G;125T>C]`).
 
 MaveDB validates submitted variants against the score set's target sequence to ensure correctness. However, intronic variants cannot be validated because the target sequence only covers the mutagenized region (typically exonic sequence). MaveDB accepts intronic variants and their scores but they are stored without validation.
 
@@ -65,7 +65,7 @@ Here is a short excerpt from the score table for [urn:mavedb:00000003-a-1](https
 
 This dataset uses `hgvs_nt` as the [index column](#index-column). It has several additional data columns with the scores and error estimates for multiple biological replicates.
 
-Note that some variants do not have a score. This is permitted (and encouraged) for variants that were observed in the experiment but did not have a score calculated for them (e.g., due to low counts or missing data). These variants should be included in the score table with `NA` values for the score and any additional columns. This allows users to see the full set of variants that were observed in the experiment, even if some of them do not have scores.
+Note that some variants do not have a score. This is permitted (and encouraged) for variants that were observed in the experiment but did not have a score calculated for them (e.g., due to low counts or missing data). These variants should be included in the score table with `NA` values for the score and any additional columns.
 
 | hgvs_nt | hgvs_splice | hgvs_pro | score | SE | epsilon |
 |---------|-------------|----------|-------|----|---------|
@@ -114,7 +114,7 @@ The metadata files should contain a JSON object where each key is a column name 
 ## See also
 
 - [Targets](targets.md) -- How to define sequence-based and accession-based targets for your score set.
-- [Upload Guide](upload-guide.md) -- Step-by-step instructions for creating experiments and score sets.
+- [Submitting a Dataset](submitting-a-dataset.md) -- Step-by-step instructions for creating experiments and score sets.
 - [Metadata Guide](metadata-guide.md) -- Detailed descriptions of all metadata fields, including free-text methods where you should describe your column naming conventions.
 - [Downloading Data](../finding-data/downloading.md) -- How users can download the data you upload, including CSV and VRS formats.
-- [Variant Mapping](../reference/variant-mapping.md) -- How MaveDB maps your uploaded variants to genomic coordinates.
+- [Variant Mapping](../mapping/forward-mapping.md) -- How MaveDB maps your uploaded variants to genomic coordinates.

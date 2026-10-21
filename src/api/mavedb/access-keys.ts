@@ -22,6 +22,6 @@ export async function createRoleAccessKey(role: UserRole): Promise<NewAccessKey>
   return response.data
 }
 
-export async function deleteAccessKey(keyId: string): Promise<void> {
-  await axios.delete(`${config.apiBaseUrl}/users/me/access-keys/${encodeURIComponent(keyId)}`)
+export async function deleteAccessKey(accessKeyId: number): Promise<void> {
+  await axios.delete(`${config.apiBaseUrl}/users/me/access-keys/${accessKeyId}`)
 }

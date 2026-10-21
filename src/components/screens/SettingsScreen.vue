@@ -81,8 +81,9 @@
         <div class="border-b border-border-light px-4 py-3 text-sm font-bold text-text-dark">User API Key</div>
         <div class="px-4 py-3.5">
           <MvAccessKeyRow
+            :access-key="accessKeyRows[DEFAULT_ROLE]?.accessKey ?? null"
             empty-message="You have not created an API key for your user."
-            :key-id="accessKeysByRole[DEFAULT_ROLE]"
+            :new-key="accessKeyRows[DEFAULT_ROLE]?.newKey ?? null"
             @delete="deleteAccessKeyWithConfirmation"
             @generate="generateAccessKey(DEFAULT_ROLE)"
           />
@@ -131,9 +132,10 @@
             >
               <div class="mb-2 text-xs-plus font-semibold capitalize text-text-secondary">{{ role }}</div>
               <MvAccessKeyRow
+                :access-key="accessKeyRows[role]?.accessKey ?? null"
                 empty-message="You have not created an API key for this role."
                 key-display-class="bg-surface"
-                :key-id="accessKeysByRole[role]"
+                :new-key="accessKeyRows[role]?.newKey ?? null"
                 @delete="deleteAccessKeyWithConfirmation"
                 @generate="generateAccessKey(role)"
               />
@@ -161,6 +163,7 @@ import {
   searchMyExperiments,
   searchMyScoreSets
 } from '@/api/mavedb'
+import {accessKeyRowState, type AccessKeyRowState} from '@/lib/access-keys.ts'
 import {getErrorResponse} from '@/lib/errors'
 import MvAccessKeyRow from '@/components/common/MvAccessKeyRow.vue'
 import MvOrcidLink from '@/components/common/MvOrcidLink.vue'
@@ -174,6 +177,7 @@ import useItems from '@/composition/items'
 
 type CurrentUser = components['schemas']['CurrentUser']
 type AccessKey = components['schemas']['AccessKey']
+type NewAccessKey = components['schemas']['NewAccessKey']
 type UserRole = components['schemas']['UserRole']
 
 // "ordinary user" is a client-side default, not a server-side role
@@ -217,6 +221,8 @@ export default defineComponent({
       collectionCount: 0,
       email: null as string | null,
       emailValidationError: null as string | null,
+      // Keys generated on this page, by role. The API returns a key's full value only when it is created.
+      newKeysByRole: {} as Record<string, NewAccessKey>,
       experimentCount: 0,
       scoreSetCount: 0,
       statsLoaded: false
@@ -224,16 +230,23 @@ export default defineComponent({
   },
 
   computed: {
-    accessKeysByRole(): Record<string, string> {
+    accessKeysByRole(): Record<string, AccessKey> {
       if (!this.accessKeys) {
         return {}
       }
       return this.accessKeys.reduce(
-        (acc: Record<string, string>, cur) => ({
+        (acc: Record<string, AccessKey>, cur) => ({
           ...acc,
-          [cur.role || DEFAULT_ROLE]: cur.keyId
+          [cur.role || DEFAULT_ROLE]: cur
         }),
         {}
+      )
+    },
+
+    accessKeyRows(): Record<string, AccessKeyRowState> {
+      const roles = new Set([...Object.keys(this.accessKeysByRole), ...Object.keys(this.newKeysByRole)])
+      return Object.fromEntries(
+        [...roles].map((role) => [role, accessKeyRowState(this.accessKeysByRole[role], this.newKeysByRole[role])])
       )
     },
 
@@ -310,11 +323,8 @@ export default defineComponent({
 
     async generateAccessKey(role: RoleWithDefault) {
       try {
-        if (role === DEFAULT_ROLE) {
-          await createAccessKey()
-        } else {
-          await createRoleAccessKey(role)
-        }
+        const created = role === DEFAULT_ROLE ? await createAccessKey() : await createRoleAccessKey(role)
+        this.newKeysByRole = {...this.newKeysByRole, [role]: created}
         this.invalidateAccessKeys()
       } catch (e: unknown) {
         const {data} = getErrorResponse(e)
@@ -326,7 +336,7 @@ export default defineComponent({
       }
     },
 
-    deleteAccessKeyWithConfirmation(keyId: string) {
+    deleteAccessKeyWithConfirmation(accessKeyId: number) {
       // @ts-expect-error PrimeVue ConfirmationService plugin is globally registered but not typed on Options API instances
       this.$confirm.require({
         message:
@@ -335,7 +345,10 @@ export default defineComponent({
         icon: 'pi pi-exclamation-triangle',
         accept: async () => {
           try {
-            await deleteAccessKey(keyId)
+            await deleteAccessKey(accessKeyId)
+            this.newKeysByRole = Object.fromEntries(
+              Object.entries(this.newKeysByRole).filter(([, created]) => created.id !== accessKeyId)
+            )
             this.invalidateAccessKeys()
           } catch (e: unknown) {
             const {data} = getErrorResponse(e)

@@ -24,12 +24,12 @@ export interface paths {
      */
     post: operations["create_my_access_key_with_role_api_v1_users_me_access_keys__role__post"];
   };
-  "/api/v1/users/me/access-keys/{key_id}": {
+  "/api/v1/users/me/access-keys/{access_key_id}": {
     /**
      * Delete one of my access keys
      * @description Delete one of the current user's access keys.
      */
-    delete: operations["delete_my_access_key_api_v1_users_me_access_keys__key_id__delete"];
+    delete: operations["delete_my_access_key_api_v1_users_me_access_keys__access_key_id__delete"];
   };
   "/api/v1/alleles/{identifier}": {
     /**
@@ -1524,10 +1524,11 @@ export interface paths {
   "/api/v1/variants/vrs/{identifier}": {
     /**
      * Look up variants by VRS identifier
-     * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+     * @description Resolve a GA4GH VRS identifier to the readable variants it identifies.
      *
-     * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
-     * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+     * The identifier may be a reference-level (post-mapped) allele or a variant's pre-mapped variation on
+     * its submitted target sequence. A deduplicated allele may be shared across score sets, so one
+     * identifier can resolve to several variants. This is a lookup returning a collection: results are filtered to the score sets the caller
      * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
      * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
      * the response never reveals a private allele's existence.
@@ -1675,14 +1676,16 @@ export interface components {
     ACMGCriterion: "PVS1" | "PS1" | "PS2" | "PS3" | "PS4" | "PM1" | "PM2" | "PM3" | "PM4" | "PM5" | "PM6" | "PP1" | "PP2" | "PP3" | "PP4" | "PP5" | "BA1" | "BS1" | "BS2" | "BS3" | "BS4" | "BP1" | "BP2" | "BP3" | "BP4" | "BP5" | "BP6" | "BP7";
     /** AccessKey */
     AccessKey: {
-      /** Keyid */
-      keyId: string;
+      /** Keyhint */
+      keyHint?: string | null;
       /** Name */
       name?: string | null;
       /** Expirationdate */
       expirationDate?: string | null;
       /** Creationtime */
       creationTime?: string | null;
+      /** Id */
+      id: number;
       /** Recordtype */
       recordType?: string;
       role?: components["schemas"]["UserRole"] | null;
@@ -4430,9 +4433,10 @@ export interface components {
      * MappedTriple
      * @description The mapped (reference-frame) HGVS keyed by level — the canonical projection of the measured change.
      *
-     * One slot per level. A nucleotide assay populates all three (``mapped[assayLevel]`` is the measured
-     * slot; ``cdna`` is the level-invariant search key, present even when ``assayLevel`` is ``genomic``); a
-     * protein assay populates only ``protein`` (the ambiguous c/g fan-out is not fabricated). Null slots are
+     * One slot per level. A nucleotide assay populates the measured slot (``mapped[assayLevel]``) and the
+     * projections it has (``cdna`` is the level-invariant search key, present even when ``assayLevel`` is
+     * ``genomic``; an intronic or UTR change has no ``protein``); a protein assay populates only ``protein``
+     * (the ambiguous c/g fan-out is not fabricated). Null slots are
      * omitted under ``response_model_exclude_none``.
      */
     MappedTriple: {
@@ -4529,17 +4533,21 @@ export interface components {
     MoleculeType: "genomic" | "RNA" | "mRNA" | "protein";
     /** NewAccessKey */
     NewAccessKey: {
-      /** Keyid */
-      keyId: string;
+      /** Keyhint */
+      keyHint?: string | null;
       /** Name */
       name?: string | null;
       /** Expirationdate */
       expirationDate?: string | null;
       /** Creationtime */
       creationTime?: string | null;
+      /** Id */
+      id: number;
       /** Recordtype */
       recordType?: string;
       role?: components["schemas"]["UserRole"] | null;
+      /** Keyid */
+      keyId: string;
       /** Privatekey */
       privateKey: string;
     };
@@ -6802,7 +6810,6 @@ export interface components {
       referenceHgvs?: string | null;
       /** Assayleveldigest */
       assayLevelDigest?: string | null;
-      mapped?: components["schemas"]["MappedTriple"] | null;
       /** Clingenalleleid */
       clingenAlleleId?: string | null;
       /** Premapped */
@@ -6819,6 +6826,7 @@ export interface components {
       } | null;
       /** Mode */
       mode?: string | null;
+      mapped?: components["schemas"]["MappedTriple"] | null;
       /**
        * Alleles
        * @default {}
@@ -7120,11 +7128,11 @@ export interface components {
     };
     /**
      * VariantVrsMatch
-     * @description One variant whose mapping links an allele bearing the queried VRS identifier.
+     * @description One variant the queried VRS identifier identifies, before or after mapping.
      *
-     * The ``GET /variants/vrs/{identifier}`` lookup result. The ClinGen id + level ride from the matched
-     * (deduplicated) allele; the URN from the variant it is linked to. Replaces the legacy MappedVariant VRS
-     * lookup on the new Allele substrate (#743, item 3.5).
+     * The ``GET /variants/vrs/{identifier}`` lookup result. The ClinGen id, VRS id and level ride from the
+     * matched (deduplicated) allele for a post-mapped match, or from the variant's measured allele for a
+     * pre-mapped match; they are null when that variant did not map.
      */
     VariantVrsMatch: {
       /** Varianturn */
@@ -7350,13 +7358,13 @@ export interface operations {
    * Delete one of my access keys
    * @description Delete one of the current user's access keys.
    */
-  delete_my_access_key_api_v1_users_me_access_keys__key_id__delete: {
+  delete_my_access_key_api_v1_users_me_access_keys__access_key_id__delete: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
       };
       path: {
-        key_id: string;
+        access_key_id: number;
       };
     };
     responses: {
@@ -13621,10 +13629,11 @@ export interface operations {
   };
   /**
    * Look up variants by VRS identifier
-   * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+   * @description Resolve a GA4GH VRS identifier to the readable variants it identifies.
    *
-   * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
-   * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+   * The identifier may be a reference-level (post-mapped) allele or a variant's pre-mapped variation on
+   * its submitted target sequence. A deduplicated allele may be shared across score sets, so one
+   * identifier can resolve to several variants. This is a lookup returning a collection: results are filtered to the score sets the caller
    * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
    * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
    * the response never reveals a private allele's existence.
@@ -13639,7 +13648,7 @@ export interface operations {
         "x-active-roles"?: string | null;
       };
       path: {
-        /** @description A valid GA4GH digest-based identifier for the mapped allele. */
+        /** @description A GA4GH digest-based identifier for a variant's pre-mapped or post-mapped variation. */
         identifier: string;
       };
     };

@@ -81,8 +81,9 @@
         <div class="border-b border-border-light px-4 py-3 text-sm font-bold text-text-dark">User API Key</div>
         <div class="px-4 py-3.5">
           <MvAccessKeyRow
+            :access-key="accessKeysByRole[DEFAULT_ROLE]"
             empty-message="You have not created an API key for your user."
-            :key-id="accessKeysByRole[DEFAULT_ROLE]"
+            :new-key="newKeysByRole[DEFAULT_ROLE]"
             @delete="deleteAccessKeyWithConfirmation"
             @generate="generateAccessKey(DEFAULT_ROLE)"
           />
@@ -131,9 +132,10 @@
             >
               <div class="mb-2 text-xs-plus font-semibold capitalize text-text-secondary">{{ role }}</div>
               <MvAccessKeyRow
+                :access-key="accessKeysByRole[role]"
                 empty-message="You have not created an API key for this role."
                 key-display-class="bg-surface"
-                :key-id="accessKeysByRole[role]"
+                :new-key="newKeysByRole[role]"
                 @delete="deleteAccessKeyWithConfirmation"
                 @generate="generateAccessKey(role)"
               />
@@ -217,6 +219,8 @@ export default defineComponent({
       collectionCount: 0,
       email: null as string | null,
       emailValidationError: null as string | null,
+      // Full keys generated on this page, by role. The API returns a key only when it is created.
+      newKeysByRole: {} as Record<string, string>,
       experimentCount: 0,
       scoreSetCount: 0,
       statsLoaded: false
@@ -224,14 +228,14 @@ export default defineComponent({
   },
 
   computed: {
-    accessKeysByRole(): Record<string, string> {
+    accessKeysByRole(): Record<string, AccessKey> {
       if (!this.accessKeys) {
         return {}
       }
       return this.accessKeys.reduce(
-        (acc: Record<string, string>, cur) => ({
+        (acc: Record<string, AccessKey>, cur) => ({
           ...acc,
-          [cur.role || DEFAULT_ROLE]: cur.keyId
+          [cur.role || DEFAULT_ROLE]: cur
         }),
         {}
       )
@@ -310,11 +314,8 @@ export default defineComponent({
 
     async generateAccessKey(role: RoleWithDefault) {
       try {
-        if (role === DEFAULT_ROLE) {
-          await createAccessKey()
-        } else {
-          await createRoleAccessKey(role)
-        }
+        const created = role === DEFAULT_ROLE ? await createAccessKey() : await createRoleAccessKey(role)
+        this.newKeysByRole = {...this.newKeysByRole, [role]: created.keyId}
         this.invalidateAccessKeys()
       } catch (e: unknown) {
         const {data} = getErrorResponse(e)
@@ -326,7 +327,7 @@ export default defineComponent({
       }
     },
 
-    deleteAccessKeyWithConfirmation(keyId: string) {
+    deleteAccessKeyWithConfirmation(accessKeyId: number) {
       // @ts-expect-error PrimeVue ConfirmationService plugin is globally registered but not typed on Options API instances
       this.$confirm.require({
         message:
@@ -335,7 +336,7 @@ export default defineComponent({
         icon: 'pi pi-exclamation-triangle',
         accept: async () => {
           try {
-            await deleteAccessKey(keyId)
+            await deleteAccessKey(accessKeyId)
             this.invalidateAccessKeys()
           } catch (e: unknown) {
             const {data} = getErrorResponse(e)

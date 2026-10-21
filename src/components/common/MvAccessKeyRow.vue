@@ -7,7 +7,9 @@
         :class="keyDisplayClass"
         role="status"
       >
-        <span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{{ newKey ?? maskedKey }}</span>
+        <!-- A new key wraps rather than truncates, so it can still be read and copied by hand on a narrow screen. -->
+        <span v-if="newKey" class="flex-1 select-all break-all">{{ newKey }}</span>
+        <span v-else class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{{ maskedKey }}</span>
       </span>
       <PButton
         v-if="newKey"
@@ -43,6 +45,7 @@
 import PButton from 'primevue/button'
 import {defineComponent, type PropType} from 'vue'
 
+import {maskAccessKey} from '@/lib/access-keys.ts'
 import type {components} from '@/schema/openapi'
 
 type AccessKey = components['schemas']['AccessKey']
@@ -70,7 +73,7 @@ export default defineComponent({
 
   computed: {
     maskedKey(): string {
-      return `${'•'.repeat(8)}${this.accessKey?.keyHint ?? ''}`
+      return maskAccessKey(this.accessKey?.keyHint)
     }
   },
 
@@ -83,7 +86,12 @@ export default defineComponent({
   methods: {
     async copyToClipboard() {
       if (!this.newKey) return
-      await navigator.clipboard.writeText(this.newKey)
+      try {
+        await navigator.clipboard.writeText(this.newKey)
+      } catch {
+        this.$toast.add({severity: 'error', summary: "Couldn't copy the key. Select it and copy it by hand."})
+        return
+      }
       this.copySuccess = true
       setTimeout(() => (this.copySuccess = false), 1500)
     }

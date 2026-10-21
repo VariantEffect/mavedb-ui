@@ -23,7 +23,7 @@ MaveDB can only view public email addresses associated with your [ORCID iD](http
 
 Users may generate an API key to authenticate with the [MaveDB API](https://api.mavedb.org/docs) (see also [API quickstart](../programmatic-access/api-quickstart.md)). This key allows you to perform actions such as uploading and modifying datasets programmatically, fetching your [private datasets](../submitting-data/publishing.md), or managing your account. You can generate and revoke API keys on the [Profile settings page](https://www.mavedb.org/#/settings/) (requires login).
 
-Your account can have one API key at a time, plus one for each additional role you hold. To replace a key, delete it and then generate a new one; deleting a key stops it working immediately.
+The settings page holds one API key for your account, plus one for each additional role you hold. To replace a key, delete it and then generate a new one; deleting a key stops it working immediately.
 
 Your key is shown only once, right after you generate it, so copy it somewhere safe. After that, the settings page shows only its last four characters. If you lose the key, delete it and generate a new one.
 

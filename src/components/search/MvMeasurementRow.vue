@@ -6,7 +6,7 @@
       <router-link
         class="line-clamp-2 min-w-0 text-xs-plus text-link hover:underline sm:line-clamp-1"
         :title="measurement.scoreSetTitle"
-        :to="{name: 'scoreSet', params: {urn: measurement.scoreSetUrn}}"
+        :to="{name: 'scoreSet', params: {urn: measurement.scoreSetUrn}, query: {variant: measurement.variantUrn}}"
         >{{ measurement.scoreSetTitle }}</router-link
       >
     </div>

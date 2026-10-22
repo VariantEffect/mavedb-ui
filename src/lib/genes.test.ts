@@ -26,7 +26,7 @@ vi.mock('@/config', () => ({
 }))
 
 const mockedAxiosGet = vi.mocked(axios.get)
-type GetGene = typeof import('@/api/mavedb/genes')['getGene']
+type GetGene = (typeof import('@/api/mavedb/genes'))['getGene']
 
 type ScoreSetOverrides = Partial<Omit<GeneScoreSet, 'experiment'>> & {
   experiment?: Partial<GeneScoreSet['experiment']>
@@ -140,10 +140,7 @@ describe('gene page helpers', () => {
     const groups = groupGeneScoreSetsByExperiment([olderExperiment, newerExperiment, olderExperimentSecondRow])
 
     expect(groups.map((group) => group.experimentUrn)).toEqual(['urn:mavedb:00000002-a', 'urn:mavedb:00000001-a'])
-    expect(groups[1].scoreSets.map((item) => item.urn)).toEqual([
-      olderExperimentSecondRow.urn,
-      olderExperiment.urn
-    ])
+    expect(groups[1].scoreSets.map((item) => item.urn)).toEqual([olderExperimentSecondRow.urn, olderExperiment.urn])
   })
 
   it('uses API totals for summary counts instead of the loaded page length', () => {

@@ -219,12 +219,7 @@
           </MvPanel>
 
           <!-- Clinical Score Distribution -->
-          <MvPanel
-            v-if="hasClinicalVariants"
-            class="mb-4"
-            :padded="false"
-            title="Clinical score distribution"
-          >
+          <MvPanel v-if="hasClinicalVariants" class="mb-4" :padded="false" title="Clinical score distribution">
             <template #actions>
               <div v-if="clinicalHistogramExportFn" class="inline-flex items-center gap-1">
                 <SplitButton
@@ -259,7 +254,10 @@
             <div v-if="selectedCalibrationObjects[1]" class="border-t border-border-light px-4 py-3 tablet:px-5">
               <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
             </div>
-            <div v-if="hasCalibrations" class="flex items-center justify-end border-t border-border-light px-4 py-3 tablet:px-5">
+            <div
+              v-if="hasCalibrations"
+              class="flex items-center justify-end border-t border-border-light px-4 py-3 tablet:px-5"
+            >
               <router-link
                 class="text-xs font-semibold text-link no-underline"
                 :to="{path: `/score-sets/${item.urn}/calibrations`}"
@@ -277,43 +275,43 @@
             title="Variant effect heatmap"
           >
             <template #actions>
-                <Select
-                  v-if="heatmapSequenceTypeOptions.length > 1"
-                  :model-value="heatmapSequenceType"
-                  option-label="title"
-                  option-value="value"
-                  :options="heatmapSequenceTypeOptions"
+              <Select
+                v-if="heatmapSequenceTypeOptions.length > 1"
+                :model-value="heatmapSequenceType"
+                option-label="title"
+                option-value="value"
+                :options="heatmapSequenceTypeOptions"
+                size="small"
+                @update:model-value="heatmapSequenceType = $event"
+              >
+                <template #value="{value}">
+                  Coordinate system: {{ heatmapSequenceTypeOptions.find((o) => o.value === value)?.title ?? value }}
+                </template>
+              </Select>
+              <Select
+                :model-value="heatmapLayout"
+                option-label="title"
+                option-value="value"
+                :options="heatmapLayoutOptions"
+                size="small"
+                @update:model-value="heatmapLayout = $event"
+              >
+                <template #value="{value}">
+                  Layout: {{ heatmapLayoutOptions.find((o) => o.value === value)?.title ?? value }}
+                </template>
+              </Select>
+              <div v-if="heatmapExportFn" class="inline-flex items-center gap-1">
+                <SplitButton
+                  :disabled="heatmapInProgress"
+                  icon="pi pi-download"
+                  label="Export SVG"
+                  :model="[{label: 'Export PNG', icon: 'pi pi-image', command: exportHeatmapPng}]"
+                  severity="secondary"
                   size="small"
-                  @update:model-value="heatmapSequenceType = $event"
-                >
-                  <template #value="{value}">
-                    Coordinate system: {{ heatmapSequenceTypeOptions.find((o) => o.value === value)?.title ?? value }}
-                  </template>
-                </Select>
-                <Select
-                  :model-value="heatmapLayout"
-                  option-label="title"
-                  option-value="value"
-                  :options="heatmapLayoutOptions"
-                  size="small"
-                  @update:model-value="heatmapLayout = $event"
-                >
-                  <template #value="{value}">
-                    Layout: {{ heatmapLayoutOptions.find((o) => o.value === value)?.title ?? value }}
-                  </template>
-                </Select>
-                <div v-if="heatmapExportFn" class="inline-flex items-center gap-1">
-                  <SplitButton
-                    :disabled="heatmapInProgress"
-                    icon="pi pi-download"
-                    label="Export SVG"
-                    :model="[{label: 'Export PNG', icon: 'pi pi-image', command: exportHeatmapPng}]"
-                    severity="secondary"
-                    size="small"
-                    @click="exportHeatmapSvg"
-                  />
-                  <i v-if="heatmapInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
-                </div>
+                  @click="exportHeatmapSvg"
+                />
+                <i v-if="heatmapInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
+              </div>
             </template>
             <div class="px-4 py-3 tablet:px-5">
               <ScoreSetHeatmap

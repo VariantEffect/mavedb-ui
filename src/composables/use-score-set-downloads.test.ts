@@ -311,7 +311,7 @@ describe('useScoreSetDownloads variant-details streaming', () => {
     expect(url).not.toContain('mapped-variants')
   })
 
-  it('sends the signed-in user\'s credentials, which fetch does not get from the axios interceptor', async () => {
+  it("sends the signed-in user's credentials, which fetch does not get from the axios interceptor", async () => {
     authHeader.mockReturnValueOnce({Authorization: 'Bearer token', 'X-Active-Roles': ['admin', 'mapper']})
     const fetchMock = mockStream()
     const downloads = useScoreSetDownloads({scoreSet: SCORE_SET})

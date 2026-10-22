@@ -4,7 +4,9 @@ import {v4 as uuidv4} from 'uuid'
 
 type FieldGetter<T> = (d: HeatmapDatum) => T
 type Getter<T> = () => T
-type Accessor<T, Self> = (value?: T) => T | Self
+// Called with no argument an accessor reads its value; with one it sets it and returns the chart for chaining. Each
+// implementation is one function with an optional argument, so the chart object is asserted to its interface.
+type Accessor<T, Self> = {(): T; (value: T): Self}
 
 export const DEFAULT_MINIMUM_COLOR = '#3F51B5'
 export const DEFAULT_PIVOT_COLOR = '#FFFFFF'
@@ -190,6 +192,7 @@ export default function makeHeatmap(): Heatmap {
   let rowGroupSelected:
     | ((group: {groupCode: string | null; groupLabel: string | null; data: HeatmapDatum[][]}) => void)
     | null = null
+  // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
   let excludeDatum: (d: HeatmapDatum) => boolean = (d) => false as boolean
 
   // Layout
@@ -237,9 +240,10 @@ export default function makeHeatmap(): Heatmap {
 
   // Selection
   let selectedDatum: HeatmapDatum | null = null
-  let selectionStartDatum: HeatmapDatum | null = null
-  let selectionEndDatum: HeatmapDatum | null = null
-  let selectedRows: number[] | null = null
+  const selectionStartDatum: HeatmapDatum | null = null
+  const selectionEndDatum: HeatmapDatum | null = null
+  // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
+  const selectedRows: number[] | null = null
 
   let selectionStartPoint: DOMPoint | null = null
 
@@ -341,7 +345,7 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const color = function (d: HeatmapDatum) {
-    let classification: number | d3.Color = colorClassifier(d)
+    const classification: number | d3.Color = colorClassifier(d)
     return typeof classification === 'number' ? (colorScale ? colorScale(classification) : null) : classification
   }
 
@@ -358,9 +362,11 @@ export default function makeHeatmap(): Heatmap {
         min: lowerBoundColor,
         max: upperBoundColor
       }
+      // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
       colorScale = d3
         .scaleLinear()
         .domain(colorScaleControlPoints.map((controlPoint) => controlPoint.value))
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         .range(colorScaleControlPoints.map((controlPoint) => colors[controlPoint.colorKey] ?? pivotColor))
     } else {
       const imputedDomain = [
@@ -369,6 +375,7 @@ export default function makeHeatmap(): Heatmap {
         upperBound ? upperBound : 1
       ]
       const imputedRange = [lowerBoundColor, pivotColor, upperBoundColor]
+      // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
       colorScale = d3.scaleLinear().domain(imputedDomain).range(imputedRange)
     }
   }
@@ -600,7 +607,12 @@ export default function makeHeatmap(): Heatmap {
     if (svg) {
       svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
       // if start.x or end.x is outside content xMin/xMax, do not draw selection rectangle
-      if (!content.xMin || !content.xMax || !_.inRange(start.x, content.xMin, content.xMax + 1) || !_.inRange(end.x, content.xMin, content.xMax + 1)) {
+      if (
+        !content.xMin ||
+        !content.xMax ||
+        !_.inRange(start.x, content.xMin, content.xMax + 1) ||
+        !_.inRange(end.x, content.xMin, content.xMax + 1)
+      ) {
         return
       }
       const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
@@ -686,13 +698,17 @@ export default function makeHeatmap(): Heatmap {
 
   const scrollToDatum = function (d: HeatmapDatum) {
     if (_container) {
+      // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
       const scrollValue = xScale(xCoordinate(d)) + strokeWidth(d) / 2
 
       // Only scroll if the variant is not in view.
       const variantIsInView =
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         _container.parentElement.scrollLeft < scrollValue &&
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         _container.clientWidth + _container.parentElement.scrollLeft > scrollValue
       if (!variantIsInView) {
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         _container.parentElement.scrollLeft = scrollValue
       }
     }
@@ -742,12 +758,14 @@ export default function makeHeatmap(): Heatmap {
     hoverTooltip.style('left', left + 'px').style('top', top + 'px')
   }
 
+  // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
   const mousemove = (event: MouseEvent, d: HeatmapDatum) => {
     if (!selectionStartDatum && hoverTooltip) {
       positionHoverTooltip(event)
     }
   }
 
+  // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
   const mouseleave = (event: MouseEvent, d: HeatmapDatum) => {
     refreshHoverDatum(null)
 
@@ -1003,7 +1021,7 @@ export default function makeHeatmap(): Heatmap {
     }
   }
 
-  const chart: Heatmap = {
+  const chart = {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Chart lifecyle methods
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1044,14 +1062,18 @@ export default function makeHeatmap(): Heatmap {
         d3.select(_container).on(`click.heatmap-popover-${instanceId}`, null)
         containerClickHandlerRegistered = false
 
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         svg = d3.select(_container).html(null).append('svg')
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         svg.append('defs')
         // Draw the legend after applying the margins.
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         const legendGroup = svg
           .append('g')
           .attr('class', 'heatmap-legend')
           .attr('transform', `translate(${margins.left},${margins.top})`)
         legendGroup.append('g').attr('class', 'heatmap-vertical-color-legend')
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         const mainGroup = svg.append('g').attr('class', 'heatmap-main')
         mainGroup.append('g').attr('class', 'heatmap-bottom-axis')
         mainGroup.append('g').attr('class', 'heatmap-y-axis-tick-labels')
@@ -1071,12 +1093,14 @@ export default function makeHeatmap(): Heatmap {
         }
 
         // Main group's margins must include the legend.
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         svg.select('g.heatmap-main').attr('transform', `translate(${effectiveMargins.left}, ${effectiveMargins.top})`)
       } else {
         svg = null
       }
 
       if (_wrapper) {
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         yAxisSvg = d3
           .select(_wrapper)
           .append('svg')
@@ -1087,11 +1111,13 @@ export default function makeHeatmap(): Heatmap {
           .style('z-index', 5)
           .style('background-color', '#fff')
           .classed('exclude-from-export', true)
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         const legendGroup = yAxisSvg
           .append('g')
           .attr('class', 'heatmap-legend')
           .attr('transform', `translate(${margins.left},${margins.top})`)
         legendGroup.append('g').attr('class', 'heatmap-vertical-color-legend')
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         yAxisSvg
           .append('g')
           .attr('class', 'heatmap-y-axis-tick-labels')
@@ -1118,11 +1144,13 @@ export default function makeHeatmap(): Heatmap {
             startRowNumber: rows.length - (rows.findIndex((row) => row.groupCode === groupCode) + groupRows.length),
             rowCount: groupRows.length
           }))
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .filter((group) => group.groupCode && group.groupCode !== 'undefined')
           .value()
 
         if (drawLegend) {
           const legend = svg.select('g.heatmap-vertical-color-legend').attr('width', LEGEND_SIZE).attr('height', height)
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           verticalColorLegend(legend, {
             color: colorScale,
             title: legendTitle,
@@ -1138,6 +1166,7 @@ export default function makeHeatmap(): Heatmap {
               .attr('width', LEGEND_SIZE)
               .attr('height', height)
 
+            // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
             verticalColorLegend(legendAbsolute, {
               color: colorScale,
               title: legendTitle,
@@ -1148,10 +1177,12 @@ export default function makeHeatmap(): Heatmap {
         }
 
         // Set the Y scale. We are placing all row content starting at screen position 0 and continuing to the heatmap height.
+        // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
         yScale.range([0, height]).domain(_.range(0, rows.length)).padding(nodePadding)
 
         // Set the X scale. We are placing idxLowerBound to idxUpperBound (all heatmap content) starting at screen position 0 and continuing to the effective heatmap width.
         xScale
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .range([0, width - effectiveMargins.left])
           .domain(idxLowerBound && idxUpperBound ? _.range(idxLowerBound, idxUpperBound + 1) : [])
           .padding(nodePadding)
@@ -1171,6 +1202,7 @@ export default function makeHeatmap(): Heatmap {
           svg
             .select('g.heatmap-bottom-axis')
             .selectAll('g.tick')
+            // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
             .attr('class', (n) => (skipXTicks > 0 && n % (skipXTicks + 1) === 1 ? '' : 'heatmap-x-axis-invisible'))
         }
         if (drawY) {
@@ -1179,6 +1211,7 @@ export default function makeHeatmap(): Heatmap {
             // @ts-ignore
             // Get the row's amino acid code or variation symbol
             .call(
+              // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
               d3
                 .axisLeft(yScale)
                 .tickSize(0)
@@ -1190,6 +1223,7 @@ export default function makeHeatmap(): Heatmap {
           // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg
             .selectAll('g.heatmap-y-axis-tick-labels g.tick')
+            // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
             .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
 
           if (_wrapper && yAxisSvg) {
@@ -1198,6 +1232,7 @@ export default function makeHeatmap(): Heatmap {
             // Get the row's amino acid code or variation symbol
             yAxisLabels
               .call(
+                // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                 d3
                   .axisLeft(yScale)
                   .tickSize(0)
@@ -1211,6 +1246,7 @@ export default function makeHeatmap(): Heatmap {
               .selectAll('g.tick text')
               .attr('text-anchor', 'middle')
               .attr('x', -8)
+              // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
               .on('mouseover', mouseoverYAxisTickLabel)
               .on('mouseleave', mouseleave)
 
@@ -1229,6 +1265,7 @@ export default function makeHeatmap(): Heatmap {
             // Apply row-specific CSS classes to Y-axis tick mark labels.
             yAxisSvg
               .selectAll('g.heatmap-y-axis-tick-labels g.tick')
+              // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
               .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
 
             if (drawYGroups) {
@@ -1248,12 +1285,15 @@ export default function makeHeatmap(): Heatmap {
                   .append('rect')
                   .attr('x', -40)
                   .attr('y', (d) => {
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
                     return startY - nodeSize.height / 2
                   })
                   .attr('width', 20)
                   .attr('height', (d) => {
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
                     return endY - startY + nodeSize.height
                   })
@@ -1267,7 +1307,9 @@ export default function makeHeatmap(): Heatmap {
                   .append('text')
                   .attr('x', -30)
                   .attr('y', (d) => {
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
                     return (startY + endY) / 2
                   })
@@ -1277,7 +1319,9 @@ export default function makeHeatmap(): Heatmap {
                   .attr('font-size', '11px')
                   .attr('font-weight', 'bold')
                   .attr('transform', (d) => {
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
                     const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
                     const centerY = (startY + endY) / 2
                     return `rotate(-90, -30, ${centerY})`
@@ -1299,6 +1343,7 @@ export default function makeHeatmap(): Heatmap {
         const chartedDatum = svg
           .select('g.heatmap-nodes')
           .selectAll('rect')
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .data(filteredData, (d) => d)
         chartedDatum.exit().remove()
         chartedDatum
@@ -1313,12 +1358,16 @@ export default function makeHeatmap(): Heatmap {
           .on('mousemove', mousemove)
           .on('mouseleave', mouseleave)
           .on('click', click)
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .merge(chartedDatum)
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .attr('x', (d) => xScale(xCoordinate(d)))
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .attr('y', (d) => yScale(yCoordinate(d)))
           // bandwidth is directly proportional to the controllable nodeHeight and nodeWidth properties.
           .attr('width', xScale.bandwidth())
           .attr('height', yScale.bandwidth())
+          // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
           .style('fill', (d) => color(d))
           .style('stroke-width', (d) => strokeWidth(d === selectedDatum))
           .style('stroke', (d) => stroke(d === selectedDatum))
@@ -1676,7 +1725,7 @@ export default function makeHeatmap(): Heatmap {
     filteredData: () => filteredData,
 
     content: () => content
-  }
+  } as Heatmap
 
   return chart
 }
@@ -1720,8 +1769,10 @@ export function verticalColorLegend(
   {
     color = d3.scaleSequential(d3.interpolateRdBu).domain([0, 1]),
     title = 'Legend',
+    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
     tickSize = 5,
     width = 36 + tickSize,
+    // @ts-expect-error TODO(#745): d3 typing debt in the heatmap.
     height = 100,
     marginTop = 12,
     marginRight = 5,

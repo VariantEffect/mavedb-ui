@@ -1,11 +1,8 @@
 # Annotation
 
-Once a variant has been [mapped](../reference/variant-mapping.md) and its other molecular levels [derived](reverse-translation.md), MaveDB annotates each representation with data from external resources. This is the final stage of the pipeline, and it is what connects a functional measurement to the wider clinical-genomics ecosystem.
+Once a variant has been [mapped](forward-mapping.md) and its other molecular levels [derived](reverse-translation.md), MaveDB annotates each representation with data from external resources. This is the final stage of the pipeline, and it is what connects a functional measurement to the wider clinical-genomics ecosystem.
 
 This page describes annotation as a **pipeline stage** — what is annotated, and at what grain. For what a given annotation *means* and how to weigh it, see [Interpreting Annotated Variants](../interpreting-annotated-variants.md). For a per-resource description of each external source, see [External Integrations](../finding-data/external-integrations.md).
-
-!!! info "Rolling out"
-    Annotation of derived (reverse-translated) representations is still being deployed across MaveDB. Some published datasets may not yet carry the full set of annotations described here.
 
 ## Registration comes first
 
@@ -25,7 +22,7 @@ Each is attached at the level the resource describes variants, almost always DNA
 
 Annotations are attached **per representation**, not per variant. Every allele in a variant's set, the measured one and each derived (resolved, convergent, or candidate) representation, is annotated independently.
 
-This matters because a measured allele and its derived siblings are distinct molecular descriptions, so they can carry **different** annotations. When that happens, MaveDB keeps them per-level rather than merging them into one. Which annotation to prioritize in that situation is an interpretation question. For more details on interpreting annotations across representations, see [Interpreting Annotated Variants](../interpreting-annotated-variants.md#annotations-across-representations).
+This matters because a measured allele and its derived siblings are distinct molecular descriptions, so they can carry **different** annotations. When that happens, MaveDB keeps them per-level rather than merging them into one. For which annotation to weigh most when they differ, see [Interpreting Annotated Variants](../interpreting-annotated-variants.md#annotations-across-representations).
 
 ## When annotation runs
 

@@ -1,6 +1,6 @@
 # Score calibrations
 
-Score calibrations in MaveDB provide a way to give additional context to variant effect scores by mapping them to known reference points. This helps users interpret the scores in a biologically meaningful way. A score calibration is associated with a [score set](../getting-started/key-concepts.md) and consists of four parts: a baseline score, a set of classifications, a set of evidence strengths, and calibration metadata.
+Score calibrations in MaveDB provide a way to give additional context to variant effect scores by mapping them to known reference points. A score calibration is associated with a [score set](../getting-started/key-concepts.md) and consists of four parts: a baseline score, a set of classifications, a set of evidence strengths, and calibration metadata.
 
 You can add a calibration to a score set from multiple places in the MaveDB interface: from the score set page, from the dedicated calibrations page, or during score set creation in the upload form. Calibrations can also be created and managed via the [API](../programmatic-access/api-quickstart.md).
 
@@ -20,7 +20,7 @@ The baseline score should be provided as a numeric value along with a descriptio
 
 ## Functional classifications
 
-Functional classifications provide a way to categorize variants based on their effect scores. These classifications help users understand the biological significance of the scores and facilitate comparisons between different variants. MaveDB supports a controlled vocabulary for functional classifications, which includes the following terms:
+Functional classifications provide a way to categorize variants based on their effect scores. MaveDB supports a controlled vocabulary for functional classifications, which includes the following terms:
 
 - **Normal**: Indicates that the variant has no significant effect on the phenotype.
 - **Abnormal**: Indicates that the variant has a significant effect on the phenotype.
@@ -58,6 +58,7 @@ Calibration metadata provides additional context about the score calibration, in
 - A description of the methods used to determine the baseline score and functional classifications.
 - Any additional notes or comments that may be useful for users interpreting the calibration, especially with regard to the baseline score and functional classifications.
 - Whether the calibration should be marked as **research use only**, indicating that it is not intended for clinical or diagnostic purposes.
+- The **disease or disorder** the calibration's evidence applies to, as a [MONDO](https://www.ebi.ac.uk/ols4/ontologies/mondo) term. Every calibration starts with the generic "disease or disorder" term; choose a more specific one if the calibration applies to a particular condition.
 
 In addition, users may provide three types of publication references (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) to support the calibration:
 
@@ -67,14 +68,28 @@ In addition, users may provide three types of publication references (e.g., a DO
 
 ## Calibration controls
 
-Calibration controls are the variants of known clinical significance used to derive a calibration. Each control is a variant in the calibration's score set, labeled `pathogenic` or `benign`. They are shown with the calibration, alongside the functional classification each one falls into.
+Calibration controls are the variants of known clinical significance used to derive a calibration. Each control is a variant in the calibration's score set, labeled `pathogenic` or `benign`. Controls show how well a calibration's ranges separate variants whose clinical significance is already known.
 
-Controls are uploaded as a CSV file with two columns:
+### Adding controls
+
+To add controls, edit an existing calibration and upload a controls CSV file with two columns:
 
 - One of `variant_urn`, `hgvs_nt`, or `hgvs_pro`: the URN or HGVS notation of a variant in the score set. Use `variant_urn` when an HGVS string matches more than one variant.
 - `clinical_status`: `pathogenic` or `benign` (case-insensitive).
 
 Uploading a new file replaces all of a calibration's existing controls. Controls can only be added when editing an existing calibration, not while creating a score set, because they refer to the score set's variants and those don't exist until its scores have been processed.
+
+Controls are visible to everyone who can see the calibration. Once the calibration is [published](#calibration-privacy), its controls are public.
+
+### Reading controls
+
+Wherever a calibration's table appears (on the score set page, the calibrations page, and the variant page), a calibration with controls adds two rows under its ranges, **Pathogenic controls** and **Benign controls**. Each cell counts the controls the calibration places in that range, by score or, for a class-based calibration, by class:
+
+- **Green** counts agree with the range: pathogenic controls in an abnormal range, or benign controls in a normal range.
+- **Orange** counts contradict it: pathogenic controls in a normal range, or benign controls in an abnormal range.
+- **Gray** counts fall in a range that is neither abnormal nor normal, such as an indeterminate one.
+
+A summary line below the table totals the controls and how many are **concordant** (green) or **discordant** (orange), plus any that fall in an unclassified range or in no range at all.
 
 ### Protected health information
 
@@ -94,7 +109,7 @@ If you upload new scores for a score set, MaveDB carries each calibration's cont
 
 ## Calibration privacy
 
-By default, score calibrations are not visible to all MaveDB users. However, you may choose to [publish](../submitting-data/publishing.md) a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set. Published calibrations are visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.
+New score calibrations are private. A private calibration is visible to the user who uploaded it and, for an [investigator calibration](#investigator-and-community-calibrations), to the score set's contributors (see [Permission differences](#permission-differences)). Once published, a calibration is visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.
 
 !!! note
     Unlike experiments and experiment sets, calibrations are **not** automatically published when their associated score set is published. Each calibration must be published separately.
@@ -111,8 +126,6 @@ Research use only calibrations:
 - Are displayed with a prominent RUO label to distinguish them from calibrations intended for clinical interpretation.
 - May not be designated as [primary calibrations](#primary-calibrations).
 - Are still visible to all users when published, but the RUO label signals that they should not be used as the sole basis for clinical variant classification.
-
-The RUO designation is set when the calibration is created and cannot be changed after publication.
 
 ## Primary calibrations
 
@@ -148,6 +161,6 @@ The rank restriction means that community calibration providers cannot promote t
 
 - [Visualizations](../finding-data/visualizations.md) -- How calibrations influence the histogram and heatmap displays.
 - [Downloading Data](../finding-data/downloading.md#annotated-variants-va-spec) -- How calibration data is included in VA-Spec annotated variant downloads.
-- [Upload Guide](../submitting-data/upload-guide.md) -- Step-by-step instructions for creating score sets, including adding calibrations.
+- [Submitting a Dataset](../submitting-data/submitting-a-dataset.md) -- Step-by-step instructions for creating score sets, including adding calibrations.
 - [External Integrations](../finding-data/external-integrations.md) -- How MaveDB connects with ClinVar, ClinGen, and other resources that use calibration-informed classifications.
 - [Accession Numbers](accession-numbers.md#urns-for-other-resources) -- How calibration URNs are structured in MaveDB.

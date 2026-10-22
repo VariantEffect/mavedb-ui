@@ -35,6 +35,16 @@
   width: 100% !important;
 }
 
+/* Diagrams without their own styles use the brand sage, matching the app's palette (src/assets/app.css).
+   Material sets its defaults on the color scheme attribute, so match it to win. */
+[data-md-color-scheme="default"] {
+  --md-mermaid-node-bg-color: #e5f2e4;
+  --md-mermaid-node-fg-color: #3a654e;
+  --md-mermaid-edge-color: #5a9375;
+  --md-mermaid-label-bg-color: #ffffff;
+  --md-mermaid-label-fg-color: #3a654e;
+}
+
 /* Center images and Mermaid diagrams */
 .md-typeset img {
   display: block;

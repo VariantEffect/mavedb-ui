@@ -15,7 +15,8 @@
           label="Scores"
           severity="secondary"
           size="small"
-          @click="downloadFile('scores')" />
+          @click="downloadFile('scores')"
+        />
         <PButton
           v-if="!processingErrors && hasCountData"
           :disabled="fileDownloadInProgress"
@@ -23,7 +24,8 @@
           label="Counts"
           severity="secondary"
           size="small"
-          @click="downloadFile('counts')" />
+          @click="downloadFile('counts')"
+        />
         <PButton
           v-if="!processingErrors"
           :disabled="fileDownloadInProgress"
@@ -31,7 +33,8 @@
           label="Custom Data"
           severity="secondary"
           size="small"
-          @click="customDialogVisible = true" />
+          @click="customDialogVisible = true"
+        />
         <span v-if="fileDownloadInProgress" aria-live="polite" class="flex items-center gap-2 text-xs text-text-muted">
           <i class="pi pi-spin pi-spinner text-xs" />
           Preparing {{ fileDownloadLabel }}…
@@ -58,9 +61,7 @@
       <div v-if="scoresRows.length > 0">
         <div class="flex items-center justify-between border-b border-border-light bg-bg px-4 py-2 tablet:px-5">
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Scores</span>
-          <span class="text-xs text-text-muted">
-            Showing {{ scoresRows.length }} of {{ totalLabel }}
-          </span>
+          <span class="text-xs text-text-muted"> Showing {{ scoresRows.length }} of {{ totalLabel }} </span>
         </div>
         <div class="overflow-x-auto">
           <table class="variant-table w-full">
@@ -86,11 +87,10 @@
       </div>
       <div v-else-if="countsRows.length > 0">
         <div
-          class="flex items-center justify-between border-b border-border-light border-t bg-bg px-4 py-2 tablet:px-5">
+          class="flex items-center justify-between border-b border-border-light border-t bg-bg px-4 py-2 tablet:px-5"
+        >
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Counts</span>
-          <span class="text-xs text-text-muted">
-            Showing {{ countsRows.length }} of {{ totalLabel }}
-          </span>
+          <span class="text-xs text-text-muted"> Showing {{ countsRows.length }} of {{ totalLabel }} </span>
         </div>
         <div class="overflow-x-auto">
           <table class="variant-table w-full">
@@ -112,7 +112,8 @@
 
       <div
         v-if="scoresRows.length === 0 && countsRows.length === 0"
-        class="px-5 py-8 text-center text-sm italic text-text-muted">
+        class="px-5 py-8 text-center text-sm italic text-text-muted"
+      >
         No data available.
       </div>
     </template>
@@ -124,7 +125,8 @@
     header="Custom data download"
     kind="scoreSet"
     :urn="scoreSet.urn"
-    @confirm="downloadMultipleData" />
+    @confirm="downloadMultipleData"
+  />
 </template>
 
 <script lang="ts">

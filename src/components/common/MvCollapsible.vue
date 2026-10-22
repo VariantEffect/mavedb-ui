@@ -5,9 +5,9 @@
         <slot name="inline-link" />
       </div>
       <button
-        :aria-label="buttonLabel || undefined"
         :aria-controls="panelId"
         :aria-expanded="isOpen"
+        :aria-label="buttonLabel || undefined"
         class="flex flex-1 cursor-pointer items-center justify-between gap-2 py-2.5 pr-4 text-left text-xs font-bold uppercase tracking-wide text-gray-500"
         type="button"
         @click="toggle"
@@ -26,9 +26,9 @@
     </div>
     <button
       v-else
-      :aria-label="buttonLabel || undefined"
       :aria-controls="panelId"
       :aria-expanded="isOpen"
+      :aria-label="buttonLabel || undefined"
       class="flex w-full cursor-pointer items-center justify-between px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-gray-500 hover:bg-gray-50"
       type="button"
       @click="toggle"

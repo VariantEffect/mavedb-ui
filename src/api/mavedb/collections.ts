@@ -47,9 +47,13 @@ export async function removeCollectionRole(urn: string, role: string, orcidId: s
 }
 
 export async function addCollectionScoreSet(urn: string, scoreSetUrn: string): Promise<void> {
-  await axios.post(`${config.apiBaseUrl}/collections/${encodeURIComponent(urn)}/score-sets`, {score_set_urn: scoreSetUrn})
+  await axios.post(`${config.apiBaseUrl}/collections/${encodeURIComponent(urn)}/score-sets`, {
+    score_set_urn: scoreSetUrn
+  })
 }
 
 export async function addCollectionExperiment(urn: string, experimentUrn: string): Promise<void> {
-  await axios.post(`${config.apiBaseUrl}/collections/${encodeURIComponent(urn)}/experiments`, {experiment_urn: experimentUrn})
+  await axios.post(`${config.apiBaseUrl}/collections/${encodeURIComponent(urn)}/experiments`, {
+    experiment_urn: experimentUrn
+  })
 }

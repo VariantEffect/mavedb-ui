@@ -22,7 +22,11 @@ interface UseItemReturn<T> {
   itemStatus: ComputedRef<string>
   /** HTTP status of the last failed load, or null for a network error or when the load didn't fail. */
   itemErrorStatus: ComputedRef<number | null>
-  resetItem: (params?: {itemTypeName?: string | null; stateNamespace?: string | null; options?: Record<string, unknown> | null}) => void
+  resetItem: (params?: {
+    itemTypeName?: string | null
+    stateNamespace?: string | null
+    options?: Record<string, unknown> | null
+  }) => void
   ensureItemStore: () => boolean
   ensureItemLoaded: (payload?: unknown) => Promise<unknown> | null
   loadItem: (payload?: unknown) => Promise<unknown> | null
@@ -44,7 +48,11 @@ export default <T = unknown>({
   const configStateNamespace = ref(initialStateNamespace)
   const configOptions = ref(initialOptions)
 
-  const resetItem = ({itemTypeName = null, stateNamespace = null, options = null}: {itemTypeName?: string | null; stateNamespace?: string | null; options?: Record<string, unknown> | null} = {}) => {
+  const resetItem = ({
+    itemTypeName = null,
+    stateNamespace = null,
+    options = null
+  }: {itemTypeName?: string | null; stateNamespace?: string | null; options?: Record<string, unknown> | null} = {}) => {
     configItemTypeName.value = itemTypeName
     configStateNamespace.value = stateNamespace
     if (options != null) {
@@ -52,13 +60,17 @@ export default <T = unknown>({
     }
   }
 
-  const itemType = computed(() => (configItemTypeName.value && (itemTypes as Record<string, Record<string, unknown>>)[configItemTypeName.value]) || null)
+  const itemType = computed(
+    () =>
+      (configItemTypeName.value && (itemTypes as Record<string, Record<string, unknown>>)[configItemTypeName.value]) ||
+      null
+  )
 
   const stateNamespace = computed(() => {
     if (configStateNamespace.value) {
       return configStateNamespace
     }
-    const base = (itemType.value && (itemType.value as Record<string, unknown>).name as string) || 'item'
+    const base = (itemType.value && ((itemType.value as Record<string, unknown>).name as string)) || 'item'
     return `${pluralize(base)}/one/${uuidv4()}`
   })
 
@@ -75,9 +87,12 @@ export default <T = unknown>({
           : `${config.apiBaseUrl}/${(itemType.value as Record<string, unknown>).restCollectionName}/`
         store.registerModule(
           stateNamespace.value as string,
-          makeItemModule(restCollectionUrl, (itemType.value as Record<string, unknown>).primaryKey
-            ? {primaryKey: (itemType.value as Record<string, unknown>).primaryKey as string}
-            : {})
+          makeItemModule(
+            restCollectionUrl,
+            (itemType.value as Record<string, unknown>).primaryKey
+              ? {primaryKey: (itemType.value as Record<string, unknown>).primaryKey as string}
+              : {}
+          )
         )
         switchedStore = true
         itemStoreReady.value = true
@@ -123,10 +138,13 @@ export default <T = unknown>({
     ensureItemStore,
     ensureItemLoaded: (payload?: unknown) =>
       itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureItemLoaded`, payload) : null,
-    loadItem: (payload?: unknown) => (itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadItem`, payload) : null),
+    loadItem: (payload?: unknown) =>
+      itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadItem`, payload) : null,
     reloadItem: (payload?: unknown) =>
       itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/reloadItem`, payload) : null,
-    saveItem: (payload?: unknown) => (itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null),
-    setItemId: (payload?: unknown) => (itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemId`, payload) : null)
+    saveItem: (payload?: unknown) =>
+      itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null,
+    setItemId: (payload?: unknown) =>
+      itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemId`, payload) : null
   }
 }

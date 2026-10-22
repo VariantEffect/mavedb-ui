@@ -1,8 +1,6 @@
 # External integrations
 
-MaveDB integrates with several external resources to enrich hosted datasets and facilitate data sharing, interpretation, and clinical use.
-
-Many of these integrations rely on [variant mapping](../reference/variant-mapping.md) to link MAVE variants to genomic coordinates and transcripts. Through this mapping process and the adoption of GA4GH data standards, MAVE data from MaveDB is now accessible across a range of widely used genomic platforms.
+MaveDB exchanges data with the external resources below. Most of these integrations depend on [variant mapping](../mapping/forward-mapping.md), which places MAVE variants on the human reference genome and represents them with GA4GH standards.
 
 ## ClinGen
 
@@ -12,7 +10,7 @@ After mapping, MaveDB submits variant data to the [ClinGen Allele Registry](http
 
 ### ClinGen Linked Data Hub
 
-When a dataset is [published](../submitting-data/publishing.md), MaveDB automatically submits the mapped variants to the [ClinGen Linked Data Hub](https://ldh.clinicalgenome.org/) (LDH). Each variant is represented as a MaveDBMapping document that includes the MAVE score, score set accession, provenance information, and a link back to the MaveDB score set page. These documents are linked to ClinGen canonical allele identifiers, enabling users to access MAVE functional evidence for a variant alongside other curation data within the ClinGen ecosystem.
+When a dataset is [published](../submitting-data/publishing.md), MaveDB automatically submits its reference variants to the [ClinGen Linked Data Hub](https://ldh.clinicalgenome.org/) (LDH). Each variant is represented as a MaveDBMapping document that includes the MAVE score, score set accession, provenance information, and a link back to the MaveDB score set page. These documents are linked to ClinGen canonical allele identifiers, enabling users to access MAVE functional evidence for a variant alongside other curation data within the ClinGen ecosystem.
 
 Users can also navigate from the ClinGen Allele Registry directly to the corresponding [MaveMD variant page](../mavemd/variant-page.md) when functional data is available, providing a bidirectional link between the two resources.
 
@@ -52,7 +50,7 @@ Inferred calls list the records they were drawn from. Surfaces use these rules a
 
 ## gnomAD
 
-Mapped variants in MaveDB are cross-referenced with the [gnomAD database](https://gnomad.broadinstitute.org/) to retrieve population allele frequency data. This integration provides context about the prevalence of variants in diverse human populations, which is an important factor in clinical variant interpretation alongside functional evidence.
+Reference variants in MaveDB are cross-referenced with the [gnomAD database](https://gnomad.broadinstitute.org/) to retrieve population allele frequency data. This integration provides context about the prevalence of variants in diverse human populations, which is an important factor in clinical variant interpretation alongside functional evidence.
 
 A variant's frequency is displayed on its [variant page](../mavemd/variant-page.md), and is available in bulk through the `gnomad` namespace of the variant data download. Each frequency is matched by ClinGen allele ID, so it is a direct assertion about that variant rather than an aggregate over related variants. Variants absent from gnomAD show no frequency.
 
@@ -60,7 +58,7 @@ A protein change has no gnomAD record of its own. For a protein-level measuremen
 
 ## Ensembl VEP
 
-MaveDB uses the [Ensembl Variant Effect Predictor (VEP)](https://www.ensembl.org/info/docs/tools/vep/index.html) to annotate mapped variants with predicted functional consequences, including effects on protein coding sequences, splicing, and regulatory regions. These VEP annotations are displayed alongside variant effect scores on score set pages, providing additional context for interpreting the functional impact of each variant.
+MaveDB uses the [Ensembl Variant Effect Predictor (VEP)](https://www.ensembl.org/info/docs/tools/vep/index.html) to annotate reference variants with predicted functional consequences, including effects on protein coding sequences, splicing, and regulatory regions. These VEP annotations are displayed alongside variant effect scores on score set pages, providing additional context for interpreting the functional impact of each variant.
 
 ## IGVF Catalog
 
@@ -68,7 +66,7 @@ MaveDB is integrated with the [Impact of Genetic Variation on Function (IGVF) Co
 
 ## Sequence resolution services
 
-MaveDB relies on two open-source services to resolve and validate sequences for [accession-based targets](../submitting-data/targets.md#accession-based-targets) and [variant mapping](../reference/variant-mapping.md).
+MaveDB relies on three open-source services to resolve and validate sequences for [accession-based targets](../submitting-data/targets.md#accession-based-targets) and [variant mapping](../mapping/forward-mapping.md).
 
 ### CDOT
 
@@ -76,7 +74,7 @@ MaveDB relies on two open-source services to resolve and validate sequences for 
 
 ### UTA
 
-The [Universal Transcript Archive (UTA)](https://github.com/biocommons/uta) provides a comprehensive database of transcript alignments and annotations. MaveDB uses UTA to resolve transcript-to-genome alignments during [variant mapping](../reference/variant-mapping.md).
+The [Universal Transcript Archive (UTA)](https://github.com/biocommons/uta) provides a comprehensive database of transcript alignments and annotations. MaveDB uses UTA to resolve transcript-to-genome alignments during [variant mapping](../mapping/forward-mapping.md).
 
 ### SeqRepo
 
@@ -84,7 +82,7 @@ The [Universal Transcript Archive (UTA)](https://github.com/biocommons/uta) prov
 
 ## See also
 
-- [Variant mapping](../reference/variant-mapping.md) -- The mapping process that enables these external integrations
+- [Variant mapping](../mapping/forward-mapping.md) -- The mapping process that enables these external integrations
 - [Score calibrations](../reference/score-calibrations.md) -- How functional scores are calibrated using ClinVar pathogenic and benign variant data
 - [Visualizations](visualizations.md) -- How ClinVar and VEP data appear in histograms and other charts
 - [Downloading data](downloading.md) -- Download annotated variant data in VRS and VA-Spec formats

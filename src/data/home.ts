@@ -60,7 +60,7 @@ export const CONTRIBUTE_CATEGORIES = [
 ]
 
 /** Points first-time submitters at the submission guide before the ORCID-gated create forms. */
-export const SUBMISSION_GUIDE_HREF = '/docs/mavedb/submitting-data/before-you-start.html'
+export const SUBMISSION_GUIDE_HREF = '/docs/mavedb/submitting-data/index.html'
 
 export const FEATURED_COLLECTIONS = [
   {

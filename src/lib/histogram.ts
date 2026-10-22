@@ -6,7 +6,9 @@ import {HeatmapDatum} from './heatmap'
 
 type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
-type Accessor<T, Self> = (value?: T) => T | Self
+// Called with no argument an accessor reads its value; with one it sets it and returns the chart for chaining. Each
+// implementation is one function with an optional argument, so the chart object is asserted to its interface.
+type Accessor<T, Self> = {(): T; (value: T): Self}
 
 /**
  * How many ticks an axis of the given pixel length can carry without its labels running together. Score labels
@@ -124,9 +126,9 @@ export interface HistogramShader {
   gradientUUID: string | undefined
 }
 
-/** An object containing definitions of each of the possible shaded regions on this Histogram. */
+/** An object containing definitions of each of the possible shaded regions on this Histogram. A null entry shades nothing. */
 export interface HistogramShaderRegions {
-  [key: string]: HistogramShader[]
+  [key: string]: HistogramShader[] | null
 }
 
 export interface Histogram {
@@ -469,7 +471,7 @@ export default function makeHistogram(): Histogram {
     }
   }
 
-  const mouseleave = (event: MouseEvent, d: HistogramBin) => {
+  const mouseleave = (_event: MouseEvent, d: HistogramBin) => {
     if (d == hoverBin) {
       hoverBin = null
       refreshHighlighting()
@@ -776,7 +778,7 @@ export default function makeHistogram(): Histogram {
     }
   }
 
-  const chart: Histogram = {
+  const chart = {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Chart lifecyle methods
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -957,7 +959,9 @@ export default function makeHistogram(): Histogram {
             (enter) => {
               const g = enter.append('g').attr('class', 'histogram-legend-item')
               g.append('circle').attr('r', legendCircleWidth).attr('cx', legendX)
-              g.append('text').attr('x', legendX + legendCircleWidth + legendSpacing).style('font-size', legendFontSize)
+              g.append('text')
+                .attr('x', legendX + legendCircleWidth + legendSpacing)
+                .style('font-size', legendFontSize)
               return g
             },
             (update) => update,
@@ -1471,7 +1475,7 @@ export default function makeHistogram(): Histogram {
     width: () => width,
 
     bins: () => bins
-  }
+  } as Histogram
 
   return chart
 }

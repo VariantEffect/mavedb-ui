@@ -8,7 +8,10 @@ import {GENERIC_DISEASE, toDraftDisease, type DiseaseConcept, type DraftDisease}
 import {useValidationErrors, type ValidationErrorState} from '@/composables/use-validation-errors'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
-import {usePublicationIdentifiers, type UsePublicationIdentifiersReturn} from '@/composables/use-publication-identifiers'
+import {
+  usePublicationIdentifiers,
+  type UsePublicationIdentifiersReturn
+} from '@/composables/use-publication-identifiers'
 import {components} from '@/schema/openapi'
 import type {
   DraftScoreCalibration,
@@ -16,10 +19,7 @@ import type {
   DraftAcmgClassification,
   FunctionalClassificationHelper
 } from '@/lib/calibration-types'
-import {
-  DRAFT_CALIBRATION_COPYABLE_KEYS,
-  createClassificationHelper
-} from '@/lib/calibration-types'
+import {DRAFT_CALIBRATION_COPYABLE_KEYS, createClassificationHelper} from '@/lib/calibration-types'
 
 // Re-export types so consumers can import from here
 export type {
@@ -190,9 +190,7 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
 
     // Disease arrives as a served MappableConcept (load) or an existing {code, label} (blank draft);
     // normalize to the draft selection, defaulting to the generic term so it's always surfaced.
-    draftCalibration.disease = toDraftDisease(
-      (data as {disease?: DiseaseConcept | DraftDisease | null}).disease
-    )
+    draftCalibration.disease = toDraftDisease((data as {disease?: DiseaseConcept | DraftDisease | null}).disease)
 
     if (draftCalibration.functionalClassifications == null) {
       draftCalibration.functionalClassifications = []
@@ -265,8 +263,7 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
     })
     // A pending controls upload or clear is a change even though it lives outside the draft snapshot.
     const controlsChanged = draftControlsFile.value != null || controlsCleared.value
-    isDirty.value =
-      controlsChanged || !_.isEqual(snapshot(draftCalibration), snapshot(draftCalibration.__original))
+    isDirty.value = controlsChanged || !_.isEqual(snapshot(draftCalibration), snapshot(draftCalibration.__original))
     isValid.value = !!draftCalibration.title
   }
 

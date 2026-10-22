@@ -8,15 +8,10 @@ import {checkPermissions} from '@/api/mavedb/permissions'
  * and whenever the URN changes. Returns `false` for all actions while loading, on error,
  * or when the user is not authenticated.
  */
-export function useDatasetPermissions<T extends string>(
-  modelName: string,
-  urn: Ref<string>,
-  actions: readonly T[]
-) {
+export function useDatasetPermissions<T extends string>(modelName: string, urn: Ref<string>, actions: readonly T[]) {
   const {userIsAuthenticated} = useAuth()
 
-  const defaultPermissions = () =>
-    Object.fromEntries(actions.map((a) => [a, false])) as Record<T, boolean>
+  const defaultPermissions = () => Object.fromEntries(actions.map((a) => [a, false])) as Record<T, boolean>
 
   const permissions = ref<Record<T, boolean>>(defaultPermissions()) as Ref<Record<T, boolean>>
   const loading = ref(false)

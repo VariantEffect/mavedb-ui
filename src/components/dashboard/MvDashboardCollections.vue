@@ -1,7 +1,11 @@
 <template>
   <div>
     <div class="mb-4 space-y-2.5">
-      <MvFilterChips :filters="filters" :model-value="collectionFilter" @update:model-value="$emit('update:collectionFilter', $event)" />
+      <MvFilterChips
+        :filters="filters"
+        :model-value="collectionFilter"
+        @update:model-value="$emit('update:collectionFilter', $event)"
+      />
       <FloatLabel variant="on">
         <InputText
           id="collection-search"
@@ -36,7 +40,13 @@
       description="No collections match your current filters. Try adjusting or clearing your filters."
       title="No matching collections"
     >
-      <PButton class="mt-2" label="Clear filters" severity="warn" size="small" @click="$emit('update:collectionFilter', ['all']); $emit('update:collectionSearch', '')" />
+      <PButton
+        class="mt-2"
+        label="Clear filters"
+        severity="warn"
+        size="small"
+        @click="($emit('update:collectionFilter', ['all']), $emit('update:collectionSearch', ''))"
+      />
     </MvEmptyState>
 
     <div v-else class="mave-card overflow-hidden">
@@ -44,9 +54,16 @@
       <table class="hidden w-full table-fixed border-collapse text-sm tablet:table">
         <thead>
           <tr class="border-b border-border bg-bg">
-            <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted" style="width: 38%">Collection</th>
+            <th
+              class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted"
+              style="width: 38%"
+            >
+              Collection
+            </th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Score Sets</th>
-            <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Experiments</th>
+            <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">
+              Experiments
+            </th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Role</th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Visibility</th>
             <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-text-muted">Updated</th>
@@ -60,7 +77,10 @@
             class="group border-b border-border-light transition-colors last:border-b-0 hover:bg-bg"
           >
             <td class="px-4 py-2.5 [overflow-wrap:anywhere]">
-              <router-link class="line-clamp-1 text-sm font-semibold leading-snug text-sage-strong hover:underline" :to="{name: 'collection', params: {urn: col.urn}}">
+              <router-link
+                class="line-clamp-1 text-sm font-semibold leading-snug text-sage-strong hover:underline"
+                :to="{name: 'collection', params: {urn: col.urn}}"
+              >
                 {{ col.name }}
               </router-link>
               <div v-if="col.description" class="line-clamp-2 text-xs leading-tight text-text-muted">
@@ -108,8 +128,9 @@
             <MvBadge :value="col.role" />
             <MvBadge :value="col.private ? 'private' : 'public'" />
             <span class="text-xs text-text-muted">
-              {{ col.scoreSetUrns?.length || 0 }} score {{ (col.scoreSetUrns?.length || 0) === 1 ? 'set' : 'sets' }}
-              · {{ col.experimentUrns?.length || 0 }} {{ (col.experimentUrns?.length || 0) === 1 ? 'experiment' : 'experiments' }}
+              {{ col.scoreSetUrns?.length || 0 }} score {{ (col.scoreSetUrns?.length || 0) === 1 ? 'set' : 'sets' }} ·
+              {{ col.experimentUrns?.length || 0 }}
+              {{ (col.experimentUrns?.length || 0) === 1 ? 'experiment' : 'experiments' }}
             </span>
           </div>
         </div>
@@ -140,7 +161,17 @@ import {formatDate} from '@/lib/formats'
 export default defineComponent({
   name: 'MvDashboardCollections',
 
-  components: {FloatLabel, InputText, PButton, MvFilterChips, MvBadge, MvEmptyState, MvErrorState, MvLoader, MvRowActionMenu},
+  components: {
+    FloatLabel,
+    InputText,
+    PButton,
+    MvFilterChips,
+    MvBadge,
+    MvEmptyState,
+    MvErrorState,
+    MvLoader,
+    MvRowActionMenu
+  },
 
   props: {
     filteredCollections: {type: Array as PropType<CollectionWithRole[]>, required: true},
@@ -175,7 +206,12 @@ export default defineComponent({
       if (col.role === 'admin') {
         actions.push(
           {separator: true},
-          {label: 'Delete', description: 'Permanently delete this collection', danger: true, handler: () => this.confirmDeleteCollection(col)}
+          {
+            label: 'Delete',
+            description: 'Permanently delete this collection',
+            danger: true,
+            handler: () => this.confirmDeleteCollection(col)
+          }
         )
       }
       return actions

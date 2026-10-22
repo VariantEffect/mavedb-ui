@@ -1,44 +1,39 @@
 <template>
-  <div v-if="keyId" class="flex items-center gap-2">
-    <span
-      aria-label="API key"
-      class="flex max-w-[450px] flex-1 items-center gap-1 overflow-hidden rounded-md border border-border py-1.5 pl-3 pr-1 font-mono text-sm tracking-wide text-text-secondary"
-      :class="keyDisplayClass"
-      role="status"
-    >
-      <span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap" :aria-hidden="!revealed" aria-live="polite">{{ revealed ? keyId : maskedKey }}</span>
-      <span v-if="!revealed" class="sr-only">Key hidden. Use the reveal button to show it.</span>
+  <div v-if="accessKey">
+    <div class="flex items-center gap-2">
+      <span
+        aria-label="API key"
+        class="flex max-w-[450px] flex-1 items-center overflow-hidden rounded-md border border-border py-1.5 pl-3 pr-3 font-mono text-sm tracking-wide text-text-secondary"
+        :class="keyDisplayClass"
+        role="status"
+      >
+        <!-- A new key wraps rather than truncates, so it can still be read and copied by hand on a narrow screen. -->
+        <span v-if="newKey" class="flex-1 select-all break-all">{{ newKey }}</span>
+        <span v-else class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{{ maskedKey }}</span>
+      </span>
       <PButton
-        :aria-label="revealed ? 'Hide API key' : 'Reveal API key'"
-        :aria-pressed="revealed"
-        class="shrink-0 opacity-50 transition-opacity hover:bg-transparent hover:!text-sage-strong hover:opacity-100"
-        :class="revealed ? '!text-sage-strong opacity-100' : ''"
-        :icon="revealed ? 'pi pi-eye-slash' : 'pi pi-eye'"
+        v-if="newKey"
+        aria-label="Copy API key to clipboard"
+        class="key-copy-btn"
+        :icon="copySuccess ? 'pi pi-check' : 'pi pi-copy'"
         rounded
         severity="secondary"
-        size="small"
         text
-        @click="revealed = !revealed"
+        @click="copyToClipboard"
       />
-    </span>
-    <PButton
-      aria-label="Copy API key to clipboard"
-      class="key-copy-btn"
-      :icon="copySuccess ? 'pi pi-check' : 'pi pi-copy'"
-      rounded
-      severity="secondary"
-      text
-      @click="copyToClipboard"
-    />
-    <PButton
-      aria-label="Delete API key"
-      class="key-delete-btn"
-      icon="pi pi-trash"
-      rounded
-      severity="danger"
-      text
-      @click="$emit('delete', keyId)"
-    />
+      <PButton
+        aria-label="Delete API key"
+        class="key-delete-btn"
+        icon="pi pi-trash"
+        rounded
+        severity="danger"
+        text
+        @click="$emit('delete', accessKey.id)"
+      />
+    </div>
+    <p v-if="newKey" class="mt-1.5 text-xs text-text-muted">
+      Copy this key now. It won't be shown again; if you lose it, delete it and generate a new one.
+    </p>
   </div>
   <div v-else>
     <p class="text-xs italic text-text-muted">{{ emptyMessage }}</p>
@@ -48,7 +43,12 @@
 
 <script lang="ts">
 import PButton from 'primevue/button'
-import {defineComponent} from 'vue'
+import {defineComponent, type PropType} from 'vue'
+
+import {maskAccessKey} from '@/lib/access-keys.ts'
+import type {components} from '@/schema/openapi'
+
+type AccessKey = components['schemas']['AccessKey']
 
 export default defineComponent({
   name: 'MvAccessKeyRow',
@@ -56,7 +56,9 @@ export default defineComponent({
   components: {PButton},
 
   props: {
-    keyId: {type: String, default: null},
+    accessKey: {type: Object as PropType<AccessKey | null>, default: null},
+    // The full key, available only in the session that generated it; the API returns it once.
+    newKey: {type: String as PropType<string | null>, default: null},
     emptyMessage: {type: String, default: 'You have not created an API key.'},
     keyDisplayClass: {type: String, default: 'bg-bg'}
   },
@@ -65,30 +67,31 @@ export default defineComponent({
 
   data() {
     return {
-      copySuccess: false,
-      revealed: false
+      copySuccess: false
     }
   },
 
   computed: {
     maskedKey(): string {
-      if (!this.keyId) return ''
-      const suffix = this.keyId.slice(-4)
-      return `${'•'.repeat(8)}${suffix}`
+      return maskAccessKey(this.accessKey?.keyHint)
     }
   },
 
   watch: {
-    keyId() {
-      this.revealed = false
+    newKey() {
       this.copySuccess = false
     }
   },
 
   methods: {
     async copyToClipboard() {
-      if (!this.keyId) return
-      await navigator.clipboard.writeText(this.keyId)
+      if (!this.newKey) return
+      try {
+        await navigator.clipboard.writeText(this.newKey)
+      } catch {
+        this.$toast.add({severity: 'error', summary: "Couldn't copy the key. Select it and copy it by hand."})
+        return
+      }
       this.copySuccess = true
       setTimeout(() => (this.copySuccess = false), 1500)
     }

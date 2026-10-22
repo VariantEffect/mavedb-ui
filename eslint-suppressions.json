@@ -1,0 +1,120 @@
+{
+  "src/App.vue": {
+    "vue/block-lang": {
+      "count": 1
+    }
+  },
+  "src/components/common/MvEntityLink.vue": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/score-set/ProteinStructureView.vue": {
+    "vue/block-lang": {
+      "count": 1
+    }
+  },
+  "src/components/score-set/ScoreSetHistogram.vue": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    },
+    "vue/no-mutating-props": {
+      "count": 3
+    }
+  },
+  "src/components/screens/OidcCallback.vue": {
+    "vue/block-lang": {
+      "count": 1
+    }
+  },
+  "src/components/screens/OidcCallbackError.vue": {
+    "vue/block-lang": {
+      "count": 1
+    }
+  },
+  "src/components/screens/ScoreSetView.vue": {
+    "vue/no-reserved-component-names": {
+      "count": 1
+    }
+  },
+  "src/components/screens/StatisticsView.vue": {
+    "vue/block-lang": {
+      "count": 1
+    }
+  },
+  "src/lib/bar-line-chart.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "src/lib/calibrations.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/lib/chart-export.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/lib/form-helpers.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/lib/form-validation.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "src/lib/heatmap.ts": {
+    "@typescript-eslint/ban-ts-comment": {
+      "count": 3
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 29
+    },
+    "@typescript-eslint/no-unsafe-function-type": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 5
+    }
+  },
+  "src/lib/histogram.ts": {
+    "@typescript-eslint/ban-ts-comment": {
+      "count": 8
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 19
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/lib/objects.js": {
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 1
+    }
+  },
+  "src/lib/scores.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/overrides.d.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/store/index.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/store/modules/auth.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 13
+    }
+  }
+}

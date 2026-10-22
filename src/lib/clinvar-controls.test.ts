@@ -180,12 +180,29 @@ describe('enumerateUnderlyingClinvar — the popover projection', () => {
     const annotations = {
       cDigest: {
         clinvar: [
-          clinvar({clinvarAlleleId: 'x', clinvarVariationId: '123', clinicalSignificance: 'Benign', dbVersion: '03_2024'}),
-          clinvar({clinvarAlleleId: 'x', clinvarVariationId: '123', clinicalSignificance: 'Pathogenic', dbVersion: '06_2024'})
+          clinvar({
+            clinvarAlleleId: 'x',
+            clinvarVariationId: '123',
+            clinicalSignificance: 'Benign',
+            dbVersion: '03_2024'
+          }),
+          clinvar({
+            clinvarAlleleId: 'x',
+            clinvarVariationId: '123',
+            clinicalSignificance: 'Pathogenic',
+            dbVersion: '06_2024'
+          })
         ]
       },
       gDigest: {
-        clinvar: [clinvar({clinvarAlleleId: 'x', clinvarVariationId: '123', clinicalSignificance: 'Benign', dbVersion: '03_2024'})]
+        clinvar: [
+          clinvar({
+            clinvarAlleleId: 'x',
+            clinvarVariationId: '123',
+            clinicalSignificance: 'Benign',
+            dbVersion: '03_2024'
+          })
+        ]
       }
     }
     const alleles = {cDigest: {hgvs: 'NM_1.2:c.10A>G'}, gDigest: {hgvs: 'NC_1.11:g.100A>G'}}

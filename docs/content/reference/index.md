@@ -9,6 +9,6 @@ This section contains detailed reference documentation for MaveDB's data standar
 - **[Accession Numbers](accession-numbers.md)** -- How MaveDB URNs are structured for experiment sets, experiments, score sets, and other resources.
 - **[Controlled Vocabulary](controlled-vocabulary.md)** -- Definitions of the standardized terms used in MaveDB metadata and assay facts.
 - **[Permissions](permissions.md)** -- Who can view, edit, publish, and delete each type of resource in MaveDB.
-- **[Variant Mapping](variant-mapping.md)** -- How MAVE variants are mapped from assay-specific target sequences to human reference genome coordinates.
+- **[Variant Mapping](../mapping/forward-mapping.md)** -- How MAVE variants are mapped from assay-specific target sequences to human reference genome coordinates.
 - **[Assay Facts](assay-facts.md)** -- Structured summaries of experimental assay properties displayed on score set pages.
 - **[Collections](collections.md)** -- How datasets are organized into curated collections in MaveDB.

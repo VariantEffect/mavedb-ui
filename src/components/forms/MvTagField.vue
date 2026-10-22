@@ -82,7 +82,12 @@ export default defineComponent({
   emits: ['update:modelValue', 'blur', 'complete', 'escape', 'option-select'],
 
   setup(props) {
-    return {...useFieldId(() => props.label, () => props.id)}
+    return {
+      ...useFieldId(
+        () => props.label,
+        () => props.id
+      )
+    }
   },
 
   data() {

@@ -67,7 +67,8 @@ export function describeScheduledWindow(notice: MaintenanceNotice, locale?: stri
   if (start && end) {
     return `MaveDB will be unavailable for scheduled maintenance from ${formatMaintenanceTime(start, locale)} to ${formatMaintenanceTime(end, locale)}.`
   }
-  if (start) return `MaveDB will be unavailable for scheduled maintenance starting ${formatMaintenanceTime(start, locale)}.`
+  if (start)
+    return `MaveDB will be unavailable for scheduled maintenance starting ${formatMaintenanceTime(start, locale)}.`
   return 'MaveDB will be unavailable for scheduled maintenance soon.'
 }
 

@@ -18,7 +18,12 @@ describe('parseMaintenanceNotice', () => {
 
   it('parses a scheduled window', () => {
     const notice = parseMaintenanceNotice(
-      {status: 'scheduled', message: '  Database upgrade.  ', start: '2026-10-21T16:00:00Z', end: '2026-10-21T20:00:00Z'},
+      {
+        status: 'scheduled',
+        message: '  Database upgrade.  ',
+        start: '2026-10-21T16:00:00Z',
+        end: '2026-10-21T20:00:00Z'
+      },
       NOW
     )
     expect(notice).toEqual({
@@ -70,7 +75,9 @@ describe('describeExpectedReturn', () => {
   })
 
   it('acknowledges an overrun window', () => {
-    expect(describeExpectedReturn({...base, end: new Date('2026-10-20T11:00:00Z')}, NOW)).toMatch(/longer than expected/)
+    expect(describeExpectedReturn({...base, end: new Date('2026-10-20T11:00:00Z')}, NOW)).toMatch(
+      /longer than expected/
+    )
   })
 
   it('handles a window with no announced end', () => {

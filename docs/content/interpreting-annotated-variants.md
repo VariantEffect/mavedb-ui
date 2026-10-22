@@ -5,11 +5,10 @@ When you upload a variant to MaveDB, it is described relative to the experiment'
 1. **Maps** it onto standard human reference coordinates (GRCh38), and
 2. **Annotates** it with data from external resources — clinical significance (ClinVar), population frequency (gnomAD), and predicted consequences (Ensembl VEP).
 
-The result is an **annotated variant**: the original measurement, expressed across molecular levels and enriched with external evidence. This page explains what each element of an
-annotated variant represents and how they can be interpreted.
+The result is an **annotated variant**: the original measurement, expressed across molecular levels and enriched with external evidence. This page explains what each element of an annotated variant represents and how they can be interpreted.
 
 !!! info "Rolling out"
-    These multi-level representations are still being deployed across MaveDB. Some published datasets may not yet have a full derived variant data set as described below.
+    Multi-level representations are still being deployed, so some published datasets may not have all of them yet. See [Variant Mapping & Annotation](mapping/index.md).
 
 ## One variant, several representations
 
@@ -19,7 +18,7 @@ A variant can be described at three molecular levels:
 - **Coding** (`c.`) — position within a transcript's coding sequence.
 - **Protein** (`p.`) — the amino-acid change.
 
-MaveDB shows a variant at whichever of these levels apply. The important point is that **these levels are not all equally direct.** An assay measures a variant at one of these levels. We must *derive* all other levels from that measurement. How faithfully a level can be derived and interpreted depends on the underlying biology, which the four relationships below capture.
+MaveDB shows a variant at whichever of these levels apply. The important point is that **these levels are not all equally direct.** An assay measures a variant at one of these levels. We must *derive* all other levels from that measurement. How faithfully a level can be derived and interpreted depends on the underlying biology, which the four relationships in [Measured, resolved, convergent, and candidate](#measured-resolved-convergent-and-candidate) capture.
 
 ### Which transcript a coding change is written on
 
@@ -58,7 +57,7 @@ MaveDB shows the full set for a reason: most clinically relevant external databa
 
 ### Not everything can be reverse-translated
 
-Not every protein change can be reverse-translated. Simple **substitutions** (and single-residue deletions) can be; more complex edits — insertions, delins, and frameshifts — cannot, so a protein-only measurement of one of these shows **no** derived coding or genomic variants.
+Not every protein change can be reverse-translated. Substitutions (including changes to a stop codon) and single-residue deletions can be; insertions, delins, frameshifts, and stop-loss changes cannot, so a protein-only measurement of one of these shows **no** derived coding or genomic variants.
 
 For the mechanism behind candidate generation — codon enumeration, synonymous handling, and transcript selection — see [Reverse Translation & Projection](mapping/reverse-translation.md).
 
@@ -79,7 +78,7 @@ When annotations diverge, weigh the annotation on the **measured** level most he
 
 A DNA measurement's coding and protein descriptions can also appear as plain HGVS, with no allele of their own and so no identifier or annotations. This happens where VRS cannot represent the change at that level, such as an intronic or UTR coding coordinate, which has no transcript sequence to place it on. An intronic or UTR change has no protein description at all.
 
-How annotations are attached, and how divergence is handled, is covered in [Annotation](mapping/annotation.md); for what each external resource provides, see [External Integrations](finding-data/external-integrations.md).
+How annotations are attached is covered in [Annotation](mapping/annotation.md); for what each external resource provides, see [External Integrations](finding-data/external-integrations.md).
 
 ## Identifiers
 
@@ -88,7 +87,7 @@ MaveDB variants carry ClinGen Allele identifiers, which act as stable cross-refe
 - **Nucleotide** representations (genomic and coding) carry a **canonical-allele (CA)** identifier.
 - **Protein** representations carry a **protein-allele (PA)** identifier.
 
-Because every variant is projected up to its protein consequence, an annotated variant typically has a **PA identifier for its protein level and CA identifiers for its nucleotide representations — regardless of the level at which it was originally measured.** A variant measured at the nucleotide level still projects up to a protein representation with its own PA identifier; a protein-only measurement still receives a CA identifier for each of its nucleotide candidates.
+Because every coding variant is projected up to its protein consequence, an annotated variant typically has a **PA identifier for its protein level and CA identifiers for its nucleotide representations — regardless of the level at which it was originally measured.** A variant measured at the nucleotide level still projects up to a protein representation with its own PA identifier; a protein-only measurement still receives a CA identifier for each of its nucleotide candidates.
 
 ## In short
 
@@ -101,6 +100,6 @@ Because every variant is projected up to its protein consequence, an annotated v
 ## See also
 
 - [Variant page](mavemd/variant-page.md) — reading these representations on the MaveMD clinical interface
-- [Variant mapping](reference/variant-mapping.md) — how variants are mapped to reference coordinates
+- [Variant mapping](mapping/forward-mapping.md) — how variants are mapped to reference coordinates
 - [External Integrations](finding-data/external-integrations.md) — the ClinVar, gnomAD, and ClinGen resources behind annotations
 - [Data Formats](submitting-data/data-formats.md) — how variants are described on upload

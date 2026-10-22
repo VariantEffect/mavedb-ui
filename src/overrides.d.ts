@@ -4,7 +4,7 @@ declare module 'fasta-js' {
   }
 }
 
-declare module "vue-debounce" {
+declare module 'vue-debounce' {
   function debounce(fn: (arg: any) => any, interval: string | number): void
 }
 

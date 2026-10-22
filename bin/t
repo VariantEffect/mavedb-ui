@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Unit tests: bin/t [test file or directory] [vitest args]. The whole suite takes a few seconds.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+exec node_modules/.bin/vitest run "$@"

@@ -20,11 +20,11 @@
       <ProteinStructureView
         ref="proteinStructureViewer"
         :residue-tooltips="residueTooltips"
-        :row-group-selected="rowGroupSelected"
-        :row-selected="rowSelected"
+        :row-group-selected="rowGroupSelected ?? undefined"
+        :row-selected="rowSelected ?? undefined"
         :selected-residue-ranges="selectedResidueRanges"
         :selection-data="selectionData"
-        :uniprot-id="uniprotId"
+        :uniprot-id="uniprotId ?? undefined"
         @clicked-residue="didClickResidue($event.residueNumber)"
         @hovered-over-residue="didHighlightResidue($event.residueNumber)"
       />

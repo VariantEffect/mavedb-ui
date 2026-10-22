@@ -80,7 +80,7 @@ export function buildSearchParams(filters: SearchFilters) {
       filters.filterControlledKeywords.length > 0
         ? filters.filterControlledKeywords.map((v) => {
             const [key, label] = v.split('::', 2)
-            return { key, label }
+            return {key, label}
           })
         : undefined
   }

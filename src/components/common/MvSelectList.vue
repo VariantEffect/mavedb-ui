@@ -32,7 +32,9 @@
           type="checkbox"
           @change="toggleOption(option.value)"
         />
-        <span class="min-w-0 truncate" :class="optionClass" :title="displayLabel(option)">{{ displayLabel(option) }}</span>
+        <span class="min-w-0 truncate" :class="optionClass" :title="displayLabel(option)">{{
+          displayLabel(option)
+        }}</span>
         <span v-if="option.badge" class="ml-auto shrink-0 text-xs tabular-nums text-gray-400">
           <span class="sr-only">({{ option.badge }} results)</span>
           <span aria-hidden="true">{{ option.badge }}</span>

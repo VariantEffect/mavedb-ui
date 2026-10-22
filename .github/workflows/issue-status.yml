@@ -37,5 +37,5 @@ jobs:
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
-            const run = require('./.github/scripts/issue-status.js');
+            const run = require('./.github/scripts/issue-status.cjs');
             await run({ github, context, core });

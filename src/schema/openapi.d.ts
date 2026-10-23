@@ -191,7 +191,7 @@ export interface paths {
   "/api/v1/doi-identifiers/search": {
     /**
      * Search DOI identifiers
-     * @description Search DOI identifiers based on the provided text.
+     * @description Search the DOI identifiers cited by records you can read.
      */
     post: operations["search_doi_identifiers_api_v1_doi_identifiers_search_post"];
   };
@@ -516,7 +516,7 @@ export interface paths {
   "/api/v1/raw-read-identifiers/search": {
     /**
      * Search Raw Read identifiers
-     * @description Search Raw Read identifiers.
+     * @description Search the Raw Read identifiers cited by records you can read.
      */
     post: operations["search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post"];
   };
@@ -1227,7 +1227,7 @@ export interface paths {
   "/api/v1/statistics/record/{record}/raw-read-identifiers": {
     /**
      * Get raw read identifier statistics for a record
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `raw_read_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct raw read identifier.
      * Don't include any raw read identifiers from unpublished experiments.
      */
     get: operations["experiment_raw_read_identifier_statistics_api_v1_statistics_record__record__raw_read_identifiers_get"];
@@ -1235,7 +1235,7 @@ export interface paths {
   "/api/v1/statistics/record/{record}/doi-identifiers": {
     /**
      * Get DOI identifier statistics for a record
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `doi_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct DOI identifier.
      * Don't include any DOI identifiers from unpublished experiments.
      */
     get: operations["experiment_doi_identifiers_statistics_api_v1_statistics_record__record__doi_identifiers_get"];
@@ -1334,7 +1334,7 @@ export interface paths {
   "/api/v1/statistics/target/gene/ensembl-identifier": {
     /**
      * Get target gene statistics for Ensembl identifiers
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `ensembl_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct Ensembl identifier of a target gene.
      * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      */
     get: operations["target_genes_ensembl_identifier_counts_api_v1_statistics_target_gene_ensembl_identifier_get"];
@@ -1342,7 +1342,7 @@ export interface paths {
   "/api/v1/statistics/target/gene/refseq-identifier": {
     /**
      * Get target gene statistics for RefSeq identifiers
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `refseq_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct RefSeq identifier of a target gene.
      * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      */
     get: operations["target_genes_refseq_identifier_counts_api_v1_statistics_target_gene_refseq_identifier_get"];
@@ -1350,7 +1350,7 @@ export interface paths {
   "/api/v1/statistics/target/gene/uniprot-identifier": {
     /**
      * Get target gene statistics for UniProt identifiers
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `uniprot_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct UniProt identifier of a target gene.
      * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      */
     get: operations["target_genes_uniprot_identifier_counts_api_v1_statistics_target_gene_uniprot_identifier_get"];
@@ -1384,7 +1384,7 @@ export interface paths {
   "/api/v1/target-gene-identifiers/search": {
     /**
      * Search target gene identifiers
-     * @description Search target gene identifiers.
+     * @description Search the target gene identifiers of score sets you can read.
      */
     post: operations["search_target_gene_identifiers_api_v1_target_gene_identifiers_search_post"];
   };
@@ -3256,8 +3256,6 @@ export interface components {
     DoiIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -3733,8 +3731,6 @@ export interface components {
       dbVersion?: string | null;
       /** Url */
       url?: string | null;
-      /** Referencehtml */
-      referenceHtml?: string | null;
     };
     /** ExternalGeneIdentifierCreate */
     ExternalGeneIdentifierCreate: {
@@ -4766,8 +4762,6 @@ export interface components {
     RawReadIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -5118,8 +5112,6 @@ export interface components {
     SavedDoiIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -5294,8 +5286,6 @@ export interface components {
     SavedRawReadIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -8214,9 +8204,14 @@ export interface operations {
   };
   /**
    * Search DOI identifiers
-   * @description Search DOI identifiers based on the provided text.
+   * @description Search the DOI identifiers cited by records you can read.
    */
   search_doi_identifiers_api_v1_doi_identifiers_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["TextSearch"];
@@ -9886,9 +9881,14 @@ export interface operations {
   };
   /**
    * Search Raw Read identifiers
-   * @description Search Raw Read identifiers.
+   * @description Search the Raw Read identifiers cited by records you can read.
    */
   search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["TextSearch"];
@@ -12351,7 +12351,7 @@ export interface operations {
   };
   /**
    * Get raw read identifier statistics for a record
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `raw_read_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct raw read identifier.
    * Don't include any raw read identifiers from unpublished experiments.
    */
   experiment_raw_read_identifier_statistics_api_v1_statistics_record__record__raw_read_identifiers_get: {
@@ -12387,7 +12387,7 @@ export interface operations {
   };
   /**
    * Get DOI identifier statistics for a record
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `doi_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct DOI identifier.
    * Don't include any DOI identifiers from unpublished experiments.
    */
   experiment_doi_identifiers_statistics_api_v1_statistics_record__record__doi_identifiers_get: {
@@ -12726,7 +12726,7 @@ export interface operations {
   };
   /**
    * Get target gene statistics for Ensembl identifiers
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `ensembl_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct Ensembl identifier of a target gene.
    * Don't include any NULL field values. Don't include any targets from unpublished score sets.
    */
   target_genes_ensembl_identifier_counts_api_v1_statistics_target_gene_ensembl_identifier_get: {
@@ -12751,7 +12751,7 @@ export interface operations {
   };
   /**
    * Get target gene statistics for RefSeq identifiers
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `refseq_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct RefSeq identifier of a target gene.
    * Don't include any NULL field values. Don't include any targets from unpublished score sets.
    */
   target_genes_refseq_identifier_counts_api_v1_statistics_target_gene_refseq_identifier_get: {
@@ -12776,7 +12776,7 @@ export interface operations {
   };
   /**
    * Get target gene statistics for UniProt identifiers
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `uniprot_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct UniProt identifier of a target gene.
    * Don't include any NULL field values. Don't include any targets from unpublished score sets.
    */
   target_genes_uniprot_identifier_counts_api_v1_statistics_target_gene_uniprot_identifier_get: {
@@ -12901,12 +12901,15 @@ export interface operations {
   };
   /**
    * Search target gene identifiers
-   * @description Search target gene identifiers.
+   * @description Search the target gene identifiers of score sets you can read.
    */
   search_target_gene_identifiers_api_v1_target_gene_identifiers_search_post: {
     parameters: {
       query: {
         db_name: string;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
       };
     };
     requestBody: {

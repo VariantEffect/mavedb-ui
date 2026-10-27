@@ -213,6 +213,15 @@
             </template>
           </DataTable>
         </div>
+
+        <!-- Pages hold whole threads, so a calibration's versions are never split across pages. -->
+        <Paginator
+          v-if="calibrationThreads.length > threadsPerPage"
+          v-model:first="threadFirst"
+          class="mt-3"
+          :rows="threadsPerPage"
+          :total-records="calibrationThreads.length"
+        />
       </template>
     </div>
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-8">
@@ -264,6 +273,7 @@ import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import Paginator from 'primevue/paginator'
 import useItem from '@/composition/item.ts'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
@@ -320,6 +330,7 @@ export default {
     MvItemNotFound,
     Column,
     MvPageLoading,
+    Paginator,
     CalibrationTable,
     PrimeDialog
   },
@@ -361,7 +372,10 @@ export default {
       expandedRanges: {} as Record<number, boolean>,
       // The table is lazy, so it reports the sort and the page applies it, keeping each version thread together.
       sortField: undefined as string | undefined,
-      sortOrder: undefined as number | undefined
+      sortOrder: undefined as number | undefined,
+      // Index of the first thread on the page; pages count threads, not rows.
+      threadFirst: 0,
+      threadsPerPage: 15
     }
   },
   computed: {
@@ -388,9 +402,12 @@ export default {
         this.sortOrder ?? 1
       )
     },
-    /** Each thread's head, then its other versions in chain order. */
+    pageThreads(): CalibrationThread[] {
+      return this.calibrationThreads.slice(this.threadFirst, this.threadFirst + this.threadsPerPage)
+    },
+    /** Each thread on the page: its head, then its other versions in chain order. */
     calibrationRows(): ScoreCalibration[] {
-      return this.calibrationThreads.flatMap((thread) => [
+      return this.pageThreads.flatMap((thread) => [
         thread.head,
         ...thread.versions.filter((version) => version !== thread.head)
       ])
@@ -408,6 +425,18 @@ export default {
     item(newValue) {
       this.head.patch({title: newValue ? `Calibrations for ${getScoreSetShortName(newValue)}` : undefined})
       this.expandedRows = {}
+    },
+    // A new order starts from the first page, as the table's own sorting does.
+    sortField() {
+      this.threadFirst = 0
+    },
+    sortOrder() {
+      this.threadFirst = 0
+    },
+    // A reload can remove threads; stay on the last page rather than one past it.
+    'calibrationThreads.length'(count: number) {
+      const lastPageFirst = Math.max(0, Math.ceil(count / this.threadsPerPage) - 1) * this.threadsPerPage
+      if (this.threadFirst > lastPageFirst) this.threadFirst = lastPageFirst
     },
     itemId: {
       handler: async function (newValue, oldValue) {
@@ -432,6 +461,8 @@ export default {
     async showCalibration(urn: string) {
       const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)
       if (!calibration) return
+      const threadIndex = this.calibrationThreads.findIndex((thread) => thread.versions.includes(calibration))
+      if (threadIndex >= 0) this.threadFirst = Math.floor(threadIndex / this.threadsPerPage) * this.threadsPerPage
       this.expandedRows = {...this.expandedRows, [calibration.id]: true}
       this.expandedRanges[calibration.id] = true
       await this.$nextTick()

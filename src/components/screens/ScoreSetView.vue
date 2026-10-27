@@ -820,7 +820,14 @@ export default {
       this.reconcileHeatmapLevel()
     },
     selectedVariant: 'refreshUrlState',
-    selectedCalibrations: {handler: 'refreshUrlState', deep: true}
+    selectedCalibrations: {handler: 'refreshUrlState', deep: true},
+    // A version link targets this same route with another `calibration`, so the view isn't remounted.
+    '$route.query.calibration'(newValue: unknown) {
+      if (!newValue) return
+      const cal = String(newValue)
+      if (this.selectedCalibrations.every((selected) => selected === cal)) return
+      this.selectedCalibrations = this.selectedCalibrations.map(() => cal)
+    }
   },
 
   async mounted() {

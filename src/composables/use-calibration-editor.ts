@@ -2,8 +2,14 @@ import {reactive, ref, type Ref} from 'vue'
 import _, {cloneDeep} from 'lodash'
 
 import {getScoreCalibration} from '@/api/mavedb'
+import {getScoreCalibrationVariants} from '@/api/mavedb/calibrations.ts'
 import config from '@/config'
-import {saveCalibration, type CalibrationSaveResult} from '@/lib/calibrations'
+import {
+  calibrationClassesCsv,
+  prepareCalibrationVersion,
+  saveCalibration,
+  type CalibrationSaveResult
+} from '@/lib/calibrations.ts'
 import {GENERIC_DISEASE, toDraftDisease, type DiseaseConcept, type DraftDisease} from '@/lib/diseases'
 import {useValidationErrors, type ValidationErrorState} from '@/composables/use-validation-errors'
 import useScopedId from '@/composables/scoped-id'
@@ -33,6 +39,7 @@ export interface CalibrationEditorProps {
   calibrationUrn: string | null
   scoreSetUrn: string | null
   allowClassBased: boolean
+  supersededCalibrationUrn?: string | null
 }
 
 type DraftScoreCalibrationWithOriginal = DraftScoreCalibration & {
@@ -230,7 +237,14 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
   const loadCalibration = async (urn: string) => {
     try {
       const data = await getScoreCalibration(urn)
-      applyCalibrationData(data as unknown as Partial<DraftScoreCalibration>)
+      const loaded = data as unknown as DraftScoreCalibration
+      applyCalibrationData(props.supersededCalibrationUrn ? prepareCalibrationVersion(loaded) : loaded)
+      if (props.supersededCalibrationUrn && classBased.value) {
+        const memberships = await getScoreCalibrationVariants(urn)
+        draftClassesFile.value = new File([calibrationClassesCsv(data, memberships)], 'calibration-classes.csv', {
+          type: 'text/csv'
+        })
+      }
       draftCalibration.__original = cloneDeep(draftCalibration)
     } catch (e) {
       console.error('Failed to load calibration', urn, e)
@@ -273,6 +287,8 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
   const inCreateMode = !props.calibrationUrn
   if (props.calibrationUrn) {
     loadCalibration(props.calibrationUrn)
+  } else if (props.supersededCalibrationUrn) {
+    loadCalibration(props.supersededCalibrationUrn)
   } else {
     initCreateDraft()
   }

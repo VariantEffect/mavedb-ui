@@ -9,6 +9,40 @@
       >
     </div>
 
+    <!-- Versions -->
+    <div
+      v-if="scoreSetUrn && versionLinks.length"
+      class="flex flex-col gap-1.5 border-b border-border px-4 py-2.5 text-xs"
+    >
+      <div v-for="version in versionLinks" :key="version.urn" class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span class="w-32 shrink-0 font-bold uppercase tracking-wide text-text-muted">{{ version.label }}</span>
+        <!-- Versions often share a title, so the status and date tell them apart. -->
+        <template v-if="version.calibration">
+          <button
+            v-if="showVersionsInPlace"
+            class="cursor-pointer text-left font-semibold text-link hover:underline"
+            type="button"
+            @click="$emit('showVersion', version.urn)"
+          >
+            {{ version.calibration.title }}
+          </button>
+          <RouterLink v-else class="font-semibold" :to="scoreSetRoute(version.urn)">{{
+            version.calibration.title
+          }}</RouterLink>
+          <span class="text-text-muted"
+            >{{ calibrationVersionStatus(version.calibration) }} &middot; created
+            {{ formatDate(version.calibration.creationDate) }}</span
+          >
+        </template>
+        <RouterLink
+          v-if="showVersionsInPlace || !version.calibration"
+          :class="{'ml-auto': version.calibration}"
+          :to="scoreSetRoute(version.urn)"
+          >View in score set</RouterLink
+        >
+      </div>
+    </div>
+
     <!-- Baseline score -->
     <div class="flex items-center gap-3 border-b border-border bg-bg px-4 py-2.5">
       <span
@@ -459,8 +493,15 @@ import CalibrationControlsSummary from '@/components/calibration/CalibrationCont
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
-import {buildControlPlacements, type ControlPlacements} from '@/lib/calibrations'
+import {
+  buildControlPlacements,
+  calibrationVersionLinks,
+  calibrationVersionStatus,
+  type CalibrationVersionLink,
+  type ControlPlacements
+} from '@/lib/calibrations'
 import {diseaseDisplayLabel} from '@/lib/diseases'
+import {formatDate} from '@/lib/formats'
 import {shortCitationForPublication} from '@/lib/publication'
 
 type FunctionalClassification =
@@ -476,6 +517,7 @@ export default defineComponent({
   },
 
   props: {
+    scoreSetUrn: {type: String, default: null},
     scoreCalibration: {
       type: Object as PropType<components['schemas']['ScoreCalibration']>,
       required: true
@@ -483,18 +525,34 @@ export default defineComponent({
     highlightedRangeLabel: {
       type: String as PropType<string | null>,
       default: null
-    }
+    },
+    /** The score set's calibrations, where the table finds this calibration's other versions to name them. */
+    relatedCalibrations: {
+      type: Array as PropType<components['schemas']['ScoreCalibration'][] | null>,
+      default: null
+    },
+    /**
+     * Whether the page shows the other versions too. If so, a version's name emits `showVersion` for the page to
+     * reveal it, and a separate link opens it in the score set; otherwise the name opens it in the score set.
+     */
+    showVersionsInPlace: {type: Boolean, default: false}
   },
 
-  emits: ['rangeSelected'],
+  emits: ['rangeSelected', 'showVersion'],
 
   data() {
     return {
+      calibrationVersionStatus,
+      formatDate,
       shortCitationForPublication
     }
   },
 
   computed: {
+    versionLinks(): CalibrationVersionLink[] {
+      return calibrationVersionLinks(this.scoreCalibration, this.relatedCalibrations)
+    },
+
     calibrationIsClassBased(): boolean {
       if (!this.scoreCalibration.functionalClassifications) {
         return false
@@ -652,6 +710,11 @@ export default defineComponent({
   },
 
   methods: {
+    /** The score set page, with the calibration `urn` selected. */
+    scoreSetRoute(urn: string) {
+      return {name: 'scoreSet', params: {urn: this.scoreSetUrn}, query: {calibration: urn}}
+    },
+
     /** Controls of `status` that landed in `range`; an em dash reads better than a field of zeros. */
     controlCountText(range: FunctionalClassification, status: CalibrationControlStatus): string {
       const count = this.controlPlacements.byRange.get(range)?.[status] ?? 0

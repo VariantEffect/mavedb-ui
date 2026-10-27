@@ -81,6 +81,15 @@ export async function deleteScoreCalibration(urn: string) {
 }
 
 /**
+ * Delete a score calibration's controls and withdraw its PHI affirmation, changing nothing else. The one change
+ * allowed to a calibration that a newer version has replaced.
+ */
+export async function deleteScoreCalibrationControls(urn: string) {
+  const response = await axios.delete(`${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(urn)}/controls`)
+  return response.data
+}
+
+/**
  * Fetch variants for a single functional classification in a score calibration.
  */
 export async function getScoreCalibrationClassificationVariants(

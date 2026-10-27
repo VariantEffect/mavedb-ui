@@ -4,6 +4,8 @@
  */
 
 import axios from 'axios'
+import {cloneDeep} from 'lodash'
+import Papa from 'papaparse'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
@@ -293,6 +295,7 @@ export function hasPathogenicityCalibrations(
 
   return scoreCalibrations.some(
     (cal) =>
+      !cal.hasPublishedReplacement &&
       !(excludeResearchUseOnly && cal.researchUseOnly) &&
       cal.functionalClassifications &&
       Array.isArray(cal.functionalClassifications) &&
@@ -318,6 +321,7 @@ export function hasFunctionalCalibrations(
 
   return scoreCalibrations.some(
     (cal) =>
+      !cal.hasPublishedReplacement &&
       !(excludeResearchUseOnly && cal.researchUseOnly) &&
       cal.functionalClassifications &&
       Array.isArray(cal.functionalClassifications) &&
@@ -332,7 +336,7 @@ export function hasFunctionalCalibrations(
 export function getPrimaryCalibration(
   scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined
 ): ScoreCalibration | null {
-  const calibrations = scoreSet?.scoreCalibrations
+  const calibrations = scoreSet?.scoreCalibrations?.filter((calibration) => !calibration.hasPublishedReplacement)
   if (!calibrations || calibrations.length === 0) return null
   return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
 }
@@ -360,7 +364,7 @@ export function unclassifiedCallLabel(
  * alphabetical by title within each tier. Returns a new array.
  */
 export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | null | undefined): ScoreCalibration[] {
-  const tier = (c: ScoreCalibration) => (c.primary ? 0 : c.researchUseOnly ? 2 : 1)
+  const tier = (c: ScoreCalibration) => (c.hasPublishedReplacement ? 3 : c.primary ? 0 : c.researchUseOnly ? 2 : 1)
   return [...(scoreCalibrations ?? [])].sort(
     (a, b) => tier(a) - tier(b) || (a.title ?? '').localeCompare(b.title ?? '')
   )
@@ -374,6 +378,7 @@ export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | 
 export function chooseDefaultCalibration(
   scoreCalibrations: ScoreCalibration[] | null | undefined
 ): ScoreCalibration | null {
+  scoreCalibrations = scoreCalibrations?.filter((calibration) => !calibration.hasPublishedReplacement)
   if (!scoreCalibrations || scoreCalibrations.length === 0) return null
   return (
     scoreCalibrations.find((c) => c.primary === true) ||
@@ -413,6 +418,74 @@ export function getClassificationOddsPath(
 export type CalibrationPayload = Omit<DraftScoreCalibration, 'disease' | 'controls' | 'controlsCount'> & {
   disease: string | null
   controls?: components['schemas']['CalibrationControlCreate'][]
+}
+
+/** Another version of a calibration, as its table names it. */
+export interface CalibrationVersionLink {
+  urn: string
+  label: 'Previous version' | 'Superseded by' | 'Draft new version'
+  /** Null when the other version isn't among the calibrations the caller was given. */
+  calibration: ScoreCalibration | null
+}
+
+/**
+ * The versions a calibration links to: the one it replaced, and the one replacing it. The api names a draft
+ * replacement only to users who may read it, and a draft supersedes nothing until it's published.
+ *
+ * @param calibration - The calibration whose versions to list.
+ * @param related - The score set's calibrations, where every version of `calibration` the caller may read lives.
+ */
+export function calibrationVersionLinks(
+  calibration: ScoreCalibration,
+  related: ScoreCalibration[] | null | undefined
+): CalibrationVersionLink[] {
+  const find = (urn: string) => related?.find((c) => c.urn === urn) ?? null
+  const links: CalibrationVersionLink[] = []
+  if (calibration.supersededCalibrationUrn) {
+    const urn = calibration.supersededCalibrationUrn
+    links.push({urn, label: 'Previous version', calibration: find(urn)})
+  }
+  if (calibration.supersedingCalibrationUrn) {
+    const urn = calibration.supersedingCalibrationUrn
+    const label = calibration.hasPublishedReplacement ? 'Superseded by' : 'Draft new version'
+    links.push({urn, label, calibration: find(urn)})
+  }
+  return links
+}
+
+/** A calibration's place in its version history, for telling versions with the same title apart. */
+export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft' | 'Superseded' | 'Published' {
+  if (calibration.private) return 'Draft'
+  return calibration.hasPublishedReplacement ? 'Superseded' : 'Published'
+}
+
+export function prepareCalibrationVersion(calibration: DraftScoreCalibration): DraftScoreCalibration {
+  return {
+    ...cloneDeep(calibration),
+    urn: null,
+    supersededCalibrationUrn: calibration.urn,
+    supersedingCalibrationUrn: null,
+    hasPublishedReplacement: false,
+    private: true,
+    primary: false,
+    controlsNotPhi: calibration.controls?.length ? null : calibration.controlsNotPhi
+  }
+}
+
+export function calibrationClassesCsv(
+  calibration: ScoreCalibration,
+  memberships: FunctionalClassificationVariants[]
+): string {
+  const rows = memberships.flatMap((membership) => {
+    const classification = calibration.functionalClassifications?.find(
+      (item) => item.id === membership.functionalClassificationId
+    )
+    return (membership.variants ?? []).map((variant) => ({
+      variant_urn: variant.urn,
+      class_name: classification?.class
+    }))
+  })
+  return Papa.unparse({fields: ['variant_urn', 'class_name'], data: rows})
 }
 
 /**
@@ -465,6 +538,12 @@ export async function saveCalibration(params: {
 
   // Controls are conveyed via file, cleared to an empty list, or left unchanged (omitted).
   const payload = toCalibrationPayload(draft)
+  if (!existingUrn && draft.supersededCalibrationUrn && !controlsFile) {
+    payload.controls = (draft.controls ?? []).map((control) => ({
+      variantUrn: control.variantUrn,
+      clinicalStatus: control.clinicalStatus
+    }))
+  }
   if (!controlsFile && controlsCleared) {
     payload.controls = []
   }

@@ -13,6 +13,7 @@
       <span class="flex min-w-0 items-center gap-1.5 text-xs">
         <span class="truncate">{{ selected ? optionTitle(selected) : 'None' }}</span>
         <span v-if="selected?.primary" class="mave-tag mave-tag-primary shrink-0">Primary</span>
+        <span v-if="selected?.hasPublishedReplacement" class="mave-tag shrink-0">Superseded</span>
         <span v-if="selected?.researchUseOnly" class="mave-tag mave-tag-ruo shrink-0">Research use only</span>
       </span>
     </template>
@@ -20,6 +21,7 @@
       <span class="flex items-center gap-1.5 text-xs">
         <span>{{ option.urn ? optionTitle(option) : 'None' }}</span>
         <span v-if="option.primary" class="mave-tag mave-tag-primary">Primary</span>
+        <span v-if="option.hasPublishedReplacement" class="mave-tag">Superseded</span>
         <span v-if="option.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
       </span>
     </template>

@@ -5,6 +5,7 @@ import type {DraftScoreCalibration} from '@/lib/calibration-types'
 import {
   buildControlPlacements,
   calibrationClassesCsv,
+  calibrationVersionNumbers,
   calibrationVersionLinks,
   calibrationVersionStatus,
   chooseDefaultCalibration,
@@ -117,6 +118,18 @@ describe('orderCalibrationOptions', () => {
       cal('Alpha')
     ])
     expect(ordered.map((c) => c.title)).toEqual(['Primary', 'Alpha', 'Beta', 'Alpha RUO', 'Zeta RUO'])
+  })
+
+  it('keeps each version thread together under its head, ordered by the head', () => {
+    const v1 = cal('Alpha', {urn: 'v1', supersedingCalibrationUrn: 'v2', hasPublishedReplacement: true})
+    const v2 = cal('Alpha', {urn: 'v2', supersededCalibrationUrn: 'v1', supersedingCalibrationUrn: 'v3'})
+    const v3 = cal('Alpha', {urn: 'v3', supersededCalibrationUrn: 'v2', private: true})
+    const beta = cal('Beta', {urn: 'beta'})
+    const primary = cal('Primary', {urn: 'primary', primary: true})
+
+    const ordered = orderCalibrationOptions([v3, beta, v1, primary, v2])
+    expect(ordered.map((c) => c.urn)).toEqual(['primary', 'v2', 'v1', 'v3', 'beta'])
+    expect(calibrationVersionNumbers(groupCalibrationVersions(ordered))).toEqual({v1: 1, v2: 2, v3: 3})
   })
 
   it('does not mutate its input and tolerates a missing list', () => {

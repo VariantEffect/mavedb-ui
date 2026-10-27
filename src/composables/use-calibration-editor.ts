@@ -5,9 +5,10 @@ import {getScoreCalibration} from '@/api/mavedb'
 import {getScoreCalibrationVariants} from '@/api/mavedb/calibrations.ts'
 import config from '@/config'
 import {
-  calibrationClassesCsv,
+  calibrationVersionClassesCsv,
   prepareCalibrationVersion,
   saveCalibration,
+  variantUrnsByClassification,
   type CalibrationSaveResult
 } from '@/lib/calibrations.ts'
 import {GENERIC_DISEASE, toDraftDisease, type DiseaseConcept, type DraftDisease} from '@/lib/diseases'
@@ -25,7 +26,11 @@ import type {
   DraftAcmgClassification,
   FunctionalClassificationHelper
 } from '@/lib/calibration-types'
-import {DRAFT_CALIBRATION_COPYABLE_KEYS, createClassificationHelper} from '@/lib/calibration-types'
+import {
+  DRAFT_CALIBRATION_COPYABLE_KEYS,
+  SOURCE_CLASSIFICATION_ID,
+  createClassificationHelper
+} from '@/lib/calibration-types'
 
 // Re-export types so consumers can import from here
 export type {
@@ -119,6 +124,8 @@ export interface UseCalibrationEditorReturn {
   draftClassesFile: Ref<File | null>
   /** Controls CSV selected to replace the calibration's controls on save, or null. */
   draftControlsFile: Ref<File | null>
+  /** Why the calibration couldn't be loaded in full, for the editor to show; null when it loaded. */
+  loadError: Ref<string | null>
   /** Whether the user has cleared all controls (saved as an empty controls list). */
   controlsCleared: Ref<boolean>
   /** Whether the draft has unsaved changes relative to the original. */
@@ -157,6 +164,18 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
   const draftClassesFile = ref<File | null>(null)
   const draftControlsFile = ref<File | null>(null)
   const controlsCleared = ref(false)
+  const loadError = ref<string | null>(null)
+
+  // A new version of a class-based calibration copies its variants. The classes file is rebuilt from them at save
+  // unless the user replaced it, so it carries the classes' current names.
+  let copiedVariantUrns = new Map<number, string[]>()
+  let copiedClassesFile: File | null = null
+  const buildCopiedClassesFile = () =>
+    new File(
+      [calibrationVersionClassesCsv(draftCalibration.functionalClassifications ?? [], copiedVariantUrns)],
+      'calibration-classes.csv',
+      {type: 'text/csv'}
+    )
 
   const buildBlankDraft = (): DraftScoreCalibration => ({
     urn: props.calibrationUrn || null,
@@ -221,7 +240,8 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
           inclusiveUpperBound: classBased.value ? null : (fr.inclusiveUpperBound ?? true),
           functionalClassification: fr.functionalClassification || 'not_specified',
           acmgClassification: fr.acmgClassification || null,
-          oddspathsRatio: fr.oddspathsRatio || null
+          oddspathsRatio: fr.oddspathsRatio || null,
+          [SOURCE_CLASSIFICATION_ID]: fr[SOURCE_CLASSIFICATION_ID]
         }
 
         if (draftCalibration.functionalClassifications == null) {
@@ -240,14 +260,18 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
       const loaded = data as unknown as DraftScoreCalibration
       applyCalibrationData(props.supersededCalibrationUrn ? prepareCalibrationVersion(loaded) : loaded)
       if (props.supersededCalibrationUrn && classBased.value) {
-        const memberships = await getScoreCalibrationVariants(urn)
-        draftClassesFile.value = new File([calibrationClassesCsv(data, memberships)], 'calibration-classes.csv', {
-          type: 'text/csv'
-        })
+        try {
+          copiedVariantUrns = variantUrnsByClassification(await getScoreCalibrationVariants(urn))
+          copiedClassesFile = draftClassesFile.value = buildCopiedClassesFile()
+        } catch (e) {
+          console.error('Failed to load calibration classes', urn, e)
+          loadError.value = "This calibration's variant classes couldn't be copied. Upload a classes file instead."
+        }
       }
       draftCalibration.__original = cloneDeep(draftCalibration)
     } catch (e) {
       console.error('Failed to load calibration', urn, e)
+      loadError.value = "This calibration couldn't be loaded. Close the editor and try again."
     }
   }
 
@@ -304,6 +328,9 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
 
   // Save logic — the editor owns the draft, so it owns the save
   async function saveCalibrationDraft(): Promise<CalibrationSaveResult> {
+    if (copiedClassesFile && draftClassesFile.value === copiedClassesFile) {
+      copiedClassesFile = draftClassesFile.value = buildCopiedClassesFile()
+    }
     const result = await saveCalibration({
       draft: draftCalibration,
       classesFile: draftClassesFile.value,
@@ -334,6 +361,7 @@ export function useCalibrationEditor(props: CalibrationEditorProps): UseCalibrat
     draftClassesFile,
     draftControlsFile,
     controlsCleared,
+    loadError,
     isDirty,
     isValid,
     classBased,

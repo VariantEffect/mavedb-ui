@@ -1,4 +1,5 @@
 <template>
+  <Message v-if="loadError" class="mb-3" :closable="false" severity="error">{{ loadError }}</Message>
   <p v-if="showRequiredLegend !== false" class="pb-3 text-sm text-text-muted">
     Fields marked <span class="font-bold text-danger">*</span> are required.
   </p>
@@ -78,6 +79,7 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import {cloneDeep} from 'lodash'
+import Message from 'primevue/message'
 import {useConfirm} from 'primevue/useconfirm'
 
 import CalibrationControlsField from '@/components/calibration/CalibrationControlsField.vue'
@@ -105,7 +107,7 @@ export type {DraftScoreCalibration, DraftFunctionalClassification, DraftAcmgClas
 export default defineComponent({
   name: 'CalibrationEditor',
 
-  components: {CalibrationControlsField, CalibrationFields},
+  components: {CalibrationControlsField, CalibrationFields, Message},
 
   props: {
     calibrationUrn: {type: String, default: null},

@@ -616,6 +616,8 @@ export function prepareCalibrationVersion(calibration: DraftScoreCalibration): D
       })) ?? copy.functionalClassifications,
     urn: null,
     supersededCalibrationUrn: calibration.urn,
+    // The editor copies only DRAFT_CALIBRATION_COPYABLE_KEYS and starts from a private, non-primary blank draft, so
+    // it ignores these four. They keep the result a valid new version for any other caller.
     supersedingCalibrationUrn: null,
     hasPublishedReplacement: false,
     private: true,

@@ -368,7 +368,9 @@
           <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light px-4 py-3 tablet:px-5">
             <CalibrationTable
               :highlighted-range-label="lookup.calibrationResolution.scoreRange.value?.label || null"
+              :related-calibrations="lookup.selectedScoreSet.value?.scoreCalibrations"
               :score-calibration="lookup.selectedCalibrationObject.value"
+              :score-set-urn="lookup.selectedScoreSetUrn.value ?? undefined"
             />
           </div>
         </MvPanel>

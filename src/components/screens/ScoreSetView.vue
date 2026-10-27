@@ -199,7 +199,11 @@
               v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
               class="border-t border-border-light px-4 py-3 tablet:px-5"
             >
-              <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
+              <CalibrationTable
+                :related-calibrations="item.scoreCalibrations"
+                :score-calibration="selectedCalibrationObjects[0]"
+                :score-set-urn="item.urn"
+              />
             </div>
             <div
               v-if="hasCalibrations"
@@ -252,7 +256,11 @@
               />
             </div>
             <div v-if="selectedCalibrationObjects[1]" class="border-t border-border-light px-4 py-3 tablet:px-5">
-              <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
+              <CalibrationTable
+                :related-calibrations="item.scoreCalibrations"
+                :score-calibration="selectedCalibrationObjects[1]"
+                :score-set-urn="item.urn"
+              />
             </div>
             <div
               v-if="hasCalibrations"

@@ -68,6 +68,7 @@ export interface FunctionalClassificationHelper {
 export const DRAFT_CALIBRATION_COPYABLE_KEYS: (keyof DraftScoreCalibration)[] = [
   'urn',
   'scoreSetUrn',
+  'supersededCalibrationUrn',
   'title',
   'notes',
   'baselineScore',

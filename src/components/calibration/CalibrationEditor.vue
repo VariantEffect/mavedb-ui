@@ -22,7 +22,9 @@
     :range-classifications="rangeClassifications"
     :research-use-only="draft.researchUseOnly"
     :selected-score-set="selectedScoreSet"
-    :show-score-set-selector="showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn)"
+    :show-score-set-selector="
+      !supersededCalibrationUrn && (showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn))
+    "
     :threshold-sources="draft.thresholdSources || []"
     :title="draft.title"
     :validation-errors="validationErrors"
@@ -108,6 +110,7 @@ export default defineComponent({
   props: {
     calibrationUrn: {type: String, default: null},
     scoreSetUrn: {type: String, default: null},
+    supersededCalibrationUrn: {type: String, default: null},
     // Parent components may wish to disable class-based editing or controls editing, e.g. when the
     // calibration is being created alongside a score set and variants are not yet available.
     allowClassBased: {type: Boolean, default: true},

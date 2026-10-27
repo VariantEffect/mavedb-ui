@@ -54,7 +54,12 @@
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
         <div class="flex flex-col gap-4 tablet:hidden">
-          <div v-for="cal in sortedCalibrations" :key="cal.id" class="mave-card relative overflow-hidden">
+          <div
+            v-for="cal in sortedCalibrations"
+            :key="cal.id"
+            class="mave-card relative overflow-hidden"
+            :data-calibration-urn="cal.urn"
+          >
             <div class="px-4 py-4">
               <div class="mb-2 flex items-start gap-2">
                 <div class="min-w-0 flex-1">
@@ -90,7 +95,14 @@
                   {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
                 </button>
                 <div v-if="expandedRanges[cal.id]" class="mt-2">
-                  <CalibrationTable :score-calibration="cal" :score-calibration-name="cal.title || ''" />
+                  <CalibrationTable
+                    :related-calibrations="item.scoreCalibrations"
+                    :score-calibration="cal"
+                    :score-calibration-name="cal.title || ''"
+                    :score-set-urn="item.urn"
+                    show-versions-in-place
+                    @show-version="showCalibration"
+                  />
                 </div>
               </div>
             </div>
@@ -172,8 +184,15 @@
               </template>
             </Column>
             <template #expansion="{data}">
-              <div class="bg-[#f8faf9] px-6 py-5">
-                <CalibrationTable :score-calibration="data" :score-calibration-name="data.title || ''" />
+              <div class="bg-[#f8faf9] px-6 py-5" :data-calibration-urn="data.urn">
+                <CalibrationTable
+                  :related-calibrations="item.scoreCalibrations"
+                  :score-calibration="data"
+                  :score-calibration-name="data.title || ''"
+                  :score-set-urn="item.urn"
+                  show-versions-in-place
+                  @show-version="showCalibration"
+                />
               </div>
             </template>
           </DataTable>
@@ -199,6 +218,7 @@
       ref="calibrationEditorRef"
       :calibration-urn="editingCalibrationUrn"
       :score-set-urn="editingScoreSetUrn"
+      :superseded-calibration-urn="supersededCalibrationUrn"
       @canceled="closeCalibrationEditor"
       @saved="onCalibrationSaved"
     />
@@ -220,6 +240,7 @@ import {
   demoteScoreCalibration,
   promoteScoreCalibration,
   deleteScoreCalibration,
+  deleteScoreCalibrationControls,
   getScoreSetCalibrations
 } from '@/api/mavedb'
 import {useCanonicalUrn} from '@/composables/use-canonical-urn'
@@ -249,7 +270,7 @@ import {components} from '@/schema/openapi'
 type ScoreSet = components['schemas']['ScoreSet']
 type ScoreCalibration = components['schemas']['ScoreCalibration']
 
-const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank'] as const
+const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank', 'supersede'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
 
 export default {
@@ -303,7 +324,8 @@ export default {
   },
   data() {
     return {
-      expandedRows: [] as Array<Record<string, unknown>>,
+      // Keyed by calibration id, the form DataTable uses when it has a dataKey.
+      expandedRows: {} as Record<number, boolean>,
       expandedRanges: {} as Record<number, boolean>
     }
   },
@@ -333,7 +355,7 @@ export default {
   watch: {
     item(newValue) {
       this.head.patch({title: newValue ? `Calibrations for ${getScoreSetShortName(newValue)}` : undefined})
-      this.expandedRows = []
+      this.expandedRows = {}
     },
     itemId: {
       handler: async function (newValue, oldValue) {
@@ -352,6 +374,20 @@ export default {
     /** The calibration's disease label, generic "disease or disorder" default included; null only when no concept is present. */
     diseaseLabel(cal: ScoreCalibration): string | null {
       return diseaseDisplayLabel(cal.disease)
+    },
+
+    /** Expand the calibration `urn` in whichever layout is showing, and scroll to it. */
+    async showCalibration(urn: string) {
+      const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)
+      if (!calibration) return
+      this.expandedRows = {...this.expandedRows, [calibration.id]: true}
+      this.expandedRanges[calibration.id] = true
+      await this.$nextTick()
+      // Both layouts are rendered and one is hidden; scroll to the one in view.
+      const target = [...document.querySelectorAll<HTMLElement>('[data-calibration-urn]')].find(
+        (el) => el.dataset.calibrationUrn === urn && el.offsetParent !== null
+      )
+      target?.scrollIntoView({behavior: 'smooth', block: 'start'})
     },
 
     calibrationSortKey(cal: ScoreCalibration): number {
@@ -377,10 +413,30 @@ export default {
 
       actions.push({separator: true})
 
-      if (auth.update) {
+      if (auth.supersede && !data.hasPublishedReplacement) {
+        actions.push({
+          label: 'Create new version',
+          // A calibration has at most one replacement, so a draft the user can see blocks another.
+          disabled:
+            !!data.supersedingCalibrationUrn ||
+            this.item?.scoreCalibrations?.some((calibration) => calibration.supersededCalibrationUrn === data.urn),
+          handler: () => this.createCalibrationVersion(data.urn)
+        })
+      }
+
+      // A replaced version is frozen, even for admins; removing its controls is the one change it allows.
+      if (auth.update && !data.hasPublishedReplacement) {
         actions.push({
           label: 'Edit calibration',
           handler: () => this.editCalibrationInEditor(data.urn)
+        })
+      }
+
+      if (auth.update && (data.controlsCount ?? 0) > 0) {
+        actions.push({
+          label: 'Remove controls',
+          danger: true,
+          handler: () => this.removeCalibrationControls(data.urn)
         })
       }
 
@@ -394,7 +450,7 @@ export default {
       if (auth.change_rank && !data.primary) {
         actions.push({
           label: 'Promote to primary',
-          disabled: data.researchUseOnly || this.primaryExists,
+          disabled: data.researchUseOnly || this.primaryExists || !!data.hasPublishedReplacement,
           handler: () => this.promoteCalibration(data.urn)
         })
       }
@@ -575,6 +631,38 @@ export default {
               severity: 'error',
               summary: 'Calibration Not Deleted',
               detail: `An error occurred while deleting the calibration: ${describeRequestError(error)}. Please try again later.`,
+              life: 4000
+            })
+          }
+        },
+        reject: () => {}
+      })
+    },
+
+    removeCalibrationControls: async function (calibrationUrn: string) {
+      this.confirm.require({
+        message:
+          "Are you sure you want to remove this calibration's controls? This also withdraws its affirmation that the controls contain no protected health information (PHI). It cannot be undone.",
+        header: 'Confirm Removing Controls',
+        icon: 'pi pi-exclamation-triangle',
+        acceptProps: {label: 'Remove controls', severity: 'danger', icon: 'pi pi-trash'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
+        accept: async () => {
+          try {
+            await deleteScoreCalibrationControls(calibrationUrn)
+            this.$toast.add({
+              severity: 'success',
+              summary: 'Controls Removed',
+              detail: "The calibration's controls were removed.",
+              life: 4000
+            })
+            await this.reloadItem()
+          } catch (error) {
+            console.error('Error removing calibration controls:', error)
+            this.$toast.add({
+              severity: 'error',
+              summary: 'Controls Not Removed',
+              detail: `An error occurred while removing the controls: ${describeRequestError(error)}. Please try again later.`,
               life: 4000
             })
           }

@@ -25,7 +25,7 @@
       <!-- A thread's other versions sit under its head, as on the calibrations page. -->
       <span
         class="flex items-center gap-1.5 text-xs"
-        :class="{'ml-1 border-l-2 border-border pl-2.5': isThreadedVersion(option.urn)}"
+        :class="{'ml-1 border-l-2 border-border pl-2.5': !!option.urn && threadedUrns.has(option.urn)}"
       >
         <span>{{ option.urn ? optionTitle(option) : 'None' }}</span>
         <span v-if="option.urn && versionNumbers[option.urn]" class="whitespace-nowrap text-text-muted"
@@ -49,6 +49,7 @@ import {
   groupCalibrationVersions,
   isClassBasedCalibration,
   orderCalibrationOptions,
+  threadedVersionUrns,
   type CalibrationThread,
   type ScoreCalibration
 } from '@/lib/calibrations'
@@ -83,15 +84,14 @@ export default defineComponent({
     },
     versionNumbers(): Record<string, number> {
       return calibrationVersionNumbers(this.threads)
+    },
+    /** URNs of the versions listed under their thread's head. */
+    threadedUrns(): Set<string> {
+      return threadedVersionUrns(this.threads)
     }
   },
 
   methods: {
-    /** Whether the calibration `urn` is listed under the head of its version thread. */
-    isThreadedVersion(urn: string | null): boolean {
-      return !!urn && !!this.versionNumbers[urn] && !this.threads.some((thread) => thread.head.urn === urn)
-    },
-
     optionTitle(calibration: Partial<Omit<ScoreCalibration, 'urn'>>): string {
       return this.markClassBased && isClassBasedCalibration(calibration)
         ? `${calibration.title}*`

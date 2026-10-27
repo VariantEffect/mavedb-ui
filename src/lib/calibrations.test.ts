@@ -8,6 +8,7 @@ import {
   calibrationVersionNumbers,
   calibrationVersionLinks,
   calibrationVersionStatus,
+  calibrationVersionSummary,
   chooseDefaultCalibration,
   groupCalibrationVersions,
   isClassBasedCalibration,
@@ -242,6 +243,20 @@ describe('calibration versions', () => {
       {urn: 'third', label: 'Draft new version', calibration: third}
     ])
     expect(all.map(calibrationVersionStatus)).toEqual(['Superseded', 'Published', 'Draft'])
+  })
+
+  it('dates published versions by publication, and drafts and untracked versions by creation', () => {
+    const created = '2026-09-01'
+    const published = '2026-10-27'
+    const summary = (flags: Partial<ScoreCalibration>) =>
+      calibrationVersionSummary({creationDate: created, ...flags} as ScoreCalibration)
+
+    expect(summary({private: true})).toBe('Draft · created Sep 01, 2026')
+    expect(summary({publishedDate: published})).toBe('Published · Oct 27, 2026')
+    expect(summary({publishedDate: published, hasPublishedReplacement: true})).toBe(
+      'Superseded · published Oct 27, 2026'
+    )
+    expect(summary({publishedDate: null})).toBe('Published · created Sep 01, 2026')
   })
 
   it('still links a version missing from the given calibrations', () => {

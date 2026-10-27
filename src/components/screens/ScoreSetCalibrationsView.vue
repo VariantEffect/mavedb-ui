@@ -65,7 +65,7 @@
               <div class="mb-2 flex items-start gap-2">
                 <div class="min-w-0 flex-1">
                   <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
-                  <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs text-text-muted"
+                  <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
                     >v{{ versionNumbers[cal.urn] }}</span
                   >
                 </div>
@@ -132,7 +132,7 @@
               <template #body="{data}">
                 <div :class="{'ml-1 border-l-2 border-border pl-3': isThreadedVersion(data)}">
                   <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
-                  <span v-if="versionNumbers[data.urn]" class="ml-1.5 text-xs text-text-muted"
+                  <span v-if="versionNumbers[data.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
                     >v{{ versionNumbers[data.urn] }}</span
                   >
                   <p

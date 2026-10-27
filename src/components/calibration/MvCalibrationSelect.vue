@@ -12,7 +12,7 @@
     <template #value>
       <span class="flex min-w-0 items-center gap-1.5 text-xs">
         <span class="truncate">{{ selected ? optionTitle(selected) : 'None' }}</span>
-        <span v-if="selected && versionNumbers[selected.urn]" class="shrink-0 text-text-muted"
+        <span v-if="selected && versionNumbers[selected.urn]" class="shrink-0 whitespace-nowrap text-text-muted"
           >v{{ versionNumbers[selected.urn] }}</span
         >
         <span v-if="selected?.primary" class="mave-tag mave-tag-primary shrink-0">Primary</span>
@@ -28,7 +28,7 @@
         :class="{'ml-1 border-l-2 border-border pl-2.5': isThreadedVersion(option.urn)}"
       >
         <span>{{ option.urn ? optionTitle(option) : 'None' }}</span>
-        <span v-if="option.urn && versionNumbers[option.urn]" class="text-text-muted"
+        <span v-if="option.urn && versionNumbers[option.urn]" class="whitespace-nowrap text-text-muted"
           >v{{ versionNumbers[option.urn] }}</span
         >
         <span v-if="option.primary" class="mave-tag mave-tag-primary">Primary</span>

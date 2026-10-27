@@ -5,6 +5,8 @@ import type {DraftScoreCalibration} from '@/lib/calibration-types'
 import {
   buildControlPlacements,
   calibrationClassesCsv,
+  calibrationDeleteBlocker,
+  calibrationHasReplacement,
   calibrationVersionNumbers,
   calibrationVersionLinks,
   calibrationVersionStatus,
@@ -185,6 +187,35 @@ describe('toCalibrationPayload', () => {
     toCalibrationPayload(draft)
     expect(draft.disease).toEqual({code: 'MONDO:0015263', label: 'Brugada syndrome'})
     expect(draft.controls).toHaveLength(1)
+  })
+})
+
+describe('calibrationDeleteBlocker', () => {
+  const cal = (urn: string, flags: Partial<ScoreCalibration> = {}) => ({urn, ...flags}) as ScoreCalibration
+
+  it('allows deleting a standalone calibration and a draft replacement', () => {
+    const published = cal('published')
+    const draft = cal('draft', {private: true, supersededCalibrationUrn: 'published'})
+    expect(calibrationDeleteBlocker(cal('alone'), [])).toBeNull()
+    expect(calibrationDeleteBlocker(draft, [published, draft])).toBeNull()
+  })
+
+  it.each([
+    ['a primary calibration', cal('x', {primary: true}), []],
+    ['a published version', cal('x', {supersededCalibrationUrn: 'old'}), []],
+    ['a calibration with a published replacement', cal('x', {hasPublishedReplacement: true}), []],
+    ['a calibration with a draft replacement it names', cal('x', {supersedingCalibrationUrn: 'draft'}), []],
+    [
+      'a calibration with a draft replacement in the list',
+      cal('x'),
+      [cal('draft', {private: true, supersededCalibrationUrn: 'x'})]
+    ]
+  ])('refuses %s', (_, calibration, related) => {
+    expect(calibrationDeleteBlocker(calibration, related)).not.toBeNull()
+  })
+
+  it('treats a draft replacement the caller cannot see as no replacement', () => {
+    expect(calibrationHasReplacement(cal('x'), [cal('other')])).toBe(false)
   })
 })
 

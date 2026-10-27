@@ -285,6 +285,8 @@ import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
 import {
+  calibrationDeleteBlocker,
+  calibrationHasReplacement,
   calibrationVersionNumbers,
   calibrationVersionStatus,
   groupCalibrationVersions,
@@ -499,9 +501,7 @@ export default {
         actions.push({
           label: 'Create new version',
           // A calibration has at most one replacement, so a draft the user can see blocks another.
-          disabled:
-            !!data.supersedingCalibrationUrn ||
-            this.item?.scoreCalibrations?.some((calibration) => calibration.supersededCalibrationUrn === data.urn),
+          disabled: calibrationHasReplacement(data, this.item?.scoreCalibrations),
           handler: () => this.createCalibrationVersion(data.urn)
         })
       }
@@ -545,10 +545,13 @@ export default {
       }
 
       if (auth.delete) {
+        const deleteBlocker = calibrationDeleteBlocker(data, this.item?.scoreCalibrations)
         actions.push({separator: true})
         actions.push({
           label: 'Delete calibration',
+          description: deleteBlocker ?? undefined,
           danger: true,
+          disabled: !!deleteBlocker,
           handler: () => this.deleteCalibration(data.urn)
         })
       }

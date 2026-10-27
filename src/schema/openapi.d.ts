@@ -709,6 +709,17 @@ export interface paths {
      */
     post: operations["create_score_calibration_route_api_v1_score_calibrations__post"];
   };
+  "/api/v1/score-calibrations/{urn}/controls": {
+    /**
+     * Delete Score Calibration Controls Route
+     * @description Delete a score calibration's controls and withdraw its PHI affirmation, changing nothing else.
+     *
+     * This is the only change allowed to a calibration that a newer version has replaced, so protected health
+     * information found in an old version can be removed. It needs the same permission as modifying the
+     * calibration.
+     */
+    delete: operations["delete_score_calibration_controls_route_api_v1_score_calibrations__urn__controls_delete"];
+  };
   "/api/v1/score-calibrations/{urn}/promote-to-primary": {
     /**
      * Promote Score Calibration To Primary Route
@@ -1694,7 +1705,7 @@ export interface components {
      * Action
      * @enum {string}
      */
-    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank" | "add_calibration";
+    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank" | "add_calibration" | "supersede";
     /** AddExperimentToCollectionRequest */
     AddExperimentToCollectionRequest: {
       /** Experimenturn */
@@ -5401,6 +5412,16 @@ export interface components {
       id: number;
       /** Urn */
       urn: string;
+      /** Supersededcalibrationurn */
+      supersededCalibrationUrn?: string | null;
+      /** Supersedingcalibrationurn */
+      supersedingCalibrationUrn?: string | null;
+      /**
+       * Haspublishedreplacement
+       * @description Whether a published calibration has replaced this one. supersedingCalibrationUrn can also name a draft replacement, for callers who may read the draft, so use this to decide whether this calibration is superseded.
+       * @default false
+       */
+      hasPublishedReplacement?: boolean;
       /** Scoresetid */
       scoreSetId: number;
       /** Investigatorprovided */
@@ -5480,6 +5501,11 @@ export interface components {
        * @description The MONDO code (e.g. "MONDO:0015263") for this calibration's disease context; validated against OLS. Omitted or null resolves to the generic "disease or disorder" term.
        */
       disease?: string | null;
+      /**
+       * Supersededcalibrationurn
+       * @description Published calibration this new draft will replace when published.
+       */
+      supersededCalibrationUrn?: string | null;
     };
     /**
      * ScoreCalibrationDetailWithScoreSetUrn
@@ -5519,6 +5545,16 @@ export interface components {
       id: number;
       /** Urn */
       urn: string;
+      /** Supersededcalibrationurn */
+      supersededCalibrationUrn?: string | null;
+      /** Supersedingcalibrationurn */
+      supersedingCalibrationUrn?: string | null;
+      /**
+       * Haspublishedreplacement
+       * @description Whether a published calibration has replaced this one. supersedingCalibrationUrn can also name a draft replacement, for callers who may read the draft, so use this to decide whether this calibration is superseded.
+       * @default false
+       */
+      hasPublishedReplacement?: boolean;
       /** Scoresetid */
       scoreSetId: number;
       /** Investigatorprovided */
@@ -5600,6 +5636,16 @@ export interface components {
       id: number;
       /** Urn */
       urn: string;
+      /** Supersededcalibrationurn */
+      supersededCalibrationUrn?: string | null;
+      /** Supersedingcalibrationurn */
+      supersedingCalibrationUrn?: string | null;
+      /**
+       * Haspublishedreplacement
+       * @description Whether a published calibration has replaced this one. supersedingCalibrationUrn can also name a draft replacement, for callers who may read the draft, so use this to decide whether this calibration is superseded.
+       * @default false
+       */
+      hasPublishedReplacement?: boolean;
       /** Scoresetid */
       scoreSetId: number;
       /** Investigatorprovided */
@@ -10416,6 +10462,44 @@ export interface operations {
       /** @description Validation Error */
       422: {
         content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Delete Score Calibration Controls Route
+   * @description Delete a score calibration's controls and withdraw its PHI affirmation, changing nothing else.
+   *
+   * This is the only change allowed to a calibration that a newer version has replaced, so protected health
+   * information found in an old version can be removed. It needs the same permission as modifying the
+   * calibration.
+   */
+  delete_score_calibration_controls_route_api_v1_score_calibrations__urn__controls_delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        content: never;
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal server error. */
       500: {

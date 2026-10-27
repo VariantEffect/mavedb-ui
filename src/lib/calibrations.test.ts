@@ -8,8 +8,10 @@ import {
   calibrationVersionLinks,
   calibrationVersionStatus,
   chooseDefaultCalibration,
+  groupCalibrationVersions,
   isClassBasedCalibration,
   orderCalibrationOptions,
+  orderCalibrationThreads,
   prepareCalibrationVersion,
   toCalibrationPayload,
   unclassifiedCallLabel,
@@ -233,6 +235,57 @@ describe('calibration versions', () => {
     const current = {urn: 'current', supersededCalibrationUrn: 'old'} as ScoreCalibration
     expect(calibrationVersionLinks(current, null)).toEqual([{urn: 'old', label: 'Previous version', calibration: null}])
     expect(calibrationVersionLinks({urn: 'lone'} as ScoreCalibration, [current])).toEqual([])
+  })
+
+  it('threads each version chain under its newest published version, in chain order', () => {
+    const v1 = {
+      urn: 'v1',
+      title: 'IGVF',
+      supersedingCalibrationUrn: 'v2',
+      hasPublishedReplacement: true
+    } as ScoreCalibration
+    const v2 = {
+      urn: 'v2',
+      title: 'IGVF',
+      supersededCalibrationUrn: 'v1',
+      supersedingCalibrationUrn: 'v3'
+    } as ScoreCalibration
+    const v3 = {urn: 'v3', title: 'IGVF', supersededCalibrationUrn: 'v2', private: true} as ScoreCalibration
+    const lone = {urn: 'lone', title: 'Lone draft', private: true} as ScoreCalibration
+
+    expect(groupCalibrationVersions([v3, lone, v1, v2])).toEqual([
+      {head: lone, versions: [lone]},
+      {head: v2, versions: [v1, v2, v3]}
+    ])
+    expect(groupCalibrationVersions(null)).toEqual([])
+  })
+
+  it('starts a thread at a version whose predecessor it was not given', () => {
+    const current = {urn: 'current', supersededCalibrationUrn: 'unlisted'} as ScoreCalibration
+    expect(groupCalibrationVersions([current])).toEqual([{head: current, versions: [current]}])
+  })
+
+  it('orders threads as units by their heads, falling back to rank, title and creation date', () => {
+    const thread = (urn: string, flags: Partial<ScoreCalibration> = {}) => {
+      const head = {urn, title: urn, creationDate: '2026-01-01', ...flags} as ScoreCalibration
+      return {head, versions: [head]}
+    }
+    const primary = thread('primary', {primary: true, functionalClassifications: [{}] as never})
+    const community = thread('community', {functionalClassifications: [{}, {}, {}] as never})
+    const investigator = thread('investigator', {investigatorProvided: true})
+    const draft = thread('draft', {private: true})
+    const all = [draft, community, investigator, primary]
+    const urns = (threads: typeof all) => threads.map((t) => t.head.urn)
+
+    expect(urns(orderCalibrationThreads(all))).toEqual(['primary', 'investigator', 'community', 'draft'])
+    const ranges = (c: ScoreCalibration) => c.functionalClassifications?.length ?? 0
+    expect(urns(orderCalibrationThreads(all, ranges, -1))).toEqual(['community', 'primary', 'investigator', 'draft'])
+    expect(urns(orderCalibrationThreads(all, (c) => c.title, 1))).toEqual([
+      'community',
+      'draft',
+      'investigator',
+      'primary'
+    ])
   })
 
   it('copies an independent draft and requires a fresh PHI affirmation for copied controls', () => {

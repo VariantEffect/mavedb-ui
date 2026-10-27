@@ -76,10 +76,11 @@
   /* --color-unpublished fails WCAG AA as text on its light fill (3.5:1); this passes (5.1:1). */
   --color-unpublished-strong: #bf360c;
 
-  /* ── Status: Superseded (amber) ────────────────────────────── */
-  --color-superseded: #92400e;
-  --color-superseded-light: #fef3c7;
-  --color-superseded-dot: #b45309;
+  /* ── Status: Superseded (grey) ─────────────────────────────── */
+  /* Grey reads as no longer current, and stays distinct from research use only's amber. */
+  --color-superseded: #555555;
+  --color-superseded-light: #eeeeee;
+  --color-superseded-dot: #9e9e9e;
 
   /* ── Evidence: PS3 Pathogenic (red gradient) ────────────────── */
   --color-ps3-very-strong: #943744;
@@ -96,8 +97,8 @@
   --color-bs3-supporting: #e4f1f6;
 
   /* ── Research use only ─────────────────────────────────────── */
-  --color-ruo: #856404;
-  --color-ruo-light: #fff3cd;
+  --color-ruo: #b45309;
+  --color-ruo-light: #fffbeb;
   --color-ruo-border: #f0d78c;
 
   /* ── Evidence: Indeterminate ───────────────────────────────── */
@@ -416,11 +417,11 @@ body .p-button {
   background-color: var(--color-ruo-light);
   color: var(--color-ruo);
 }
+/* Calibration tags share their colors with the matching badges in lib/badges.ts. */
 .mave-tag-primary {
-  background-color: #d1ecf1;
-  color: #0c5460;
+  background-color: var(--color-published-light);
+  color: var(--color-published);
 }
-/* Version status, in the colors of the status badges on the calibrations page. */
 .mave-tag-superseded {
   background-color: var(--color-superseded-light);
   color: var(--color-superseded);

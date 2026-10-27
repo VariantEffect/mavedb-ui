@@ -15,7 +15,11 @@ export type Status = 'published' | 'unpublished' | 'superseded'
 
 export const statusBadges: Record<Status, BadgeConfig> = {
   published: {label: 'Published', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'},
-  unpublished: {label: 'Unpublished', classes: 'bg-unpublished-light text-unpublished', dotClass: 'bg-unpublished-dot'},
+  unpublished: {
+    label: 'Unpublished',
+    classes: 'bg-unpublished-light text-unpublished-strong',
+    dotClass: 'bg-unpublished-dot'
+  },
   superseded: {label: 'Superseded', classes: 'bg-superseded-light text-superseded', dotClass: 'bg-superseded-dot'}
 }
 
@@ -45,7 +49,7 @@ export const calibrationBadges: Record<string, BadgeConfig> = {
   primary: {label: 'Primary', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'},
   investigator: {label: 'Investigator', classes: 'bg-blue-50 text-blue-700', dotClass: 'bg-blue-500'},
   community: {label: 'Community', classes: 'bg-purple-50 text-purple-700', dotClass: 'bg-purple-500'},
-  research: {label: 'Research', classes: 'bg-amber-50 text-amber-700', dotClass: 'bg-amber-500'},
+  research: {label: 'Research', classes: 'bg-ruo-light text-ruo', dotClass: 'bg-amber-500'},
   general: {label: 'General', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'}
 }
 

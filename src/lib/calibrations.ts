@@ -456,6 +456,41 @@ export function calibrationVersionLinks(
   return links
 }
 
+/**
+ * Whether a calibration has a replacement, draft or published, that the caller can see. The api names a draft
+ * replacement only to users who may read it, so a draft the caller can't see doesn't count.
+ *
+ * @param calibration - The calibration to check.
+ * @param related - The score set's calibrations, where a draft replacement the caller may read would be listed.
+ */
+export function calibrationHasReplacement(
+  calibration: ScoreCalibration,
+  related: ScoreCalibration[] | null | undefined
+): boolean {
+  return (
+    !!calibration.supersedingCalibrationUrn ||
+    !!calibration.hasPublishedReplacement ||
+    !!related?.some((c) => c.supersededCalibrationUrn === calibration.urn)
+  )
+}
+
+/**
+ * Why the api would refuse to delete a calibration, or null if it wouldn't. Deleting a published version or a
+ * calibration with a replacement would break its version history; a primary calibration must be demoted first.
+ *
+ * @param calibration - The calibration to delete.
+ * @param related - The score set's calibrations.
+ */
+export function calibrationDeleteBlocker(
+  calibration: ScoreCalibration,
+  related: ScoreCalibration[] | null | undefined
+): string | null {
+  if (calibration.primary) return 'Demote it to non-primary first.'
+  if (calibration.supersededCalibrationUrn && !calibration.private) return 'Published versions are kept.'
+  if (calibrationHasReplacement(calibration, related)) return 'Calibrations with a newer version are kept.'
+  return null
+}
+
 /** A calibration's place in its version history, for telling versions with the same title apart. */
 export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft' | 'Superseded' | 'Published' {
   if (calibration.private) return 'Draft'

@@ -6522,8 +6522,11 @@ export interface components {
     };
     /** TargetSequenceCreate */
     TargetSequenceCreate: {
-      /** Sequencetype */
-      sequenceType: string;
+      /**
+       * Sequencetype
+       * @enum {string}
+       */
+      sequenceType: "infer" | "dna" | "protein";
       /** Sequence */
       sequence: string;
       /** Label */
@@ -10102,7 +10105,7 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10208,16 +10211,40 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Validation Error */
+      /** @description Unprocessable entity. Validation failed. */
       422: {
         content: never;
       };
       /** @description Internal server error. */
       500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
@@ -10240,7 +10267,19 @@ export interface operations {
       204: {
         content: never;
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10276,7 +10315,7 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10312,7 +10351,7 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10409,16 +10448,40 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Validation Error */
+      /** @description Unprocessable entity. Validation failed. */
       422: {
         content: never;
       };
       /** @description Internal server error. */
       500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
@@ -10447,7 +10510,19 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10483,7 +10558,15 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10521,7 +10604,19 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10563,7 +10658,7 @@ export interface operations {
           "application/json": components["schemas"]["FunctionalClassificationVariants"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10603,7 +10698,7 @@ export interface operations {
           "application/json": components["schemas"]["FunctionalClassificationVariants"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };

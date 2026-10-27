@@ -285,6 +285,7 @@ import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
 import {
+  calibrationVersionNumbers,
   calibrationVersionStatus,
   groupCalibrationVersions,
   orderCalibrationThreads,
@@ -414,11 +415,7 @@ export default {
     },
     /** Version numbers by URN, for calibrations with more than one version. */
     versionNumbers(): Record<string, number> {
-      const numbers: Record<string, number> = {}
-      for (const thread of this.calibrationThreads) {
-        if (thread.versions.length > 1) thread.versions.forEach((version, i) => (numbers[version.urn] = i + 1))
-      }
-      return numbers
+      return calibrationVersionNumbers(this.calibrationThreads)
     }
   },
   watch: {

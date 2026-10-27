@@ -360,14 +360,16 @@ export function unclassifiedCallLabel(
 }
 
 /**
- * A score set's calibrations in calibration-picker order: primary, then clinical-grade, then research-use-only,
- * alphabetical by title within each tier. Returns a new array.
+ * A score set's calibrations in calibration-picker order. Each version thread stays together, its head first and
+ * its other versions after in chain order. Threads order by their head: primary, then clinical-grade, then
+ * research-use-only, alphabetical by title within each tier. Returns a new array.
  */
 export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | null | undefined): ScoreCalibration[] {
+  // A head is superseded only when its replacement wasn't listed, which leaves it nothing to sit under.
   const tier = (c: ScoreCalibration) => (c.hasPublishedReplacement ? 3 : c.primary ? 0 : c.researchUseOnly ? 2 : 1)
-  return [...(scoreCalibrations ?? [])].sort(
-    (a, b) => tier(a) - tier(b) || (a.title ?? '').localeCompare(b.title ?? '')
-  )
+  return groupCalibrationVersions(scoreCalibrations)
+    .sort((a, b) => tier(a.head) - tier(b.head) || (a.head.title ?? '').localeCompare(b.head.title ?? ''))
+    .flatMap((thread) => [thread.head, ...thread.versions.filter((version) => version !== thread.head)])
 }
 
 /**
@@ -488,6 +490,15 @@ export function groupCalibrationVersions(calibrations: ScoreCalibration[] | null
       const head = [...versions].reverse().find((v) => !v.private) ?? versions[versions.length - 1]
       return {head, versions}
     })
+}
+
+/** Version numbers by URN, counted along each chain from 1, for calibrations with more than one version. */
+export function calibrationVersionNumbers(threads: CalibrationThread[]): Record<string, number> {
+  const numbers: Record<string, number> = {}
+  for (const thread of threads) {
+    if (thread.versions.length > 1) thread.versions.forEach((version, i) => (numbers[version.urn] = i + 1))
+  }
+  return numbers
 }
 
 /** Where a calibration falls in the default list order: primary, investigator, community, research use, draft. */

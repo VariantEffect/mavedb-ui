@@ -73,6 +73,8 @@
   --color-unpublished: #e65100;
   --color-unpublished-light: #fff3e0;
   --color-unpublished-dot: #ff9800;
+  /* --color-unpublished fails WCAG AA as text on its light fill (3.5:1); this passes (5.1:1). */
+  --color-unpublished-strong: #bf360c;
 
   /* ── Status: Superseded (amber) ────────────────────────────── */
   --color-superseded: #92400e;
@@ -417,6 +419,15 @@ body .p-button {
 .mave-tag-primary {
   background-color: #d1ecf1;
   color: #0c5460;
+}
+/* Version status, in the colors of the status badges on the calibrations page. */
+.mave-tag-superseded {
+  background-color: var(--color-superseded-light);
+  color: var(--color-superseded);
+}
+.mave-tag-draft {
+  background-color: var(--color-unpublished-light);
+  color: var(--color-unpublished-strong);
 }
 /* The absence of a call (unclassified, not calibrated). Dashed and unfilled so it never reads as a grey call such
    as Not Specified. The border replaces a pixel of padding to keep the tag geometry. */

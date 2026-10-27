@@ -54,17 +54,26 @@
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
         <div class="flex flex-col gap-4 tablet:hidden">
-          <div v-for="cal in sortedCalibrations" :key="cal.id" class="mave-card relative overflow-hidden">
+          <div
+            v-for="cal in calibrationRows"
+            :key="cal.id"
+            class="mave-card relative overflow-hidden"
+            :class="{'ml-5': threadedUrns.has(cal.urn)}"
+            :data-calibration-urn="cal.urn"
+          >
             <div class="px-4 py-4">
               <div class="mb-2 flex items-start gap-2">
                 <div class="min-w-0 flex-1">
                   <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
+                  <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
+                    >v{{ versionNumbers[cal.urn] }}</span
+                  >
                 </div>
                 <MvRowActionMenu :actions="calibrationActions(cal)" />
               </div>
 
               <div class="mb-3 flex flex-wrap items-center gap-1.5">
-                <MvBadge :value="cal.private ? 'unpublished' : 'published'" />
+                <MvBadge :value="statusBadge(cal)" />
                 <MvBadge v-if="cal.primary" value="primary" />
                 <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
                 <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
@@ -90,7 +99,14 @@
                   {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
                 </button>
                 <div v-if="expandedRanges[cal.id]" class="mt-2">
-                  <CalibrationTable :score-calibration="cal" :score-calibration-name="cal.title || ''" />
+                  <CalibrationTable
+                    :related-calibrations="item.scoreCalibrations"
+                    :score-calibration="cal"
+                    :score-calibration-name="cal.title || ''"
+                    :score-set-urn="item.urn"
+                    show-versions-in-place
+                    @show-version="showCalibration"
+                  />
                 </div>
               </div>
             </div>
@@ -101,19 +117,24 @@
         <div class="cal-card hidden tablet:block">
           <DataTable
             v-model:expanded-rows="expandedRows"
+            v-model:sort-field="sortField"
+            v-model:sort-order="sortOrder"
             class="cal-datatable"
             data-key="id"
-            :paginator="(item.scoreCalibrations?.length ?? 0) > 15"
-            :rows="15"
+            lazy
+            removable-sort
             :striped-rows="true"
-            :value="sortedCalibrations"
+            :value="calibrationRows"
           >
             <Column :expander="true" header-style="width:3rem" />
 
             <Column field="title" header="Title" :sortable="true">
               <template #body="{data}">
-                <div>
+                <div :class="{'ml-1 border-l-2 border-border pl-3': threadedUrns.has(data.urn)}">
                   <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
+                  <span v-if="versionNumbers[data.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
+                    >v{{ versionNumbers[data.urn] }}</span
+                  >
                   <p
                     v-if="data.notes"
                     class="mt-0.5 text-xs leading-snug text-text-muted line-clamp-2"
@@ -129,10 +150,11 @@
               field="private"
               header="Status"
               header-style="width:5.5rem"
+              sort-field="status"
               :sortable="true"
             >
               <template #body="{data}">
-                <MvBadge :value="data.private ? 'unpublished' : 'published'" />
+                <MvBadge :value="statusBadge(data)" />
               </template>
             </Column>
             <Column body-class="text-center" field="primary" header="Rank" header-style="width:4.5rem" :sortable="true">
@@ -163,7 +185,13 @@
                 <MvBadge :value="data.researchUseOnly ? 'research' : 'general'" />
               </template>
             </Column>
-            <Column body-class="text-center" header="Ranges" header-style="width:3rem" :sortable="true">
+            <Column
+              body-class="text-center"
+              header="Ranges"
+              header-style="width:3rem"
+              sort-field="ranges"
+              :sortable="true"
+            >
               <template #body="{data}">{{ data.functionalClassifications?.length ?? 0 }}</template>
             </Column>
             <Column header-style="width:3rem">
@@ -172,12 +200,28 @@
               </template>
             </Column>
             <template #expansion="{data}">
-              <div class="bg-[#f8faf9] px-6 py-5">
-                <CalibrationTable :score-calibration="data" :score-calibration-name="data.title || ''" />
+              <div class="bg-[#f8faf9] px-6 py-5" :data-calibration-urn="data.urn">
+                <CalibrationTable
+                  :related-calibrations="item.scoreCalibrations"
+                  :score-calibration="data"
+                  :score-calibration-name="data.title || ''"
+                  :score-set-urn="item.urn"
+                  show-versions-in-place
+                  @show-version="showCalibration"
+                />
               </div>
             </template>
           </DataTable>
         </div>
+
+        <!-- Pages hold whole threads, so a calibration's versions are never split across pages. -->
+        <Paginator
+          v-if="calibrationThreads.length > threadsPerPage"
+          v-model:first="threadFirst"
+          class="mt-3"
+          :rows="threadsPerPage"
+          :total-records="calibrationThreads.length"
+        />
       </template>
     </div>
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-8">
@@ -199,6 +243,7 @@
       ref="calibrationEditorRef"
       :calibration-urn="editingCalibrationUrn"
       :score-set-urn="editingScoreSetUrn"
+      :superseded-calibration-urn="supersededCalibrationUrn"
       @canceled="closeCalibrationEditor"
       @saved="onCalibrationSaved"
     />
@@ -220,6 +265,7 @@ import {
   demoteScoreCalibration,
   promoteScoreCalibration,
   deleteScoreCalibration,
+  deleteScoreCalibrationControls,
   getScoreSetCalibrations
 } from '@/api/mavedb'
 import {useCanonicalUrn} from '@/composables/use-canonical-urn'
@@ -227,6 +273,7 @@ import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import Paginator from 'primevue/paginator'
 import useItem from '@/composition/item.ts'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
@@ -237,6 +284,17 @@ import {describeRequestError} from '@/lib/errors'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import {
+  calibrationDeleteBlocker,
+  calibrationHasReplacement,
+  calibrationThreadRows,
+  calibrationVersionNumbers,
+  calibrationVersionStatus,
+  groupCalibrationVersions,
+  orderCalibrationThreads,
+  threadedVersionUrns,
+  type CalibrationThread
+} from '@/lib/calibrations'
 import {diseaseDisplayLabel} from '@/lib/diseases'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import {ref, toRef} from 'vue'
@@ -249,8 +307,21 @@ import {components} from '@/schema/openapi'
 type ScoreSet = components['schemas']['ScoreSet']
 type ScoreCalibration = components['schemas']['ScoreCalibration']
 
-const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank'] as const
+const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank', 'supersede'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
+
+/** The status badge for each version status. */
+const STATUS_BADGES = {Draft: 'unpublished', Superseded: 'superseded', Published: 'published'} as const
+
+/** What each sortable column sorts by, keyed by the column's sort field. */
+const SORT_VALUES: Record<string, (calibration: ScoreCalibration) => string | number | boolean | null | undefined> = {
+  title: (c) => c.title,
+  status: calibrationVersionStatus,
+  primary: (c) => !!c.primary,
+  investigatorProvided: (c) => !!c.investigatorProvided,
+  researchUseOnly: (c) => !!c.researchUseOnly,
+  ranges: (c) => c.functionalClassifications?.length ?? 0
+}
 
 export default {
   name: 'ScoreSetCalibrationsView',
@@ -267,6 +338,7 @@ export default {
     MvItemNotFound,
     Column,
     MvPageLoading,
+    Paginator,
     CalibrationTable,
     PrimeDialog
   },
@@ -303,8 +375,15 @@ export default {
   },
   data() {
     return {
-      expandedRows: [] as Array<Record<string, unknown>>,
-      expandedRanges: {} as Record<number, boolean>
+      // Keyed by calibration id, the form DataTable uses when it has a dataKey.
+      expandedRows: {} as Record<number, boolean>,
+      expandedRanges: {} as Record<number, boolean>,
+      // The table is lazy, so it reports the sort and the page applies it, keeping each version thread together.
+      sortField: undefined as string | undefined,
+      sortOrder: undefined as number | undefined,
+      // Index of the first thread on the page; pages count threads, not rows.
+      threadFirst: 0,
+      threadsPerPage: 15
     }
   },
   computed: {
@@ -323,17 +402,46 @@ export default {
       actions.push({label: 'Download calibration JSON', handler: () => this.downloadCalibrations()})
       return actions
     },
-    sortedCalibrations(): components['schemas']['ScoreCalibration'][] {
-      if (!this.item?.scoreCalibrations) return []
-      return [...this.item.scoreCalibrations].sort((a, b) => {
-        return this.calibrationSortKey(a) - this.calibrationSortKey(b)
-      })
+    calibrationThreads(): CalibrationThread[] {
+      const sortValue = this.sortField ? SORT_VALUES[this.sortField] : null
+      return orderCalibrationThreads(
+        groupCalibrationVersions(this.item?.scoreCalibrations),
+        sortValue,
+        this.sortOrder ?? 1
+      )
+    },
+    pageThreads(): CalibrationThread[] {
+      return this.calibrationThreads.slice(this.threadFirst, this.threadFirst + this.threadsPerPage)
+    },
+    /** Each thread on the page: its head, then its other versions in chain order. */
+    calibrationRows(): ScoreCalibration[] {
+      return this.pageThreads.flatMap(calibrationThreadRows)
+    },
+    /** URNs of the versions listed under their thread's head. */
+    threadedUrns(): Set<string> {
+      return threadedVersionUrns(this.calibrationThreads)
+    },
+    /** Version numbers by URN, for calibrations with more than one version. */
+    versionNumbers(): Record<string, number> {
+      return calibrationVersionNumbers(this.calibrationThreads)
     }
   },
   watch: {
     item(newValue) {
       this.head.patch({title: newValue ? `Calibrations for ${getScoreSetShortName(newValue)}` : undefined})
-      this.expandedRows = []
+      this.expandedRows = {}
+    },
+    // A new order starts from the first page, as the table's own sorting does.
+    sortField() {
+      this.threadFirst = 0
+    },
+    sortOrder() {
+      this.threadFirst = 0
+    },
+    // A reload can remove threads; stay on the last page rather than one past it.
+    'calibrationThreads.length'(count: number) {
+      const lastPageFirst = Math.max(0, Math.ceil(count / this.threadsPerPage) - 1) * this.threadsPerPage
+      if (this.threadFirst > lastPageFirst) this.threadFirst = lastPageFirst
     },
     itemId: {
       handler: async function (newValue, oldValue) {
@@ -354,12 +462,24 @@ export default {
       return diseaseDisplayLabel(cal.disease)
     },
 
-    calibrationSortKey(cal: ScoreCalibration): number {
-      if (cal.primary) return 0
-      if (cal.private) return 4
-      if (cal.researchUseOnly) return 3
-      if (cal.investigatorProvided) return 1
-      return 2 // community
+    /** Expand the calibration `urn` in whichever layout is showing, and scroll to it. */
+    async showCalibration(urn: string) {
+      const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)
+      if (!calibration) return
+      const threadIndex = this.calibrationThreads.findIndex((thread) => thread.versions.includes(calibration))
+      if (threadIndex >= 0) this.threadFirst = Math.floor(threadIndex / this.threadsPerPage) * this.threadsPerPage
+      this.expandedRows = {...this.expandedRows, [calibration.id]: true}
+      this.expandedRanges[calibration.id] = true
+      await this.$nextTick()
+      // Both layouts are rendered and one is hidden; scroll to the one in view.
+      const target = [...document.querySelectorAll<HTMLElement>('[data-calibration-urn]')].find(
+        (el) => el.dataset.calibrationUrn === urn && el.offsetParent !== null
+      )
+      target?.scrollIntoView({behavior: 'smooth', block: 'start'})
+    },
+
+    statusBadge(cal: ScoreCalibration): 'unpublished' | 'superseded' | 'published' {
+      return STATUS_BADGES[calibrationVersionStatus(cal)]
     },
 
     calibrationActions(data: ScoreCalibration): RowAction[] {
@@ -377,10 +497,28 @@ export default {
 
       actions.push({separator: true})
 
-      if (auth.update) {
+      if (auth.supersede && !data.hasPublishedReplacement) {
+        actions.push({
+          label: 'Create new version',
+          // A calibration has at most one replacement, so a draft the user can see blocks another.
+          disabled: calibrationHasReplacement(data, this.item?.scoreCalibrations),
+          handler: () => this.createCalibrationVersion(data.urn)
+        })
+      }
+
+      // A replaced version is frozen, even for admins; removing its controls is the one change it allows.
+      if (auth.update && !data.hasPublishedReplacement) {
         actions.push({
           label: 'Edit calibration',
           handler: () => this.editCalibrationInEditor(data.urn)
+        })
+      }
+
+      if (auth.update && (data.controlsCount ?? 0) > 0) {
+        actions.push({
+          label: 'Remove controls',
+          danger: true,
+          handler: () => this.removeCalibrationControls(data.urn)
         })
       }
 
@@ -394,7 +532,7 @@ export default {
       if (auth.change_rank && !data.primary) {
         actions.push({
           label: 'Promote to primary',
-          disabled: data.researchUseOnly || this.primaryExists,
+          disabled: data.researchUseOnly || this.primaryExists || !!data.hasPublishedReplacement,
           handler: () => this.promoteCalibration(data.urn)
         })
       }
@@ -407,10 +545,13 @@ export default {
       }
 
       if (auth.delete) {
+        const deleteBlocker = calibrationDeleteBlocker(data, this.item?.scoreCalibrations)
         actions.push({separator: true})
         actions.push({
           label: 'Delete calibration',
+          description: deleteBlocker ?? undefined,
           danger: true,
+          disabled: !!deleteBlocker,
           handler: () => this.deleteCalibration(data.urn)
         })
       }
@@ -575,6 +716,38 @@ export default {
               severity: 'error',
               summary: 'Calibration Not Deleted',
               detail: `An error occurred while deleting the calibration: ${describeRequestError(error)}. Please try again later.`,
+              life: 4000
+            })
+          }
+        },
+        reject: () => {}
+      })
+    },
+
+    removeCalibrationControls: async function (calibrationUrn: string) {
+      this.confirm.require({
+        message:
+          "Are you sure you want to remove this calibration's controls? This also withdraws its affirmation that the controls contain no protected health information (PHI). It cannot be undone.",
+        header: 'Confirm Removing Controls',
+        icon: 'pi pi-exclamation-triangle',
+        acceptProps: {label: 'Remove controls', severity: 'danger', icon: 'pi pi-trash'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
+        accept: async () => {
+          try {
+            await deleteScoreCalibrationControls(calibrationUrn)
+            this.$toast.add({
+              severity: 'success',
+              summary: 'Controls Removed',
+              detail: "The calibration's controls were removed.",
+              life: 4000
+            })
+            await this.reloadItem()
+          } catch (error) {
+            console.error('Error removing calibration controls:', error)
+            this.$toast.add({
+              severity: 'error',
+              summary: 'Controls Not Removed',
+              detail: `An error occurred while removing the controls: ${describeRequestError(error)}. Please try again later.`,
               life: 4000
             })
           }

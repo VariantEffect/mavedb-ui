@@ -102,6 +102,8 @@ Control data must not contain protected health information (PHI). When you add c
 !!! warning
     Removed controls can't be recovered. To restore them after saving, upload the controls file again.
 
+A published calibration can't be edited, so its controls can't be removed this way. If you find PHI in a published calibration's controls, contact the MaveDB team. A maintainer can remove the controls without changing anything else about the calibration, including a calibration that a [newer version](#calibration-versions) has replaced.
+
 If you upload new scores for a score set, MaveDB carries each calibration's controls over to the matching new variants. A control whose variant is missing from the new upload is dropped. You don't need to confirm again: the remaining controls are ones you already confirmed, and removing controls can't add PHI.
 
 !!! info "Calibration controls are not clinical controls"
@@ -115,7 +117,23 @@ New score calibrations are private. A private calibration is visible to the user
     Unlike experiments and experiment sets, calibrations are **not** automatically published when their associated score set is published. Each calibration must be published separately.
 
 !!! warning
-    Once a calibration has been published, it cannot be made private again, deleted, nor edited. Please ensure that you are comfortable with making the calibration public before publishing it.
+    Once a calibration has been published, it cannot be made private again, deleted, nor edited. Please ensure that you are comfortable with making the calibration public before publishing it. To correct a published calibration, create a [new version](#calibration-versions) of it.
+
+## Calibration versions
+
+A published calibration can't be edited. To correct or update one, create a new version of it. The new version replaces the published calibration, and MaveDB keeps both, linked to each other, so the calibration's history stays visible.
+
+To create a new version, open the score set's **Calibrations** page, open the calibration's actions menu, and choose **Create new version**. The editor opens with the calibration's details copied in, including the variants assigned to each class of a class-based calibration. If the calibration has [controls](#calibration-controls), they're copied too, and you must confirm again that they contain no [protected health information](#protected-health-information) before you can save.
+
+The new version starts as a private draft in the same score set. Until you publish it, nothing changes: the published calibration remains the current one. When you publish the new version:
+
+- It becomes the current version. The calibration it replaces is labelled **Superseded** and links to it.
+- The superseded version stays visible, but MaveDB no longer uses it by default in [visualizations](../finding-data/visualizations.md), variant interpretations or annotations, and it can't be made the [primary calibration](#primary-calibrations).
+- If the superseded version was the primary calibration, the new version becomes primary in its place. A research use only version can't replace a primary calibration.
+
+A calibration can have only one new version at a time. While a draft new version exists, **Create new version** is unavailable; edit or delete the draft instead. If someone else's draft blocks you and you can't see it, ask them or the score set's contributors.
+
+A superseded version can't be edited or deleted, even by MaveDB maintainers, because annotations and other records refer to calibrations by URN. The one exception is removing its controls if they turn out to contain PHI (see [Protected health information](#protected-health-information)).
 
 ## Research use only calibrations
 
@@ -131,7 +149,7 @@ Research use only calibrations:
 
 A primary calibration is the main score calibration associated with a score set. Each score set in MaveDB may have at most one primary calibration. The primary calibration is used by default when displaying the score set in [visualizations](../finding-data/visualizations.md) and when interpreting variant effect scores.
 
-After uploading a score calibration to MaveDB, you may choose to designate it as the primary calibration for the associated score set. If a score set already has a primary calibration, you must demote the existing primary calibration before designating a new one. A calibration must be publicly visible to be marked as the primary calibration, and research use only calibrations may not be designated as primary calibrations.
+After uploading a score calibration to MaveDB, you may choose to designate it as the primary calibration for the associated score set. If a score set already has a primary calibration, you must demote the existing primary calibration before designating a new one. A calibration must be publicly visible to be marked as the primary calibration, and research use only calibrations may not be designated as primary calibrations. Publishing a [new version](#calibration-versions) of the primary calibration makes the new version primary.
 
 !!! note
     MaveDB maintainers may review primary calibrations to ensure that they meet quality standards and are appropriate for use in visualizations and interpretations, and retain the right to remove primary calibration status from any calibration that does not meet these standards.
@@ -153,9 +171,10 @@ Investigator and community calibrations share most behaviors — both can be pub
 | **Edit** (private) | Editable by all score set contributors | Editable only by the calibration owner |
 | **Delete** (private) | Only the calibration owner | Only the calibration owner |
 | **Publish** | Only the calibration owner | Only the calibration owner |
+| **Create new version** (published) | Score set contributors and calibration owner | Only the calibration owner |
 | **Change rank** (promote/demote primary) | Score set contributors and calibration owner | Score set contributors only — the community calibration owner cannot change rank |
 
-The rank restriction means that community calibration providers cannot promote their own calibration to primary status. Instead, the score set team decides whether to elevate a community calibration.
+The rank restriction means that community calibration providers cannot promote their own calibration to primary status. Instead, the score set team decides whether to elevate a community calibration. For the same reason, if the score set team has made a community calibration primary, its owner can create a new version but can't publish it: publishing would move primary status to it. The owner can ask the score set team to demote the current version first.
 
 ## See also
 

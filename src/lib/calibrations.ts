@@ -4,10 +4,17 @@
  */
 
 import axios from 'axios'
+import {cloneDeep} from 'lodash'
+import Papa from 'papaparse'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
-import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {
+  SOURCE_CLASSIFICATION_ID,
+  type DraftFunctionalClassification,
+  type DraftScoreCalibration
+} from '@/lib/calibration-types'
+import {formatDate} from '@/lib/formats'
 import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
@@ -293,6 +300,7 @@ export function hasPathogenicityCalibrations(
 
   return scoreCalibrations.some(
     (cal) =>
+      !cal.hasPublishedReplacement &&
       !(excludeResearchUseOnly && cal.researchUseOnly) &&
       cal.functionalClassifications &&
       Array.isArray(cal.functionalClassifications) &&
@@ -318,6 +326,7 @@ export function hasFunctionalCalibrations(
 
   return scoreCalibrations.some(
     (cal) =>
+      !cal.hasPublishedReplacement &&
       !(excludeResearchUseOnly && cal.researchUseOnly) &&
       cal.functionalClassifications &&
       Array.isArray(cal.functionalClassifications) &&
@@ -332,7 +341,7 @@ export function hasFunctionalCalibrations(
 export function getPrimaryCalibration(
   scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined
 ): ScoreCalibration | null {
-  const calibrations = scoreSet?.scoreCalibrations
+  const calibrations = scoreSet?.scoreCalibrations?.filter((calibration) => !calibration.hasPublishedReplacement)
   if (!calibrations || calibrations.length === 0) return null
   return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
 }
@@ -356,14 +365,16 @@ export function unclassifiedCallLabel(
 }
 
 /**
- * A score set's calibrations in calibration-picker order: primary, then clinical-grade, then research-use-only,
- * alphabetical by title within each tier. Returns a new array.
+ * A score set's calibrations in calibration-picker order. Each version thread stays together, its head first and
+ * its other versions after in chain order. Threads order by their head: primary, then clinical-grade, then
+ * research-use-only, alphabetical by title within each tier. Returns a new array.
  */
 export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | null | undefined): ScoreCalibration[] {
-  const tier = (c: ScoreCalibration) => (c.primary ? 0 : c.researchUseOnly ? 2 : 1)
-  return [...(scoreCalibrations ?? [])].sort(
-    (a, b) => tier(a) - tier(b) || (a.title ?? '').localeCompare(b.title ?? '')
-  )
+  // A head is superseded only when its replacement wasn't listed, which leaves it nothing to sit under.
+  const tier = (c: ScoreCalibration) => (c.hasPublishedReplacement ? 3 : c.primary ? 0 : c.researchUseOnly ? 2 : 1)
+  return groupCalibrationVersions(scoreCalibrations)
+    .sort((a, b) => tier(a.head) - tier(b.head) || (a.head.title ?? '').localeCompare(b.head.title ?? ''))
+    .flatMap(calibrationThreadRows)
 }
 
 /**
@@ -374,6 +385,7 @@ export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | 
 export function chooseDefaultCalibration(
   scoreCalibrations: ScoreCalibration[] | null | undefined
 ): ScoreCalibration | null {
+  scoreCalibrations = scoreCalibrations?.filter((calibration) => !calibration.hasPublishedReplacement)
   if (!scoreCalibrations || scoreCalibrations.length === 0) return null
   return (
     scoreCalibrations.find((c) => c.primary === true) ||
@@ -413,6 +425,248 @@ export function getClassificationOddsPath(
 export type CalibrationPayload = Omit<DraftScoreCalibration, 'disease' | 'controls' | 'controlsCount'> & {
   disease: string | null
   controls?: components['schemas']['CalibrationControlCreate'][]
+}
+
+/** Another version of a calibration, as its table names it. */
+export interface CalibrationVersionLink {
+  urn: string
+  label: 'Previous version' | 'Superseded by' | 'Draft new version'
+  /** Null when the other version isn't among the calibrations the caller was given. */
+  calibration: ScoreCalibration | null
+}
+
+/**
+ * The versions a calibration links to: the one it replaced, and the one replacing it. The api names a draft
+ * replacement only to users who may read it, and a draft supersedes nothing until it's published.
+ *
+ * @param calibration - The calibration whose versions to list.
+ * @param related - The score set's calibrations, where every version of `calibration` the caller may read lives.
+ */
+export function calibrationVersionLinks(
+  calibration: ScoreCalibration,
+  related: ScoreCalibration[] | null | undefined
+): CalibrationVersionLink[] {
+  const find = (urn: string) => related?.find((c) => c.urn === urn) ?? null
+  const links: CalibrationVersionLink[] = []
+  if (calibration.supersededCalibrationUrn) {
+    const urn = calibration.supersededCalibrationUrn
+    links.push({urn, label: 'Previous version', calibration: find(urn)})
+  }
+  if (calibration.supersedingCalibrationUrn) {
+    const urn = calibration.supersedingCalibrationUrn
+    const label = calibration.hasPublishedReplacement ? 'Superseded by' : 'Draft new version'
+    links.push({urn, label, calibration: find(urn)})
+  }
+  return links
+}
+
+/**
+ * Whether a calibration has a replacement, draft or published, that the caller can see. The api names a draft
+ * replacement only to users who may read it, so a draft the caller can't see doesn't count.
+ *
+ * @param calibration - The calibration to check.
+ * @param related - The score set's calibrations, where a draft replacement the caller may read would be listed.
+ */
+export function calibrationHasReplacement(
+  calibration: ScoreCalibration,
+  related: ScoreCalibration[] | null | undefined
+): boolean {
+  return (
+    !!calibration.supersedingCalibrationUrn ||
+    !!calibration.hasPublishedReplacement ||
+    !!related?.some((c) => c.supersededCalibrationUrn === calibration.urn)
+  )
+}
+
+/**
+ * Why the api would refuse to delete a calibration, or null if it wouldn't. Deleting a published version or a
+ * calibration with a replacement would break its version history; a primary calibration must be demoted first.
+ *
+ * @param calibration - The calibration to delete.
+ * @param related - The score set's calibrations.
+ */
+export function calibrationDeleteBlocker(
+  calibration: ScoreCalibration,
+  related: ScoreCalibration[] | null | undefined
+): string | null {
+  if (calibration.primary) return 'Demote it to non-primary first.'
+  if (calibration.supersededCalibrationUrn && !calibration.private) return 'Published versions are kept.'
+  if (calibrationHasReplacement(calibration, related)) return 'Calibrations with a newer version are kept.'
+  return null
+}
+
+/** A calibration's place in its version history, for telling versions with the same title apart. */
+export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft' | 'Superseded' | 'Published' {
+  if (calibration.private) return 'Draft'
+  return calibration.hasPublishedReplacement ? 'Superseded' : 'Published'
+}
+
+/**
+ * A calibration's status and date, for telling versions with the same title apart: "Superseded · published Oct 27,
+ * 2026". A published version is dated by publication. A draft, and a version published before MaveDB recorded
+ * publication times, is dated by creation, and says so.
+ */
+export function calibrationVersionSummary(calibration: ScoreCalibration): string {
+  const status = calibrationVersionStatus(calibration)
+  if (!calibration.publishedDate) return `${status} · created ${formatDate(calibration.creationDate)}`
+  const date = formatDate(calibration.publishedDate)
+  return status === 'Published' ? `${status} · ${date}` : `${status} · published ${date}`
+}
+
+/** A calibration and the other versions in its chain, listed together. */
+export interface CalibrationThread {
+  /** The newest published version, or the draft when the chain has nothing published. */
+  head: ScoreCalibration
+  /** Every version in chain order, oldest first. A draft replacement is always last. */
+  versions: ScoreCalibration[]
+}
+
+/**
+ * Group calibrations into their version chains. A version whose predecessor isn't among `calibrations` starts its
+ * own thread.
+ */
+export function groupCalibrationVersions(calibrations: ScoreCalibration[] | null | undefined): CalibrationThread[] {
+  const list = calibrations ?? []
+  const urns = new Set(list.map((c) => c.urn))
+  const successors = new Map<string, ScoreCalibration>()
+  for (const calibration of list) {
+    if (calibration.supersededCalibrationUrn && urns.has(calibration.supersededCalibrationUrn)) {
+      successors.set(calibration.supersededCalibrationUrn, calibration)
+    }
+  }
+  return list
+    .filter((c) => !c.supersededCalibrationUrn || !urns.has(c.supersededCalibrationUrn))
+    .map((root) => {
+      const versions = [root]
+      for (let next = successors.get(root.urn); next; next = successors.get(next.urn)) versions.push(next)
+      const head = [...versions].reverse().find((v) => !v.private) ?? versions[versions.length - 1]
+      return {head, versions}
+    })
+}
+
+/** Version numbers by URN, counted along each chain from 1, for calibrations with more than one version. */
+export function calibrationVersionNumbers(threads: CalibrationThread[]): Record<string, number> {
+  const numbers: Record<string, number> = {}
+  for (const thread of threads) {
+    if (thread.versions.length > 1) thread.versions.forEach((version, i) => (numbers[version.urn] = i + 1))
+  }
+  return numbers
+}
+
+/** A thread's calibrations as they're listed: its head, then its other versions in chain order. */
+export function calibrationThreadRows(thread: CalibrationThread): ScoreCalibration[] {
+  return [thread.head, ...thread.versions.filter((version) => version !== thread.head)]
+}
+
+/** URNs of the versions listed under their thread's head, which lists indent. */
+export function threadedVersionUrns(threads: CalibrationThread[]): Set<string> {
+  return new Set(
+    threads.flatMap((thread) => thread.versions.filter((version) => version !== thread.head).map((v) => v.urn))
+  )
+}
+
+/** Where a calibration falls in the default list order: primary, investigator, community, research use, draft. */
+export function calibrationListRank(calibration: ScoreCalibration): number {
+  if (calibration.primary) return 0
+  if (calibration.private) return 4
+  if (calibration.researchUseOnly) return 3
+  if (calibration.investigatorProvided) return 1
+  return 2 // community
+}
+
+type SortValue = string | number | boolean | null | undefined
+
+function compareSortValues(a: SortValue, b: SortValue): number {
+  if (a == null || b == null) return a == null ? (b == null ? 0 : 1) : -1
+  if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b)
+  return Number(a) - Number(b)
+}
+
+/**
+ * Order threads as units, by their heads. With a `sortValue`, heads compare by it in `order` (1 ascending, -1
+ * descending); ties, and the order without one, fall back to the default rank, then title, then creation date.
+ */
+export function orderCalibrationThreads(
+  threads: CalibrationThread[],
+  sortValue?: ((calibration: ScoreCalibration) => SortValue) | null,
+  order: number = 1
+): CalibrationThread[] {
+  const byDefault = (a: ScoreCalibration, b: ScoreCalibration) =>
+    calibrationListRank(a) - calibrationListRank(b) ||
+    (a.title ?? '').localeCompare(b.title ?? '') ||
+    (a.creationDate ?? '').localeCompare(b.creationDate ?? '')
+  return [...threads].sort(
+    (a, b) =>
+      (sortValue ? compareSortValues(sortValue(a.head), sortValue(b.head)) * order : 0) || byDefault(a.head, b.head)
+  )
+}
+
+/**
+ * A draft of a new version of `calibration`, as the editor opens it. Each classification is tagged with the id it
+ * was copied from, so a class-based version can carry each class's variants over under the class's current name.
+ */
+export function prepareCalibrationVersion(calibration: DraftScoreCalibration): DraftScoreCalibration {
+  const copy = cloneDeep(calibration)
+  return {
+    ...copy,
+    functionalClassifications:
+      copy.functionalClassifications?.map((classification) => ({
+        ...classification,
+        [SOURCE_CLASSIFICATION_ID]: (classification as {id?: number}).id
+      })) ?? copy.functionalClassifications,
+    urn: null,
+    supersededCalibrationUrn: calibration.urn,
+    // The editor copies only DRAFT_CALIBRATION_COPYABLE_KEYS and starts from a private, non-primary blank draft, so
+    // it ignores these four. They keep the result a valid new version for any other caller.
+    supersedingCalibrationUrn: null,
+    hasPublishedReplacement: false,
+    private: true,
+    primary: false,
+    controlsNotPhi: calibration.controls?.length ? null : calibration.controlsNotPhi
+  }
+}
+
+/** Variant URNs by the id of the functional classification they belong to. */
+export function variantUrnsByClassification(memberships: FunctionalClassificationVariants[]): Map<number, string[]> {
+  return new Map(
+    memberships.map((membership) => [
+      membership.functionalClassificationId,
+      (membership.variants ?? []).flatMap((variant) => (variant.urn ? [variant.urn] : []))
+    ])
+  )
+}
+
+/**
+ * A classes file for a class-based calibration, in the columns the api's `classes_file` takes.
+ *
+ * @param classes - Each class's name and the URNs of the variants in it.
+ */
+export function calibrationClassesCsv(
+  classes: Array<{className: string | null | undefined; variantUrns: string[]}>
+): string {
+  const rows = classes.flatMap(({className, variantUrns}) =>
+    variantUrns.map((urn) => ({variant_urn: urn, class_name: className}))
+  )
+  return Papa.unparse({fields: ['variant_urn', 'class_name'], data: rows})
+}
+
+/**
+ * The classes file for a new version of a class-based calibration: each copied class's variants, under the name
+ * the class has now. A class added in the editor has no variants until a classes file is uploaded.
+ *
+ * @param classifications - The draft's classifications, as tagged by {@link prepareCalibrationVersion}.
+ * @param variantUrns - The copied calibration's variants, from {@link variantUrnsByClassification}.
+ */
+export function calibrationVersionClassesCsv(
+  classifications: DraftFunctionalClassification[],
+  variantUrns: Map<number, string[]>
+): string {
+  return calibrationClassesCsv(
+    classifications.map((classification) => {
+      const sourceId = classification[SOURCE_CLASSIFICATION_ID]
+      return {className: classification.class, variantUrns: sourceId == null ? [] : (variantUrns.get(sourceId) ?? [])}
+    })
+  )
 }
 
 /**
@@ -465,6 +719,12 @@ export async function saveCalibration(params: {
 
   // Controls are conveyed via file, cleared to an empty list, or left unchanged (omitted).
   const payload = toCalibrationPayload(draft)
+  if (!existingUrn && draft.supersededCalibrationUrn && !controlsFile) {
+    payload.controls = (draft.controls ?? []).map((control) => ({
+      variantUrn: control.variantUrn,
+      clinicalStatus: control.clinicalStatus
+    }))
+  }
   if (!controlsFile && controlsCleared) {
     payload.controls = []
   }

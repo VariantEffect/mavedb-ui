@@ -294,7 +294,7 @@
           <!-- Supersession banner (about the score set of the selected measurement (Y) ) -->
           <div
             v-if="lookup.selectedVariantDetail.value && !lookup.selectedVariantDetail.value.isCurrent"
-            class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-superseded"
+            class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
           >
             <i class="pi pi-exclamation-triangle mt-0.5 text-xs" />
             <div>
@@ -368,7 +368,9 @@
           <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light px-4 py-3 tablet:px-5">
             <CalibrationTable
               :highlighted-range-label="lookup.calibrationResolution.scoreRange.value?.label || null"
+              :related-calibrations="lookup.selectedScoreSet.value?.scoreCalibrations"
               :score-calibration="lookup.selectedCalibrationObject.value"
+              :score-set-urn="lookup.selectedScoreSetUrn.value ?? undefined"
             />
           </div>
         </MvPanel>

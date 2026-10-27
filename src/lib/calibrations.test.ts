@@ -1,12 +1,30 @@
 import {describe, expect, it} from 'vitest'
+import Papa from 'papaparse'
 
-import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {cloneDeep} from 'lodash'
+
+import type {DraftFunctionalClassification, DraftScoreCalibration} from '@/lib/calibration-types'
 import {
   buildControlPlacements,
+  calibrationClassesCsv,
+  calibrationDeleteBlocker,
+  calibrationHasReplacement,
+  calibrationThreadRows,
+  calibrationVersionNumbers,
+  calibrationVersionClassesCsv,
+  calibrationVersionLinks,
+  calibrationVersionStatus,
+  calibrationVersionSummary,
+  chooseDefaultCalibration,
+  groupCalibrationVersions,
   isClassBasedCalibration,
   orderCalibrationOptions,
+  orderCalibrationThreads,
+  prepareCalibrationVersion,
+  threadedVersionUrns,
   toCalibrationPayload,
   unclassifiedCallLabel,
+  variantUrnsByClassification,
   type ScoreCalibration
 } from '@/lib/calibrations'
 
@@ -111,6 +129,18 @@ describe('orderCalibrationOptions', () => {
     expect(ordered.map((c) => c.title)).toEqual(['Primary', 'Alpha', 'Beta', 'Alpha RUO', 'Zeta RUO'])
   })
 
+  it('keeps each version thread together under its head, ordered by the head', () => {
+    const v1 = cal('Alpha', {urn: 'v1', supersedingCalibrationUrn: 'v2', hasPublishedReplacement: true})
+    const v2 = cal('Alpha', {urn: 'v2', supersededCalibrationUrn: 'v1', supersedingCalibrationUrn: 'v3'})
+    const v3 = cal('Alpha', {urn: 'v3', supersededCalibrationUrn: 'v2', private: true})
+    const beta = cal('Beta', {urn: 'beta'})
+    const primary = cal('Primary', {urn: 'primary', primary: true})
+
+    const ordered = orderCalibrationOptions([v3, beta, v1, primary, v2])
+    expect(ordered.map((c) => c.urn)).toEqual(['primary', 'v2', 'v1', 'v3', 'beta'])
+    expect(calibrationVersionNumbers(groupCalibrationVersions(ordered))).toEqual({v1: 1, v2: 2, v3: 3})
+  })
+
   it('does not mutate its input and tolerates a missing list', () => {
     const input = [cal('B'), cal('A')]
     orderCalibrationOptions(input)
@@ -163,5 +193,213 @@ describe('toCalibrationPayload', () => {
     toCalibrationPayload(draft)
     expect(draft.disease).toEqual({code: 'MONDO:0015263', label: 'Brugada syndrome'})
     expect(draft.controls).toHaveLength(1)
+  })
+})
+
+describe('calibrationDeleteBlocker', () => {
+  const cal = (urn: string, flags: Partial<ScoreCalibration> = {}) => ({urn, ...flags}) as ScoreCalibration
+
+  it('allows deleting a standalone calibration and a draft replacement', () => {
+    const published = cal('published')
+    const draft = cal('draft', {private: true, supersededCalibrationUrn: 'published'})
+    expect(calibrationDeleteBlocker(cal('alone'), [])).toBeNull()
+    expect(calibrationDeleteBlocker(draft, [published, draft])).toBeNull()
+  })
+
+  it.each([
+    ['a primary calibration', cal('x', {primary: true}), []],
+    ['a published version', cal('x', {supersededCalibrationUrn: 'old'}), []],
+    ['a calibration with a published replacement', cal('x', {hasPublishedReplacement: true}), []],
+    ['a calibration with a draft replacement it names', cal('x', {supersedingCalibrationUrn: 'draft'}), []],
+    [
+      'a calibration with a draft replacement in the list',
+      cal('x'),
+      [cal('draft', {private: true, supersededCalibrationUrn: 'x'})]
+    ]
+  ])('refuses %s', (_, calibration, related) => {
+    expect(calibrationDeleteBlocker(calibration, related)).not.toBeNull()
+  })
+
+  it('treats a draft replacement the caller cannot see as no replacement', () => {
+    expect(calibrationHasReplacement(cal('x'), [cal('other')])).toBe(false)
+  })
+})
+
+describe('calibration versions', () => {
+  it('copies class memberships using the API CSV headers and escapes class labels', () => {
+    const memberships = [{functionalClassificationId: 1, variants: [{urn: 'urn:variant:1'}]}] as never
+    const csv = calibrationClassesCsv([
+      {className: 'abnormal, strong', variantUrns: variantUrnsByClassification(memberships).get(1) ?? []}
+    ])
+    expect(Papa.parse(csv, {header: true}).data).toEqual([
+      {variant_urn: 'urn:variant:1', class_name: 'abnormal, strong'}
+    ])
+  })
+
+  it('never defaults to a superseded version, even if it has preferred flags', () => {
+    const old = {
+      urn: 'old',
+      primary: true,
+      investigatorProvided: true,
+      supersedingCalibrationUrn: 'new',
+      hasPublishedReplacement: true
+    } as ScoreCalibration
+    const current = {urn: 'new'} as ScoreCalibration
+    expect(chooseDefaultCalibration([old, current])).toBe(current)
+    expect(chooseDefaultCalibration([old])).toBeNull()
+    expect(orderCalibrationOptions([old, current])).toEqual([current, old])
+  })
+
+  it('still defaults to a calibration whose only replacement is a draft', () => {
+    // The api names a draft replacement to users who may read it; until it's published, nothing is superseded.
+    const current = {
+      urn: 'current',
+      primary: true,
+      supersedingCalibrationUrn: 'draft',
+      hasPublishedReplacement: false
+    } as ScoreCalibration
+    const draft = {urn: 'draft', private: true} as ScoreCalibration
+    expect(chooseDefaultCalibration([current, draft])).toBe(current)
+    expect(orderCalibrationOptions([draft, current])[0]).toBe(current)
+  })
+
+  it('links each version to the ones before and after it, with their status', () => {
+    const first = {urn: 'first', supersedingCalibrationUrn: 'second', hasPublishedReplacement: true} as ScoreCalibration
+    const second = {
+      urn: 'second',
+      supersededCalibrationUrn: 'first',
+      supersedingCalibrationUrn: 'third'
+    } as ScoreCalibration
+    const third = {urn: 'third', supersededCalibrationUrn: 'second', private: true} as ScoreCalibration
+    const all = [first, second, third]
+
+    expect(calibrationVersionLinks(first, all)).toEqual([{urn: 'second', label: 'Superseded by', calibration: second}])
+    expect(calibrationVersionLinks(second, all)).toEqual([
+      {urn: 'first', label: 'Previous version', calibration: first},
+      {urn: 'third', label: 'Draft new version', calibration: third}
+    ])
+    expect(all.map(calibrationVersionStatus)).toEqual(['Superseded', 'Published', 'Draft'])
+  })
+
+  it('dates published versions by publication, and drafts and untracked versions by creation', () => {
+    const created = '2026-09-01'
+    const published = '2026-10-27'
+    const summary = (flags: Partial<ScoreCalibration>) =>
+      calibrationVersionSummary({creationDate: created, ...flags} as ScoreCalibration)
+
+    expect(summary({private: true})).toBe('Draft · created Sep 01, 2026')
+    expect(summary({publishedDate: published})).toBe('Published · Oct 27, 2026')
+    expect(summary({publishedDate: published, hasPublishedReplacement: true})).toBe(
+      'Superseded · published Oct 27, 2026'
+    )
+    expect(summary({publishedDate: null})).toBe('Published · created Sep 01, 2026')
+  })
+
+  it('still links a version missing from the given calibrations', () => {
+    const current = {urn: 'current', supersededCalibrationUrn: 'old'} as ScoreCalibration
+    expect(calibrationVersionLinks(current, null)).toEqual([{urn: 'old', label: 'Previous version', calibration: null}])
+    expect(calibrationVersionLinks({urn: 'lone'} as ScoreCalibration, [current])).toEqual([])
+  })
+
+  it('threads each version chain under its newest published version, in chain order', () => {
+    const v1 = {
+      urn: 'v1',
+      title: 'IGVF',
+      supersedingCalibrationUrn: 'v2',
+      hasPublishedReplacement: true
+    } as ScoreCalibration
+    const v2 = {
+      urn: 'v2',
+      title: 'IGVF',
+      supersededCalibrationUrn: 'v1',
+      supersedingCalibrationUrn: 'v3'
+    } as ScoreCalibration
+    const v3 = {urn: 'v3', title: 'IGVF', supersededCalibrationUrn: 'v2', private: true} as ScoreCalibration
+    const lone = {urn: 'lone', title: 'Lone draft', private: true} as ScoreCalibration
+
+    expect(groupCalibrationVersions([v3, lone, v1, v2])).toEqual([
+      {head: lone, versions: [lone]},
+      {head: v2, versions: [v1, v2, v3]}
+    ])
+    expect(groupCalibrationVersions(null)).toEqual([])
+
+    const threads = groupCalibrationVersions([v3, lone, v1, v2])
+    expect(threads.flatMap(calibrationThreadRows)).toEqual([lone, v2, v1, v3])
+    expect(threadedVersionUrns(threads)).toEqual(new Set(['v1', 'v3']))
+  })
+
+  it('starts a thread at a version whose predecessor it was not given', () => {
+    const current = {urn: 'current', supersededCalibrationUrn: 'unlisted'} as ScoreCalibration
+    expect(groupCalibrationVersions([current])).toEqual([{head: current, versions: [current]}])
+  })
+
+  it('orders threads as units by their heads, falling back to rank, title and creation date', () => {
+    const thread = (urn: string, flags: Partial<ScoreCalibration> = {}) => {
+      const head = {urn, title: urn, creationDate: '2026-01-01', ...flags} as ScoreCalibration
+      return {head, versions: [head]}
+    }
+    const primary = thread('primary', {primary: true, functionalClassifications: [{}] as never})
+    const community = thread('community', {functionalClassifications: [{}, {}, {}] as never})
+    const investigator = thread('investigator', {investigatorProvided: true})
+    const draft = thread('draft', {private: true})
+    const all = [draft, community, investigator, primary]
+    const urns = (threads: typeof all) => threads.map((t) => t.head.urn)
+
+    expect(urns(orderCalibrationThreads(all))).toEqual(['primary', 'investigator', 'community', 'draft'])
+    const ranges = (c: ScoreCalibration) => c.functionalClassifications?.length ?? 0
+    expect(urns(orderCalibrationThreads(all, ranges, -1))).toEqual(['community', 'primary', 'investigator', 'draft'])
+    expect(urns(orderCalibrationThreads(all, (c) => c.title, 1))).toEqual([
+      'community',
+      'draft',
+      'investigator',
+      'primary'
+    ])
+  })
+
+  it('copies an independent draft and requires a fresh PHI affirmation for copied controls', () => {
+    const original = {
+      urn: 'original',
+      primary: true,
+      private: false,
+      controlsNotPhi: true,
+      controls: [{variantUrn: 'variant', clinicalStatus: 'benign'}],
+      functionalClassifications: [{label: 'Normal'}]
+    } as DraftScoreCalibration
+    const draft = prepareCalibrationVersion(original)
+    expect(draft.urn).toBeNull()
+    expect(draft.supersededCalibrationUrn).toBe('original')
+    expect(draft.private).toBe(true)
+    expect(draft.primary).toBe(false)
+    expect(draft.controlsNotPhi).toBeNull()
+    draft.functionalClassifications![0].label = 'Updated'
+    expect(original.functionalClassifications![0].label).toBe('Normal')
+    expect(original.controlsNotPhi).toBe(true)
+  })
+
+  it("carries each copied class's variants under the class's current name", () => {
+    const original = {
+      urn: 'original',
+      functionalClassifications: [
+        {id: 1, class: 'lof'},
+        {id: 2, class: 'wt'}
+      ]
+    } as unknown as DraftScoreCalibration
+    const variantUrns = variantUrnsByClassification([
+      {functionalClassificationId: 1, variants: [{urn: 'v1'}, {urn: 'v2'}]},
+      {functionalClassificationId: 2, variants: [{urn: 'v3'}]}
+    ] as never)
+    // Renaming, adding and deleting classes all happen on a deep copy of the draft, which must keep the tags.
+    const classifications = cloneDeep(prepareCalibrationVersion(original).functionalClassifications!)
+    classifications[0].class = 'loss of function'
+    classifications.splice(1, 1)
+    classifications.push({class: 'new'} as DraftFunctionalClassification)
+
+    const csv = calibrationVersionClassesCsv(classifications, variantUrns)
+
+    expect(Papa.parse(csv, {header: true}).data).toEqual([
+      {variant_urn: 'v1', class_name: 'loss of function'},
+      {variant_urn: 'v2', class_name: 'loss of function'}
+    ])
+    expect(JSON.parse(JSON.stringify(classifications[0]))).toEqual({class: 'loss of function', id: 1})
   })
 })

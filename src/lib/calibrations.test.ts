@@ -9,6 +9,7 @@ import {
   calibrationClassesCsv,
   calibrationDeleteBlocker,
   calibrationHasReplacement,
+  calibrationThreadRows,
   calibrationVersionNumbers,
   calibrationVersionClassesCsv,
   calibrationVersionLinks,
@@ -20,6 +21,7 @@ import {
   orderCalibrationOptions,
   orderCalibrationThreads,
   prepareCalibrationVersion,
+  threadedVersionUrns,
   toCalibrationPayload,
   unclassifiedCallLabel,
   variantUrnsByClassification,
@@ -320,6 +322,10 @@ describe('calibration versions', () => {
       {head: v2, versions: [v1, v2, v3]}
     ])
     expect(groupCalibrationVersions(null)).toEqual([])
+
+    const threads = groupCalibrationVersions([v3, lone, v1, v2])
+    expect(threads.flatMap(calibrationThreadRows)).toEqual([lone, v2, v1, v3])
+    expect(threadedVersionUrns(threads)).toEqual(new Set(['v1', 'v3']))
   })
 
   it('starts a thread at a version whose predecessor it was not given', () => {

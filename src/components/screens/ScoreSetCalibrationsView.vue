@@ -58,7 +58,7 @@
             v-for="cal in calibrationRows"
             :key="cal.id"
             class="mave-card relative overflow-hidden"
-            :class="{'ml-5': isThreadedVersion(cal)}"
+            :class="{'ml-5': threadedUrns.has(cal.urn)}"
             :data-calibration-urn="cal.urn"
           >
             <div class="px-4 py-4">
@@ -130,7 +130,7 @@
 
             <Column field="title" header="Title" :sortable="true">
               <template #body="{data}">
-                <div :class="{'ml-1 border-l-2 border-border pl-3': isThreadedVersion(data)}">
+                <div :class="{'ml-1 border-l-2 border-border pl-3': threadedUrns.has(data.urn)}">
                   <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
                   <span v-if="versionNumbers[data.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
                     >v{{ versionNumbers[data.urn] }}</span
@@ -287,10 +287,12 @@ import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
 import {
   calibrationDeleteBlocker,
   calibrationHasReplacement,
+  calibrationThreadRows,
   calibrationVersionNumbers,
   calibrationVersionStatus,
   groupCalibrationVersions,
   orderCalibrationThreads,
+  threadedVersionUrns,
   type CalibrationThread
 } from '@/lib/calibrations'
 import {diseaseDisplayLabel} from '@/lib/diseases'
@@ -307,6 +309,9 @@ type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank', 'supersede'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
+
+/** The status badge for each version status. */
+const STATUS_BADGES = {Draft: 'unpublished', Superseded: 'superseded', Published: 'published'} as const
 
 /** What each sortable column sorts by, keyed by the column's sort field. */
 const SORT_VALUES: Record<string, (calibration: ScoreCalibration) => string | number | boolean | null | undefined> = {
@@ -410,10 +415,11 @@ export default {
     },
     /** Each thread on the page: its head, then its other versions in chain order. */
     calibrationRows(): ScoreCalibration[] {
-      return this.pageThreads.flatMap((thread) => [
-        thread.head,
-        ...thread.versions.filter((version) => version !== thread.head)
-      ])
+      return this.pageThreads.flatMap(calibrationThreadRows)
+    },
+    /** URNs of the versions listed under their thread's head. */
+    threadedUrns(): Set<string> {
+      return threadedVersionUrns(this.calibrationThreads)
     },
     /** Version numbers by URN, for calibrations with more than one version. */
     versionNumbers(): Record<string, number> {
@@ -472,14 +478,8 @@ export default {
       target?.scrollIntoView({behavior: 'smooth', block: 'start'})
     },
 
-    /** Whether `cal` is listed under the head of its version thread. */
-    isThreadedVersion(cal: ScoreCalibration): boolean {
-      return !!this.versionNumbers[cal.urn] && !this.calibrationThreads.some((thread) => thread.head === cal)
-    },
-
     statusBadge(cal: ScoreCalibration): 'unpublished' | 'superseded' | 'published' {
-      if (cal.private) return 'unpublished'
-      return cal.hasPublishedReplacement ? 'superseded' : 'published'
+      return STATUS_BADGES[calibrationVersionStatus(cal)]
     },
 
     calibrationActions(data: ScoreCalibration): RowAction[] {

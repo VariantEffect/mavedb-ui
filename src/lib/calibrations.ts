@@ -374,7 +374,7 @@ export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | 
   const tier = (c: ScoreCalibration) => (c.hasPublishedReplacement ? 3 : c.primary ? 0 : c.researchUseOnly ? 2 : 1)
   return groupCalibrationVersions(scoreCalibrations)
     .sort((a, b) => tier(a.head) - tier(b.head) || (a.head.title ?? '').localeCompare(b.head.title ?? ''))
-    .flatMap((thread) => [thread.head, ...thread.versions.filter((version) => version !== thread.head)])
+    .flatMap(calibrationThreadRows)
 }
 
 /**
@@ -551,6 +551,18 @@ export function calibrationVersionNumbers(threads: CalibrationThread[]): Record<
     if (thread.versions.length > 1) thread.versions.forEach((version, i) => (numbers[version.urn] = i + 1))
   }
   return numbers
+}
+
+/** A thread's calibrations as they're listed: its head, then its other versions in chain order. */
+export function calibrationThreadRows(thread: CalibrationThread): ScoreCalibration[] {
+  return [thread.head, ...thread.versions.filter((version) => version !== thread.head)]
+}
+
+/** URNs of the versions listed under their thread's head, which lists indent. */
+export function threadedVersionUrns(threads: CalibrationThread[]): Set<string> {
+  return new Set(
+    threads.flatMap((thread) => thread.versions.filter((version) => version !== thread.head).map((v) => v.urn))
+  )
 }
 
 /** Where a calibration falls in the default list order: primary, investigator, community, research use, draft. */

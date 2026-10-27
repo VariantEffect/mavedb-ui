@@ -9,7 +9,11 @@ import Papa from 'papaparse'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
-import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {
+  SOURCE_CLASSIFICATION_ID,
+  type DraftFunctionalClassification,
+  type DraftScoreCalibration
+} from '@/lib/calibration-types'
 import {formatDate} from '@/lib/formats'
 import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
@@ -585,9 +589,19 @@ export function orderCalibrationThreads(
   )
 }
 
+/**
+ * A draft of a new version of `calibration`, as the editor opens it. Each classification is tagged with the id it
+ * was copied from, so a class-based version can carry each class's variants over under the class's current name.
+ */
 export function prepareCalibrationVersion(calibration: DraftScoreCalibration): DraftScoreCalibration {
+  const copy = cloneDeep(calibration)
   return {
-    ...cloneDeep(calibration),
+    ...copy,
+    functionalClassifications:
+      copy.functionalClassifications?.map((classification) => ({
+        ...classification,
+        [SOURCE_CLASSIFICATION_ID]: (classification as {id?: number}).id
+      })) ?? copy.functionalClassifications,
     urn: null,
     supersededCalibrationUrn: calibration.urn,
     supersedingCalibrationUrn: null,
@@ -598,20 +612,47 @@ export function prepareCalibrationVersion(calibration: DraftScoreCalibration): D
   }
 }
 
+/** Variant URNs by the id of the functional classification they belong to. */
+export function variantUrnsByClassification(memberships: FunctionalClassificationVariants[]): Map<number, string[]> {
+  return new Map(
+    memberships.map((membership) => [
+      membership.functionalClassificationId,
+      (membership.variants ?? []).flatMap((variant) => (variant.urn ? [variant.urn] : []))
+    ])
+  )
+}
+
+/**
+ * A classes file for a class-based calibration, in the columns the api's `classes_file` takes.
+ *
+ * @param classes - Each class's name and the URNs of the variants in it.
+ */
 export function calibrationClassesCsv(
-  calibration: ScoreCalibration,
-  memberships: FunctionalClassificationVariants[]
+  classes: Array<{className: string | null | undefined; variantUrns: string[]}>
 ): string {
-  const rows = memberships.flatMap((membership) => {
-    const classification = calibration.functionalClassifications?.find(
-      (item) => item.id === membership.functionalClassificationId
-    )
-    return (membership.variants ?? []).map((variant) => ({
-      variant_urn: variant.urn,
-      class_name: classification?.class
-    }))
-  })
+  const rows = classes.flatMap(({className, variantUrns}) =>
+    variantUrns.map((urn) => ({variant_urn: urn, class_name: className}))
+  )
   return Papa.unparse({fields: ['variant_urn', 'class_name'], data: rows})
+}
+
+/**
+ * The classes file for a new version of a class-based calibration: each copied class's variants, under the name
+ * the class has now. A class added in the editor has no variants until a classes file is uploaded.
+ *
+ * @param classifications - The draft's classifications, as tagged by {@link prepareCalibrationVersion}.
+ * @param variantUrns - The copied calibration's variants, from {@link variantUrnsByClassification}.
+ */
+export function calibrationVersionClassesCsv(
+  classifications: DraftFunctionalClassification[],
+  variantUrns: Map<number, string[]>
+): string {
+  return calibrationClassesCsv(
+    classifications.map((classification) => {
+      const sourceId = classification[SOURCE_CLASSIFICATION_ID]
+      return {className: classification.class, variantUrns: sourceId == null ? [] : (variantUrns.get(sourceId) ?? [])}
+    })
+  )
 }
 
 /**

@@ -1,13 +1,16 @@
 import {describe, expect, it} from 'vitest'
 import Papa from 'papaparse'
 
-import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {cloneDeep} from 'lodash'
+
+import type {DraftFunctionalClassification, DraftScoreCalibration} from '@/lib/calibration-types'
 import {
   buildControlPlacements,
   calibrationClassesCsv,
   calibrationDeleteBlocker,
   calibrationHasReplacement,
   calibrationVersionNumbers,
+  calibrationVersionClassesCsv,
   calibrationVersionLinks,
   calibrationVersionStatus,
   calibrationVersionSummary,
@@ -19,6 +22,7 @@ import {
   prepareCalibrationVersion,
   toCalibrationPayload,
   unclassifiedCallLabel,
+  variantUrnsByClassification,
   type ScoreCalibration
 } from '@/lib/calibrations'
 
@@ -221,11 +225,10 @@ describe('calibrationDeleteBlocker', () => {
 
 describe('calibration versions', () => {
   it('copies class memberships using the API CSV headers and escapes class labels', () => {
-    const calibration = {
-      functionalClassifications: [{id: 1, class: 'abnormal, strong'}]
-    } as ScoreCalibration
     const memberships = [{functionalClassificationId: 1, variants: [{urn: 'urn:variant:1'}]}] as never
-    const csv = calibrationClassesCsv(calibration, memberships)
+    const csv = calibrationClassesCsv([
+      {className: 'abnormal, strong', variantUrns: variantUrnsByClassification(memberships).get(1) ?? []}
+    ])
     expect(Papa.parse(csv, {header: true}).data).toEqual([
       {variant_urn: 'urn:variant:1', class_name: 'abnormal, strong'}
     ])
@@ -365,5 +368,32 @@ describe('calibration versions', () => {
     draft.functionalClassifications![0].label = 'Updated'
     expect(original.functionalClassifications![0].label).toBe('Normal')
     expect(original.controlsNotPhi).toBe(true)
+  })
+
+  it("carries each copied class's variants under the class's current name", () => {
+    const original = {
+      urn: 'original',
+      functionalClassifications: [
+        {id: 1, class: 'lof'},
+        {id: 2, class: 'wt'}
+      ]
+    } as unknown as DraftScoreCalibration
+    const variantUrns = variantUrnsByClassification([
+      {functionalClassificationId: 1, variants: [{urn: 'v1'}, {urn: 'v2'}]},
+      {functionalClassificationId: 2, variants: [{urn: 'v3'}]}
+    ] as never)
+    // Renaming, adding and deleting classes all happen on a deep copy of the draft, which must keep the tags.
+    const classifications = cloneDeep(prepareCalibrationVersion(original).functionalClassifications!)
+    classifications[0].class = 'loss of function'
+    classifications.splice(1, 1)
+    classifications.push({class: 'new'} as DraftFunctionalClassification)
+
+    const csv = calibrationVersionClassesCsv(classifications, variantUrns)
+
+    expect(Papa.parse(csv, {header: true}).data).toEqual([
+      {variant_urn: 'v1', class_name: 'loss of function'},
+      {variant_urn: 'v2', class_name: 'loss of function'}
+    ])
+    expect(JSON.parse(JSON.stringify(classifications[0]))).toEqual({class: 'loss of function', id: 1})
   })
 })

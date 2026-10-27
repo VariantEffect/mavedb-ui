@@ -10,6 +10,7 @@ import Papa from 'papaparse'
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
 import type {DraftScoreCalibration} from '@/lib/calibration-types'
+import {formatDate} from '@/lib/formats'
 import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
@@ -459,6 +460,18 @@ export function calibrationVersionLinks(
 export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft' | 'Superseded' | 'Published' {
   if (calibration.private) return 'Draft'
   return calibration.hasPublishedReplacement ? 'Superseded' : 'Published'
+}
+
+/**
+ * A calibration's status and date, for telling versions with the same title apart: "Superseded · published Oct 27,
+ * 2026". A published version is dated by publication. A draft, and a version published before MaveDB recorded
+ * publication times, is dated by creation, and says so.
+ */
+export function calibrationVersionSummary(calibration: ScoreCalibration): string {
+  const status = calibrationVersionStatus(calibration)
+  if (!calibration.publishedDate) return `${status} · created ${formatDate(calibration.creationDate)}`
+  const date = formatDate(calibration.publishedDate)
+  return status === 'Published' ? `${status} · ${date}` : `${status} · published ${date}`
 }
 
 /** A calibration and the other versions in its chain, listed together. */

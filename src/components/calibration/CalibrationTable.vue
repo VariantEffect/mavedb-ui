@@ -29,10 +29,7 @@
           <RouterLink v-else class="font-semibold" :to="scoreSetRoute(version.urn)">{{
             version.calibration.title
           }}</RouterLink>
-          <span class="text-text-muted"
-            >{{ calibrationVersionStatus(version.calibration) }} &middot; created
-            {{ formatDate(version.calibration.creationDate) }}</span
-          >
+          <span class="text-text-muted">{{ calibrationVersionSummary(version.calibration) }}</span>
         </template>
         <RouterLink
           v-if="showVersionsInPlace || !version.calibration"
@@ -496,12 +493,11 @@ import type {CalibrationControlStatus} from '@/lib/calibration-controls'
 import {
   buildControlPlacements,
   calibrationVersionLinks,
-  calibrationVersionStatus,
+  calibrationVersionSummary,
   type CalibrationVersionLink,
   type ControlPlacements
 } from '@/lib/calibrations'
 import {diseaseDisplayLabel} from '@/lib/diseases'
-import {formatDate} from '@/lib/formats'
 import {shortCitationForPublication} from '@/lib/publication'
 
 type FunctionalClassification =
@@ -542,8 +538,7 @@ export default defineComponent({
 
   data() {
     return {
-      calibrationVersionStatus,
-      formatDate,
+      calibrationVersionSummary,
       shortCitationForPublication
     }
   },

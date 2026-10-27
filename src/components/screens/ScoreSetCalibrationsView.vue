@@ -55,21 +55,25 @@
         <!-- ── MOBILE: Card layout ────────────────────────── -->
         <div class="flex flex-col gap-4 tablet:hidden">
           <div
-            v-for="cal in sortedCalibrations"
+            v-for="cal in calibrationRows"
             :key="cal.id"
             class="mave-card relative overflow-hidden"
+            :class="{'ml-5': isThreadedVersion(cal)}"
             :data-calibration-urn="cal.urn"
           >
             <div class="px-4 py-4">
               <div class="mb-2 flex items-start gap-2">
                 <div class="min-w-0 flex-1">
                   <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
+                  <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs text-text-muted"
+                    >v{{ versionNumbers[cal.urn] }}</span
+                  >
                 </div>
                 <MvRowActionMenu :actions="calibrationActions(cal)" />
               </div>
 
               <div class="mb-3 flex flex-wrap items-center gap-1.5">
-                <MvBadge :value="cal.private ? 'unpublished' : 'published'" />
+                <MvBadge :value="statusBadge(cal)" />
                 <MvBadge v-if="cal.primary" value="primary" />
                 <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
                 <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
@@ -113,19 +117,24 @@
         <div class="cal-card hidden tablet:block">
           <DataTable
             v-model:expanded-rows="expandedRows"
+            v-model:sort-field="sortField"
+            v-model:sort-order="sortOrder"
             class="cal-datatable"
             data-key="id"
-            :paginator="(item.scoreCalibrations?.length ?? 0) > 15"
-            :rows="15"
+            lazy
+            removable-sort
             :striped-rows="true"
-            :value="sortedCalibrations"
+            :value="calibrationRows"
           >
             <Column :expander="true" header-style="width:3rem" />
 
             <Column field="title" header="Title" :sortable="true">
               <template #body="{data}">
-                <div>
+                <div :class="{'ml-1 border-l-2 border-border pl-3': isThreadedVersion(data)}">
                   <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
+                  <span v-if="versionNumbers[data.urn]" class="ml-1.5 text-xs text-text-muted"
+                    >v{{ versionNumbers[data.urn] }}</span
+                  >
                   <p
                     v-if="data.notes"
                     class="mt-0.5 text-xs leading-snug text-text-muted line-clamp-2"
@@ -141,10 +150,11 @@
               field="private"
               header="Status"
               header-style="width:5.5rem"
+              sort-field="status"
               :sortable="true"
             >
               <template #body="{data}">
-                <MvBadge :value="data.private ? 'unpublished' : 'published'" />
+                <MvBadge :value="statusBadge(data)" />
               </template>
             </Column>
             <Column body-class="text-center" field="primary" header="Rank" header-style="width:4.5rem" :sortable="true">
@@ -175,7 +185,13 @@
                 <MvBadge :value="data.researchUseOnly ? 'research' : 'general'" />
               </template>
             </Column>
-            <Column body-class="text-center" header="Ranges" header-style="width:3rem" :sortable="true">
+            <Column
+              body-class="text-center"
+              header="Ranges"
+              header-style="width:3rem"
+              sort-field="ranges"
+              :sortable="true"
+            >
               <template #body="{data}">{{ data.functionalClassifications?.length ?? 0 }}</template>
             </Column>
             <Column header-style="width:3rem">
@@ -258,6 +274,12 @@ import {describeRequestError} from '@/lib/errors'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import {
+  calibrationVersionStatus,
+  groupCalibrationVersions,
+  orderCalibrationThreads,
+  type CalibrationThread
+} from '@/lib/calibrations'
 import {diseaseDisplayLabel} from '@/lib/diseases'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import {ref, toRef} from 'vue'
@@ -272,6 +294,16 @@ type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank', 'supersede'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
+
+/** What each sortable column sorts by, keyed by the column's sort field. */
+const SORT_VALUES: Record<string, (calibration: ScoreCalibration) => string | number | boolean | null | undefined> = {
+  title: (c) => c.title,
+  status: calibrationVersionStatus,
+  primary: (c) => !!c.primary,
+  investigatorProvided: (c) => !!c.investigatorProvided,
+  researchUseOnly: (c) => !!c.researchUseOnly,
+  ranges: (c) => c.functionalClassifications?.length ?? 0
+}
 
 export default {
   name: 'ScoreSetCalibrationsView',
@@ -326,7 +358,10 @@ export default {
     return {
       // Keyed by calibration id, the form DataTable uses when it has a dataKey.
       expandedRows: {} as Record<number, boolean>,
-      expandedRanges: {} as Record<number, boolean>
+      expandedRanges: {} as Record<number, boolean>,
+      // The table is lazy, so it reports the sort and the page applies it, keeping each version thread together.
+      sortField: undefined as string | undefined,
+      sortOrder: undefined as number | undefined
     }
   },
   computed: {
@@ -345,11 +380,28 @@ export default {
       actions.push({label: 'Download calibration JSON', handler: () => this.downloadCalibrations()})
       return actions
     },
-    sortedCalibrations(): components['schemas']['ScoreCalibration'][] {
-      if (!this.item?.scoreCalibrations) return []
-      return [...this.item.scoreCalibrations].sort((a, b) => {
-        return this.calibrationSortKey(a) - this.calibrationSortKey(b)
-      })
+    calibrationThreads(): CalibrationThread[] {
+      const sortValue = this.sortField ? SORT_VALUES[this.sortField] : null
+      return orderCalibrationThreads(
+        groupCalibrationVersions(this.item?.scoreCalibrations),
+        sortValue,
+        this.sortOrder ?? 1
+      )
+    },
+    /** Each thread's head, then its other versions in chain order. */
+    calibrationRows(): ScoreCalibration[] {
+      return this.calibrationThreads.flatMap((thread) => [
+        thread.head,
+        ...thread.versions.filter((version) => version !== thread.head)
+      ])
+    },
+    /** Version numbers by URN, for calibrations with more than one version. */
+    versionNumbers(): Record<string, number> {
+      const numbers: Record<string, number> = {}
+      for (const thread of this.calibrationThreads) {
+        if (thread.versions.length > 1) thread.versions.forEach((version, i) => (numbers[version.urn] = i + 1))
+      }
+      return numbers
     }
   },
   watch: {
@@ -390,12 +442,14 @@ export default {
       target?.scrollIntoView({behavior: 'smooth', block: 'start'})
     },
 
-    calibrationSortKey(cal: ScoreCalibration): number {
-      if (cal.primary) return 0
-      if (cal.private) return 4
-      if (cal.researchUseOnly) return 3
-      if (cal.investigatorProvided) return 1
-      return 2 // community
+    /** Whether `cal` is listed under the head of its version thread. */
+    isThreadedVersion(cal: ScoreCalibration): boolean {
+      return !!this.versionNumbers[cal.urn] && !this.calibrationThreads.some((thread) => thread.head === cal)
+    },
+
+    statusBadge(cal: ScoreCalibration): 'unpublished' | 'superseded' | 'published' {
+      if (cal.private) return 'unpublished'
+      return cal.hasPublishedReplacement ? 'superseded' : 'published'
     },
 
     calibrationActions(data: ScoreCalibration): RowAction[] {

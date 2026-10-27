@@ -459,6 +459,73 @@ export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft'
   return calibration.hasPublishedReplacement ? 'Superseded' : 'Published'
 }
 
+/** A calibration and the other versions in its chain, listed together. */
+export interface CalibrationThread {
+  /** The newest published version, or the draft when the chain has nothing published. */
+  head: ScoreCalibration
+  /** Every version in chain order, oldest first. A draft replacement is always last. */
+  versions: ScoreCalibration[]
+}
+
+/**
+ * Group calibrations into their version chains. A version whose predecessor isn't among `calibrations` starts its
+ * own thread.
+ */
+export function groupCalibrationVersions(calibrations: ScoreCalibration[] | null | undefined): CalibrationThread[] {
+  const list = calibrations ?? []
+  const urns = new Set(list.map((c) => c.urn))
+  const successors = new Map<string, ScoreCalibration>()
+  for (const calibration of list) {
+    if (calibration.supersededCalibrationUrn && urns.has(calibration.supersededCalibrationUrn)) {
+      successors.set(calibration.supersededCalibrationUrn, calibration)
+    }
+  }
+  return list
+    .filter((c) => !c.supersededCalibrationUrn || !urns.has(c.supersededCalibrationUrn))
+    .map((root) => {
+      const versions = [root]
+      for (let next = successors.get(root.urn); next; next = successors.get(next.urn)) versions.push(next)
+      const head = [...versions].reverse().find((v) => !v.private) ?? versions[versions.length - 1]
+      return {head, versions}
+    })
+}
+
+/** Where a calibration falls in the default list order: primary, investigator, community, research use, draft. */
+export function calibrationListRank(calibration: ScoreCalibration): number {
+  if (calibration.primary) return 0
+  if (calibration.private) return 4
+  if (calibration.researchUseOnly) return 3
+  if (calibration.investigatorProvided) return 1
+  return 2 // community
+}
+
+type SortValue = string | number | boolean | null | undefined
+
+function compareSortValues(a: SortValue, b: SortValue): number {
+  if (a == null || b == null) return a == null ? (b == null ? 0 : 1) : -1
+  if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b)
+  return Number(a) - Number(b)
+}
+
+/**
+ * Order threads as units, by their heads. With a `sortValue`, heads compare by it in `order` (1 ascending, -1
+ * descending); ties, and the order without one, fall back to the default rank, then title, then creation date.
+ */
+export function orderCalibrationThreads(
+  threads: CalibrationThread[],
+  sortValue?: ((calibration: ScoreCalibration) => SortValue) | null,
+  order: number = 1
+): CalibrationThread[] {
+  const byDefault = (a: ScoreCalibration, b: ScoreCalibration) =>
+    calibrationListRank(a) - calibrationListRank(b) ||
+    (a.title ?? '').localeCompare(b.title ?? '') ||
+    (a.creationDate ?? '').localeCompare(b.creationDate ?? '')
+  return [...threads].sort(
+    (a, b) =>
+      (sortValue ? compareSortValues(sortValue(a.head), sortValue(b.head)) * order : 0) || byDefault(a.head, b.head)
+  )
+}
+
 export function prepareCalibrationVersion(calibration: DraftScoreCalibration): DraftScoreCalibration {
   return {
     ...cloneDeep(calibration),

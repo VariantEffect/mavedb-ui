@@ -5455,6 +5455,11 @@ export interface components {
        */
       modificationDate: string;
       /**
+       * Publisheddate
+       * @description The day the calibration was published. Null for a draft, and for a calibration published before MaveDB recorded publication times.
+       */
+      publishedDate?: string | null;
+      /**
        * Controls
        * @default []
        */
@@ -5587,6 +5592,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Publisheddate
+       * @description The day the calibration was published. Null for a draft, and for a calibration published before MaveDB recorded publication times.
+       */
+      publishedDate?: string | null;
       /** Scoreseturn */
       scoreSetUrn: string;
       /**
@@ -5678,6 +5688,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Publisheddate
+       * @description The day the calibration was published. Null for a draft, and for a calibration published before MaveDB recorded publication times.
+       */
+      publishedDate?: string | null;
       /** Scoreseturn */
       scoreSetUrn: string;
     };

@@ -235,7 +235,6 @@ export default defineComponent({
       return Boolean(this.gene && this.gene.scoreSets.length < this.gene.total)
     },
     unmappedCount(): number {
-      // Absent until the api that reports it is deployed.
       return this.gene?.totalUnmapped ?? 0
     },
     unmappedScoreSetSummary(): string {

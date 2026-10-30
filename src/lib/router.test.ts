@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {variantPageQuery} from '@/lib/router'
+import {sameQueryValues, variantPageQuery} from '@/lib/router'
 
 const state = {includeSuperseded: false, includeResearchUseOnly: true, asOf: null, selectedVariantUrn: null}
 
@@ -26,5 +26,18 @@ describe('variantPageQuery', () => {
 
   it('leaves unrelated parameters alone', () => {
     expect(variantPageQuery({tab: 'ledger'}, state)).toEqual({tab: 'ledger'})
+  })
+})
+
+describe('sameQueryValues', () => {
+  it('treats separate arrays with the same values as equal', () => {
+    expect(sameQueryValues(['PALB2', 'BRCA1'], ['PALB2', 'BRCA1'])).toBe(true)
+    expect(sameQueryValues([], [])).toBe(true)
+  })
+
+  it('detects added, removed and reordered values', () => {
+    expect(sameQueryValues(['PALB2'], ['PALB2', 'BRCA1'])).toBe(false)
+    expect(sameQueryValues(['PALB2', 'BRCA1'], ['PALB2'])).toBe(false)
+    expect(sameQueryValues(['PALB2', 'BRCA1'], ['BRCA1', 'PALB2'])).toBe(false)
   })
 })

@@ -85,6 +85,7 @@ function geneResponse(overrides: Partial<GeneResponse> = {}): GeneResponse {
     offset: 0,
     total: 0,
     totalScoredVariants: 0,
+    totalUnmapped: 0,
     ...overrides
   }
 }

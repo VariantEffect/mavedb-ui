@@ -3944,6 +3944,8 @@ export interface components {
       total: number;
       /** Totalscoredvariants */
       totalScoredVariants: number;
+      /** Totalunmapped */
+      totalUnmapped: number;
     };
     /**
      * GnomADVariantWithVariantLinks

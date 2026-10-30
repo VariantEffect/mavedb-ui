@@ -53,13 +53,20 @@
             </span>
           </div>
 
+          <MvStatusMessage v-if="unmappedCount > 0" class="mb-3">
+            {{ unmappedScoreSetSummary }}
+            <router-link class="text-link" :to="{name: 'search', query: {'target-name': gene.symbol}}">
+              View them in search
+            </router-link>
+          </MvStatusMessage>
+
           <MvEmptyState
-            v-if="gene.scoreSets.length === 0"
+            v-if="gene.scoreSets.length === 0 && unmappedCount === 0"
             description="No published MaveDB score sets are available for this gene yet."
             title="No published MaveDB score sets"
           />
 
-          <div v-else class="flex flex-col gap-2.5">
+          <div v-else-if="gene.scoreSets.length > 0" class="flex flex-col gap-2.5">
             <div v-for="group in groupedScoreSets" :key="group.experimentUrn" class="mave-card overflow-hidden">
               <div class="px-5 pt-3 text-xs font-semibold text-gray-500">
                 Experiment:
@@ -226,6 +233,16 @@ export default defineComponent({
     },
     canLoadMore(): boolean {
       return Boolean(this.gene && this.gene.scoreSets.length < this.gene.total)
+    },
+    unmappedCount(): number {
+      return this.gene?.totalUnmapped ?? 0
+    },
+    unmappedScoreSetSummary(): string {
+      if (!this.gene) return ''
+      const count = this.unmappedCount
+      const subject = count === 1 ? 'published score set names' : 'published score sets name'
+      const more = this.gene.total > 0 ? ' more' : ''
+      return `${count.toLocaleString()}${more} ${subject} ${this.gene.symbol} as the target but ${count === 1 ? "hasn't" : "haven't"} yet been mapped to the reference genome, so ${count === 1 ? "it isn't" : "they aren't"} listed here.`
     },
     scoredVariantCount(): string {
       if (!this.gene) return '0'

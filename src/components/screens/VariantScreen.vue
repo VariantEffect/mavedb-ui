@@ -361,8 +361,25 @@
                 @selection-changed="() => {}"
               />
             </div>
+            <MvErrorState
+              v-else-if="lookup.selectedScoresProblem.value?.kind === 'failed'"
+              :description="
+                scoresLoadFailedMessage(
+                  lookup.selectedScoresProblem.value.serverBusy,
+                  'The measurement loaded, but its score set\'s score distribution didn\'t.'
+                )
+              "
+              title="Variant scores couldn't be loaded"
+              @retry="lookup.retrySelectedScores()"
+            />
             <div v-else class="flex min-h-[200px] items-center justify-center">
-              <MvLoader text="Loading variant information..." />
+              <MvLoader
+                :text="
+                  lookup.selectedScoresProblem.value?.kind === 'busy'
+                    ? busyRetryMessage(lookup.selectedScoresProblem.value.retry)
+                    : 'Loading variant information...'
+                "
+              />
             </div>
           </div>
           <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light px-4 py-3 tablet:px-5">
@@ -414,6 +431,7 @@ import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvMeasurementTable from '@/components/variant/MvMeasurementTable.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
+import {busyRetryMessage, scoresLoadFailedMessage} from '@/lib/busy-retry.ts'
 import {formatScore} from '@/lib/scores'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations, unclassifiedCallLabel} from '@/lib/calibrations'
 import {groupAlleles, mergeDetailAlleles, titleMember, type AlleleGroup} from '@/lib/allele-grouping'
@@ -743,7 +761,9 @@ export default defineComponent({
   },
 
   methods: {
+    busyRetryMessage,
     formatScore,
+    scoresLoadFailedMessage,
 
     // Choosing a measurement is a request to read its evidence, so jump there. A first-time selection may
     // still be loading, in which case the detail watcher finishes the scroll once the box renders.

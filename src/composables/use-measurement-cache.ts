@@ -2,6 +2,7 @@ import {shallowRef, type Ref} from 'vue'
 
 import {getVariantDetail} from '@/api/mavedb/variants'
 import {getLeanScoreSetVariants, getScoreSet} from '@/api/mavedb/score-sets'
+import {isServerBusy, withBusyRetry, type BusyRetry} from '@/lib/busy-retry.ts'
 import type {DisplayVariant} from '@/lib/variants'
 import type {components} from '@/schema/openapi'
 
@@ -10,6 +11,9 @@ type VariantDetail = components['schemas']['VariantDetail']
 
 // A variant URN is `<score-set-urn>#<n>`, so its score set is the URN's prefix — no extra lookup needed.
 export const scoreSetUrnOf = (variantUrn: string): string => variantUrn.split('#')[0]
+
+/** Why a score set's lean scores aren't showing yet: waiting out a busy server, or failed. */
+export type ScoresProblem = {kind: 'busy'; retry: BusyRetry} | {kind: 'failed'; serverBusy: boolean}
 
 export interface UseMeasurementCacheReturn {
   variantDetails: Ref<Record<string, VariantDetail>>
@@ -20,6 +24,7 @@ export interface UseMeasurementCacheReturn {
   // In-flight flags for loading affordances.
   isDetailLoading: (variantUrn: string) => boolean
   isScoresLoading: (scoreSetUrn: string) => boolean
+  scoresProblem: (scoreSetUrn: string) => ScoresProblem | null
   clear: () => void
 }
 
@@ -43,6 +48,10 @@ export function useMeasurementCache(asOf: Ref<string | null>): UseMeasurementCac
   // mutated) so the shallowRefs stay reactive.
   const pendingDetails = shallowRef<Set<string>>(new Set())
   const pendingScores = shallowRef<Set<string>>(new Set())
+  const scoresProblems = shallowRef<Record<string, ScoresProblem>>({})
+  // One per in-flight scores load, aborted by `clear()` so a load waiting out a busy server can't write into the
+  // next query epoch.
+  const scoresControllers = new Map<string, AbortController>()
   function setPending(pending: Ref<Set<string>>, key: string, active: boolean) {
     if (pending.value.has(key) === active) return
     const next = new Set(pending.value)
@@ -65,18 +74,39 @@ export function useMeasurementCache(asOf: Ref<string | null>): UseMeasurementCac
     }
   }
 
+  function setScoresProblem(scoreSetUrn: string, problem: ScoresProblem | null) {
+    const next = {...scoresProblems.value}
+    if (problem) next[scoreSetUrn] = problem
+    else delete next[scoreSetUrn]
+    scoresProblems.value = next
+  }
+
   async function loadScores(scoreSetUrn: string) {
-    if (scores.value[scoreSetUrn]) return
+    // A load already in flight may be waiting out a busy server; a second one would double its retries.
+    if (scores.value[scoreSetUrn] || scoresControllers.has(scoreSetUrn)) return
+    const controller = new AbortController()
+    scoresControllers.set(scoreSetUrn, controller)
     setPending(pendingScores, scoreSetUrn, true)
+    setScoresProblem(scoreSetUrn, null)
     try {
       // Await into a local before spreading — see loadScoreSet for why an inline `await` in the spread
       // literal races and drops keys under concurrent loads.
-      const leanVariants = await getLeanScoreSetVariants(scoreSetUrn)
+      const leanVariants = await withBusyRetry(() => getLeanScoreSetVariants(scoreSetUrn), {
+        signal: controller.signal,
+        onBusy: (retry) => setScoresProblem(scoreSetUrn, {kind: 'busy', retry})
+      })
+      if (controller.signal.aborted) return
       scores.value = {...scores.value, [scoreSetUrn]: leanVariants}
+      setScoresProblem(scoreSetUrn, null)
     } catch (error) {
+      if (controller.signal.aborted) return
       console.error(`Error fetching scores for score set "${scoreSetUrn}"`, error)
+      setScoresProblem(scoreSetUrn, {kind: 'failed', serverBusy: isServerBusy(error)})
     } finally {
-      setPending(pendingScores, scoreSetUrn, false)
+      if (!controller.signal.aborted) {
+        scoresControllers.delete(scoreSetUrn)
+        setPending(pendingScores, scoreSetUrn, false)
+      }
     }
   }
 
@@ -97,11 +127,14 @@ export function useMeasurementCache(asOf: Ref<string | null>): UseMeasurementCac
   }
 
   function clear() {
+    for (const controller of scoresControllers.values()) controller.abort()
+    scoresControllers.clear()
     variantDetails.value = {}
     scoreSets.value = {}
     scores.value = {}
     pendingDetails.value = new Set()
     pendingScores.value = new Set()
+    scoresProblems.value = {}
   }
 
   return {
@@ -112,6 +145,7 @@ export function useMeasurementCache(asOf: Ref<string | null>): UseMeasurementCac
     loadScores,
     isDetailLoading: (variantUrn: string) => pendingDetails.value.has(variantUrn),
     isScoresLoading: (scoreSetUrn: string) => pendingScores.value.has(scoreSetUrn),
+    scoresProblem: (scoreSetUrn: string) => scoresProblems.value[scoreSetUrn] ?? null,
     clear
   }
 }

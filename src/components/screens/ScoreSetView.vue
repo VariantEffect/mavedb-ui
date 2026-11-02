@@ -148,12 +148,17 @@
           v-if="variants == null && variantsDataStatus !== 'Loaded' && variantsDataStatus !== 'Failed'"
           class="flex items-center justify-center py-6"
         >
-          <MvLoader text="Loading variants..." />
+          <MvLoader :text="variantsBusyRetry ? busyRetryMessage(variantsBusyRetry) : 'Loading variants...'" />
         </div>
         <MvErrorState
           v-else-if="variantsDataStatus === 'Failed'"
           class="mb-4"
-          description="The score set loaded, but its variant scores didn't. Charts, variant search and downloads need them."
+          :description="
+            scoresLoadFailedMessage(
+              variantsFailedServerBusy,
+              'The score set loaded, but its variant scores didn\'t. Charts, variant search and downloads need them.'
+            )
+          "
           title="Variant scores couldn't be loaded"
           @retry="reloadVariantsData()"
         />
@@ -529,6 +534,7 @@ import {useClinvarControls} from '@/composables/use-clinvar-controls'
 import {useChartExport, type ChartExportFns} from '@/composables/use-chart-export'
 import {useVariantCoordinates, type CoordinateFrame, type SequenceLevel} from '@/composables/use-variant-coordinates'
 import config from '@/config'
+import {busyRetryMessage, scoresLoadFailedMessage} from '@/lib/busy-retry.ts'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {dominantAssayLevel} from '@/lib/measurement-types'
@@ -627,6 +633,8 @@ export default {
       ...useVariantCoordinates(),
       variantsData: variantsRemoteData.data,
       variantsDataStatus: variantsRemoteData.remoteDataStatus,
+      variantsBusyRetry: variantsRemoteData.busyRetry,
+      variantsFailedServerBusy: variantsRemoteData.failedServerBusy,
       setVariantsDataUrl: variantsRemoteData.setDataUrl,
       ensureVariantsDataLoaded: variantsRemoteData.ensureDataLoaded,
       reloadVariantsData: variantsRemoteData.reloadData,
@@ -820,6 +828,9 @@ export default {
   },
 
   methods: {
+    busyRetryMessage,
+    scoresLoadFailedMessage,
+
     refreshUrlState() {
       const query = {...this.$route.query}
       if (this.selectedVariant) {

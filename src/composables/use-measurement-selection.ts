@@ -1,7 +1,7 @@
 import {computed, ref, watch, type ComputedRef, type Ref} from 'vue'
 
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
-import {scoreSetUrnOf, type UseMeasurementCacheReturn} from '@/composables/use-measurement-cache'
+import {scoreSetUrnOf, type ScoresProblem, type UseMeasurementCacheReturn} from '@/composables/use-measurement-cache'
 import {displayedClassification, eligibleCalibrations} from '@/lib/measurement-types'
 import {stripCalibration} from '@/lib/score-strip'
 import type {DisplayVariant} from '@/lib/variants'
@@ -29,6 +29,9 @@ export interface UseMeasurementSelectionReturn {
   calibrationResolution: UseCalibrationResolutionReturn
   // True while the selected measurement's detail or lean scores are still in flight.
   selectedLoading: ComputedRef<boolean>
+  // Set while the selected measurement's lean scores wait out a busy server, or once they failed to load.
+  selectedScoresProblem: ComputedRef<ScoresProblem | null>
+  retrySelectedScores: () => void
 }
 
 /**
@@ -81,6 +84,12 @@ export function useMeasurementSelection(
     if (!selectedScoreSetUrn.value) return null
     return cache.scores.value[selectedScoreSetUrn.value] || null
   })
+  const selectedScoresProblem = computed(() =>
+    selectedVariantUrn.value ? cache.scoresProblem(scoreSetUrnOf(selectedVariantUrn.value)) : null
+  )
+  function retrySelectedScores() {
+    if (selectedVariantUrn.value) cache.loadScores(scoreSetUrnOf(selectedVariantUrn.value))
+  }
   const variantScoreRow = computed(() => (scores.value || []).find((s) => s.variantUrn === selectedVariantUrn.value))
   const selectedVariantScore = computed(() => selectedVariant.value?.score ?? null)
 
@@ -160,6 +169,8 @@ export function useMeasurementSelection(
     selectedScoreSet,
     selectedScoreSetUrn,
     scores,
+    selectedScoresProblem,
+    retrySelectedScores,
     variantScoreRow,
     selectedVariantScore,
     selectedCalibration,

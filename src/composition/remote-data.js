@@ -75,6 +75,12 @@ export default ({stateNamespace: initialStateNamespace = null, options: initialO
     remoteDataStatus: computed(() =>
       remoteDataStoreReady.value ? _.get(store.state, `${stateNamespace.value}.dataStatus`) : 'NotLoaded'
     ),
+    busyRetry: computed(() =>
+      remoteDataStoreReady.value ? _.get(store.state, `${stateNamespace.value}.busyRetry`, null) : null
+    ),
+    failedServerBusy: computed(() =>
+      remoteDataStoreReady.value ? _.get(store.state, `${stateNamespace.value}.failedServerBusy`, false) : false
+    ),
 
     // Methods
     resetData,

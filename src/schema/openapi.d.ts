@@ -3727,8 +3727,6 @@ export interface components {
       identifier: string;
       /** Recordtype */
       recordType?: string;
-      /** Dbversion */
-      dbVersion?: string | null;
       /** Url */
       url?: string | null;
     };

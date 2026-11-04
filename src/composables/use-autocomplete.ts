@@ -87,7 +87,7 @@ export function useAutocomplete<T = unknown>(
 
       items.value = extract ? extract(response.data) : Array.isArray(response.data) ? response.data : []
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return
+      if (controller.signal.aborted) return
       console.warn(`[useAutocomplete] search failed for ${path}:`, error)
       items.value = []
     } finally {

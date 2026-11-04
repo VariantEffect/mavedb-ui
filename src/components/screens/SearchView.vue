@@ -262,7 +262,7 @@ import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 
 import {textForTargetGeneCategory, type TargetGeneCategory} from '@/lib/target-genes'
-import {extractQueryParam} from '@/lib/router'
+import {extractQueryParam, sameQueryValues} from '@/lib/router'
 import {variantSearchRouteFor, buildSearchParams, SEARCH_RESULT_LIMIT, SORT_OPTIONS} from '@/lib/search'
 import type {FilterOption, ExperimentGroup, ActiveFilter, SortValue} from '@/lib/search'
 import type {components} from '@/schema/openapi'
@@ -333,7 +333,7 @@ export default defineComponent({
       visibleCount: 25,
       searchAbortController: null as AbortController | null,
       filterAbortController: null as AbortController | null,
-      debouncedSearch: (() => {}) as () => void
+      debouncedSearch: Object.assign(() => {}, {cancel: () => {}}) as (() => void) & {cancel: () => void}
     }
   },
 
@@ -394,57 +394,57 @@ export default defineComponent({
 
   watch: {
     filterTargetNames: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetOrganismNames: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetAccession: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetTypes: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationAuthors: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationDatabases: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationJournals: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
     },
     filterControlledKeywords: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler: function (newValue: string[], oldValue: string[]) {
+        if (!sameQueryValues(newValue, oldValue)) {
           this.debouncedSearch()
         }
       }
@@ -561,7 +561,15 @@ export default defineComponent({
   },
 
   created() {
-    this.debouncedSearch = debounce(() => this.search(), '400ms') as unknown as () => void
+    this.debouncedSearch = debounce(() => this.search(), '400ms') as unknown as typeof this.debouncedSearch
+  },
+
+  beforeUnmount() {
+    // Leaving the page empties the route query, which the route watchers turn into a debounced search. Left to fire,
+    // that search would rewrite the next page's query.
+    this.debouncedSearch.cancel()
+    this.searchAbortController?.abort()
+    this.filterAbortController?.abort()
   },
 
   mounted: async function () {
@@ -596,9 +604,7 @@ export default defineComponent({
           ...(this.sortBy !== 'recent' ? {sort: this.sortBy} : {})
         }
       })
-      this.loading = true
       await this.fetchSearchResults()
-      this.loading = false
     },
 
     fetchSearchResults: async function () {
@@ -606,6 +612,7 @@ export default defineComponent({
       const controller = new AbortController()
       this.searchAbortController = controller
       this.searchFailed = false
+      this.loading = true
       try {
         const requestParams = {
           ...buildSearchParams(this),
@@ -620,9 +627,12 @@ export default defineComponent({
 
         this.$nextTick(() => this.fetchFilterOptions())
       } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return
+        // A newer search superseded this one and now owns the results, so this one must not mark them failed.
+        if (controller.signal.aborted) return
         console.error('Error while loading search results', err)
         this.searchFailed = true
+      } finally {
+        if (this.searchAbortController === controller) this.loading = false
       }
     },
 
@@ -673,10 +683,10 @@ export default defineComponent({
           badge: option.count
         }))
       } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return
+        if (controller.signal.aborted) return
         console.error('Error while loading filter options', err)
       } finally {
-        this.filtersLoading = false
+        if (this.filterAbortController === controller) this.filtersLoading = false
       }
     },
 

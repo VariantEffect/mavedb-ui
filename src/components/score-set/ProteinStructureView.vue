@@ -63,6 +63,86 @@ import {watch, ref} from 'vue'
 
 import useScopedId from '@/composables/scoped-id'
 
+// Memoized result of probeBrokenGlFrontFacing(), which costs a WebGL context per call.
+let brokenGlFrontFacing = null
+
+/**
+ * Report whether this browser mis-evaluates gl_FrontFacing the way Mol*'s mesh shaders use it.
+ *
+ * Those shaders assign `interior = !gl_FrontFacing` to a global bool and then paint interior
+ * fragments with the representation's dark gray interior color. Firefox on macOS with Intel
+ * graphics reads that as true for every fragment, so cartoons render solid gray. The probe draws
+ * one front-facing triangle through the same pattern and checks whether the fragment survived
+ * uncolored. Reading gl_FrontFacing directly in the output expression does not reproduce it, so
+ * the shader has to keep the global-bool shape.
+ */
+function probeBrokenGlFrontFacing() {
+  if (brokenGlFrontFacing !== null) {
+    return brokenGlFrontFacing
+  }
+  brokenGlFrontFacing = false
+
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 1
+  const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+  if (!gl) {
+    return brokenGlFrontFacing
+  }
+
+  const webgl2 = typeof WebGL2RenderingContext != 'undefined' && gl instanceof WebGL2RenderingContext
+  const vertexSource = webgl2
+    ? '#version 300 es\nin vec2 aPosition;\nvoid main() { gl_Position = vec4(aPosition, 0.0, 1.0); }'
+    : 'attribute vec2 aPosition;\nvoid main() { gl_Position = vec4(aPosition, 0.0, 1.0); }'
+  const fragmentSource =
+    (webgl2 ? '#version 300 es\n' : '') +
+    'precision highp float;\n' +
+    (webgl2 ? 'out vec4 fragColor;\n' : '#define fragColor gl_FragColor\n') +
+    'bool interior;\n' +
+    'void main() {\n' +
+    '  interior = !gl_FrontFacing;\n' +
+    '  vec4 material = vec4(0.0, 1.0, 0.0, 1.0);\n' +
+    '  if (interior) material.rgb = vec3(0.0);\n' +
+    '  fragColor = material;\n' +
+    '}'
+
+  try {
+    const program = gl.createProgram()
+    for (const [type, source] of [
+      [gl.VERTEX_SHADER, vertexSource],
+      [gl.FRAGMENT_SHADER, fragmentSource]
+    ]) {
+      const shader = gl.createShader(type)
+      gl.shaderSource(shader, source)
+      gl.compileShader(shader)
+      gl.attachShader(program, shader)
+    }
+    gl.linkProgram(program)
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      return brokenGlFrontFacing
+    }
+    gl.useProgram(program)
+
+    // Counter-clockwise triangle covering the viewport, so it is front-facing under the default winding.
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
+    const position = gl.getAttribLocation(program, 'aPosition')
+    gl.enableVertexAttribArray(position)
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
+
+    gl.disable(gl.CULL_FACE)
+    gl.viewport(0, 0, 1, 1)
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+
+    const pixel = new Uint8Array(4)
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+    brokenGlFrontFacing = pixel[1] < 128
+  } finally {
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
+  }
+
+  return brokenGlFrontFacing
+}
+
 export default {
   name: 'ProteinStructureView',
 
@@ -743,6 +823,26 @@ export default {
         .join('+')
     },
 
+    // Stop Mol* tinting back-facing mesh fragments with the representation's dark gray interior
+    // color. Where gl_FrontFacing is unreliable every fragment counts as interior, so the tint
+    // covers the whole structure and hides the score coloring; without it the flag no longer
+    // affects color. Call only when probeBrokenGlFrontFacing() reports a broken driver.
+    disableInteriorTint: async function (plugin) {
+      const update = plugin.build()
+      for (const structure of plugin.managers.structure.hierarchy.current.structures) {
+        for (const component of structure.components) {
+          for (const representation of component.representations) {
+            if (representation.cell.params?.values?.type?.params?.interior) {
+              update.to(representation.cell).update((old) => {
+                old.type.params.interior.colorStrength = 0
+              })
+            }
+          }
+        }
+      }
+      await update.commit()
+    },
+
     destroyViewer: function () {
       if (this.viewerInstance) {
         document.removeEventListener('PDB.molstar.click', this.clickedResidue)
@@ -788,6 +888,9 @@ export default {
         } else {
           viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
           viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
+          if (probeBrokenGlFrontFacing()) {
+            this.disableInteriorTint(viewerInstance.plugin)
+          }
           viewerInstance.visual.tooltips({data: this.mapSelectionToModel(this.residueTooltips)})
         }
       })

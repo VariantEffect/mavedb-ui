@@ -5,6 +5,10 @@
     <slot name="label"><span v-key-term="'consequence'" class="mave-label w-fit">Molecular consequence</span></slot>
     <template v-if="consequence">
       <span class="stat-value font-semibold">{{ formatConsequence(consequence) }}</span>
+      <template v-if="worstCase">
+        <span class="mave-tag mave-tag-caution w-fit">Most severe across all transcripts</span>
+        <span class="text-xs text-text-secondary">Not a call for one transcript; it may not apply here.</span>
+      </template>
       <span v-if="sourceVersion && showRelease" class="mt-auto text-[10px] text-text-muted"
         >As of VEP {{ sourceVersion }}</span
       >
@@ -17,6 +21,7 @@
 import {defineComponent, type PropType} from 'vue'
 
 import {formatConsequence} from '@/lib/formats'
+import {isWorstCaseConsequence} from '@/lib/vep-consequence'
 import type {components} from '@/schema/openapi'
 
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
@@ -45,6 +50,9 @@ export default defineComponent({
     },
     sourceVersion(): string | null {
       return this.vep?.sourceVersion ?? null
+    },
+    worstCase(): boolean {
+      return isWorstCaseConsequence(this.vep)
     }
   },
 

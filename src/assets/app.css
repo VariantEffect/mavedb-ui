@@ -418,6 +418,11 @@ body .p-button {
   background-color: #d1ecf1;
   color: #0c5460;
 }
+/* A value shown with a caveat the reader must see. Borrows the amber pair, which clears WCAG AA as text. */
+.mave-tag-caution {
+  background-color: var(--color-superseded-light);
+  color: var(--color-superseded);
+}
 /* The absence of a call (unclassified, not calibrated). Dashed and unfilled so it never reads as a grey call such
    as Not Specified. The border replaces a pixel of padding to keep the tag geometry. */
 .mave-tag-no-call {

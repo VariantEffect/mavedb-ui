@@ -11,8 +11,7 @@ export const CONSEQUENCE_KEY_SECTION: KeySection = {
     {
       label: 'Most severe across all transcripts',
       definition:
-        "VEP's most severe call across every transcript at this position, shown when there is no call for the variant's own transcript, as for a genomic variant. It may come from a different isoform, so it may not apply to the transcript the assay measured.",
-      class: 'mave-tag-caution'
+        "VEP's most severe call across every transcript at this position, shown when there is no call for the variant's own transcript, as for a genomic variant. It may come from a different isoform, so it may not apply to the transcript the assay measured."
     }
   ]
 }

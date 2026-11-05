@@ -4,11 +4,13 @@
          mirroring VariantGnomadStat/VariantClinvarStat. -->
     <slot name="label"><span v-key-term="'consequence'" class="mave-label w-fit">Molecular consequence</span></slot>
     <template v-if="consequence">
-      <span class="stat-value font-semibold">{{ formatConsequence(consequence) }}</span>
-      <template v-if="worstCase">
-        <span class="mave-tag mave-tag-caution w-fit">Most severe across all transcripts</span>
-        <span class="text-xs text-text-secondary">Not a call for one transcript; it may not apply here.</span>
-      </template>
+      <!-- Beside the value when narrow; stacked when wide, offset like the ledger's variant tags so the rows line up. -->
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1 tablet:flex-col tablet:items-start">
+        <span class="stat-value font-semibold tablet:leading-relaxed">{{ formatConsequence(consequence) }}</span>
+        <span v-if="worstCase" v-key-term="'consequence'" class="mave-tag mave-tag-caution"
+          >Most severe across all transcripts</span
+        >
+      </div>
       <span v-if="sourceVersion && showRelease" class="mt-auto text-[10px] text-text-muted"
         >As of VEP {{ sourceVersion }}</span
       >

@@ -281,6 +281,21 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
 }
 
 /**
+ * The VEP call for a measurement: its assay-level allele's group, coalesced, so a genomic-level measurement shows its
+ * cDNA projection's transcript call rather than its own cross-transcript worst case.
+ */
+export function assayLevelVep(detail: VariantDetail): VepAnnotation | null {
+  const digest = detail.assayLevelDigest
+  if (!digest) return null
+  const group = groupAlleles({
+    alleles: detail.alleles ?? {},
+    annotations: detail.annotations ?? {},
+    pageClingenAlleleId: detail.clingenAlleleId ?? null
+  }).find((g) => g.members.some((m) => m.digest === digest))
+  return group?.coalescedAnnotations?.vep ?? detail.annotations?.[digest]?.vep ?? null
+}
+
+/**
  * Every allele across a page's loaded variant details, so page-wide tables don't change with the selection.
  *
  * An identity's `derivation`, `relation` and `projectionOf` are relative to its own envelope's focus, so an allele

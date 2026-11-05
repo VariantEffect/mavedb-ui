@@ -3,6 +3,7 @@ import {describe, expect, it} from 'vitest'
 
 import {
   type AlleleGroup,
+  assayLevelVep,
   groupAlleles,
   mergeDetailAlleles,
   sharedReleases,
@@ -420,5 +421,38 @@ describe('sharedReleases', () => {
     ]
     expect(sharedReleases(groups, null).clinvar).toBeNull()
     expect(sharedReleases(groups, '01_2026').clinvar).toBe('01_2026')
+  })
+})
+
+describe('assayLevelVep', () => {
+  // A genomic-level measurement (e.g. saturation genome editing) whose record also carries its cDNA projection.
+  const alleles: Record<string, AlleleIdentity> = {
+    g: {level: 'genomic', hgvs: 'NC_x:g.100A>C', relation: null, isFocus: true, projectionOf: 'c'},
+    c: {
+      level: 'cdna',
+      hgvs: 'NM_x.1:c.6T>G',
+      relation: 'coordinate_representation_of',
+      isFocus: false,
+      derivation: 'projection',
+      projectionOf: 'g'
+    }
+  }
+  const transcript = {consequence: 'synonymous_variant', consequenceSource: 'transcript', matchedTranscript: 'NM_x.1'}
+  const worstCase = {consequence: 'splice_polypyrimidine_tract_variant', consequenceSource: 'most_severe'}
+
+  function detail(annotations: Record<string, unknown>): VariantDetail {
+    return {assayLevelDigest: 'g', alleles, annotations, clingenAlleleId: null} as unknown as VariantDetail
+  }
+
+  it("shows the cDNA twin's transcript call over the genomic allele's worst case", () => {
+    expect(assayLevelVep(detail({g: {vep: worstCase}, c: {vep: transcript}}))).toEqual(transcript)
+  })
+
+  it('falls back to the worst case when no member has a transcript call', () => {
+    expect(assayLevelVep(detail({g: {vep: worstCase}}))).toEqual(worstCase)
+  })
+
+  it('is null without an assay-level allele', () => {
+    expect(assayLevelVep({...detail({g: {vep: worstCase}}), assayLevelDigest: null} as VariantDetail)).toBeNull()
   })
 })

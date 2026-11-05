@@ -150,6 +150,31 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(pair.coalescedAnnotations?.gnomad?.alleleFrequency).toBe(0.01)
   })
 
+  it("prefers the cDNA member's transcript call over the genomic member's cross-transcript worst case", () => {
+    // Genomic sorts first, so present-wins alone would show the worst case (the BARD1 p.Pro610= bug).
+    const transcript = {consequence: 'synonymous_variant', consequenceSource: 'transcript', matchedTranscript: 'NM_x.1'}
+    const worstCase = {consequence: 'splice_polypyrimidine_tract_variant', consequenceSource: 'most_severe'}
+    const groups = run({
+      alleles: nucleotide,
+      annotations: {c: {vep: transcript}, g: {vep: worstCase}} as unknown as Record<string, AlleleAnnotations>
+    })
+    const pair = groups.find((g) => g.members.length === 2)!
+    expect(pair.members[0].level).toBe('genomic')
+    expect(pair.coalescedAnnotations?.vep).toEqual(transcript)
+    // The worst case isn't a competing call for this transcript, so it doesn't mark the levels as differing.
+    expect(pair.annotationsMatch).toBe(true)
+  })
+
+  it('keeps a genomic-only worst case when no member has a transcript call', () => {
+    const worstCase = {consequence: 'splice_region_variant', consequenceSource: 'most_severe'}
+    const groups = run({
+      alleles: nucleotide,
+      annotations: {g: {vep: worstCase}} as unknown as Record<string, AlleleAnnotations>
+    })
+    const pair = groups.find((g) => g.members.length === 2)!
+    expect(pair.coalescedAnnotations?.vep).toEqual(worstCase)
+  })
+
   it('leaves a projection-failed candidate (dangling projectionOf) as a one-member group', () => {
     const groups = run({
       alleles: {

@@ -8,9 +8,11 @@
 import _ from 'lodash'
 
 import {selectClinvar} from '@/lib/clinvar-controls'
+import {specificVepFirst} from '@/lib/vep-consequence'
 import type {components} from '@/schema/openapi'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
+type VepAnnotation = components['schemas']['VepAnnotation']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type VariantDetail = components['schemas']['VariantDetail']
 type MappedTriple = components['schemas']['MappedTriple']
@@ -105,7 +107,9 @@ function coalesceAnnotations(members: AlleleMember[]): {merged: AlleleAnnotation
   const merged: Record<string, unknown> = {}
   let conflict = false
   for (const key of _.union(...present.map((a) => Object.keys(a)))) {
-    const values = present.map((a) => (a as Record<string, unknown>)[key]).filter((v) => v != null)
+    let values = present.map((a) => (a as Record<string, unknown>)[key]).filter((v) => v != null)
+    // A genomic member's cross-transcript worst case would otherwise displace the cDNA member's transcript call.
+    if (key === 'vep') values = specificVepFirst(values as VepAnnotation[])
     if (values.length === 0) continue
     if (values.length > 1 && !values.every((v) => _.isEqual(v, values[0]))) conflict = true
     merged[key] = values[0]

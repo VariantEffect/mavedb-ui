@@ -75,18 +75,28 @@ let brokenGlFrontFacing = null
  * one front-facing triangle through the same pattern and checks whether the fragment survived
  * uncolored. Reading gl_FrontFacing directly in the output expression does not reproduce it, so
  * the shader has to keep the global-bool shape.
+ *
+ * Never throws: a probe that fails to run reports false, which leaves Mol*'s rendering untouched.
  */
 function probeBrokenGlFrontFacing() {
-  if (brokenGlFrontFacing !== null) {
-    return brokenGlFrontFacing
+  if (brokenGlFrontFacing === null) {
+    try {
+      brokenGlFrontFacing = drawFrontFacingProbe()
+    } catch {
+      brokenGlFrontFacing = false
+    }
   }
-  brokenGlFrontFacing = false
+  return brokenGlFrontFacing
+}
 
+// Draw the probe described on probeBrokenGlFrontFacing() and report whether the defect showed.
+// Returns false when the probe cannot draw: no WebGL, or the program fails to link.
+function drawFrontFacingProbe() {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 1
   const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
   if (!gl) {
-    return brokenGlFrontFacing
+    return false
   }
 
   const webgl2 = typeof WebGL2RenderingContext != 'undefined' && gl instanceof WebGL2RenderingContext
@@ -118,7 +128,7 @@ function probeBrokenGlFrontFacing() {
     }
     gl.linkProgram(program)
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      return brokenGlFrontFacing
+      return false
     }
     gl.useProgram(program)
 
@@ -135,12 +145,10 @@ function probeBrokenGlFrontFacing() {
 
     const pixel = new Uint8Array(4)
     gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
-    brokenGlFrontFacing = pixel[1] < 128
+    return pixel[1] < 128
   } finally {
     gl.getExtension('WEBGL_lose_context')?.loseContext()
   }
-
-  return brokenGlFrontFacing
 }
 
 export default {

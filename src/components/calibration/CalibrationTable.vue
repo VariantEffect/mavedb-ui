@@ -3,10 +3,7 @@
     <!-- Title bar -->
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-bg px-3.5 py-3">
       <span class="text-lg font-bold text-sage-strong">{{ scoreCalibration.title ?? 'Score ranges' }}</span>
-      <span v-if="scoreCalibration.primary" v-key-term="'calibration'" class="mave-tag mave-tag-primary">Primary</span>
-      <span v-if="scoreCalibration.researchUseOnly" v-key-term="'calibration'" class="mave-tag mave-tag-ruo"
-        >Research use only</span
-      >
+      <MvCalibrationTags :calibration="scoreCalibration" key-term="calibration" />
     </div>
 
     <!-- Versions -->
@@ -487,6 +484,7 @@ import {defineComponent, PropType} from 'vue'
 import {components} from '@/schema/openapi'
 
 import CalibrationControlsSummary from '@/components/calibration/CalibrationControlsSummary.vue'
+import MvCalibrationTags from '@/components/calibration/MvCalibrationTags.vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import type {CalibrationControlStatus} from '@/lib/calibration-controls'
@@ -509,6 +507,7 @@ export default defineComponent({
 
   components: {
     CalibrationControlsSummary,
+    MvCalibrationTags,
     MvClassificationTag,
     MvEvidenceTag
   },

@@ -367,14 +367,19 @@ export function unclassifiedCallLabel(
 
 /**
  * A score set's calibrations in calibration-picker order. Each version thread stays together, its head first and
- * its other versions after in chain order. Threads order by their head: primary, then clinical-grade, then
- * research-use-only, alphabetical by title within each tier. Returns a new array.
+ * its other versions after in chain order. Threads order by their head, as the calibrations page lists them
+ * (`calibrationListRank`), with superseded heads last, alphabetical by title within each tier. Returns a new array.
  */
 export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | null | undefined): ScoreCalibration[] {
   // A head is superseded only when its replacement wasn't listed, which leaves it nothing to sit under.
-  const tier = (c: ScoreCalibration) => (c.hasPublishedReplacement ? 3 : c.primary ? 0 : c.researchUseOnly ? 2 : 1)
+  const tier = (c: ScoreCalibration) => (c.hasPublishedReplacement ? 1 : 0)
   return groupCalibrationVersions(scoreCalibrations)
-    .sort((a, b) => tier(a.head) - tier(b.head) || (a.head.title ?? '').localeCompare(b.head.title ?? ''))
+    .sort(
+      (a, b) =>
+        tier(a.head) - tier(b.head) ||
+        calibrationListRank(a.head) - calibrationListRank(b.head) ||
+        (a.head.title ?? '').localeCompare(b.head.title ?? '')
+    )
     .flatMap(calibrationThreadRows)
 }
 

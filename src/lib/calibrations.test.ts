@@ -143,6 +143,16 @@ describe('orderCalibrationOptions', () => {
     expect(calibrationVersionNumbers(groupCalibrationVersions(ordered))).toEqual({v1: 1, v2: 2, v3: 3})
   })
 
+  it('ranks threads as the calibrations page does, with superseded heads last', () => {
+    const ordered = orderCalibrationOptions([
+      cal('Draft', {urn: 'draft', private: true}),
+      cal('Superseded', {urn: 'superseded', hasPublishedReplacement: true}),
+      cal('Community', {urn: 'community'}),
+      cal('Investigator', {urn: 'investigator', investigatorProvided: true})
+    ])
+    expect(ordered.map((c) => c.urn)).toEqual(['investigator', 'community', 'draft', 'superseded'])
+  })
+
   it('does not mutate its input and tolerates a missing list', () => {
     const input = [cal('B'), cal('A')]
     orderCalibrationOptions(input)

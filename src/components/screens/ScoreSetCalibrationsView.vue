@@ -419,6 +419,8 @@ export default {
     item(newValue) {
       this.head.patch({title: newValue ? `Calibrations for ${getScoreSetShortName(newValue)}` : undefined})
       this.expandedRows = {}
+      // Rechecked on every load, so a calibration created or published since then gets the right actions.
+      for (const calibration of newValue?.scoreCalibrations ?? []) this.checkCalibrationAuthorization(calibration.urn)
     },
     // A new order starts from the first page, as the table's own sorting does.
     sortField() {
@@ -437,9 +439,6 @@ export default {
         if (newValue !== oldValue) {
           this.setItemId(newValue)
           await this.ensureItemLoaded()
-          for (const calibration of this.item?.scoreCalibrations || []) {
-            await this.checkCalibrationAuthorization(calibration.urn)
-          }
         }
       },
       immediate: true

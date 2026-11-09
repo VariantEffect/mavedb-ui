@@ -185,6 +185,7 @@ export default defineComponent({
       return [
         {value: 'all', label: 'All', group: 'default'},
         {value: 'published', label: 'Published', group: 'status'},
+        {value: 'superseded', label: 'Superseded', group: 'status'},
         {value: 'unpublished', label: 'Draft', group: 'status'},
         {value: 'primary', label: 'Primary', group: 'use'},
         {value: 'general', label: 'General Use', group: 'use'},

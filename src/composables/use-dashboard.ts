@@ -28,6 +28,7 @@ import {searchMyExperiments} from '@/api/mavedb/experiments'
 import {getMyCollections} from '@/api/mavedb/collections'
 import {getMyCalibrations} from '@/api/mavedb/calibrations'
 import useAuth from '@/composition/auth'
+import {calibrationStatus} from '@/lib/calibrations'
 import {components} from '@/schema/openapi'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
@@ -186,9 +187,11 @@ export function useDashboard(): UseDashboardReturn {
     viewer: (c) => c.role === 'viewer'
   }
 
+  // The status filters match the status chip each calibration shows, so a superseded version counts only as superseded.
   const calibrationPredicates: Record<string, (c: ScoreCalibration) => boolean> = {
-    published: (c) => !c.private,
-    unpublished: (c) => !!c.private,
+    published: (c) => calibrationStatus(c) === 'published',
+    superseded: (c) => calibrationStatus(c) === 'superseded',
+    unpublished: (c) => calibrationStatus(c) === 'draft',
     primary: (c) => !!c.primary,
     general: (c) => !c.researchUseOnly,
     research: (c) => !!c.researchUseOnly

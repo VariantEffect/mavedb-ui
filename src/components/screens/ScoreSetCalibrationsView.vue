@@ -73,7 +73,7 @@
               </div>
 
               <div class="mb-3 flex flex-wrap items-center gap-1.5">
-                <MvBadge :value="statusBadge(cal)" />
+                <MvBadge :value="calibrationStatus(cal)" />
                 <MvBadge v-if="cal.primary" value="primary" />
                 <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
                 <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
@@ -154,7 +154,7 @@
               :sortable="true"
             >
               <template #body="{data}">
-                <MvBadge :value="statusBadge(data)" />
+                <MvBadge :value="calibrationStatus(data)" />
               </template>
             </Column>
             <Column body-class="text-center" field="primary" header="Rank" header-style="width:4.5rem" :sortable="true">
@@ -285,13 +285,15 @@ import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
 import {
+  CALIBRATION_SORT_VALUES,
   calibrationDeleteBlocker,
   calibrationHasReplacement,
+  calibrationStatus,
   calibrationThreadRows,
   calibrationVersionNumbers,
-  calibrationVersionStatus,
   groupCalibrationVersions,
   orderCalibrationThreads,
+  pageStart,
   threadedVersionUrns,
   type CalibrationThread
 } from '@/lib/calibrations'
@@ -309,19 +311,6 @@ type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank', 'supersede'] as const
 type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
-
-/** The status badge for each version status. */
-const STATUS_BADGES = {Draft: 'unpublished', Superseded: 'superseded', Published: 'published'} as const
-
-/** What each sortable column sorts by, keyed by the column's sort field. */
-const SORT_VALUES: Record<string, (calibration: ScoreCalibration) => string | number | boolean | null | undefined> = {
-  title: (c) => c.title,
-  status: calibrationVersionStatus,
-  primary: (c) => !!c.primary,
-  investigatorProvided: (c) => !!c.investigatorProvided,
-  researchUseOnly: (c) => !!c.researchUseOnly,
-  ranges: (c) => c.functionalClassifications?.length ?? 0
-}
 
 export default {
   name: 'ScoreSetCalibrationsView',
@@ -403,7 +392,7 @@ export default {
       return actions
     },
     calibrationThreads(): CalibrationThread[] {
-      const sortValue = this.sortField ? SORT_VALUES[this.sortField] : null
+      const sortValue = this.sortField ? CALIBRATION_SORT_VALUES[this.sortField] : null
       return orderCalibrationThreads(
         groupCalibrationVersions(this.item?.scoreCalibrations),
         sortValue,
@@ -440,7 +429,7 @@ export default {
     },
     // A reload can remove threads; stay on the last page rather than one past it.
     'calibrationThreads.length'(count: number) {
-      const lastPageFirst = Math.max(0, Math.ceil(count / this.threadsPerPage) - 1) * this.threadsPerPage
+      const lastPageFirst = pageStart(count - 1, this.threadsPerPage)
       if (this.threadFirst > lastPageFirst) this.threadFirst = lastPageFirst
     },
     itemId: {
@@ -467,7 +456,7 @@ export default {
       const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)
       if (!calibration) return
       const threadIndex = this.calibrationThreads.findIndex((thread) => thread.versions.includes(calibration))
-      if (threadIndex >= 0) this.threadFirst = Math.floor(threadIndex / this.threadsPerPage) * this.threadsPerPage
+      if (threadIndex >= 0) this.threadFirst = pageStart(threadIndex, this.threadsPerPage)
       this.expandedRows = {...this.expandedRows, [calibration.id]: true}
       this.expandedRanges[calibration.id] = true
       await this.$nextTick()
@@ -478,9 +467,7 @@ export default {
       target?.scrollIntoView({behavior: 'smooth', block: 'start'})
     },
 
-    statusBadge(cal: ScoreCalibration): 'unpublished' | 'superseded' | 'published' {
-      return STATUS_BADGES[calibrationVersionStatus(cal)]
-    },
+    calibrationStatus,
 
     calibrationActions(data: ScoreCalibration): RowAction[] {
       const actions: RowAction[] = [

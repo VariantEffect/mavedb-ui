@@ -5,6 +5,7 @@ import {cloneDeep} from 'lodash'
 
 import type {DraftFunctionalClassification, DraftScoreCalibration} from '@/lib/calibration-types'
 import {
+  CALIBRATION_SORT_VALUES,
   buildControlPlacements,
   calibrationClassesCsv,
   calibrationDeleteBlocker,
@@ -13,13 +14,14 @@ import {
   calibrationVersionNumbers,
   calibrationVersionClassesCsv,
   calibrationVersionLinks,
-  calibrationVersionStatus,
+  calibrationStatus,
   calibrationVersionSummary,
   chooseDefaultCalibration,
   groupCalibrationVersions,
   isClassBasedCalibration,
   orderCalibrationOptions,
   orderCalibrationThreads,
+  pageStart,
   prepareCalibrationVersion,
   threadedVersionUrns,
   toCalibrationPayload,
@@ -278,7 +280,7 @@ describe('calibration versions', () => {
       {urn: 'first', label: 'Previous version', calibration: first},
       {urn: 'third', label: 'Draft new version', calibration: third}
     ])
-    expect(all.map(calibrationVersionStatus)).toEqual(['Superseded', 'Published', 'Draft'])
+    expect(all.map(calibrationStatus)).toEqual(['superseded', 'published', 'draft'])
   })
 
   it('dates published versions by publication, and drafts and untracked versions by creation', () => {
@@ -401,5 +403,45 @@ describe('calibration versions', () => {
       {variant_urn: 'v2', class_name: 'loss of function'}
     ])
     expect(JSON.parse(JSON.stringify(classifications[0]))).toEqual({class: 'loss of function', id: 1})
+  })
+})
+
+describe('CALIBRATION_SORT_VALUES', () => {
+  const thread = (calibration: Partial<ScoreCalibration>) => {
+    const head = calibration as ScoreCalibration
+    return {head, versions: [head]}
+  }
+
+  it('sorts the status column draft, published, superseded', () => {
+    const threads = [
+      thread({urn: 'superseded', hasPublishedReplacement: true}),
+      thread({urn: 'published'}),
+      thread({urn: 'draft', private: true})
+    ]
+    const ordered = orderCalibrationThreads(threads, CALIBRATION_SORT_VALUES.status)
+    expect(ordered.map((t) => t.head.urn)).toEqual(['draft', 'published', 'superseded'])
+  })
+
+  it('sorts the ranges column by how many ranges each calibration has, a missing list counting as none', () => {
+    const threads = [
+      thread({urn: 'two', functionalClassifications: [{}, {}] as never}),
+      thread({urn: 'none'}),
+      thread({urn: 'one', functionalClassifications: [{}] as never})
+    ]
+    const ordered = orderCalibrationThreads(threads, CALIBRATION_SORT_VALUES.ranges, -1)
+    expect(ordered.map((t) => t.head.urn)).toEqual(['two', 'one', 'none'])
+  })
+})
+
+describe('pageStart', () => {
+  it('finds the first index of the page holding an item', () => {
+    expect(pageStart(0, 15)).toBe(0)
+    expect(pageStart(14, 15)).toBe(0)
+    expect(pageStart(15, 15)).toBe(15)
+    expect(pageStart(31, 15)).toBe(30)
+  })
+
+  it('treats a negative index, as an empty list gives for its last item, as the first page', () => {
+    expect(pageStart(-1, 15)).toBe(0)
   })
 })

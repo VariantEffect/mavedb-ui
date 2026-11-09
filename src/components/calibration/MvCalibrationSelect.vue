@@ -15,10 +15,7 @@
         <span v-if="selected && versionNumbers[selected.urn]" class="shrink-0 whitespace-nowrap text-text-muted"
           >v{{ versionNumbers[selected.urn] }}</span
         >
-        <span v-if="selected?.primary" class="mave-tag mave-tag-primary shrink-0">Primary</span>
-        <span v-if="selected?.private" class="mave-tag mave-tag-draft shrink-0">Draft</span>
-        <span v-if="selected?.hasPublishedReplacement" class="mave-tag mave-tag-superseded shrink-0">Superseded</span>
-        <span v-if="selected?.researchUseOnly" class="mave-tag mave-tag-ruo shrink-0">Research use only</span>
+        <MvCalibrationTags v-if="selected" :calibration="selected" tag-class="shrink-0" />
       </span>
     </template>
     <template #option="{option}">
@@ -31,10 +28,7 @@
         <span v-if="option.urn && versionNumbers[option.urn]" class="whitespace-nowrap text-text-muted"
           >v{{ versionNumbers[option.urn] }}</span
         >
-        <span v-if="option.primary" class="mave-tag mave-tag-primary">Primary</span>
-        <span v-if="option.private" class="mave-tag mave-tag-draft">Draft</span>
-        <span v-if="option.hasPublishedReplacement" class="mave-tag mave-tag-superseded">Superseded</span>
-        <span v-if="option.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
+        <MvCalibrationTags :calibration="option" />
       </span>
     </template>
   </PSelect>
@@ -43,6 +37,8 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import PSelect from 'primevue/select'
+
+import MvCalibrationTags from '@/components/calibration/MvCalibrationTags.vue'
 
 import {
   calibrationVersionNumbers,
@@ -61,7 +57,7 @@ import {
 export default defineComponent({
   name: 'MvCalibrationSelect',
 
-  components: {PSelect},
+  components: {MvCalibrationTags, PSelect},
 
   props: {
     calibrations: {type: Array as PropType<ScoreCalibration[]>, default: () => []},

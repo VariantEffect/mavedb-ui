@@ -84,7 +84,7 @@
               </div>
             </td>
             <td class="px-4 py-2.5">
-              <MvBadge :value="cal.private ? 'unpublished' : 'published'" />
+              <MvBadge :value="calibrationStatus(cal)" />
             </td>
             <td class="px-4 py-2.5 text-sm text-text-muted">
               <router-link class="text-link hover:underline" :to="{name: 'scoreSet', params: {urn: cal.scoreSetUrn}}">
@@ -111,7 +111,7 @@
             <MvRowActionMenu :actions="getCalibrationActions(cal)" />
           </div>
           <div class="mt-2 flex flex-wrap items-center gap-2">
-            <MvBadge :value="cal.private ? 'unpublished' : 'published'" />
+            <MvBadge :value="calibrationStatus(cal)" />
             <MvBadge v-if="cal.primary" value="primary" />
             <MvBadge v-if="cal.researchUseOnly" value="research" />
           </div>
@@ -142,6 +142,7 @@ import MvErrorState from '@/components/common/MvErrorState.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvRowActionMenu from '@/components/common/MvRowActionMenu.vue'
 import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
+import {calibrationStatus} from '@/lib/calibrations'
 import {components} from '@/schema/openapi'
 
 type ScoreCalibration = components['schemas']['ScoreCalibrationWithScoreSetUrn']
@@ -184,7 +185,7 @@ export default defineComponent({
       return [
         {value: 'all', label: 'All', group: 'default'},
         {value: 'published', label: 'Published', group: 'status'},
-        {value: 'unpublished', label: 'Unpublished', group: 'status'},
+        {value: 'unpublished', label: 'Draft', group: 'status'},
         {value: 'primary', label: 'Primary', group: 'use'},
         {value: 'general', label: 'General Use', group: 'use'},
         {value: 'research', label: 'Research Use', group: 'use'}
@@ -193,6 +194,7 @@ export default defineComponent({
   },
 
   methods: {
+    calibrationStatus,
     getCalibrationActions(cal: ScoreCalibration): RowAction[] {
       const actions: RowAction[] = [
         {

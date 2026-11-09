@@ -502,6 +502,7 @@ import {shortCitationForPublication} from '@/lib/publication'
 
 type FunctionalClassification =
   components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+type ScoreCalibration = components['schemas']['ScoreCalibration']
 
 export default defineComponent({
   name: 'CalibrationTable',
@@ -515,7 +516,7 @@ export default defineComponent({
   props: {
     scoreSetUrn: {type: String, default: null},
     scoreCalibration: {
-      type: Object as PropType<components['schemas']['ScoreCalibration']>,
+      type: Object as PropType<ScoreCalibration>,
       required: true
     },
     highlightedRangeLabel: {
@@ -524,7 +525,7 @@ export default defineComponent({
     },
     /** The score set's calibrations, where the table finds this calibration's other versions to name them. */
     relatedCalibrations: {
-      type: Array as PropType<components['schemas']['ScoreCalibration'][] | null>,
+      type: Array as PropType<ScoreCalibration[] | null>,
       default: null
     },
     /**
@@ -561,10 +562,7 @@ export default defineComponent({
         return false
       }
 
-      return this.scoreCalibration.functionalClassifications.some(
-        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
-          !!r.description
-      )
+      return this.scoreCalibration.functionalClassifications.some((r: FunctionalClassification) => !!r.description)
     },
 
     anyRangeHasEvidenceStrength(): boolean {
@@ -573,8 +571,7 @@ export default defineComponent({
       }
 
       return this.scoreCalibration.functionalClassifications.some(
-        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
-          r.acmgClassification && 'points' in r.acmgClassification
+        (r: FunctionalClassification) => r.acmgClassification && 'points' in r.acmgClassification
       )
     },
 
@@ -584,8 +581,7 @@ export default defineComponent({
       }
 
       return this.scoreCalibration.functionalClassifications.some(
-        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
-          r.acmgClassification?.evidenceStrength
+        (r: FunctionalClassification) => r.acmgClassification?.evidenceStrength
       )
     },
 
@@ -595,8 +591,7 @@ export default defineComponent({
       }
 
       return this.scoreCalibration.functionalClassifications.some(
-        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
-          r.oddspathsRatio !== undefined
+        (r: FunctionalClassification) => r.oddspathsRatio !== undefined
       )
     },
 
@@ -606,8 +601,7 @@ export default defineComponent({
       }
 
       return this.scoreCalibration.functionalClassifications.some(
-        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
-          'positiveLikelihoodRatio' in r
+        (r: FunctionalClassification) => 'positiveLikelihoodRatio' in r
       )
     },
 
@@ -732,9 +726,7 @@ export default defineComponent({
       return (status === 'pathogenic') === (classification === 'abnormal') ? 'text-sage-dark' : 'text-orange-cta-dark'
     },
 
-    columnColorClass(
-      range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-    ): string {
+    columnColorClass(range: FunctionalClassification): string {
       switch (range.functionalClassification) {
         case 'abnormal':
           return 'col-abnormal'
@@ -745,10 +737,7 @@ export default defineComponent({
       }
     },
 
-    compareScoreCalibration(
-      a: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'],
-      b: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-    ): number {
+    compareScoreCalibration(a: FunctionalClassification, b: FunctionalClassification): number {
       let result = 0
 
       if (a.class && b.class) {

@@ -14,6 +14,7 @@ import {
   type DraftFunctionalClassification,
   type DraftScoreCalibration
 } from '@/lib/calibration-types'
+import {getBadge} from '@/lib/badges'
 import {formatDate} from '@/lib/formats'
 import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
@@ -495,10 +496,13 @@ export function calibrationDeleteBlocker(
   return null
 }
 
-/** A calibration's place in its version history, for telling versions with the same title apart. */
-export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft' | 'Superseded' | 'Published' {
-  if (calibration.private) return 'Draft'
-  return calibration.hasPublishedReplacement ? 'Superseded' : 'Published'
+/** A calibration's place in its version history, as its status badge names it. */
+export type CalibrationStatus = 'draft' | 'superseded' | 'published'
+
+/** A calibration's place in its version history, for its status badge and for telling same-titled versions apart. */
+export function calibrationStatus(calibration: ScoreCalibration): CalibrationStatus {
+  if (calibration.private) return 'draft'
+  return calibration.hasPublishedReplacement ? 'superseded' : 'published'
 }
 
 /**
@@ -507,10 +511,11 @@ export function calibrationVersionStatus(calibration: ScoreCalibration): 'Draft'
  * publication times, is dated by creation, and says so.
  */
 export function calibrationVersionSummary(calibration: ScoreCalibration): string {
-  const status = calibrationVersionStatus(calibration)
-  if (!calibration.publishedDate) return `${status} · created ${formatDate(calibration.creationDate)}`
+  const status = calibrationStatus(calibration)
+  const label = getBadge(status).label
+  if (!calibration.publishedDate) return `${label} · created ${formatDate(calibration.creationDate)}`
   const date = formatDate(calibration.publishedDate)
-  return status === 'Published' ? `${status} · ${date}` : `${status} · published ${date}`
+  return status === 'published' ? `${label} · ${date}` : `${label} · published ${date}`
 }
 
 /** A calibration and the other versions in its chain, listed together. */
@@ -574,7 +579,23 @@ export function calibrationListRank(calibration: ScoreCalibration): number {
   return 2 // community
 }
 
-type SortValue = string | number | boolean | null | undefined
+/** A value a calibration list sorts by. */
+export type SortValue = string | number | boolean | null | undefined
+
+/** What the calibrations list sorts each column by, keyed by the column's sort field. */
+export const CALIBRATION_SORT_VALUES: Record<string, (calibration: ScoreCalibration) => SortValue> = {
+  title: (c) => c.title,
+  status: calibrationStatus,
+  primary: (c) => !!c.primary,
+  investigatorProvided: (c) => !!c.investigatorProvided,
+  researchUseOnly: (c) => !!c.researchUseOnly,
+  ranges: (c) => c.functionalClassifications?.length ?? 0
+}
+
+/** The index of the first item on the page holding item `index`, at `perPage` items a page. */
+export function pageStart(index: number, perPage: number): number {
+  return Math.floor(Math.max(0, index) / perPage) * perPage
+}
 
 function compareSortValues(a: SortValue, b: SortValue): number {
   if (a == null || b == null) return a == null ? (b == null ? 0 : 1) : -1

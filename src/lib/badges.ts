@@ -46,6 +46,8 @@ export const visibilityBadges: Record<'public' | 'private', BadgeConfig> = {
 // ── Calibration ─────────────────────────────────────────────────────────────
 
 export const calibrationBadges: Record<string, BadgeConfig> = {
+  // A calibration's 'unpublished' status. Calibration screens call it a draft, since a new version starts as one.
+  draft: {label: 'Draft', classes: 'bg-unpublished-light text-unpublished-strong', dotClass: 'bg-unpublished-dot'},
   primary: {label: 'Primary', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'},
   investigator: {label: 'Investigator', classes: 'bg-blue-50 text-blue-700', dotClass: 'bg-blue-500'},
   community: {label: 'Community', classes: 'bg-purple-50 text-purple-700', dotClass: 'bg-purple-500'},

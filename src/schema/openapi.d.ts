@@ -1634,6 +1634,19 @@ export interface paths {
      */
     get: operations["get_variant_csv_data_api_v1_variants__urn__csv_get"];
   };
+  "/api/v1/variants/clingen-allele-id-lookups": {
+    /**
+     * Removed; see GET /clingen-alleles/{clingen_allele_id}/measurements
+     * @deprecated
+     * @description This endpoint has been permanently removed.
+     *
+     * It looked up a batch of ClinGen allele IDs in one request. Its replacement,
+     * ``GET /clingen-alleles/{clingen_allele_id}/measurements``, takes one allele per request and returns a
+     * different shape, so the two are not wire-compatible and this route does not redirect. It takes no body,
+     * so a caller still sending the old request gets this 410 rather than a validation error.
+     */
+    post: operations["lookup_variants_by_clingen_allele_ids_removed_api_v1_variants_clingen_allele_id_lookups_post"];
+  };
   "/api/v1/alphafold-files/version": {
     /**
      * Proxy Alphafold Index
@@ -2117,6 +2130,11 @@ export interface components {
        * @default false
        */
       researchUseOnly?: boolean;
+      /**
+       * Superseded
+       * @default false
+       */
+      superseded?: boolean;
       /**
        * Selectedbydefault
        * @default true
@@ -14213,6 +14231,34 @@ export interface operations {
       422: {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Removed; see GET /clingen-alleles/{clingen_allele_id}/measurements
+   * @deprecated
+   * @description This endpoint has been permanently removed.
+   *
+   * It looked up a batch of ClinGen allele IDs in one request. Its replacement,
+   * ``GET /clingen-alleles/{clingen_allele_id}/measurements``, takes one allele per request and returns a
+   * different shape, so the two are not wire-compatible and this route does not redirect. It takes no body,
+   * so a caller still sending the old request gets this 410 rather than a validation error.
+   */
+  lookup_variants_by_clingen_allele_ids_removed_api_v1_variants_clingen_allele_id_lookups_post: {
+    responses: {
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Gone. This resource has been permanently removed. */
+      410: {
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Internal server error. */

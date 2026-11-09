@@ -367,7 +367,7 @@ export function unclassifiedCallLabel(
 
 /**
  * A score set's calibrations in calibration-picker order. Each version thread stays together, its head first and
- * its other versions after in chain order. Threads order by their head, as the calibrations page lists them
+ * its other versions after it newest first. Threads order by their head, as the calibrations page lists them
  * (`calibrationListRank`), with superseded heads last, alphabetical by title within each tier. Returns a new array.
  */
 export function orderCalibrationOptions(scoreCalibrations: ScoreCalibration[] | null | undefined): ScoreCalibration[] {
@@ -563,9 +563,12 @@ export function calibrationVersionNumbers(threads: CalibrationThread[]): Record<
   return numbers
 }
 
-/** A thread's calibrations as they're listed: its head, then its other versions in chain order. */
+/**
+ * A thread's calibrations as they're listed: its head, then its other versions newest first, so a draft new version
+ * sits just under the head and the earliest version comes last.
+ */
 export function calibrationThreadRows(thread: CalibrationThread): ScoreCalibration[] {
-  return [thread.head, ...thread.versions.filter((version) => version !== thread.head)]
+  return [thread.head, ...thread.versions.filter((version) => version !== thread.head).reverse()]
 }
 
 /** URNs of the versions listed under their thread's head, which lists indent. */

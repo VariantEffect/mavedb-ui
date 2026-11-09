@@ -139,7 +139,7 @@ describe('orderCalibrationOptions', () => {
     const primary = cal('Primary', {urn: 'primary', primary: true})
 
     const ordered = orderCalibrationOptions([v3, beta, v1, primary, v2])
-    expect(ordered.map((c) => c.urn)).toEqual(['primary', 'v2', 'v1', 'v3', 'beta'])
+    expect(ordered.map((c) => c.urn)).toEqual(['primary', 'v2', 'v3', 'v1', 'beta'])
     expect(calibrationVersionNumbers(groupCalibrationVersions(ordered))).toEqual({v1: 1, v2: 2, v3: 3})
   })
 
@@ -336,8 +336,23 @@ describe('calibration versions', () => {
     expect(groupCalibrationVersions(null)).toEqual([])
 
     const threads = groupCalibrationVersions([v3, lone, v1, v2])
-    expect(threads.flatMap(calibrationThreadRows)).toEqual([lone, v2, v1, v3])
+    expect(threads.flatMap(calibrationThreadRows)).toEqual([lone, v2, v3, v1])
     expect(threadedVersionUrns(threads)).toEqual(new Set(['v1', 'v3']))
+  })
+
+  it('lists a thread head first, then its other versions newest first', () => {
+    const v1 = {urn: 'v1', supersedingCalibrationUrn: 'v2', hasPublishedReplacement: true} as ScoreCalibration
+    const v2 = {
+      urn: 'v2',
+      supersededCalibrationUrn: 'v1',
+      supersedingCalibrationUrn: 'v3',
+      hasPublishedReplacement: true
+    } as ScoreCalibration
+    const v3 = {urn: 'v3', supersededCalibrationUrn: 'v2', supersedingCalibrationUrn: 'v4'} as ScoreCalibration
+    const v4 = {urn: 'v4', supersededCalibrationUrn: 'v3', private: true} as ScoreCalibration
+
+    const [thread] = groupCalibrationVersions([v1, v2, v3, v4])
+    expect(calibrationThreadRows(thread).map((c) => c.urn)).toEqual(['v3', 'v4', 'v2', 'v1'])
   })
 
   it('starts a thread at a version whose predecessor it was not given', () => {

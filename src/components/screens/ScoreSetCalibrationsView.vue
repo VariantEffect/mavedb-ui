@@ -402,7 +402,7 @@ export default {
     pageThreads(): CalibrationThread[] {
       return this.calibrationThreads.slice(this.threadFirst, this.threadFirst + this.threadsPerPage)
     },
-    /** Each thread on the page: its head, then its other versions in chain order. */
+    /** Each thread on the page: its head, then its other versions newest first. */
     calibrationRows(): ScoreCalibration[] {
       return this.pageThreads.flatMap(calibrationThreadRows)
     },

@@ -23,13 +23,14 @@
           >
             {{ version.calibration.title }}
           </button>
-          <RouterLink v-else class="font-semibold" :to="scoreSetRoute(version.urn)">{{
+          <RouterLink v-else class="font-semibold text-link" :to="scoreSetRoute(version.urn)">{{
             version.calibration.title
           }}</RouterLink>
           <span class="text-text-muted">{{ calibrationVersionSummary(version.calibration) }}</span>
         </template>
         <RouterLink
           v-if="showVersionsInPlace || !version.calibration"
+          class="text-link"
           :class="{'ml-auto': version.calibration}"
           :to="scoreSetRoute(version.urn)"
           >View in score set</RouterLink

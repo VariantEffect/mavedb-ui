@@ -1,5 +1,10 @@
 <template>
   <Message v-if="loadError" class="mb-3" :closable="false" severity="error">{{ loadError }}</Message>
+  <Message v-if="supersededCalibrationUrn" class="mb-3" :closable="false" severity="info">
+    This new version starts as a copy of the current one and is saved as an unpublished draft. The current version stays
+    in place until you publish this one; publishing marks it superseded, and if it's the primary calibration, this
+    version becomes primary instead.
+  </Message>
   <p v-if="showRequiredLegend !== false" class="pb-3 text-sm text-text-muted">
     Fields marked <span class="font-bold text-danger">*</span> are required.
   </p>

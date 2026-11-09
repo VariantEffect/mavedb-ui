@@ -129,9 +129,10 @@ The new version starts as a private draft in the same score set. Until you publi
 
 - It becomes the current version. The calibration it replaces is labelled **Superseded** and links to it.
 - The superseded version stays visible, but MaveDB no longer uses it by default in [visualizations](../finding-data/visualizations.md), variant interpretations or annotations, and it can't be made the [primary calibration](#primary-calibrations).
+- CSV downloads still offer the superseded version, labelled **Superseded** and unchecked by default. Its columns include `superseded`, which is `True`, so you can tell it from the current version when both have the same title.
 - If the superseded version was the primary calibration, the new version becomes primary in its place. A research use only version can't replace a primary calibration.
 
-A calibration can have only one new version at a time. While a draft new version exists, **Create new version** is unavailable; edit or delete the draft instead. If someone else's draft blocks you and you can't see it, ask them or the score set's contributors.
+A calibration can have only one new version at a time. While a draft new version exists, **Create new version** is unavailable: continue that draft, or ask its creator or a MaveDB admin to delete it. If you can't see the draft that's blocking you, MaveDB tells you so when you try to save the new version, and a MaveDB admin can remove it.
 
 A superseded version can't be edited or deleted, even by MaveDB maintainers, because annotations and other records refer to calibrations by URN. The one exception is removing its controls if they turn out to contain PHI (see [Protected health information](#protected-health-information)).
 

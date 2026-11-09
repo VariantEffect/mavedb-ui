@@ -595,10 +595,13 @@ export default {
     },
 
     async onCalibrationSaved() {
+      const savedVersion = !!this.supersededCalibrationUrn
       this.$toast.add({
         severity: 'success',
-        summary: 'Calibration Saved',
-        detail: 'Calibration saved successfully.',
+        summary: savedVersion ? 'New Version Saved' : 'Calibration Saved',
+        detail: savedVersion
+          ? 'Saved as an unpublished draft. Publish it to replace the current version.'
+          : 'Calibration saved successfully.',
         life: 4000
       })
       this.closeCalibrationEditor()
@@ -606,10 +609,17 @@ export default {
     },
 
     publishCalibration: async function (calibrationUrn: string) {
+      const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === calibrationUrn)
+      const previous = this.item?.scoreCalibrations?.find((c) => c.urn === calibration?.supersededCalibrationUrn)
+      let replacement = ''
+      if (previous) {
+        replacement = previous.primary
+          ? ` It will supersede "${previous.title}" and become the primary calibration in its place.`
+          : ` It will supersede "${previous.title}".`
+      }
       this.confirm.require({
-        message:
-          'Are you sure you want to publish this score calibration? Once published, you will be unable to edit its functional ranges or other details.',
-        header: 'Confirm Score Set Publication',
+        message: `Are you sure you want to publish this score calibration? Once published, you will be unable to edit its functional ranges or other details.${replacement}`,
+        header: 'Confirm Calibration Publication',
         icon: 'pi pi-exclamation-triangle',
         acceptProps: {label: 'Publish', severity: 'success', icon: 'pi pi-check'},
         rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},

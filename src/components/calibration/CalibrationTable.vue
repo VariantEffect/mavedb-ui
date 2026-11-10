@@ -389,10 +389,13 @@
 
     <!-- Sources -->
     <div
-      v-if="hasAnySources"
+      v-if="hasAnySources || scoreCalibration.urn"
       class="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-2 tablet:gap-y-1 border-t border-border bg-bg px-3.5 py-2.5 text-xs text-text-muted"
     >
-      <span class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-text-muted tablet:mr-1">
+      <span
+        v-if="hasAnySources"
+        class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-text-muted tablet:mr-1"
+      >
         <i class="pi pi-book text-xs"></i>
         Sources
       </span>
@@ -476,11 +479,26 @@
           ><span v-if="i < scoreCalibration.evidenceSources.length - 1">, </span>
         </span>
       </div>
+      <div v-if="scoreCalibration.urn" class="flex items-center gap-1.5">
+        <span class="font-semibold text-text-secondary">URN</span>:
+        <span class="text-text-secondary select-all">{{ scoreCalibration.urn }}</span>
+        <PButton
+          aria-label="Copy calibration URN to clipboard"
+          class="!h-5 !w-5 !p-0 [&_.p-button-icon]:text-[11px]"
+          :icon="urnCopied ? 'pi pi-check' : 'pi pi-copy'"
+          rounded
+          severity="secondary"
+          size="small"
+          text
+          @click="copyUrn"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import PButton from 'primevue/button'
 import {defineComponent, PropType} from 'vue'
 import {components} from '@/schema/openapi'
 
@@ -507,6 +525,7 @@ export default defineComponent({
   name: 'CalibrationTable',
 
   components: {
+    PButton,
     CalibrationControlsSummary,
     MvCalibrationTags,
     MvClassificationTag,
@@ -539,6 +558,7 @@ export default defineComponent({
 
   data() {
     return {
+      urnCopied: false,
       calibrationVersionSummary,
       shortCitationForPublication
     }
@@ -699,6 +719,18 @@ export default defineComponent({
   },
 
   methods: {
+    async copyUrn() {
+      if (!this.scoreCalibration.urn) return
+      try {
+        await navigator.clipboard.writeText(this.scoreCalibration.urn)
+      } catch {
+        this.$toast.add({severity: 'error', summary: "Couldn't copy the URN. Select it and copy it by hand."})
+        return
+      }
+      this.urnCopied = true
+      setTimeout(() => (this.urnCopied = false), 1500)
+    },
+
     /** The score set page, with the calibration `urn` selected. */
     scoreSetRoute(urn: string) {
       return {name: 'scoreSet', params: {urn: this.scoreSetUrn}, query: {calibration: urn}}

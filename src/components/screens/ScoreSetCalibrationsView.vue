@@ -86,11 +86,8 @@
                 classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
               </div>
 
-              <!-- Expandable calibration details (ranges, disease context, controls) -->
-              <div
-                v-if="cal.functionalClassifications?.length || diseaseLabel(cal) || cal.controls?.length"
-                class="mt-3"
-              >
+              <!-- Expandable calibration details (ranges, disease context, controls, URN) -->
+              <div class="mt-3">
                 <button
                   class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
                   @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
@@ -297,7 +294,6 @@ import {
   threadedVersionUrns,
   type CalibrationThread
 } from '@/lib/calibrations'
-import {diseaseDisplayLabel} from '@/lib/diseases'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import {ref, toRef} from 'vue'
 import PrimeDialog from 'primevue/dialog'
@@ -445,11 +441,6 @@ export default {
     }
   },
   methods: {
-    /** The calibration's disease label, generic "disease or disorder" default included; null only when no concept is present. */
-    diseaseLabel(cal: ScoreCalibration): string | null {
-      return diseaseDisplayLabel(cal.disease)
-    },
-
     /** Expand the calibration `urn` in whichever layout is showing, and scroll to it. */
     async showCalibration(urn: string) {
       const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)

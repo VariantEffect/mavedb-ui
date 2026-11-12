@@ -873,7 +873,7 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
-    // TODO#608: Address circularity between externalSelection parent updates and selection changed events from
+    // TODO(#608): Address circularity between externalSelection parent updates and selection changed events from
     //           the child histogram.
     externalSelection: {
       handler: function (newValue) {
@@ -1121,7 +1121,7 @@ export default defineComponent({
     },
 
     /** The functional classification a variant falls into, matched by score range then class membership. */
-    // TODO#491: Attach this to the variant object so the tooltip can read it directly.
+    // TODO(#491): Attach this to the variant object so the tooltip can read it directly.
     matchVariantClassification(variant: DisplayVariant) {
       const score = variant.score
       const calibration = this.activeCalibration.value
@@ -1187,7 +1187,7 @@ export default defineComponent({
     },
 
     /** Compact "Classes: ..." line of calibration classifications overlapping a bin, or empty when none. */
-    // TODO#491: Precompute per-bin classifications so the tooltip doesn't recompute them on every hover.
+    // TODO(#491): Precompute per-bin classifications so the tooltip doesn't recompute them on every hover.
     tooltipBinClassifications(bin: HistogramBin): string {
       const urn = this.activeCalibration.value?.urn
       if (!urn) {
@@ -1399,7 +1399,7 @@ export default defineComponent({
       }
 
       try {
-        // TODO#622calibration-classes-performance: If very large calibrations become slow, optimize by
+        // TODO(#622): If very large calibrations become slow, optimize by
         // precomputing and caching an accession->class map at fetch time and adding LRU-style cache
         // eviction for calibrationClassVariantsByUrn to cap memory usage across many calibrations.
         const response = await getScoreCalibrationVariants(calibrationUrn)

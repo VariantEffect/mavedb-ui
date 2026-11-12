@@ -234,7 +234,6 @@ const DATA_MODEL_STEPS = [
   {title: 'Variants', description: 'Individual variants with functional scores and, where available, count data.'}
 ]
 
-// TODO: Add more partners and collaborators, and include links to their websites and/or logos where available
 const PARTNERS = [
   {
     name: 'AVE Alliance',
@@ -276,7 +275,6 @@ const PARTNERS = [
   }
 ]
 
-// TODO: Complete team roster and roles, and add links to personal pages and/or photos where available
 const TEAM_MEMBERS = [
   {name: 'Alan Rubin', role: 'Principal Investigator'},
   {name: 'Douglas Fowler', role: 'Principal Investigator'},

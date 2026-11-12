@@ -1081,7 +1081,7 @@ export default function makeHeatmap(): Heatmap {
         mainGroup.append('g').attr('class', 'heatmap-selection-rectangle')
         mainGroup.append('g').attr('class', 'heatmap-axis-selection-rectangle')
 
-        // TODO drawLegend is always set to true here. Setting to false via accessor method still results in left margin
+        // TODO(#421): drawLegend is always set to true here. Setting to false via accessor method still results in left margin
         // being adjusted to include LEGEND_SIZE. Consider moving this to refresh method and/or calculating legend size
         // based on content.
         if (alignViaLegend || drawLegend) {

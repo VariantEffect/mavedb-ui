@@ -7224,13 +7224,49 @@ export interface components {
     /**
      * VepAnnotation
      * @description VEP molecular consequence for an allele and the Ensembl release it resolved under.
+     *
+     * ``consequence_source`` is ``transcript`` when the consequence was read for the allele's own
+     * transcript (named by ``matched_transcript``), and ``most_severe`` when no transcript could be
+     * matched and it is VEP's worst case across every overlapping transcript, which may not apply to the
+     * transcript of interest. ``reference_identical`` marks an allele with no sequence change, for which
+     * VEP was never called. ``consequence_terms`` is the severity-ordered term list ``consequence``
+     * heads. All three are null on rows resolved before provenance was recorded.
      */
     VepAnnotation: {
       /** Consequence */
       consequence?: string | null;
       /** Sourceversion */
       sourceVersion: string;
+      consequenceSource?: components["schemas"]["VepConsequenceSource"] | null;
+      /** Consequenceterms */
+      consequenceTerms?: string[] | null;
+      /** Matchedtranscript */
+      matchedTranscript?: string | null;
     };
+    /**
+     * VepConsequenceSource
+     * @description Which resolution path produced a stored VEP consequence — provenance, not severity.
+     *
+     * Persisted on every :class:`~mavedb.models.vep_allele_consequence.VepAlleleConsequence` so a stored
+     * consequence can be audited without re-querying Ensembl, and so a consumer can tell a
+     * transcript-specific call from a cross-transcript one, see #772.
+     *
+     * - ``transcript`` — read from the ``transcript_consequences`` entry matching the allele's own
+     *   transcript. The trustworthy case: the consequence applies to the transcript the allele lives on.
+     * - ``most_severe`` — VEP's top-level ``most_severe_consequence``, the worst call across *every*
+     *   transcript overlapping the position. Used only when no transcript could be matched (a genomic
+     *   allele carrying no transcript, or a transcript absent from VEP's set). Lower confidence: it
+     *   regularly reports a consequence that might not apply to the transcript of interest.
+     * - ``reference_identical`` — the allele describes no sequence change (a wild-type control); no VEP
+     *   call was made. Recorded distinctly so it is never mistaken for ``synonymous_variant`` or a null.
+     *
+     * Values mirror ``variant_annotation.lib.vep.ConsequenceSource``: the library computes the source, the
+     * api owns this closed set. The two are kept in sync by
+     * :func:`mavedb.lib.vep.link_vep_consequences_to_alleles`, which maps one to the other by value at the
+     * write boundary.
+     * @enum {string}
+     */
+    VepConsequenceSource: "transcript" | "most_severe" | "reference_identical";
     /**
      * code
      * @description Indicates that the value is taken from a set of controlled strings defined elsewhere. Technically, a code is restricted to a string which has at least one character and no leading or  trailing whitespace, and where there is no whitespace other than single spaces in the contents.

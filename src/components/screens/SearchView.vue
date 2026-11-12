@@ -460,7 +460,7 @@ export default defineComponent({
       handler: function () {
         // Sort is applied client-side via the sortedScoreSets computed, so we only
         // need to sync the URL query param — no need to refetch results or filters.
-        // TODO#XXX: If sorting moves server-side, this should call search() instead.
+        // TODO(VariantEffect/mavedb-api#986): If sorting moves server-side, this should call search() instead.
         this.$router.push({
           query: {
             ...this.$route.query,

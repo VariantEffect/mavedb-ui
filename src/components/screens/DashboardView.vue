@@ -415,7 +415,7 @@ export default defineComponent({
         })
       }
     },
-    // TODO: Consolidate the dual save path (imperative saveChildCalibration + @saved event)
+    // TODO(#769): Consolidate the dual save path (imperative saveChildCalibration + @saved event)
     // into a single flow. This pattern is shared with ScoreSetView and ScoreSetCalibrationsView.
     async onCalibrationSaved() {
       this.$toast.add({

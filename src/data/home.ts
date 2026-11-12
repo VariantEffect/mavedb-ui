@@ -1,7 +1,5 @@
 /**
  * Static content data for the homepage (HomeScreen).
- *
- * Items marked with TODO should be replaced with real API data when available.
  */
 
 import igvfLogo from '@/assets/igvf-tag.png'

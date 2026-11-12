@@ -404,7 +404,7 @@ export default (collectionUrl, options = {}) => {
 
       async beginDeletingItem({commit}, {itemId}) {
         let response = await axios.delete(collectionUrl + '/' + itemId)
-        // TODO handle error responses
+        // TODO(#130): handle error responses
         if (response.status == 200) {
           commit('deletedItem', {itemId})
         }
@@ -592,7 +592,7 @@ export default (collectionUrl, options = {}) => {
       async refreshItem({commit}, {itemId}) {
         if (itemId) {
           let response = await axios.get(`${collectionUrl}/${itemId}`)
-          // TODO handle error responses
+          // TODO(#130): handle error responses
           if (response.status == 200) {
             let item = response.data
             if (getPrimaryKeyValue(item)) {
@@ -609,7 +609,7 @@ export default (collectionUrl, options = {}) => {
           url: collectionUrl + (id ? '/' + id : ''),
           data: item
         })
-        // TODO handle error responses
+        // TODO(#130): handle error responses
         if (response.status == 200) {
           let newItem = response.data
           if (id) {
@@ -630,7 +630,7 @@ export default (collectionUrl, options = {}) => {
           url: collectionUrl,
           data: items
         })
-        // TODO handle error responses
+        // TODO(#130): handle error responses
         if (response.status == 200) {
           let newItems = response.data
           const createdItems = createdItemIndices.map((i) => newItems[i]).filter((item) => item != null)
@@ -682,7 +682,7 @@ export default (collectionUrl, options = {}) => {
           await dispatch('beginLoadingItems')
           /*commit('loadingItems')
           let response = await axios.get(collectionUrl)
-          // TODO (#130) catch errors in response
+          // TODO(#130): catch errors in response
           commit('loadedItems', {items: response.data || []})*/
         }
       },

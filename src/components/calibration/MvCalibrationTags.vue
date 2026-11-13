@@ -3,7 +3,11 @@
     >Primary</span
   >
   <span v-if="calibration.private" class="mave-tag mave-tag-draft" :class="tagClass">Draft</span>
-  <span v-if="calibration.hasPublishedReplacement" class="mave-tag mave-tag-superseded" :class="tagClass"
+  <span
+    v-if="calibration.hasPublishedReplacement"
+    v-key-term="keyTerm"
+    class="mave-tag mave-tag-superseded"
+    :class="tagClass"
     >Superseded</span
   >
   <span v-if="calibration.researchUseOnly" v-key-term="keyTerm" class="mave-tag mave-tag-ruo" :class="tagClass"
@@ -25,7 +29,7 @@ export default defineComponent({
 
   props: {
     calibration: {type: Object as PropType<Partial<ScoreCalibration>>, required: true},
-    /** A Key term for the primary and research-use-only tags to open, where the Key explains them. */
+    /** A Key term for the primary, superseded and research-use-only tags to open, where the Key explains them. */
     keyTerm: {type: String as PropType<string | null>, default: null},
     /** Classes added to every tag. */
     tagClass: {type: String, default: ''}

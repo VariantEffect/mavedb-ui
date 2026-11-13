@@ -7,6 +7,11 @@ export const CONSEQUENCE_KEY_SECTION: KeySection = {
     {
       label: 'Molecular consequence',
       definition: 'The predicted effect on the transcript or protein (e.g. missense), from VEP.'
+    },
+    {
+      label: 'Most severe across all transcripts',
+      definition:
+        "VEP's most severe call across every transcript at this position, shown when there is no call for the variant's own transcript, as for a genomic variant. It may come from a different isoform, so it may not apply to the transcript the assay measured."
     }
   ]
 }
@@ -35,6 +40,12 @@ export const CALIBRATION_KEY_SECTION: KeySection = {
       definition:
         'Not intended for clinical or diagnostic use, for example because its method is exploratory or not yet validated. Do not rely on it alone to classify a variant.',
       class: 'mave-tag-ruo'
+    },
+    {
+      label: 'Superseded',
+      definition:
+        "A newer version of this calibration has been published. Superseded versions stay listed for reference, but a variant's classification and evidence never come from one.",
+      class: 'mave-tag-superseded'
     }
   ]
 }
@@ -65,13 +76,13 @@ export const AS_OF_KEY_SECTION: KeySection = {
 
 export const SUPERSEDED_KEY_SECTION: KeySection = {
   id: 'superseded',
-  title: 'Superseded',
+  title: 'Superseded score set',
   terms: [
     {
       label: 'Superseded',
       definition:
-        'This measurement is from an older version of its score set and might have outdated scores or classifications. Note that the score set which supersedes the older version may not include your variant.',
-      class: 'bg-superseded-light text-superseded'
+        'A newer version of this score set has been published, so its scores or classifications might be outdated. The newer version may not include every variant the older one measured.',
+      class: 'mave-tag-superseded'
     }
   ]
 }

@@ -4,8 +4,16 @@
          mirroring VariantGnomadStat/VariantClinvarStat. -->
     <slot name="label"><span v-key-term="'consequence'" class="mave-label w-fit">Molecular consequence</span></slot>
     <template v-if="consequence">
-      <span class="stat-value font-semibold">{{ formatConsequence(consequence) }}</span>
-      <span v-if="sourceVersion && showRelease" class="mt-auto text-[10px] text-text-muted"
+      <span class="stat-value font-semibold"
+        >{{ formatConsequence(consequence)
+        }}<span v-if="worstCase" aria-hidden="true" class="text-warning">*</span></span
+      >
+      <!-- The worst-case caveat is about where the value came from, so it takes the provenance line as a footnote. -->
+      <span v-if="worstCase" class="mt-auto text-[10px] text-text-muted"
+        ><span v-key-term="'consequence'" class="text-warning">* Most severe across all transcripts</span
+        ><template v-if="sourceVersion && showRelease"> · VEP {{ sourceVersion }}</template></span
+      >
+      <span v-else-if="sourceVersion && showRelease" class="mt-auto text-[10px] text-text-muted"
         >As of VEP {{ sourceVersion }}</span
       >
     </template>
@@ -17,6 +25,7 @@
 import {defineComponent, type PropType} from 'vue'
 
 import {formatConsequence} from '@/lib/formats'
+import {isWorstCaseConsequence} from '@/lib/vep-consequence'
 import type {components} from '@/schema/openapi'
 
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
@@ -45,6 +54,9 @@ export default defineComponent({
     },
     sourceVersion(): string | null {
       return this.vep?.sourceVersion ?? null
+    },
+    worstCase(): boolean {
+      return isWorstCaseConsequence(this.vep)
     }
   },
 

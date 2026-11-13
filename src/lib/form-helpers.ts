@@ -124,7 +124,8 @@ export function addDoiIdentifier(
   if (!text) return null
 
   const doi = normalizeDoi(text)
-  if (existing.find((item) => item.identifier === doi)) {
+  // DOIs are case-insensitive, and the api stores them upper-cased.
+  if (existing.find((item) => item.identifier.toUpperCase() === doi.toUpperCase())) {
     toast.add({severity: 'warn', summary: `DOI "${doi}" is already associated with ${entityLabel}`, life: 3000})
     return null
   }

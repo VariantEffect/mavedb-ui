@@ -59,7 +59,7 @@ export interface HistogramSerieOptions {
   // A plain title renders as one legend line. An array wraps it across multiple lines instead of
   // widening the legend indefinitely — e.g. a base label plus a caveat that doesn't fit alongside it.
   title?: string | string[]
-  color: string // TODO Make this optional by providing default colors.
+  color: string
 }
 
 interface HistogramSerie {

@@ -14,12 +14,19 @@ export type DraftAcmgClassification = Omit<
 >
 
 /** FunctionalClassification without server-managed fields. */
+/**
+ * On a new version of a calibration, the id of the saved classification a draft classification was copied from. A
+ * symbol, so it survives cloning the draft but never reaches a request body.
+ */
+export const SOURCE_CLASSIFICATION_ID: unique symbol = Symbol('sourceClassificationId')
+
 export interface DraftFunctionalClassification
   extends Omit<
     components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'],
     'acmgClassification' | 'id' | 'creationDate' | 'createdBy' | 'modificationDate' | 'modifiedBy' | 'recordType'
   > {
   acmgClassification: DraftAcmgClassification | components['schemas']['ACMGClassification'] | null
+  [SOURCE_CLASSIFICATION_ID]?: number
 }
 
 /** ScoreCalibration without server-managed fields. */
@@ -68,6 +75,7 @@ export interface FunctionalClassificationHelper {
 export const DRAFT_CALIBRATION_COPYABLE_KEYS: (keyof DraftScoreCalibration)[] = [
   'urn',
   'scoreSetUrn',
+  'supersededCalibrationUrn',
   'title',
   'notes',
   'baselineScore',

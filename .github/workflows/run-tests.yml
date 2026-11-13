@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # bin/check-todos diffs against the merge base with the PR's base branch.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:

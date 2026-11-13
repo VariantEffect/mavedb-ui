@@ -1,4 +1,10 @@
 <template>
+  <Message v-if="loadError" class="mb-3" :closable="false" severity="error">{{ loadError }}</Message>
+  <Message v-if="supersededCalibrationUrn" class="mb-3" :closable="false" severity="info">
+    This new version starts as a copy of the current one and is saved as an unpublished draft. The current version stays
+    in place until you publish this one; publishing marks it superseded, and if it's the primary calibration, this
+    version becomes primary instead.
+  </Message>
   <p v-if="showRequiredLegend !== false" class="pb-3 text-sm text-text-muted">
     Fields marked <span class="font-bold text-danger">*</span> are required.
   </p>
@@ -22,7 +28,9 @@
     :range-classifications="rangeClassifications"
     :research-use-only="draft.researchUseOnly"
     :selected-score-set="selectedScoreSet"
-    :show-score-set-selector="showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn)"
+    :show-score-set-selector="
+      !supersededCalibrationUrn && (showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn))
+    "
     :threshold-sources="draft.thresholdSources || []"
     :title="draft.title"
     :validation-errors="validationErrors"
@@ -76,6 +84,7 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import {cloneDeep} from 'lodash'
+import Message from 'primevue/message'
 import {useConfirm} from 'primevue/useconfirm'
 
 import CalibrationControlsField from '@/components/calibration/CalibrationControlsField.vue'
@@ -103,11 +112,12 @@ export type {DraftScoreCalibration, DraftFunctionalClassification, DraftAcmgClas
 export default defineComponent({
   name: 'CalibrationEditor',
 
-  components: {CalibrationControlsField, CalibrationFields},
+  components: {CalibrationControlsField, CalibrationFields, Message},
 
   props: {
     calibrationUrn: {type: String, default: null},
     scoreSetUrn: {type: String, default: null},
+    supersededCalibrationUrn: {type: String, default: null},
     // Parent components may wish to disable class-based editing or controls editing, e.g. when the
     // calibration is being created alongside a score set and variants are not yet available.
     allowClassBased: {type: Boolean, default: true},

@@ -133,7 +133,7 @@ import VariantConsequenceStat from '@/components/variant/VariantConsequenceStat.
 import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
 import {getVariantDetail} from '@/api/mavedb/variants'
-import {groupAlleles} from '@/lib/allele-grouping'
+import {assayLevelVep, groupAlleles} from '@/lib/allele-grouping'
 import {collectGnomadFrequencies} from '@/lib/gnomad'
 import {formatScore} from '@/lib/scores'
 import {isClassBasedCalibration, unclassifiedCallLabel} from '@/lib/calibrations'
@@ -207,7 +207,7 @@ export default defineComponent({
       return this.detail.annotations[digest] ?? null
     },
     consequence(): AlleleAnnotations['vep'] | null {
-      return this.assayAnnotations?.vep ?? null
+      return this.detail ? assayLevelVep(this.detail) : null
     },
     gnomad(): AlleleAnnotations['gnomad'] | null {
       return this.assayAnnotations?.gnomad ?? null

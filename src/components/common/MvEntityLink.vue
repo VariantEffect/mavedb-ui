@@ -15,7 +15,6 @@ import {useEntityCache} from '@/composables/entity-cache'
  * Initially, the URN is displayed as the link text. The entity's details are loaded, and then the link text is
  * recalculated using the "display" property.
  */
-// TODO This can be enhanced easily to show a preview in a pop-over view when the cursor hovers over the link.
 export default defineComponent({
   name: 'MvEntityLink',
   components: {},

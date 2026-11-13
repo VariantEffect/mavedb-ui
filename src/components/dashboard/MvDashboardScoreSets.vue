@@ -195,7 +195,7 @@ export default defineComponent({
         {value: 'all', label: 'All', group: 'default'},
         {value: 'published', label: 'Published', group: 'status'},
         {value: 'unpublished', label: 'Unpublished', group: 'status'},
-        // TODO: Add meta-analysis and superseded filters once ShortScoreSet includes those fields.
+        // TODO(VariantEffect/mavedb-api#977): Add meta-analysis and superseded filters once ShortScoreSet includes those fields.
         {value: 'owned', label: 'Owned', group: 'role'},
         {value: 'contributed', label: 'Contributed', group: 'role'}
       ]
@@ -214,7 +214,7 @@ export default defineComponent({
         {label: 'View', description: 'Open score set details', to: {name: 'scoreSet', params: {urn: ss.urn}}}
       ]
       // Score sets can only be edited (mostly) and deleted before publication.
-      // TODO: Use the permissions API (GET /permissions/user-is-permitted/{model}/{urn}/{action})
+      // TODO(#768): Use the permissions API (GET /permissions/user-is-permitted/{model}/{urn}/{action})
       // for precise authorization checks instead of client-side heuristics.
       if (!ss.publishedDate) {
         actions.push(

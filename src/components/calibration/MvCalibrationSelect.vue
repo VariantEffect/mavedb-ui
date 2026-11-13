@@ -19,16 +19,18 @@
       </span>
     </template>
     <template #option="{option}">
-      <!-- A thread's other versions sit under its head, as on the calibrations page. -->
+      <!-- A thread's other versions sit under its head, as on the calibrations page. The version and tags flow inline
+           after the title, so a long title wraps under them instead of being squeezed into a narrow column beside
+           them. -->
       <span
-        class="flex items-center gap-1.5 text-xs"
+        class="block text-xs leading-5"
         :class="{'ml-1 border-l-2 border-border pl-2.5': !!option.urn && threadedUrns.has(option.urn)}"
       >
-        <span>{{ option.urn ? optionTitle(option) : 'None' }}</span>
-        <span v-if="option.urn && versionNumbers[option.urn]" class="whitespace-nowrap text-text-muted"
+        {{ option.urn ? optionTitle(option) : 'None' }}
+        <span v-if="option.urn && versionNumbers[option.urn]" class="ml-1 whitespace-nowrap text-text-muted"
           >v{{ versionNumbers[option.urn] }}</span
         >
-        <MvCalibrationTags :calibration="option" />
+        <MvCalibrationTags :calibration="option" tag-class="ml-1.5 align-middle" />
       </span>
     </template>
   </PSelect>

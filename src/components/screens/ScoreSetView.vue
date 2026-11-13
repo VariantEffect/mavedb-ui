@@ -297,6 +297,7 @@
                 </template>
               </Select>
               <Select
+                v-if="heatmapExists"
                 :model-value="heatmapLayout"
                 option-label="title"
                 option-value="value"
@@ -308,7 +309,7 @@
                   Layout: {{ heatmapLayoutOptions.find((o) => o.value === value)?.title ?? value }}
                 </template>
               </Select>
-              <div v-if="heatmapExportFn" class="inline-flex items-center gap-1">
+              <div v-if="heatmapExists && heatmapExportFn" class="inline-flex items-center gap-1">
                 <SplitButton
                   :disabled="heatmapInProgress"
                   icon="pi pi-download"

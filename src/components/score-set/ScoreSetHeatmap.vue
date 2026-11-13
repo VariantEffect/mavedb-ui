@@ -27,6 +27,10 @@
           <span class="inline-block size-3 shrink-0 rounded-sm" :style="{backgroundColor: WILD_TYPE_COLOR}" />
           <span>Wild type</span>
         </div>
+        <div class="flex items-center gap-1.5">
+          <i class="pi pi-info-circle text-xs" />
+          <span>Blank cells have no scored variant at that position and substitution.</span>
+        </div>
         <div v-if="selectedVariantNotOnHeatmap" class="flex items-center gap-1.5">
           <i class="pi pi-info-circle text-xs" />
           <span
@@ -34,27 +38,32 @@
             heatmap.</span
           >
         </div>
-        <div v-if="notShownCounts.noCoordinate > 0" class="flex items-center gap-1.5">
-          <i class="pi pi-info-circle text-xs" />
+        <div v-if="exclusionPhrases.length > 0" class="flex items-start gap-1.5">
+          <i class="pi pi-info-circle mt-0.5 text-xs" />
           <span
-            >{{ notShownCounts.noCoordinate }}
-            {{ notShownCounts.noCoordinate === 1 ? 'variant has' : 'variants have' }} no
-            {{ sequenceType === 'protein' ? 'protein' : 'nucleotide' }} representation in this view.</span
-          >
-        </div>
-        <div v-if="notShownCounts.complex > 0" class="flex items-center gap-1.5">
-          <i class="pi pi-info-circle text-xs" />
-          <span
-            >{{ notShownCounts.complex }} {{ notShownCounts.complex === 1 ? 'variant is' : 'variants are' }} too complex
-            to plot (indels, multivariants).</span
+            >Not plotted:
+            <template v-for="(phrase, i) in exclusionPhrases" :key="phrase"
+              ><template v-if="i > 0">; </template>{{ phrase }}</template
+            >.
+            <a class="text-link hover:underline" :href="HEATMAP_DOCS_URL" rel="noopener" target="_blank"
+              >How the heatmap is built</a
+            ></span
           >
         </div>
       </div>
     </template>
-    <template v-else-if="scoreSet?.private">
+    <template v-else>
       <div class="no-heatmap-message">
-        <p><strong>No heatmap available.</strong> Insufficient score data to generate a heatmap.</p>
-        <p>A variant should be present at <strong>at least 5% of possible positions</strong> to generate a heatmap.</p>
+        <p class="font-semibold">Nothing to plot at this coordinate system.</p>
+        <p v-if="exclusionPhrases.length > 0">
+          None of this score set's variants can be placed on the heatmap. Of them,
+          <template v-for="(phrase, i) in exclusionPhrases" :key="phrase"
+            ><template v-if="i > 0">; </template>{{ phrase }}</template
+          >.
+          <a class="text-link hover:underline" :href="HEATMAP_DOCS_URL" rel="noopener" target="_blank"
+            >How the heatmap is built</a
+          >
+        </p>
       </div>
     </template>
   </div>
@@ -66,10 +75,12 @@ import _ from 'lodash'
 import {defineComponent} from 'vue'
 import type {PropType} from 'vue'
 
+import config from '@/config'
 import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
 import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
 import makeHeatmap from '@/lib/heatmap'
 import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
+import {describeHeatmapExclusions, type HeatmapExclusionCounts} from '@/lib/heatmap-exclusions'
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
 import {
   tooltipKeyValue,
@@ -104,6 +115,8 @@ interface VariantClassHeatmapDatum {
 
 /** Fill for a position's wild-type cell; deliberately outside the score colour scale. */
 const WILD_TYPE_COLOR = '#ffee99'
+
+const HEATMAP_DOCS_URL = `${config.appBaseUrl}/docs/mavedb/finding-data/visualizations.html#heatmap`
 
 const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
   (aa) =>
@@ -249,7 +262,7 @@ export default defineComponent({
   ],
 
   setup() {
-    return {...useVariantCoordinates(), WILD_TYPE_COLOR}
+    return {...useVariantCoordinates(), WILD_TYPE_COLOR, HEATMAP_DOCS_URL}
   },
 
   data: () => ({
@@ -449,17 +462,25 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     simpleVariantClassesForHeatmapWithStatistics: function () {
-      const {simpleVariantHeatmapData, numIgnoredVariants} = this.prepareSimpleVariantHeatmapData(this.simpleVariants)
+      const {simpleVariantHeatmapData, ignored} = this.prepareSimpleVariantHeatmapData(this.simpleVariants)
       const simpleVariantClassHeatmapData = this.prepareSimpleVariantClassHeatmapData(simpleVariantHeatmapData)
-      return {simpleVariantClassHeatmapData, numIgnoredVariants}
+      return {simpleVariantClassHeatmapData, ignored}
     },
 
     simpleVariantClassesForHeatmap: function () {
       return this.simpleVariantClassesForHeatmapWithStatistics.simpleVariantClassHeatmapData
     },
 
-    numIgnoredVariants: function () {
-      return this.simpleVariantClassesForHeatmapWithStatistics.numIgnoredVariants
+    // Every variant absent from the heatmap, by reason, for the key and the empty-heatmap message.
+    exclusionCounts: function (): HeatmapExclusionCounts {
+      return {
+        ...this.simpleVariantClassesForHeatmapWithStatistics.ignored,
+        ...this.notShownCounts
+      }
+    },
+
+    exclusionPhrases: function (): string[] {
+      return describeHeatmapExclusions(this.exclusionCounts, this.sequenceType)
     },
 
     displayedXRange: function () {
@@ -951,14 +972,14 @@ export default defineComponent({
      * @param simpleVariants
      */
     prepareSimpleVariantHeatmapData: function (simpleVariants: DisplayVariant[]) {
-      // Count of variants that do not appear to be complex but don't have a valid substitution
-      let numIgnoredVariants = 0
+      // Variants that do not appear to be complex but can't be placed, by reason.
+      const ignored = {outOfRange: 0, startStopLoss: 0, noRow: 0}
 
       const simpleVariantHeatmapData = _.filter(
         simpleVariants.map((variant) => {
           const block = this.plotBlock(variant)
           if (!block || block.position == null || block.alt == null) {
-            numIgnoredVariants++
+            ignored.noRow++
             return null
           }
           // Don't display variants out of range from the reference sequence. This happens occasionally with legacy
@@ -967,18 +988,18 @@ export default defineComponent({
             block.position < this.wtSequenceOffset ||
             block.position > this.wtSequence.length + this.wtSequenceOffset
           ) {
-            numIgnoredVariants++
+            ignored.outOfRange++
             return null
           }
           // If hideStartAndStopLoss is set to true, omit start- and stop-loss variants. The parent component should
           // set this option when viewing scores in clinical mode from an assay using a synthetic target sequence.
           if (this.hideStartAndStopLoss && isStartOrStopLoss(variant)) {
-            numIgnoredVariants++
+            ignored.startStopLoss++
             return null
           }
           const row = this.heatmapRowForSubstitution(block.alt == block.ref ? '=' : block.alt)
           if (row == null) {
-            numIgnoredVariants++
+            ignored.noRow++
             return null
           }
           const x = block.position
@@ -993,7 +1014,8 @@ export default defineComponent({
         (x) => x != null
       )
 
-      return {simpleVariantHeatmapData, numIgnoredVariants}
+      const unscored = simpleVariantHeatmapData.filter((d) => d.score == null).length
+      return {simpleVariantHeatmapData, ignored: {...ignored, unscored}}
     },
 
     prepareSimpleVariantClassHeatmapData: function (variantData: VariantHeatmapDatum[]): VariantClassHeatmapDatum[] {
@@ -1144,6 +1166,12 @@ export default defineComponent({
 
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
+      // With nothing to plot the containers aren't in the DOM, so there is nothing to draw into.
+      if (!this.heatmapVisible) {
+        this.heatmap = null
+        this.stackedHeatmap = null
+        return
+      }
 
       if (this.sequenceType == 'protein' && this.layout != 'compact') {
         this.drawStackedHeatmap()
@@ -1368,14 +1396,13 @@ export default defineComponent({
 
 .no-heatmap-message {
   padding: 10px;
-  background-color: var(--color-danger-light);
+  background-color: var(--color-info-light);
   color: var(--color-text-dark);
-  border: 1px solid var(--color-danger-border);
+  border: 1px solid var(--color-info-border);
   border-radius: 4px;
   text-align: center;
-  position: relative;
-  width: 1000px;
   margin: 0 auto;
+  max-width: 1000px;
 }
 
 .heatmapContainer {

@@ -53,61 +53,79 @@
       />
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
+        <!-- Superseded versions fold under their thread here; a narrow screen has no room to scan past them. -->
         <div class="flex flex-col gap-4 tablet:hidden">
-          <div
-            v-for="cal in calibrationRows"
-            :key="cal.id"
-            class="mave-card relative overflow-hidden"
-            :class="{'ml-5': threadedUrns.has(cal.urn)}"
-            :data-calibration-urn="cal.urn"
-          >
-            <div class="px-4 py-4">
-              <div class="mb-2 flex items-start gap-2">
-                <div class="min-w-0 flex-1">
-                  <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
-                  <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
-                    >v{{ versionNumbers[cal.urn] }}</span
-                  >
+          <template v-for="thread in pageThreads" :key="thread.head.urn">
+            <div
+              v-for="cal in visibleThreadRows(thread, !!shownSuperseded[thread.head.urn])"
+              :key="cal.id"
+              class="mave-card relative overflow-hidden"
+              :class="{'ml-5': threadedUrns.has(cal.urn)}"
+              :data-calibration-urn="cal.urn"
+            >
+              <div class="px-4 py-4">
+                <div class="mb-2 flex items-start gap-2">
+                  <div class="min-w-0 flex-1">
+                    <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
+                    <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
+                      >v{{ versionNumbers[cal.urn] }}</span
+                    >
+                  </div>
+                  <MvRowActionMenu :actions="calibrationActions(cal)" />
                 </div>
-                <MvRowActionMenu :actions="calibrationActions(cal)" />
-              </div>
 
-              <div class="mb-3 flex flex-wrap items-center gap-1.5">
-                <MvBadge :value="calibrationStatus(cal)" />
-                <MvBadge v-if="cal.primary" value="primary" />
-                <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
-                <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
-              </div>
+                <div class="mb-3 flex flex-wrap items-center gap-1.5">
+                  <MvBadge :value="calibrationStatus(cal)" />
+                  <MvBadge v-if="cal.primary" value="primary" />
+                  <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
+                  <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
+                </div>
 
-              <p v-if="cal.notes" class="mb-3 text-xs leading-relaxed text-text-secondary">{{ cal.notes }}</p>
+                <p v-if="cal.notes" class="mb-3 text-xs leading-relaxed text-text-secondary">{{ cal.notes }}</p>
 
-              <div class="text-xs text-text-muted">
-                <strong>{{ cal.functionalClassifications?.length ?? 0 }}</strong>
-                classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
-              </div>
+                <div class="text-xs text-text-muted">
+                  <strong>{{ cal.functionalClassifications?.length ?? 0 }}</strong>
+                  classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
+                </div>
 
-              <!-- Expandable calibration details (ranges, disease context, controls, URN) -->
-              <div class="mt-3">
-                <button
-                  class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
-                  @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
-                >
-                  <i class="pi pi-list text-[11px]" />
-                  {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
-                </button>
-                <div v-if="expandedRanges[cal.id]" class="mt-2">
-                  <CalibrationTable
-                    :related-calibrations="item.scoreCalibrations"
-                    :score-calibration="cal"
-                    :score-calibration-name="cal.title || ''"
-                    :score-set-urn="item.urn"
-                    show-versions-in-place
-                    @show-version="showCalibration"
-                  />
+                <!-- Expandable calibration details (ranges, disease context, controls, URN) -->
+                <div class="mt-3">
+                  <button
+                    class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
+                    @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
+                  >
+                    <i class="pi pi-list text-[11px]" />
+                    {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
+                  </button>
+                  <div v-if="expandedRanges[cal.id]" class="mt-2">
+                    <CalibrationTable
+                      :related-calibrations="item.scoreCalibrations"
+                      :score-calibration="cal"
+                      :score-calibration-name="cal.title || ''"
+                      :score-set-urn="item.urn"
+                      show-versions-in-place
+                      @show-version="showCalibration"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            <button
+              v-if="supersededVersions(thread).length > 0"
+              :aria-expanded="!!shownSuperseded[thread.head.urn]"
+              class="-mt-2 ml-5 flex w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-xs font-semibold text-link hover:underline"
+              type="button"
+              @click="shownSuperseded[thread.head.urn] = !shownSuperseded[thread.head.urn]"
+            >
+              <i
+                class="pi text-[10px]"
+                :class="shownSuperseded[thread.head.urn] ? 'pi-chevron-up' : 'pi-chevron-down'"
+              />
+              {{ shownSuperseded[thread.head.urn] ? 'Hide' : 'Show' }}
+              {{ supersededVersions(thread).length }} superseded
+              {{ supersededVersions(thread).length === 1 ? 'version' : 'versions' }}
+            </button>
+          </template>
         </div>
 
         <!-- ── DESKTOP: DataTable layout ─────────────────── -->
@@ -297,7 +315,9 @@ import {
   groupCalibrationVersions,
   orderCalibrationThreads,
   pageStart,
+  supersededVersions,
   threadedVersionUrns,
+  visibleThreadRows,
   type CalibrationThread
 } from '@/lib/calibrations'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
@@ -371,6 +391,8 @@ export default {
       expandedRanges: {} as Record<number, boolean>,
       // Saving a calibration can take a while; the Save button shows it's working.
       calibrationSaving: false,
+      // Keyed by thread head URN: the threads whose superseded versions the phone layout shows.
+      shownSuperseded: {} as Record<string, boolean>,
       // The table is lazy, so it reports the sort and the page applies it, keeping each version thread together.
       sortField: undefined as string | undefined,
       sortOrder: undefined as number | undefined,
@@ -454,7 +476,12 @@ export default {
       const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)
       if (!calibration) return
       const threadIndex = this.calibrationThreads.findIndex((thread) => thread.versions.includes(calibration))
-      if (threadIndex >= 0) this.threadFirst = pageStart(threadIndex, this.threadsPerPage)
+      if (threadIndex >= 0) {
+        this.threadFirst = pageStart(threadIndex, this.threadsPerPage)
+        if (calibration.hasPublishedReplacement) {
+          this.shownSuperseded[this.calibrationThreads[threadIndex].head.urn] = true
+        }
+      }
       this.expandedRows = {...this.expandedRows, [calibration.id]: true}
       this.expandedRanges[calibration.id] = true
       await this.$nextTick()
@@ -466,6 +493,8 @@ export default {
     },
 
     calibrationStatus,
+    supersededVersions,
+    visibleThreadRows,
 
     calibrationActions(data: ScoreCalibration): RowAction[] {
       const actions: RowAction[] = [

@@ -11,6 +11,8 @@ import {
   calibrationDeleteBlocker,
   calibrationHasReplacement,
   calibrationThreadRows,
+  supersededVersions,
+  visibleThreadRows,
   calibrationVersionNumbers,
   calibrationVersionClassesCsv,
   calibrationVersionLinks,
@@ -353,6 +355,17 @@ describe('calibration versions', () => {
 
     const [thread] = groupCalibrationVersions([v1, v2, v3, v4])
     expect(calibrationThreadRows(thread).map((c) => c.urn)).toEqual(['v3', 'v4', 'v2', 'v1'])
+  })
+
+  it('hides superseded versions until asked, keeping the head and a draft', () => {
+    const v1 = {urn: 'v1', supersedingCalibrationUrn: 'v2', hasPublishedReplacement: true} as ScoreCalibration
+    const v2 = {urn: 'v2', supersededCalibrationUrn: 'v1', supersedingCalibrationUrn: 'v3'} as ScoreCalibration
+    const v3 = {urn: 'v3', supersededCalibrationUrn: 'v2', private: true} as ScoreCalibration
+
+    const [thread] = groupCalibrationVersions([v1, v2, v3])
+    expect(supersededVersions(thread).map((c) => c.urn)).toEqual(['v1'])
+    expect(visibleThreadRows(thread, false).map((c) => c.urn)).toEqual(['v2', 'v3'])
+    expect(visibleThreadRows(thread, true).map((c) => c.urn)).toEqual(['v2', 'v3', 'v1'])
   })
 
   it('starts a thread at a version whose predecessor it was not given', () => {

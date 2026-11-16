@@ -571,6 +571,17 @@ export function calibrationThreadRows(thread: CalibrationThread): ScoreCalibrati
   return [thread.head, ...thread.versions.filter((version) => version !== thread.head).reverse()]
 }
 
+/** The versions in a thread that a newer published version has replaced. */
+export function supersededVersions(thread: CalibrationThread): ScoreCalibration[] {
+  return thread.versions.filter((version) => version.hasPublishedReplacement)
+}
+
+/** A thread's rows as {@link calibrationThreadRows} orders them, leaving out superseded versions unless asked. */
+export function visibleThreadRows(thread: CalibrationThread, showSuperseded: boolean): ScoreCalibration[] {
+  const rows = calibrationThreadRows(thread)
+  return showSuperseded ? rows : rows.filter((row) => !row.hasPublishedReplacement)
+}
+
 /** URNs of the versions listed under their thread's head, which lists indent. */
 export function threadedVersionUrns(threads: CalibrationThread[]): Set<string> {
   return new Set(

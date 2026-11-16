@@ -246,7 +246,13 @@
     />
     <template #footer>
       <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
-      <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
+      <PButton
+        icon="pi pi-save"
+        label="Save Changes"
+        :loading="calibrationSaving"
+        severity="success"
+        @click="saveChildCalibration"
+      />
     </template>
   </PrimeDialog>
 </template>
@@ -363,6 +369,8 @@ export default {
       // Keyed by calibration id, the form DataTable uses when it has a dataKey.
       expandedRows: {} as Record<number, boolean>,
       expandedRanges: {} as Record<number, boolean>,
+      // Saving a calibration can take a while; the Save button shows it's working.
+      calibrationSaving: false,
       // The table is lazy, so it reports the sort and the page applies it, keeping each version thread together.
       sortField: undefined as string | undefined,
       sortOrder: undefined as number | undefined,
@@ -548,7 +556,13 @@ export default {
       const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
       if (!editor) return
 
-      const result = await editor.saveCalibration()
+      this.calibrationSaving = true
+      let result
+      try {
+        result = await editor.saveCalibration()
+      } finally {
+        this.calibrationSaving = false
+      }
       if (!result || result.success) return
 
       // Save succeeded — handled via @saved event / onCalibrationSaved.

@@ -30,7 +30,7 @@
     <MvDetailRow v-if="gene.externalIdentifiers?.length" align="flex-start" label="External IDs">
       <div class="flex flex-col gap-0.5">
         <div v-for="ext in gene.externalIdentifiers" :key="ext.identifier?.identifier" class="text-text-primary">
-          <span class="font-medium text-text-muted">{{ ext.identifier?.dbName }}:</span>
+          <span class="mr-1 font-medium text-text-muted">{{ ext.identifier?.dbName }}:</span>
           <a
             v-if="ext.identifier?.url"
             class="text-link hover:underline"

@@ -32,7 +32,7 @@ export function shortCitationForPublication(publication: PublicationIdentifier):
       ? `${firstAuthorLastName} et al.`
       : firstAuthorLastName
     : undefined
-  // TODO VariantEffect/mavedb-api#450
+  // TODO(VariantEffect/mavedb-api#450)
   const year = publication.publicationYear
   const parts = [authors, `(${year?.toString()})`].filter((x) => x != null)
   return parts.length > 0 ? parts.join(' ') : publication.title

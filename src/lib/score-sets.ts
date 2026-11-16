@@ -69,7 +69,7 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
       ? `${firstAuthorLastName} et al.`
       : firstAuthorLastName
     : undefined
-  // TODO VariantEffect/mavedb-api#450
+  // TODO(VariantEffect/mavedb-api#450)
   const firstTarget = scoreSet.targetGenes?.[0]
   const gene = firstTarget ? getTargetGeneName(firstTarget) : undefined
   const year = scoreSet.primaryPublicationIdentifiers[0]?.publicationYear

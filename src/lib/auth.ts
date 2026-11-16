@@ -123,7 +123,7 @@ export function installAxiosUnauthorizedResponseInterceptor() {
               // Only auto-redirect if the user is NOT on a known public page
               // Since the API returns 404 for private content (security), we can't distinguish
               // between "doesn't exist" and "private", so we use route-based detection
-              // TODO#558: Implement more accurate content visibility detection
+              // TODO(#558): Implement more accurate content visibility detection
               // - Add API endpoint for content metadata (exists, requiresAuth, contentType)
               // - Or use client-side heuristics (referrer, existing store data)
               // - This would eliminate false positives/negatives in edge cases

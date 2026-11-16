@@ -96,7 +96,7 @@
     </DataTable>
   </div>
 
-  <!-- TODO: Support adding score sets and experiments directly in the creator. -->
+  <!-- TODO(#772): Support adding score sets and experiments directly in the creator. -->
   <p class="mt-4 text-xs text-text-muted">
     <i class="pi pi-info-circle" style="font-size: 11px" />
     You can add score sets and experiments after the collection is created.

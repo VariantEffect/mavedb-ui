@@ -8,6 +8,14 @@ export function extractQueryParam(content: LocationQueryValue | LocationQueryVal
   return content ? [content] : []
 }
 
+/**
+ * Whether two query-param arrays hold the same values in the same order. Syncing filters from the route
+ * assigns a fresh array even when nothing changed, so watchers compare contents rather than references.
+ */
+export function sameQueryValues(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index])
+}
+
 /** The variant page's query axes and selected measurement, as reflected in its URL. */
 export interface VariantPageQueryState {
   includeSuperseded: boolean

@@ -199,7 +199,11 @@
               v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
               class="border-t border-border-light px-4 py-3 tablet:px-5"
             >
-              <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
+              <CalibrationTable
+                :related-calibrations="item.scoreCalibrations"
+                :score-calibration="selectedCalibrationObjects[0]"
+                :score-set-urn="item.urn"
+              />
             </div>
             <div
               v-if="hasCalibrations"
@@ -252,7 +256,11 @@
               />
             </div>
             <div v-if="selectedCalibrationObjects[1]" class="border-t border-border-light px-4 py-3 tablet:px-5">
-              <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
+              <CalibrationTable
+                :related-calibrations="item.scoreCalibrations"
+                :score-calibration="selectedCalibrationObjects[1]"
+                :score-set-urn="item.urn"
+              />
             </div>
             <div
               v-if="hasCalibrations"
@@ -289,6 +297,7 @@
                 </template>
               </Select>
               <Select
+                v-if="heatmapExists"
                 :model-value="heatmapLayout"
                 option-label="title"
                 option-value="value"
@@ -300,7 +309,7 @@
                   Layout: {{ heatmapLayoutOptions.find((o) => o.value === value)?.title ?? value }}
                 </template>
               </Select>
-              <div v-if="heatmapExportFn" class="inline-flex items-center gap-1">
+              <div v-if="heatmapExists && heatmapExportFn" class="inline-flex items-center gap-1">
                 <SplitButton
                   :disabled="heatmapInProgress"
                   icon="pi pi-download"
@@ -475,7 +484,13 @@
     />
     <template #footer>
       <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
-      <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveCreatedCalibration" />
+      <PButton
+        icon="pi pi-save"
+        label="Save Changes"
+        :loading="calibrationSaving"
+        severity="success"
+        @click="saveCreatedCalibration"
+      />
     </template>
   </PrimeDialog>
 </template>
@@ -647,6 +662,7 @@ export default {
   },
 
   data: () => ({
+    calibrationSaving: false,
     clinicalMode: true,
     coordinateSwitching: false,
     showHeatmap: true,
@@ -812,7 +828,14 @@ export default {
       this.reconcileHeatmapLevel()
     },
     selectedVariant: 'refreshUrlState',
-    selectedCalibrations: {handler: 'refreshUrlState', deep: true}
+    selectedCalibrations: {handler: 'refreshUrlState', deep: true},
+    // A version link targets this same route with another `calibration`, so the view isn't remounted.
+    '$route.query.calibration'(newValue: unknown) {
+      if (!newValue) return
+      const cal = String(newValue)
+      if (this.selectedCalibrations.every((selected) => selected === cal)) return
+      this.selectedCalibrations = this.selectedCalibrations.map(() => cal)
+    }
   },
 
   async mounted() {
@@ -1000,7 +1023,13 @@ export default {
     async saveCreatedCalibration() {
       const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
       if (!editor) return
-      const result = await editor.saveCalibration()
+      this.calibrationSaving = true
+      let result
+      try {
+        result = await editor.saveCalibration()
+      } finally {
+        this.calibrationSaving = false
+      }
       if (!result || result.success) return
 
       if (result.error === 'email_required') {

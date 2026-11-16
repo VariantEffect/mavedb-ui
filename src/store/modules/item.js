@@ -92,7 +92,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
                 accept: 'application/json'
               }
             })
-            // TODO (#130) catch errors in response
+            // TODO(#130): catch errors in response
             commit('loadedItem', {item: response.data || null})
           } catch (err) {
             console.log(`Error while loading item (URL="${url}")`, err)
@@ -115,7 +115,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
           url: collectionUrl + (id ? id : ''),
           data: item
         })
-        // TODO handle error responses
+        // TODO(#130): handle error responses
         if (response.status == 200) {
           let newItem = response.data
           if (id) {

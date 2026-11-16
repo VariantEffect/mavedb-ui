@@ -124,7 +124,7 @@ export default defineComponent({
       heatmapRef.scrollToPosition(lastSelectedDOMPoint?.x)
     },
     didHighlightResidue(_residueNumber: number) {
-      // TODO: Implement highlighting logic
+      // TODO(#771): Implement highlighting logic
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     didSelectHeatmapResidues(ranges: any[]) {

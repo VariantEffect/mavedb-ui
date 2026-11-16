@@ -67,6 +67,20 @@ The **Coordinate system** control in the heatmap's header switches between nucle
 
 Each cell represents a specific variant at a given position. Color intensity indicates the variant effect score, and wild-type variants are shown in yellow. Hovering over a cell reveals the variant's score, classification (if applicable), and [HGVS](../submitting-data/data-formats.md) notation. For long target sequences, you can scroll horizontally to explore the full heatmap.
 
+### Blank cells and what isn't plotted
+
+A cell is drawn only when at least one variant with a score sits at that position and substitution. When several variants share a cell, the heatmap shows the mean of their functional score. A blank cell, which is left empty rather than drawn, means there was no scored variant reported by the assay at that position. MaveDB does not distinguish "not measured" from "not reported", so a blank is not evidence that the variant has no effect.
+
+Some variants can't be placed at all, and the key under the heatmap says how many and why:
+
+- **No score.** The variant has no score in the uploaded data.
+- **No position in this view.** The variant has no coordinate at the selected coordinate system, for example an unmapped variant viewed in reference coordinates, or a nucleotide-only variant viewed as protein. Try the **Coordinate system** control or the **Submitted variants / Reference variants** toggle.
+- **Too complex to plot.** Insertions, deletions and variants made of several changes don't fit a single position and substitution.
+- **Outside the target sequence.** The variant's position lies beyond the displayed sequence, which happens occasionally with older, legacy score sets.
+- **Hidden start/stop loss.** For assays on a synthetic target sequence, start- and stop-loss variants are left out of the heatmap.
+
+The horizontal axis runs from the first to the last position that has a plotted cell, not across the whole target sequence. In cases where no variants can be plotted on the heatmap, it is replaced with a message explaining why.
+
 When a baseline score is available from a [score calibration](../reference/score-calibrations.md), the heatmap color scale centers the normal color (purple) at the baseline score to provide better visual contrast for variants that deviate from expected function.
 
 <figure markdown="span">

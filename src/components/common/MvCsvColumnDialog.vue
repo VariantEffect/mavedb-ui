@@ -43,6 +43,8 @@
           >
             <Checkbox v-model="selected" :value="entry.namespace" />
             {{ entry.label }}
+            <!-- Versions often share a title, so the tag tells the current one apart. -->
+            <span v-if="entry.superseded" class="mave-tag mave-tag-superseded">Superseded</span>
             <span v-if="entry.researchUseOnly" class="mave-tag mave-tag-ruo">Research use only</span>
           </label>
         </template>

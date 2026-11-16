@@ -19,7 +19,7 @@
  * dashboard.filteredScoreSets.value                 // reactive filtered list
  * ```
  */
-// TODO: Add sort controls to dashboard tabs (reuse SORT_OPTIONS from lib/search.ts)
+// TODO(#770): Add sort controls to dashboard tabs (reuse SORT_OPTIONS from lib/search.ts)
 import {computed, reactive, ref, type ComputedRef, type Ref} from 'vue'
 
 import type {CollectionRole} from '@/lib/roles'
@@ -28,6 +28,7 @@ import {searchMyExperiments} from '@/api/mavedb/experiments'
 import {getMyCollections} from '@/api/mavedb/collections'
 import {getMyCalibrations} from '@/api/mavedb/calibrations'
 import useAuth from '@/composition/auth'
+import {calibrationStatus} from '@/lib/calibrations'
 import {components} from '@/schema/openapi'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
@@ -35,8 +36,7 @@ type ShortExperiment = components['schemas']['ShortExperiment']
 type Collection = components['schemas']['Collection']
 type ScoreCalibration = components['schemas']['ScoreCalibrationWithScoreSetUrn']
 
-// TODO: Add a calibrations cross-tab filter (e.g. "show calibrations for this score set")
-// once the /me/calibrations API endpoint lands and calibrations include a scoreSetUrn.
+// TODO(#767): Add a calibrations cross-tab filter (e.g. "show calibrations for this score set").
 /** Cross-tab filter that narrows one tab's results based on a related entity from another tab. */
 export type CrossTabFilter = {type: 'experiment'; experimentUrn: string; experimentTitle: string}
 
@@ -168,7 +168,7 @@ export function useDashboard(): UseDashboardReturn {
     unpublished: (ss) => ss.status === 'unpublished',
     owned: (ss) => ss.role === 'owner',
     contributed: (ss) => ss.role === 'contributor'
-    // TODO: Add meta-analysis and superseded filters once ShortScoreSet includes those fields.
+    // TODO(VariantEffect/mavedb-api#977): Add meta-analysis and superseded filters once ShortScoreSet includes those fields.
   }
 
   const experimentPredicates: Record<string, (e: ExperimentWithMeta) => boolean> = {
@@ -186,9 +186,11 @@ export function useDashboard(): UseDashboardReturn {
     viewer: (c) => c.role === 'viewer'
   }
 
+  // The status filters match the status chip each calibration shows, so a superseded version counts only as superseded.
   const calibrationPredicates: Record<string, (c: ScoreCalibration) => boolean> = {
-    published: (c) => !c.private,
-    unpublished: (c) => !!c.private,
+    published: (c) => calibrationStatus(c) === 'published',
+    superseded: (c) => calibrationStatus(c) === 'superseded',
+    unpublished: (c) => calibrationStatus(c) === 'draft',
     primary: (c) => !!c.primary,
     general: (c) => !c.researchUseOnly,
     research: (c) => !!c.researchUseOnly
@@ -281,7 +283,7 @@ export function useDashboard(): UseDashboardReturn {
   // The tab components already render both desktop tables and mobile cards — pagination
   // controls should go in the shared footer area (next to the "+ Add" button).
   //
-  // TODO: Supersession insight — Show which score sets supersede which in the dashboard.
+  // TODO(VariantEffect/mavedb-api#977): Supersession insight — Show which score sets supersede which in the dashboard.
   // ShortScoreSet has `replacesId` (numeric) but no `id` field, so we can't resolve
   // supersession relationships client-side. The best fix is for the API to add
   // `supersededScoreSet` / `supersedingScoreSet` (ShorterScoreSet) to ShortScoreSet —
@@ -297,7 +299,7 @@ export function useDashboard(): UseDashboardReturn {
     // NOTE: `replacesId` means this score set *replaces* another — i.e. it is the newer version.
     // We cannot detect superseded score sets from ShortScoreSet alone because there's no
     // `supersededBy` or `id` field to match against. Until the API adds supersession fields to
-    // ShortScoreSet (see TODO above), we can only classify as published/unpublished.
+    // ShortScoreSet (VariantEffect/mavedb-api#977), we can only classify as published/unpublished.
     const status = ss.publishedDate ? ('published' as const) : ('unpublished' as const)
     return {...ss, role, status}
   }

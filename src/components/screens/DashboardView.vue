@@ -145,7 +145,13 @@
       />
       <template #footer>
         <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
-        <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
+        <PButton
+          icon="pi pi-save"
+          label="Save Changes"
+          :loading="calibrationSaving"
+          severity="success"
+          @click="saveChildCalibration"
+        />
       </template>
     </PDialog>
   </MvLayout>
@@ -216,6 +222,7 @@ export default defineComponent({
     const experimentParam = this.$route.query.experiment as string | undefined
     return {
       activeTab: validTabs.includes(tab) ? tab : 'score-sets',
+      calibrationSaving: false,
       creatorVisible: false,
       validTabs,
       initialFilter,
@@ -367,6 +374,7 @@ export default defineComponent({
       if (!editor) return
 
       let result
+      this.calibrationSaving = true
       try {
         result = await editor.saveCalibration()
       } catch (err) {
@@ -378,6 +386,8 @@ export default defineComponent({
           life: 4000
         })
         return
+      } finally {
+        this.calibrationSaving = false
       }
 
       // Save succeeded — handled via @saved event / onCalibrationSaved.
@@ -415,7 +425,7 @@ export default defineComponent({
         })
       }
     },
-    // TODO: Consolidate the dual save path (imperative saveChildCalibration + @saved event)
+    // TODO(#769): Consolidate the dual save path (imperative saveChildCalibration + @saved event)
     // into a single flow. This pattern is shared with ScoreSetView and ScoreSetCalibrationsView.
     async onCalibrationSaved() {
       this.$toast.add({

@@ -191,7 +191,7 @@ export interface paths {
   "/api/v1/doi-identifiers/search": {
     /**
      * Search DOI identifiers
-     * @description Search DOI identifiers based on the provided text.
+     * @description Search the DOI identifiers cited by records you can read.
      */
     post: operations["search_doi_identifiers_api_v1_doi_identifiers_search_post"];
   };
@@ -516,7 +516,7 @@ export interface paths {
   "/api/v1/raw-read-identifiers/search": {
     /**
      * Search Raw Read identifiers
-     * @description Search Raw Read identifiers.
+     * @description Search the Raw Read identifiers cited by records you can read.
      */
     post: operations["search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post"];
   };
@@ -708,6 +708,17 @@ export interface paths {
      * Returns the created score calibration with its generated URN and associated score set information.
      */
     post: operations["create_score_calibration_route_api_v1_score_calibrations__post"];
+  };
+  "/api/v1/score-calibrations/{urn}/controls": {
+    /**
+     * Delete Score Calibration Controls Route
+     * @description Delete a score calibration's controls and withdraw its PHI affirmation, changing nothing else.
+     *
+     * This is the only change allowed to a calibration that a newer version has replaced, so protected health
+     * information found in an old version can be removed. It needs the same permission as modifying the
+     * calibration.
+     */
+    delete: operations["delete_score_calibration_controls_route_api_v1_score_calibrations__urn__controls_delete"];
   };
   "/api/v1/score-calibrations/{urn}/promote-to-primary": {
     /**
@@ -1227,7 +1238,7 @@ export interface paths {
   "/api/v1/statistics/record/{record}/raw-read-identifiers": {
     /**
      * Get raw read identifier statistics for a record
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `raw_read_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct raw read identifier.
      * Don't include any raw read identifiers from unpublished experiments.
      */
     get: operations["experiment_raw_read_identifier_statistics_api_v1_statistics_record__record__raw_read_identifiers_get"];
@@ -1235,7 +1246,7 @@ export interface paths {
   "/api/v1/statistics/record/{record}/doi-identifiers": {
     /**
      * Get DOI identifier statistics for a record
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `doi_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct DOI identifier.
      * Don't include any DOI identifiers from unpublished experiments.
      */
     get: operations["experiment_doi_identifiers_statistics_api_v1_statistics_record__record__doi_identifiers_get"];
@@ -1334,7 +1345,7 @@ export interface paths {
   "/api/v1/statistics/target/gene/ensembl-identifier": {
     /**
      * Get target gene statistics for Ensembl identifiers
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `ensembl_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct Ensembl identifier of a target gene.
      * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      */
     get: operations["target_genes_ensembl_identifier_counts_api_v1_statistics_target_gene_ensembl_identifier_get"];
@@ -1342,7 +1353,7 @@ export interface paths {
   "/api/v1/statistics/target/gene/refseq-identifier": {
     /**
      * Get target gene statistics for RefSeq identifiers
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `refseq_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct RefSeq identifier of a target gene.
      * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      */
     get: operations["target_genes_refseq_identifier_counts_api_v1_statistics_target_gene_refseq_identifier_get"];
@@ -1350,7 +1361,7 @@ export interface paths {
   "/api/v1/statistics/target/gene/uniprot-identifier": {
     /**
      * Get target gene statistics for UniProt identifiers
-     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `uniprot_identifiers` table).
+     * @description Returns a dictionary of counts for each distinct UniProt identifier of a target gene.
      * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      */
     get: operations["target_genes_uniprot_identifier_counts_api_v1_statistics_target_gene_uniprot_identifier_get"];
@@ -1384,7 +1395,7 @@ export interface paths {
   "/api/v1/target-gene-identifiers/search": {
     /**
      * Search target gene identifiers
-     * @description Search target gene identifiers.
+     * @description Search the target gene identifiers of score sets you can read.
      */
     post: operations["search_target_gene_identifiers_api_v1_target_gene_identifiers_search_post"];
   };
@@ -1623,6 +1634,19 @@ export interface paths {
      */
     get: operations["get_variant_csv_data_api_v1_variants__urn__csv_get"];
   };
+  "/api/v1/variants/clingen-allele-id-lookups": {
+    /**
+     * Removed; see GET /clingen-alleles/{clingen_allele_id}/measurements
+     * @deprecated
+     * @description This endpoint has been permanently removed.
+     *
+     * It looked up a batch of ClinGen allele IDs in one request. Its replacement,
+     * ``GET /clingen-alleles/{clingen_allele_id}/measurements``, takes one allele per request and returns a
+     * different shape, so the two are not wire-compatible and this route does not redirect. It takes no body,
+     * so a caller still sending the old request gets this 410 rather than a validation error.
+     */
+    post: operations["lookup_variants_by_clingen_allele_ids_removed_api_v1_variants_clingen_allele_id_lookups_post"];
+  };
   "/api/v1/alphafold-files/version": {
     /**
      * Proxy Alphafold Index
@@ -1694,7 +1718,7 @@ export interface components {
      * Action
      * @enum {string}
      */
-    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank" | "add_calibration";
+    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank" | "add_calibration" | "supersede";
     /** AddExperimentToCollectionRequest */
     AddExperimentToCollectionRequest: {
       /** Experimenturn */
@@ -2106,6 +2130,11 @@ export interface components {
        * @default false
        */
       researchUseOnly?: boolean;
+      /**
+       * Superseded
+       * @default false
+       */
+      superseded?: boolean;
       /**
        * Selectedbydefault
        * @default true
@@ -3256,8 +3285,6 @@ export interface components {
     DoiIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -3729,12 +3756,8 @@ export interface components {
       identifier: string;
       /** Recordtype */
       recordType?: string;
-      /** Dbversion */
-      dbVersion?: string | null;
       /** Url */
       url?: string | null;
-      /** Referencehtml */
-      referenceHtml?: string | null;
     };
     /** ExternalGeneIdentifierCreate */
     ExternalGeneIdentifierCreate: {
@@ -3944,6 +3967,8 @@ export interface components {
       total: number;
       /** Totalscoredvariants */
       totalScoredVariants: number;
+      /** Totalunmapped */
+      totalUnmapped: number;
     };
     /**
      * GnomADVariantWithVariantLinks
@@ -4766,8 +4791,6 @@ export interface components {
     RawReadIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -5118,8 +5141,6 @@ export interface components {
     SavedDoiIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -5294,8 +5315,6 @@ export interface components {
     SavedRawReadIdentifier: {
       /** Identifier */
       identifier: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
       /** Url */
@@ -5401,6 +5420,16 @@ export interface components {
       id: number;
       /** Urn */
       urn: string;
+      /** Supersededcalibrationurn */
+      supersededCalibrationUrn?: string | null;
+      /** Supersedingcalibrationurn */
+      supersedingCalibrationUrn?: string | null;
+      /**
+       * Haspublishedreplacement
+       * @description Whether a published calibration has replaced this one. supersedingCalibrationUrn can also name a draft replacement, for callers who may read the draft, so use this to decide whether this calibration is superseded.
+       * @default false
+       */
+      hasPublishedReplacement?: boolean;
       /** Scoresetid */
       scoreSetId: number;
       /** Investigatorprovided */
@@ -5433,6 +5462,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Publisheddate
+       * @description The day the calibration was published. Null for a draft, and for a calibration published before MaveDB recorded publication times.
+       */
+      publishedDate?: string | null;
       /**
        * Controls
        * @default []
@@ -5480,6 +5514,11 @@ export interface components {
        * @description The MONDO code (e.g. "MONDO:0015263") for this calibration's disease context; validated against OLS. Omitted or null resolves to the generic "disease or disorder" term.
        */
       disease?: string | null;
+      /**
+       * Supersededcalibrationurn
+       * @description Published calibration this new draft will replace when published.
+       */
+      supersededCalibrationUrn?: string | null;
     };
     /**
      * ScoreCalibrationDetailWithScoreSetUrn
@@ -5519,6 +5558,16 @@ export interface components {
       id: number;
       /** Urn */
       urn: string;
+      /** Supersededcalibrationurn */
+      supersededCalibrationUrn?: string | null;
+      /** Supersedingcalibrationurn */
+      supersedingCalibrationUrn?: string | null;
+      /**
+       * Haspublishedreplacement
+       * @description Whether a published calibration has replaced this one. supersedingCalibrationUrn can also name a draft replacement, for callers who may read the draft, so use this to decide whether this calibration is superseded.
+       * @default false
+       */
+      hasPublishedReplacement?: boolean;
       /** Scoresetid */
       scoreSetId: number;
       /** Investigatorprovided */
@@ -5551,6 +5600,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Publisheddate
+       * @description The day the calibration was published. Null for a draft, and for a calibration published before MaveDB recorded publication times.
+       */
+      publishedDate?: string | null;
       /** Scoreseturn */
       scoreSetUrn: string;
       /**
@@ -5600,6 +5654,16 @@ export interface components {
       id: number;
       /** Urn */
       urn: string;
+      /** Supersededcalibrationurn */
+      supersededCalibrationUrn?: string | null;
+      /** Supersedingcalibrationurn */
+      supersedingCalibrationUrn?: string | null;
+      /**
+       * Haspublishedreplacement
+       * @description Whether a published calibration has replaced this one. supersedingCalibrationUrn can also name a draft replacement, for callers who may read the draft, so use this to decide whether this calibration is superseded.
+       * @default false
+       */
+      hasPublishedReplacement?: boolean;
       /** Scoresetid */
       scoreSetId: number;
       /** Investigatorprovided */
@@ -5632,6 +5696,11 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /**
+       * Publisheddate
+       * @description The day the calibration was published. Null for a draft, and for a calibration published before MaveDB recorded publication times.
+       */
+      publishedDate?: string | null;
       /** Scoreseturn */
       scoreSetUrn: string;
     };
@@ -6532,8 +6601,11 @@ export interface components {
     };
     /** TargetSequenceCreate */
     TargetSequenceCreate: {
-      /** Sequencetype */
-      sequenceType: string;
+      /**
+       * Sequencetype
+       * @enum {string}
+       */
+      sequenceType: "infer" | "dna" | "protein";
       /** Sequence */
       sequence: string;
       /** Label */
@@ -7152,13 +7224,49 @@ export interface components {
     /**
      * VepAnnotation
      * @description VEP molecular consequence for an allele and the Ensembl release it resolved under.
+     *
+     * ``consequence_source`` is ``transcript`` when the consequence was read for the allele's own
+     * transcript (named by ``matched_transcript``), and ``most_severe`` when no transcript could be
+     * matched and it is VEP's worst case across every overlapping transcript, which may not apply to the
+     * transcript of interest. ``reference_identical`` marks an allele with no sequence change, for which
+     * VEP was never called. ``consequence_terms`` is the severity-ordered term list ``consequence``
+     * heads. All three are null on rows resolved before provenance was recorded.
      */
     VepAnnotation: {
       /** Consequence */
       consequence?: string | null;
       /** Sourceversion */
       sourceVersion: string;
+      consequenceSource?: components["schemas"]["VepConsequenceSource"] | null;
+      /** Consequenceterms */
+      consequenceTerms?: string[] | null;
+      /** Matchedtranscript */
+      matchedTranscript?: string | null;
     };
+    /**
+     * VepConsequenceSource
+     * @description Which resolution path produced a stored VEP consequence — provenance, not severity.
+     *
+     * Persisted on every :class:`~mavedb.models.vep_allele_consequence.VepAlleleConsequence` so a stored
+     * consequence can be audited without re-querying Ensembl, and so a consumer can tell a
+     * transcript-specific call from a cross-transcript one, see #772.
+     *
+     * - ``transcript`` — read from the ``transcript_consequences`` entry matching the allele's own
+     *   transcript. The trustworthy case: the consequence applies to the transcript the allele lives on.
+     * - ``most_severe`` — VEP's top-level ``most_severe_consequence``, the worst call across *every*
+     *   transcript overlapping the position. Used only when no transcript could be matched (a genomic
+     *   allele carrying no transcript, or a transcript absent from VEP's set). Lower confidence: it
+     *   regularly reports a consequence that might not apply to the transcript of interest.
+     * - ``reference_identical`` — the allele describes no sequence change (a wild-type control); no VEP
+     *   call was made. Recorded distinctly so it is never mistaken for ``synonymous_variant`` or a null.
+     *
+     * Values mirror ``variant_annotation.lib.vep.ConsequenceSource``: the library computes the source, the
+     * api owns this closed set. The two are kept in sync by
+     * :func:`mavedb.lib.vep.link_vep_consequences_to_alleles`, which maps one to the other by value at the
+     * write boundary.
+     * @enum {string}
+     */
+    VepConsequenceSource: "transcript" | "most_severe" | "reference_identical";
     /**
      * code
      * @description Indicates that the value is taken from a set of controlled strings defined elsewhere. Technically, a code is restricted to a string which has at least one character and no leading or  trailing whitespace, and where there is no whitespace other than single spaces in the contents.
@@ -8214,9 +8322,14 @@ export interface operations {
   };
   /**
    * Search DOI identifiers
-   * @description Search DOI identifiers based on the provided text.
+   * @description Search the DOI identifiers cited by records you can read.
    */
   search_doi_identifiers_api_v1_doi_identifiers_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["TextSearch"];
@@ -9886,9 +9999,14 @@ export interface operations {
   };
   /**
    * Search Raw Read identifiers
-   * @description Search Raw Read identifiers.
+   * @description Search the Raw Read identifiers cited by records you can read.
    */
   search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["TextSearch"];
@@ -10102,7 +10220,7 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10208,16 +10326,40 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Validation Error */
+      /** @description Unprocessable entity. Validation failed. */
       422: {
         content: never;
       };
       /** @description Internal server error. */
       500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
@@ -10240,7 +10382,19 @@ export interface operations {
       204: {
         content: never;
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10276,7 +10430,7 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10312,7 +10466,7 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10409,13 +10563,75 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Unprocessable entity. Validation failed. */
+      422: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Delete Score Calibration Controls Route
+   * @description Delete a score calibration's controls and withdraw its PHI affirmation, changing nothing else.
+   *
+   * This is the only change allowed to a calibration that a newer version has replaced, so protected health
+   * information found in an old version can be removed. It needs the same permission as modifying the
+   * calibration.
+   */
+  delete_score_calibration_controls_route_api_v1_score_calibrations__urn__controls_delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        content: never;
+      };
       /** @description Not Found */
       404: {
         content: never;
       };
       /** @description Validation Error */
       422: {
-        content: never;
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal server error. */
       500: {
@@ -10447,7 +10663,19 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10483,7 +10711,15 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10521,7 +10757,19 @@ export interface operations {
           "application/json": components["schemas"]["ScoreCalibrationDetailWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10563,7 +10811,7 @@ export interface operations {
           "application/json": components["schemas"]["FunctionalClassificationVariants"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -10603,7 +10851,7 @@ export interface operations {
           "application/json": components["schemas"]["FunctionalClassificationVariants"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -12351,7 +12599,7 @@ export interface operations {
   };
   /**
    * Get raw read identifier statistics for a record
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `raw_read_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct raw read identifier.
    * Don't include any raw read identifiers from unpublished experiments.
    */
   experiment_raw_read_identifier_statistics_api_v1_statistics_record__record__raw_read_identifiers_get: {
@@ -12387,7 +12635,7 @@ export interface operations {
   };
   /**
    * Get DOI identifier statistics for a record
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `doi_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct DOI identifier.
    * Don't include any DOI identifiers from unpublished experiments.
    */
   experiment_doi_identifiers_statistics_api_v1_statistics_record__record__doi_identifiers_get: {
@@ -12726,7 +12974,7 @@ export interface operations {
   };
   /**
    * Get target gene statistics for Ensembl identifiers
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `ensembl_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct Ensembl identifier of a target gene.
    * Don't include any NULL field values. Don't include any targets from unpublished score sets.
    */
   target_genes_ensembl_identifier_counts_api_v1_statistics_target_gene_ensembl_identifier_get: {
@@ -12751,7 +12999,7 @@ export interface operations {
   };
   /**
    * Get target gene statistics for RefSeq identifiers
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `refseq_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct RefSeq identifier of a target gene.
    * Don't include any NULL field values. Don't include any targets from unpublished score sets.
    */
   target_genes_refseq_identifier_counts_api_v1_statistics_target_gene_refseq_identifier_get: {
@@ -12776,7 +13024,7 @@ export interface operations {
   };
   /**
    * Get target gene statistics for UniProt identifiers
-   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `uniprot_identifiers` table).
+   * @description Returns a dictionary of counts for each distinct UniProt identifier of a target gene.
    * Don't include any NULL field values. Don't include any targets from unpublished score sets.
    */
   target_genes_uniprot_identifier_counts_api_v1_statistics_target_gene_uniprot_identifier_get: {
@@ -12901,12 +13149,15 @@ export interface operations {
   };
   /**
    * Search target gene identifiers
-   * @description Search target gene identifiers.
+   * @description Search the target gene identifiers of score sets you can read.
    */
   search_target_gene_identifiers_api_v1_target_gene_identifiers_search_post: {
     parameters: {
       query: {
         db_name: string;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
       };
     };
     requestBody: {
@@ -14016,6 +14267,34 @@ export interface operations {
       422: {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Removed; see GET /clingen-alleles/{clingen_allele_id}/measurements
+   * @deprecated
+   * @description This endpoint has been permanently removed.
+   *
+   * It looked up a batch of ClinGen allele IDs in one request. Its replacement,
+   * ``GET /clingen-alleles/{clingen_allele_id}/measurements``, takes one allele per request and returns a
+   * different shape, so the two are not wire-compatible and this route does not redirect. It takes no body,
+   * so a caller still sending the old request gets this 410 rather than a validation error.
+   */
+  lookup_variants_by_clingen_allele_ids_removed_api_v1_variants_clingen_allele_id_lookups_post: {
+    responses: {
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Gone. This resource has been permanently removed. */
+      410: {
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Internal server error. */

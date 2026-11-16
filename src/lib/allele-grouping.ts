@@ -8,9 +8,11 @@
 import _ from 'lodash'
 
 import {selectClinvar} from '@/lib/clinvar-controls'
+import {specificVepFirst} from '@/lib/vep-consequence'
 import type {components} from '@/schema/openapi'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
+type VepAnnotation = components['schemas']['VepAnnotation']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type VariantDetail = components['schemas']['VariantDetail']
 type MappedTriple = components['schemas']['MappedTriple']
@@ -105,7 +107,9 @@ function coalesceAnnotations(members: AlleleMember[]): {merged: AlleleAnnotation
   const merged: Record<string, unknown> = {}
   let conflict = false
   for (const key of _.union(...present.map((a) => Object.keys(a)))) {
-    const values = present.map((a) => (a as Record<string, unknown>)[key]).filter((v) => v != null)
+    let values = present.map((a) => (a as Record<string, unknown>)[key]).filter((v) => v != null)
+    // A genomic member's cross-transcript worst case would otherwise displace the cDNA member's transcript call.
+    if (key === 'vep') values = specificVepFirst(values as VepAnnotation[])
     if (values.length === 0) continue
     if (values.length > 1 && !values.every((v) => _.isEqual(v, values[0]))) conflict = true
     merged[key] = values[0]
@@ -274,6 +278,21 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
     if (a.measured !== b.measured) return a.measured ? -1 : 1
     return (LEVEL_ORDER[a.members[0].level ?? ''] ?? 99) - (LEVEL_ORDER[b.members[0].level ?? ''] ?? 99)
   })
+}
+
+/**
+ * The VEP call for a measurement: its assay-level allele's group, coalesced, so a genomic-level measurement shows its
+ * cDNA projection's transcript call rather than its own cross-transcript worst case.
+ */
+export function assayLevelVep(detail: VariantDetail): VepAnnotation | null {
+  const digest = detail.assayLevelDigest
+  if (!digest) return null
+  const group = groupAlleles({
+    alleles: detail.alleles ?? {},
+    annotations: detail.annotations ?? {},
+    pageClingenAlleleId: detail.clingenAlleleId ?? null
+  }).find((g) => g.members.some((m) => m.digest === digest))
+  return group?.coalescedAnnotations?.vep ?? detail.annotations?.[digest]?.vep ?? null
 }
 
 /**

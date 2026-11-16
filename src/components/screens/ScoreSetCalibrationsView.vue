@@ -53,7 +53,8 @@
       />
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
-        <!-- Superseded versions fold under their thread here; a narrow screen has no room to scan past them. -->
+        <!-- Each thread is its current version, its draft on the same card, and its superseded versions folded below:
+             a narrow screen has no room to scan past them. -->
         <div class="flex flex-col gap-4 tablet:hidden">
           <template v-for="thread in pageThreads" :key="thread.head.urn">
             <div
@@ -109,6 +110,24 @@
                   </div>
                 </div>
               </div>
+              <!-- The draft that will replace this version, attached to it rather than listed as a calibration. -->
+              <template v-if="cal === thread.head">
+                <div
+                  v-for="draft in replacementDrafts(thread)"
+                  :key="draft.id"
+                  class="flex items-center gap-2 border-t border-border-light px-4 py-2.5"
+                  :data-calibration-urn="draft.urn"
+                >
+                  <MvBadge :value="calibrationStatus(draft)" />
+                  <span class="min-w-0 flex-1 text-xs text-text-secondary">
+                    <span v-if="versionNumbers[draft.urn]" class="font-semibold text-text-primary"
+                      >v{{ versionNumbers[draft.urn] }}</span
+                    >
+                    replaces this version when published
+                  </span>
+                  <MvRowActionMenu :actions="calibrationActions(draft)" />
+                </div>
+              </template>
             </div>
             <button
               v-if="supersededVersions(thread).length > 0"
@@ -315,6 +334,7 @@ import {
   groupCalibrationVersions,
   orderCalibrationThreads,
   pageStart,
+  replacementDrafts,
   supersededVersions,
   threadedVersionUrns,
   visibleThreadRows,
@@ -493,6 +513,7 @@ export default {
     },
 
     calibrationStatus,
+    replacementDrafts,
     supersededVersions,
     visibleThreadRows,
 

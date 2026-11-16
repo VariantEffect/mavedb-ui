@@ -31,7 +31,15 @@
       <div class="flex flex-col gap-0.5">
         <div v-for="ext in gene.externalIdentifiers" :key="ext.identifier?.identifier" class="text-text-primary">
           <span class="font-medium text-text-muted">{{ ext.identifier?.dbName }}:</span>
-          {{ ext.identifier?.identifier }}
+          <a
+            v-if="ext.identifier?.url"
+            class="text-link hover:underline"
+            :href="ext.identifier.url"
+            rel="noopener noreferrer"
+            target="_blank"
+            >{{ ext.identifier.identifier }}</a
+          >
+          <template v-else>{{ ext.identifier?.identifier }}</template>
           <span v-if="ext.offset !== null && ext.offset !== undefined" class="text-text-muted">
             (offset {{ ext.offset }})
           </span>

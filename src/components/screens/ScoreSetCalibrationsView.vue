@@ -64,7 +64,7 @@
               :class="{'ml-5': threadedUrns.has(cal.urn)}"
               :data-calibration-urn="cal.urn"
             >
-              <!-- The draft that will replace this version leads its card, so its owner can find it and finish it. -->
+              <!-- The draft that will replace this version leads its card, so its owner can find it. Its menu publishes it. -->
               <template v-if="cal === thread.head">
                 <div
                   v-for="draft in replacementDrafts(thread)"
@@ -78,13 +78,6 @@
                       <span class="font-semibold">Draft v{{ versionNumbers[draft.urn] }}</span>
                       replaces v{{ versionNumbers[cal.urn] }} when published
                     </span>
-                    <PButton
-                      v-if="calibrationAuthorizations[draft.urn]?.publish"
-                      icon="pi pi-check"
-                      label="Publish"
-                      size="small"
-                      @click="publishCalibration(draft.urn)"
-                    />
                     <MvRowActionMenu :actions="calibrationActions(draft)" />
                   </div>
                 </div>

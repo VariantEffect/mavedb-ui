@@ -78,7 +78,17 @@
                       <span class="font-semibold">Draft v{{ versionNumbers[draft.urn] }}</span>
                       replaces v{{ versionNumbers[cal.urn] }} when published
                     </span>
-                    <MvRowActionMenu :actions="calibrationActions(draft)" />
+                    <MvRowActionMenu :actions="draftBandActions(draft)" />
+                  </div>
+                  <div v-if="expandedRanges[draft.id]" class="mt-2.5 rounded-md bg-surface">
+                    <CalibrationTable
+                      :related-calibrations="item.scoreCalibrations"
+                      :score-calibration="draft"
+                      :score-calibration-name="draft.title || ''"
+                      :score-set-urn="item.urn"
+                      show-versions-in-place
+                      @show-version="showCalibration"
+                    />
                   </div>
                 </div>
               </template>
@@ -516,6 +526,17 @@ export default {
     replacementDrafts,
     supersededVersions,
     visibleThreadRows,
+
+    /** A draft band's menu: the draft's details, which the band has no room to show, then its usual actions. */
+    draftBandActions(draft: ScoreCalibration): RowAction[] {
+      return [
+        {
+          label: this.expandedRanges[draft.id] ? 'Hide draft details' : 'Show draft details',
+          handler: () => (this.expandedRanges[draft.id] = !this.expandedRanges[draft.id])
+        },
+        ...this.calibrationActions(draft)
+      ]
+    },
 
     calibrationActions(data: ScoreCalibration): RowAction[] {
       const actions: RowAction[] = [

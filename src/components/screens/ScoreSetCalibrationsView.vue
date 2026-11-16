@@ -78,44 +78,14 @@
                       <span class="font-semibold">Draft v{{ versionNumbers[draft.urn] }}</span>
                       replaces v{{ versionNumbers[cal.urn] }} when published
                     </span>
-                    <MvRowActionMenu :actions="calibrationActions(draft)" />
-                  </div>
-                  <div class="mt-2.5 grid grid-cols-3 gap-2">
-                    <PButton
-                      :icon="expandedRanges[draft.id] ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                      :label="expandedRanges[draft.id] ? 'Hide' : 'View'"
-                      severity="secondary"
-                      fluid
-                      size="small"
-                      @click="expandedRanges[draft.id] = !expandedRanges[draft.id]"
-                    />
-                    <PButton
-                      v-if="calibrationAuthorizations[draft.urn]?.update"
-                      icon="pi pi-pencil"
-                      label="Edit"
-                      severity="secondary"
-                      fluid
-                      size="small"
-                      @click="editCalibrationInEditor(draft.urn)"
-                    />
                     <PButton
                       v-if="calibrationAuthorizations[draft.urn]?.publish"
                       icon="pi pi-check"
                       label="Publish"
-                      fluid
                       size="small"
                       @click="publishCalibration(draft.urn)"
                     />
-                  </div>
-                  <div v-if="expandedRanges[draft.id]" class="mt-2.5 rounded-md bg-surface">
-                    <CalibrationTable
-                      :related-calibrations="item.scoreCalibrations"
-                      :score-calibration="draft"
-                      :score-calibration-name="draft.title || ''"
-                      :score-set-urn="item.urn"
-                      show-versions-in-place
-                      @show-version="showCalibration"
-                    />
+                    <MvRowActionMenu :actions="calibrationActions(draft)" />
                   </div>
                 </div>
               </template>

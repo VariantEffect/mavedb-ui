@@ -59,17 +59,28 @@ export function normalizeDoiArray(
   items: (DoiIdentifier | DoiIdentifierCreate | string)[],
   toast?: ToastServiceMethods
 ): DoiIdentifierCreate[] {
+  // DOIs are case-insensitive, and the api stores them upper-cased.
+  const seen = new Set<string>()
   return items
     .map((item) => {
       if (typeof item === 'string') {
         const text = item.trim()
         if (!text) return null
         const doi = normalizeDoi(text)
-        if (validateDoi(text)) return {identifier: doi}
-        toast?.add({life: 3000, severity: 'warn', summary: `"${text}" is not a valid DOI`})
-        return null
+        if (seen.has(doi.toUpperCase())) {
+          toast?.add({life: 3000, severity: 'warn', summary: `DOI "${doi}" is already listed`})
+          return null
+        }
+        if (!validateDoi(text)) {
+          toast?.add({life: 3000, severity: 'warn', summary: `"${text}" is not a valid DOI`})
+          return null
+        }
+        seen.add(doi.toUpperCase())
+        return {identifier: doi}
       }
-      return item?.identifier ? {identifier: item.identifier} : null
+      if (!item?.identifier || seen.has(item.identifier.toUpperCase())) return null
+      seen.add(item.identifier.toUpperCase())
+      return {identifier: item.identifier}
     })
     .filter((x): x is DoiIdentifierCreate => x !== null)
 }

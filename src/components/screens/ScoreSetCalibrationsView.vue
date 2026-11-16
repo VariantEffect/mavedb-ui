@@ -53,61 +53,108 @@
       />
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
+        <!-- Each thread is its current version, led by its draft, with its superseded versions folded below:
+             a narrow screen has no room to scan past them. -->
         <div class="flex flex-col gap-4 tablet:hidden">
-          <div
-            v-for="cal in calibrationRows"
-            :key="cal.id"
-            class="mave-card relative overflow-hidden"
-            :class="{'ml-5': threadedUrns.has(cal.urn)}"
-            :data-calibration-urn="cal.urn"
-          >
-            <div class="px-4 py-4">
-              <div class="mb-2 flex items-start gap-2">
-                <div class="min-w-0 flex-1">
-                  <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
-                  <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
-                    >v{{ versionNumbers[cal.urn] }}</span
-                  >
-                </div>
-                <MvRowActionMenu :actions="calibrationActions(cal)" />
-              </div>
-
-              <div class="mb-3 flex flex-wrap items-center gap-1.5">
-                <MvBadge :value="calibrationStatus(cal)" />
-                <MvBadge v-if="cal.primary" value="primary" />
-                <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
-                <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
-              </div>
-
-              <p v-if="cal.notes" class="mb-3 text-xs leading-relaxed text-text-secondary">{{ cal.notes }}</p>
-
-              <div class="text-xs text-text-muted">
-                <strong>{{ cal.functionalClassifications?.length ?? 0 }}</strong>
-                classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
-              </div>
-
-              <!-- Expandable calibration details (ranges, disease context, controls, URN) -->
-              <div class="mt-3">
-                <button
-                  class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
-                  @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
+          <template v-for="thread in pageThreads" :key="thread.head.urn">
+            <div
+              v-for="cal in visibleThreadRows(thread, !!shownSuperseded[thread.head.urn])"
+              :key="cal.id"
+              class="mave-card relative overflow-hidden"
+              :class="{'ml-5': threadedUrns.has(cal.urn)}"
+              :data-calibration-urn="cal.urn"
+            >
+              <!-- The draft that will replace this version leads its card, so its owner can find it. Its menu publishes it. -->
+              <template v-if="cal === thread.head">
+                <div
+                  v-for="draft in replacementDrafts(thread)"
+                  :key="draft.id"
+                  class="border-b border-border-light bg-unpublished-light px-4 py-3"
+                  :data-calibration-urn="draft.urn"
                 >
-                  <i class="pi pi-list text-[11px]" />
-                  {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
-                </button>
-                <div v-if="expandedRanges[cal.id]" class="mt-2">
-                  <CalibrationTable
-                    :related-calibrations="item.scoreCalibrations"
-                    :score-calibration="cal"
-                    :score-calibration-name="cal.title || ''"
-                    :score-set-urn="item.urn"
-                    show-versions-in-place
-                    @show-version="showCalibration"
-                  />
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-pencil text-[11px] text-unpublished-strong" />
+                    <span class="min-w-0 flex-1 text-xs text-unpublished-strong">
+                      <span class="font-semibold">Draft v{{ versionNumbers[draft.urn] }}</span>
+                      replaces v{{ versionNumbers[cal.urn] }} when published
+                    </span>
+                    <MvRowActionMenu :actions="draftBandActions(draft)" />
+                  </div>
+                  <div v-if="expandedRanges[draft.id]" class="mt-2.5 rounded-md bg-surface">
+                    <CalibrationTable
+                      :related-calibrations="item.scoreCalibrations"
+                      :score-calibration="draft"
+                      :score-calibration-name="draft.title || ''"
+                      :score-set-urn="item.urn"
+                      show-versions-in-place
+                      @show-version="showCalibration"
+                    />
+                  </div>
+                </div>
+              </template>
+              <div class="px-4 py-4">
+                <div class="mb-2 flex items-start gap-2">
+                  <div class="min-w-0 flex-1">
+                    <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
+                    <span v-if="versionNumbers[cal.urn]" class="ml-1.5 text-xs whitespace-nowrap text-text-muted"
+                      >v{{ versionNumbers[cal.urn] }}</span
+                    >
+                  </div>
+                  <MvRowActionMenu :actions="calibrationActions(cal)" />
+                </div>
+
+                <div class="mb-3 flex flex-wrap items-center gap-1.5">
+                  <MvBadge :value="calibrationStatus(cal)" />
+                  <MvBadge v-if="cal.primary" value="primary" />
+                  <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
+                  <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
+                </div>
+
+                <p v-if="cal.notes" class="mb-3 text-xs leading-relaxed text-text-secondary">{{ cal.notes }}</p>
+
+                <div class="text-xs text-text-muted">
+                  <strong>{{ cal.functionalClassifications?.length ?? 0 }}</strong>
+                  classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
+                </div>
+
+                <!-- Expandable calibration details (ranges, disease context, controls, URN) -->
+                <div class="mt-3">
+                  <button
+                    class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
+                    @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
+                  >
+                    <i class="pi pi-list text-[11px]" />
+                    {{ expandedRanges[cal.id] ? 'Hide calibration details' : 'Show calibration details' }}
+                  </button>
+                  <div v-if="expandedRanges[cal.id]" class="mt-2">
+                    <CalibrationTable
+                      :related-calibrations="item.scoreCalibrations"
+                      :score-calibration="cal"
+                      :score-calibration-name="cal.title || ''"
+                      :score-set-urn="item.urn"
+                      show-versions-in-place
+                      @show-version="showCalibration"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            <button
+              v-if="supersededVersions(thread).length > 0"
+              :aria-expanded="!!shownSuperseded[thread.head.urn]"
+              class="-mt-2 ml-5 flex w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-xs font-semibold text-link hover:underline"
+              type="button"
+              @click="shownSuperseded[thread.head.urn] = !shownSuperseded[thread.head.urn]"
+            >
+              <i
+                class="pi text-[10px]"
+                :class="shownSuperseded[thread.head.urn] ? 'pi-chevron-up' : 'pi-chevron-down'"
+              />
+              {{ shownSuperseded[thread.head.urn] ? 'Hide' : 'Show' }}
+              {{ supersededVersions(thread).length }} superseded
+              {{ supersededVersions(thread).length === 1 ? 'version' : 'versions' }}
+            </button>
+          </template>
         </div>
 
         <!-- ── DESKTOP: DataTable layout ─────────────────── -->
@@ -246,7 +293,13 @@
     />
     <template #footer>
       <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
-      <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
+      <PButton
+        icon="pi pi-save"
+        label="Save Changes"
+        :loading="calibrationSaving"
+        severity="success"
+        @click="saveChildCalibration"
+      />
     </template>
   </PrimeDialog>
 </template>
@@ -291,7 +344,10 @@ import {
   groupCalibrationVersions,
   orderCalibrationThreads,
   pageStart,
+  replacementDrafts,
+  supersededVersions,
   threadedVersionUrns,
+  visibleThreadRows,
   type CalibrationThread
 } from '@/lib/calibrations'
 import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
@@ -363,6 +419,10 @@ export default {
       // Keyed by calibration id, the form DataTable uses when it has a dataKey.
       expandedRows: {} as Record<number, boolean>,
       expandedRanges: {} as Record<number, boolean>,
+      // Saving a calibration can take a while; the Save button shows it's working.
+      calibrationSaving: false,
+      // Keyed by thread head URN: the threads whose superseded versions the phone layout shows.
+      shownSuperseded: {} as Record<string, boolean>,
       // The table is lazy, so it reports the sort and the page applies it, keeping each version thread together.
       sortField: undefined as string | undefined,
       sortOrder: undefined as number | undefined,
@@ -446,7 +506,12 @@ export default {
       const calibration = this.item?.scoreCalibrations?.find((c) => c.urn === urn)
       if (!calibration) return
       const threadIndex = this.calibrationThreads.findIndex((thread) => thread.versions.includes(calibration))
-      if (threadIndex >= 0) this.threadFirst = pageStart(threadIndex, this.threadsPerPage)
+      if (threadIndex >= 0) {
+        this.threadFirst = pageStart(threadIndex, this.threadsPerPage)
+        if (calibration.hasPublishedReplacement) {
+          this.shownSuperseded[this.calibrationThreads[threadIndex].head.urn] = true
+        }
+      }
       this.expandedRows = {...this.expandedRows, [calibration.id]: true}
       this.expandedRanges[calibration.id] = true
       await this.$nextTick()
@@ -458,6 +523,20 @@ export default {
     },
 
     calibrationStatus,
+    replacementDrafts,
+    supersededVersions,
+    visibleThreadRows,
+
+    /** A draft band's menu: the draft's details, which the band has no room to show, then its usual actions. */
+    draftBandActions(draft: ScoreCalibration): RowAction[] {
+      return [
+        {
+          label: this.expandedRanges[draft.id] ? 'Hide draft details' : 'Show draft details',
+          handler: () => (this.expandedRanges[draft.id] = !this.expandedRanges[draft.id])
+        },
+        ...this.calibrationActions(draft)
+      ]
+    },
 
     calibrationActions(data: ScoreCalibration): RowAction[] {
       const actions: RowAction[] = [
@@ -548,7 +627,13 @@ export default {
       const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
       if (!editor) return
 
-      const result = await editor.saveCalibration()
+      this.calibrationSaving = true
+      let result
+      try {
+        result = await editor.saveCalibration()
+      } finally {
+        this.calibrationSaving = false
+      }
       if (!result || result.success) return
 
       // Save succeeded — handled via @saved event / onCalibrationSaved.

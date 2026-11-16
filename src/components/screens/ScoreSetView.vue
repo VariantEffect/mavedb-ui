@@ -484,7 +484,13 @@
     />
     <template #footer>
       <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
-      <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveCreatedCalibration" />
+      <PButton
+        icon="pi pi-save"
+        label="Save Changes"
+        :loading="calibrationSaving"
+        severity="success"
+        @click="saveCreatedCalibration"
+      />
     </template>
   </PrimeDialog>
 </template>
@@ -656,6 +662,7 @@ export default {
   },
 
   data: () => ({
+    calibrationSaving: false,
     clinicalMode: true,
     coordinateSwitching: false,
     showHeatmap: true,
@@ -1016,7 +1023,13 @@ export default {
     async saveCreatedCalibration() {
       const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
       if (!editor) return
-      const result = await editor.saveCalibration()
+      this.calibrationSaving = true
+      let result
+      try {
+        result = await editor.saveCalibration()
+      } finally {
+        this.calibrationSaving = false
+      }
       if (!result || result.success) return
 
       if (result.error === 'email_required') {

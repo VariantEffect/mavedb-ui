@@ -571,6 +571,27 @@ export function calibrationThreadRows(thread: CalibrationThread): ScoreCalibrati
   return [thread.head, ...thread.versions.filter((version) => version !== thread.head).reverse()]
 }
 
+/** The versions in a thread that a newer published version has replaced. */
+export function supersededVersions(thread: CalibrationThread): ScoreCalibration[] {
+  return thread.versions.filter((version) => version.hasPublishedReplacement)
+}
+
+/** The private draft that will replace a thread's head when published. A list, though a chain has at most one. */
+export function replacementDrafts(thread: CalibrationThread): ScoreCalibration[] {
+  return thread.versions.filter((version) => version !== thread.head && version.private)
+}
+
+/**
+ * A thread's rows as {@link calibrationThreadRows} orders them, for layouts that show its replacement draft on the
+ * head's row: the head, then its superseded versions only when asked.
+ */
+export function visibleThreadRows(thread: CalibrationThread, showSuperseded: boolean): ScoreCalibration[] {
+  const drafts = replacementDrafts(thread)
+  return calibrationThreadRows(thread).filter(
+    (row) => !drafts.includes(row) && (showSuperseded || !row.hasPublishedReplacement)
+  )
+}
+
 /** URNs of the versions listed under their thread's head, which lists indent. */
 export function threadedVersionUrns(threads: CalibrationThread[]): Set<string> {
   return new Set(

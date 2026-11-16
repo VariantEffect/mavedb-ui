@@ -4,11 +4,18 @@ import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import tailwindcss from '@tailwindcss/vite'
+import pkg from './package.json' with {type: 'json'}
 
 const __dirname = import.meta.dirname
 
+// Puts the version in index.html, so a deployed build's version can be read over HTTP without AWS access.
+const versionMeta = {
+  name: 'mavedb-version-meta',
+  transformIndexHtml: () => [{tag: 'meta', attrs: {name: 'mavedb-version', content: pkg.version}, injectTo: 'head'}]
+}
+
 export default defineConfig({
-  plugins: [vue(), basicSsl(), tailwindcss()],
+  plugins: [vue(), basicSsl(), tailwindcss(), versionMeta],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

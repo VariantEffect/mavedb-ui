@@ -53,7 +53,7 @@
       />
       <template v-else>
         <!-- ── MOBILE: Card layout ────────────────────────── -->
-        <!-- Each thread is its current version, its draft on the same card, and its superseded versions folded below:
+        <!-- Each thread is its current version, led by its draft, with its superseded versions folded below:
              a narrow screen has no room to scan past them. -->
         <div class="flex flex-col gap-4 tablet:hidden">
           <template v-for="thread in pageThreads" :key="thread.head.urn">
@@ -64,6 +64,61 @@
               :class="{'ml-5': threadedUrns.has(cal.urn)}"
               :data-calibration-urn="cal.urn"
             >
+              <!-- The draft that will replace this version leads its card, so its owner can find it and finish it. -->
+              <template v-if="cal === thread.head">
+                <div
+                  v-for="draft in replacementDrafts(thread)"
+                  :key="draft.id"
+                  class="border-b border-border-light bg-unpublished-light px-4 py-3"
+                  :data-calibration-urn="draft.urn"
+                >
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-pencil text-[11px] text-unpublished-strong" />
+                    <span class="min-w-0 flex-1 text-xs text-unpublished-strong">
+                      <span class="font-semibold">Draft v{{ versionNumbers[draft.urn] }}</span>
+                      replaces v{{ versionNumbers[cal.urn] }} when published
+                    </span>
+                    <MvRowActionMenu :actions="calibrationActions(draft)" />
+                  </div>
+                  <div class="mt-2.5 grid grid-cols-3 gap-2">
+                    <PButton
+                      :icon="expandedRanges[draft.id] ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                      :label="expandedRanges[draft.id] ? 'Hide' : 'View'"
+                      severity="secondary"
+                      fluid
+                      size="small"
+                      @click="expandedRanges[draft.id] = !expandedRanges[draft.id]"
+                    />
+                    <PButton
+                      v-if="calibrationAuthorizations[draft.urn]?.update"
+                      icon="pi pi-pencil"
+                      label="Edit"
+                      severity="secondary"
+                      fluid
+                      size="small"
+                      @click="editCalibrationInEditor(draft.urn)"
+                    />
+                    <PButton
+                      v-if="calibrationAuthorizations[draft.urn]?.publish"
+                      icon="pi pi-check"
+                      label="Publish"
+                      fluid
+                      size="small"
+                      @click="publishCalibration(draft.urn)"
+                    />
+                  </div>
+                  <div v-if="expandedRanges[draft.id]" class="mt-2.5 rounded-md bg-surface">
+                    <CalibrationTable
+                      :related-calibrations="item.scoreCalibrations"
+                      :score-calibration="draft"
+                      :score-calibration-name="draft.title || ''"
+                      :score-set-urn="item.urn"
+                      show-versions-in-place
+                      @show-version="showCalibration"
+                    />
+                  </div>
+                </div>
+              </template>
               <div class="px-4 py-4">
                 <div class="mb-2 flex items-start gap-2">
                   <div class="min-w-0 flex-1">
@@ -110,24 +165,6 @@
                   </div>
                 </div>
               </div>
-              <!-- The draft that will replace this version, attached to it rather than listed as a calibration. -->
-              <template v-if="cal === thread.head">
-                <div
-                  v-for="draft in replacementDrafts(thread)"
-                  :key="draft.id"
-                  class="flex items-center gap-2 border-t border-border-light px-4 py-2.5"
-                  :data-calibration-urn="draft.urn"
-                >
-                  <MvBadge :value="calibrationStatus(draft)" />
-                  <span class="min-w-0 flex-1 text-xs text-text-secondary">
-                    <span v-if="versionNumbers[draft.urn]" class="font-semibold text-text-primary"
-                      >v{{ versionNumbers[draft.urn] }}</span
-                    >
-                    replaces this version when published
-                  </span>
-                  <MvRowActionMenu :actions="calibrationActions(draft)" />
-                </div>
-              </template>
             </div>
             <button
               v-if="supersededVersions(thread).length > 0"

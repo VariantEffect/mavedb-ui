@@ -1,0 +1,143 @@
+{
+  "type": "ExperimentalVariantFunctionalImpactStudyResult",
+  "description": "Variant effect study result for urn:mavedb:00000001-a-1#2323.",
+  "specifiedBy": {
+    "type": "Method",
+    "name": "Experimental protocol",
+    "reportedIn": "http://www.ncbi.nlm.nih.gov/pubmed/29269382"
+  },
+  "contributions": [
+    {
+      "type": "Contribution",
+      "name": "MaveDB API",
+      "description": "Contribution from the MaveDB API",
+      "contributor": {
+        "type": "Agent",
+        "name": "MaveDB API",
+        "description": "MaveDB API agent, version 2026.2.5",
+        "extensions": [
+          {
+            "name": "mavedbApiVersion",
+            "value": "2026.2.5"
+          }
+        ],
+        "agentType": "Software"
+      },
+      "activityType": "software application programming interface",
+      "date": "2026-06-24 18:13:21.636210"
+    },
+    {
+      "type": "Contribution",
+      "name": "MaveDB VRS Mapper",
+      "description": "Contribution from the MaveDB VRS mapping software",
+      "contributor": {
+        "type": "Agent",
+        "name": "MaveDB VRS Mapping Agent",
+        "description": "MaveDB VRS mapping agent, version 2026.2.0",
+        "extensions": [
+          {
+            "name": "mavedbVrsVersion",
+            "value": "2026.2.0"
+          }
+        ],
+        "agentType": "Software"
+      },
+      "activityType": "human genome sequence mapping process",
+      "date": "2026-06-10 00:00:00"
+    },
+    {
+      "type": "Contribution",
+      "name": "MaveDB Dataset Creator",
+      "description": "When this resource was first submitted, and by whom.",
+      "extensions": [
+        {
+          "name": "resourceType",
+          "value": "Variant"
+        }
+      ],
+      "contributor": {
+        "type": "Agent",
+        "name": "0000-0003-1628-9390",
+        "description": "MaveDB ORCid authenticated user 0000-0003-1628-9390",
+        "agentType": "Person"
+      },
+      "activityType": "http://purl.obolibrary.org/obo/CRO_0000105",
+      "date": "2018-06-26 00:00:00"
+    },
+    {
+      "type": "Contribution",
+      "name": "MaveDB Dataset Modifier",
+      "description": "When this resource was last modified, and by whom.",
+      "extensions": [
+        {
+          "name": "resourceType",
+          "value": "Variant"
+        }
+      ],
+      "contributor": {
+        "type": "Agent",
+        "name": "0000-0003-1628-9390",
+        "description": "MaveDB ORCid authenticated user 0000-0003-1628-9390",
+        "agentType": "Person"
+      },
+      "activityType": "http://purl.obolibrary.org/obo/CRO_0000103",
+      "date": "2019-02-14 00:00:00"
+    }
+  ],
+  "reportedIn": [
+    "https://mavedb.org/score-sets/urn:mavedb:00000001-a-1?variant=urn%3Amavedb%3A00000001-a-1%232323",
+    "https://mavedb.org/variant/PA2579755325"
+  ],
+  "sourceDataSet": {
+    "id": "urn:mavedb:00000001-a-1",
+    "type": "DataSet",
+    "name": "UBE2I imputed & refined",
+    "description": "A joint Deep Mutational Scan of the human SUMO E2 conjugase UBE2I using functional complementation in yeast, combining DMS-BarSeq and DMS-TileSeq data, followed by machine-learning-based imputation and refinement.",
+    "reportedIn": "https://mavedb.org/score-sets/urn:mavedb:00000001-a-1",
+    "releaseDate": "2018-06-26",
+    "license": {
+      "name": "CC0 (Public domain)",
+      "primaryCoding": {
+        "system": "https://spdx.org/licenses/",
+        "systemVersion": "1.0",
+        "code": "CC0-1.0",
+        "iris": [
+          "https://creativecommons.org/publicdomain/zero/1.0/"
+        ]
+      }
+    }
+  },
+  "focusVariant": {
+    "id": "ga4gh:VA.P39KFBT8kdyfg79JH7IBX-4JKXGrzCxb",
+    "type": "Allele",
+    "extensions": [
+      {
+        "name": "vrs_ref_allele_seq",
+        "value": "L"
+      }
+    ],
+    "digest": "P39KFBT8kdyfg79JH7IBX-4JKXGrzCxb",
+    "expressions": [
+      {
+        "syntax": "hgvs.p",
+        "value": "NP_003336.1:p.Leu6Gly"
+      }
+    ],
+    "location": {
+      "id": "ga4gh:SL.o4bho24Xqm_HS5mD8-HDjtmtLCZ5XLez",
+      "type": "SequenceLocation",
+      "digest": "o4bho24Xqm_HS5mD8-HDjtmtLCZ5XLez",
+      "sequenceReference": {
+        "type": "SequenceReference",
+        "refgetAccession": "SQ.hy5ErT-cGJovsPYIgzchb3BvYQ2MkKB3"
+      },
+      "start": 5,
+      "end": 6
+    },
+    "state": {
+      "type": "LiteralSequenceExpression",
+      "sequence": "G"
+    }
+  },
+  "functionalImpactScore": 0.616282520019444
+}

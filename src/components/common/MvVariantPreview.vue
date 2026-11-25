@@ -15,7 +15,7 @@
           label="Scores"
           severity="secondary"
           size="small"
-          @click="downloadFile('scores')"
+          @click="reportingFailure('scores', () => downloadFile('scores'))"
         />
         <PButton
           v-if="!processingErrors && hasCountData"
@@ -24,7 +24,7 @@
           label="Counts"
           severity="secondary"
           size="small"
-          @click="downloadFile('counts')"
+          @click="reportingFailure('counts', () => downloadFile('counts'))"
         />
         <PButton
           v-if="!processingErrors"
@@ -125,7 +125,7 @@
     header="Custom data download"
     kind="scoreSet"
     :urn="scoreSet.urn"
-    @confirm="downloadMultipleData"
+    @confirm="handleCustomDownload"
   />
 </template>
 
@@ -138,6 +138,7 @@ import {getScoreSetScoresPreview, getScoreSetCountsPreview} from '@/api/mavedb'
 import MvStatusMessage from '@/components/common/MvStatusMessage.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import {useScoreSetDownloads, TEXT_COLUMNS} from '@/composables/use-score-set-downloads'
+import {reportingDownloadFailure} from '@/lib/downloads'
 import {parseScoresOrCounts, type ScoresOrCountsRow} from '@/lib/scores'
 import type {components} from '@/schema/openapi'
 
@@ -207,6 +208,12 @@ export default defineComponent({
   },
 
   methods: {
+    async reportingFailure(what: string, download: () => Promise<unknown>) {
+      await reportingDownloadFailure(this.$toast, what, download)
+    },
+    async handleCustomDownload(selection: {namespaces: string[]; extras: string[]}) {
+      await this.reportingFailure('custom data', () => this.downloadMultipleData(selection))
+    },
     isTextColumn(col: string): boolean {
       return TEXT_COLUMNS.includes(col)
     },

@@ -106,7 +106,7 @@ import SplitButton from 'primevue/splitbutton'
 import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import {useScoreSetDownloads} from '@/composables/use-score-set-downloads'
 import config from '@/config'
-import {isRateLimited} from '@/lib/rate-limit'
+import {reportingDownloadFailure} from '@/lib/downloads'
 import type {components} from '@/schema/openapi'
 import store from '@/store'
 
@@ -169,25 +169,8 @@ export default defineComponent({
   },
 
   methods: {
-    /**
-     * Run a download, reporting any failure as a toast.
-     *
-     * Without this a rejection from a template `@click` is an unhandled promise, which is how a truncated
-     * or out-of-memory annotation download used to surface: a console error and nothing in the UI.
-     */
     async reportingFailure(what: string, download: () => Promise<unknown>) {
-      try {
-        await download()
-      } catch (error: unknown) {
-        // The rate-limit notice has already been shown, and says more than this toast would.
-        if (isRateLimited(error)) return
-        this.$toast.add({
-          severity: 'error',
-          summary: `Could not download ${what}`,
-          detail: error instanceof Error ? error.message : undefined,
-          life: 6000
-        })
-      }
+      await reportingDownloadFailure(this.$toast, what, download)
     },
 
     /**

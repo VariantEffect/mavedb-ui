@@ -19,7 +19,7 @@ function axiosError(data: unknown): unknown {
 
 describe('describeRequestError', () => {
   it("gives a 429 the rate-limit message rather than the WAF's body", () => {
-    expect(describeRequestError(rateLimitedError())).toBe(rateLimitMessage(300, false))
+    expect(describeRequestError(rateLimitedError())).toBe(rateLimitMessage(300))
   })
 
   it('prefers a string detail from the server', () => {

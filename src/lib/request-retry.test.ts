@@ -60,7 +60,7 @@ const shown = vi.fn()
 beforeEach(() => {
   vi.useFakeTimers()
   shown.mockReset()
-  installRateLimitNotice({isSignedIn: () => false, show: shown})
+  installRateLimitNotice(shown)
 })
 
 afterEach(() => {

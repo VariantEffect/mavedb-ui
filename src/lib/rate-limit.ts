@@ -3,19 +3,16 @@ import {isAxiosError, type AxiosError} from 'axios'
 /** How long the rate-limit toast stays up, and the window in which a repeat 429 doesn't raise another. */
 export const NOTICE_LIFE_MS = 10 * 1000
 
-export interface RateLimitNoticeHooks {
-  isSignedIn: () => boolean
-  /** Show *message* to the user for *lifeMs*. */
-  show: (message: string, lifeMs: number) => void
-}
+/** Shows *message* to the user for *lifeMs*. */
+export type ShowNotice = (message: string, lifeMs: number) => void
 
-// Injected at startup rather than imported, because the sign-in state and the toast store need a browser.
-let hooks: RateLimitNoticeHooks = {isSignedIn: () => false, show: () => {}}
+// Injected at startup rather than imported, because the toast store needs a browser.
+let show: ShowNotice = () => {}
 let lastNoticeAt = -Infinity
 
-/** Connect the notice to the sign-in state and the toasts. Call once at startup. */
-export function installRateLimitNotice(installed: RateLimitNoticeHooks) {
-  hooks = installed
+/** Connect the notice to the toasts. Call once at startup. */
+export function installRateLimitNotice(showNotice: ShowNotice) {
+  show = showNotice
   lastNoticeAt = -Infinity
 }
 
@@ -37,8 +34,8 @@ export class RateLimitError extends Error {
   /** Seconds the server asked us to wait, or null when it didn't say. */
   readonly retryAfterSeconds: number | null
 
-  constructor(retryAfterSeconds: number | null, signedIn: boolean) {
-    super(rateLimitMessage(retryAfterSeconds, signedIn))
+  constructor(retryAfterSeconds: number | null) {
+    super(rateLimitMessage(retryAfterSeconds))
     this.name = 'RateLimitError'
     this.retryAfterSeconds = retryAfterSeconds
   }
@@ -62,14 +59,15 @@ function describeWait(seconds: number | null): string {
  * What to tell a user who has hit a rate limit. Built from `Retry-After` alone: the 429 body comes from the WAF and
  * isn't part of the API schema.
  */
-export function rateLimitMessage(retryAfterSeconds: number | null, signedIn: boolean): string {
-  const message = `You've made too many requests to MaveDB in a short time. Try again ${describeWait(retryAfterSeconds)}.`
-  return signedIn ? message : `${message} Signing in raises the limit.`
+export function rateLimitMessage(retryAfterSeconds: number | null): string {
+  // TODO(VariantEffect/mavedb-api#917): once signed-in users get a higher limit, tell anonymous users that signing in
+  // raises it.
+  return `You've made too many requests to MaveDB in a short time. Try again ${describeWait(retryAfterSeconds)}.`
 }
 
 /** The rate-limit message for an axios 429, read from its `Retry-After`. */
 export function describeRateLimit(error: AxiosError): string {
-  return rateLimitMessage(parseRetryAfter(error.response?.headers?.['retry-after']), hooks.isSignedIn())
+  return rateLimitMessage(parseRetryAfter(error.response?.headers?.['retry-after']))
 }
 
 /**
@@ -77,11 +75,11 @@ export function describeRateLimit(error: AxiosError): string {
  * per request.
  */
 export function notifyRateLimited(retryAfterSeconds: number | null): RateLimitError {
-  const error = new RateLimitError(retryAfterSeconds, hooks.isSignedIn())
+  const error = new RateLimitError(retryAfterSeconds)
   const now = Date.now()
   if (now - lastNoticeAt >= NOTICE_LIFE_MS) {
     lastNoticeAt = now
-    hooks.show(error.message, NOTICE_LIFE_MS)
+    show(error.message, NOTICE_LIFE_MS)
   }
   return error
 }

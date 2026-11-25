@@ -356,7 +356,7 @@ describe('useScoreSetDownloads when the server refuses', () => {
 
   beforeEach(() => {
     show.mockReset()
-    installRateLimitNotice({isSignedIn: () => false, show})
+    installRateLimitNotice(show)
   })
 
   it('shows the same rate-limit message for a streamed download that gets a 429', async () => {
@@ -369,7 +369,7 @@ describe('useScoreSetDownloads when the server refuses', () => {
     expect(fetchMock).toHaveBeenCalledOnce()
     expect(error).toBeInstanceOf(RateLimitError)
     expect(isRateLimited(error)).toBe(true)
-    expect(show).toHaveBeenCalledWith(rateLimitMessage(300, false), NOTICE_LIFE_MS)
+    expect(show).toHaveBeenCalledWith(rateLimitMessage(300), NOTICE_LIFE_MS)
     expect(fileDownloadInProgress.value).toBe(false)
   })
 

@@ -70,7 +70,7 @@
         :value="fileDownloadProgress ?? 0"
       />
       <span class="whitespace-nowrap text-xs text-text-muted">
-        Preparing {{ fileDownloadLabel }}…
+        {{ fileDownloadStatus }}
         <template v-if="fileDownloadProgress !== null">{{ fileDownloadProgress }}%</template>
       </span>
     </div>
@@ -106,6 +106,7 @@ import SplitButton from 'primevue/splitbutton'
 import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import {useScoreSetDownloads} from '@/composables/use-score-set-downloads'
 import config from '@/config'
+import {reportingDownloadFailure} from '@/lib/downloads'
 import type {components} from '@/schema/openapi'
 import store from '@/store'
 
@@ -168,23 +169,8 @@ export default defineComponent({
   },
 
   methods: {
-    /**
-     * Run a download, reporting any failure as a toast.
-     *
-     * Without this a rejection from a template `@click` is an unhandled promise, which is how a truncated
-     * or out-of-memory annotation download used to surface: a console error and nothing in the UI.
-     */
     async reportingFailure(what: string, download: () => Promise<unknown>) {
-      try {
-        await download()
-      } catch (error: unknown) {
-        this.$toast.add({
-          severity: 'error',
-          summary: `Could not download ${what}`,
-          detail: error instanceof Error ? error.message : undefined,
-          life: 6000
-        })
-      }
+      await reportingDownloadFailure(this.$toast, what, download)
     },
 
     /**

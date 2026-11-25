@@ -1,0 +1,72 @@
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+
+import {
+  installRateLimitNotice,
+  isRateLimited,
+  notifyRateLimited,
+  NOTICE_LIFE_MS,
+  RateLimitError,
+  rateLimitMessage
+} from '@/lib/rate-limit'
+
+describe('rateLimitMessage', () => {
+  it('says roughly when to try again', () => {
+    expect(rateLimitMessage(300)).toContain('Try again in about 5 minutes.')
+    expect(rateLimitMessage(30)).toContain('Try again in about 30 seconds.')
+    expect(rateLimitMessage(61)).toContain('Try again in about 2 minutes.')
+    expect(rateLimitMessage(60)).toContain('Try again in about a minute.')
+    expect(rateLimitMessage(7200)).toContain('Try again in about 2 hours.')
+  })
+
+  it("falls back to a vague wait when the server didn't say", () => {
+    expect(rateLimitMessage(null)).toContain('Try again in a few minutes.')
+  })
+
+  it("doesn't mention signing in until signed-in users get a higher limit", () => {
+    expect(rateLimitMessage(300)).not.toMatch(/sign/i)
+  })
+})
+
+describe('isRateLimited', () => {
+  it('recognizes an axios 429 and a RateLimitError', () => {
+    expect(isRateLimited({isAxiosError: true, response: {status: 429}})).toBe(true)
+    expect(isRateLimited(new RateLimitError(300))).toBe(true)
+  })
+
+  it('rejects other failures', () => {
+    expect(isRateLimited({isAxiosError: true, response: {status: 503}})).toBe(false)
+    expect(isRateLimited(new Error('HTTP 429: '))).toBe(false)
+    expect(isRateLimited(undefined)).toBe(false)
+  })
+})
+
+describe('notifyRateLimited', () => {
+  const show = vi.fn()
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    show.mockReset()
+    installRateLimitNotice(show)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('shows the message the error carries', () => {
+    const error = notifyRateLimited(300)
+
+    expect(show).toHaveBeenCalledWith(error.message, NOTICE_LIFE_MS)
+    expect(error.message).toBe(rateLimitMessage(300))
+  })
+
+  it('shows one notice for a burst of 429s, and another once it has gone', () => {
+    notifyRateLimited(300)
+    notifyRateLimited(300)
+    expect(show).toHaveBeenCalledOnce()
+
+    vi.advanceTimersByTime(NOTICE_LIFE_MS)
+    notifyRateLimited(300)
+    expect(show).toHaveBeenCalledTimes(2)
+  })
+})

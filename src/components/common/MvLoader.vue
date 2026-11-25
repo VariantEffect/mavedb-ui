@@ -1,6 +1,6 @@
 <template>
   <div
-    :aria-label="text || 'Loading'"
+    :aria-label="displayText || 'Loading'"
     aria-live="polite"
     class="flex flex-col items-center justify-center gap-5 py-14"
     role="status"
@@ -13,12 +13,14 @@
         :style="{background: bar.color, height: bar.height + 'px', animationDelay: i * 0.1 + 's'}"
       />
     </div>
-    <span v-if="text" class="text-sm font-medium tracking-wide text-gray-400">{{ text }}</span>
+    <span v-if="displayText" class="text-sm font-medium tracking-wide text-gray-400">{{ displayText }}</span>
   </div>
 </template>
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+
+import {SERVER_BUSY_MESSAGE, serverBusy} from '@/lib/request-retry'
 
 const BARS = [
   {color: 'var(--color-sage)', height: 20},
@@ -43,6 +45,12 @@ export default defineComponent({
 
   data() {
     return {bars: BARS}
+  },
+
+  computed: {
+    displayText(): string {
+      return serverBusy.value ? SERVER_BUSY_MESSAGE : this.text
+    }
   }
 })
 </script>

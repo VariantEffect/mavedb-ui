@@ -70,7 +70,7 @@
         :value="fileDownloadProgress ?? 0"
       />
       <span class="whitespace-nowrap text-xs text-text-muted">
-        Preparing {{ fileDownloadLabel }}…
+        {{ fileDownloadStatus }}
         <template v-if="fileDownloadProgress !== null">{{ fileDownloadProgress }}%</template>
       </span>
     </div>
@@ -106,6 +106,7 @@ import SplitButton from 'primevue/splitbutton'
 import MvCsvColumnDialog from '@/components/common/MvCsvColumnDialog.vue'
 import {useScoreSetDownloads} from '@/composables/use-score-set-downloads'
 import config from '@/config'
+import {isRateLimited} from '@/lib/rate-limit'
 import type {components} from '@/schema/openapi'
 import store from '@/store'
 
@@ -178,6 +179,8 @@ export default defineComponent({
       try {
         await download()
       } catch (error: unknown) {
+        // The rate-limit notice has already been shown, and says more than this toast would.
+        if (isRateLimited(error)) return
         this.$toast.add({
           severity: 'error',
           summary: `Could not download ${what}`,

@@ -1,6 +1,9 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest'
 import {ref, watch, type Ref} from 'vue'
 
+import {installRateLimitNotice, isRateLimited, NOTICE_LIFE_MS, RateLimitError, rateLimitMessage} from '@/lib/rate-limit'
+import {SERVER_BUSY_MESSAGE} from '@/lib/request-retry'
+
 import {useScoreSetDownloads} from './use-score-set-downloads'
 
 const downloadScoreSetFile = vi.fn()
@@ -38,6 +41,10 @@ describe('useScoreSetDownloads download indicator', () => {
 
     expect(fileDownloadInProgress.value).toBe(false)
     expect(fileDownloadLabel.value).toBeNull()
+  })
+
+  it('has no status text while idle', () => {
+    expect(useScoreSetDownloads({scoreSet: SCORE_SET}).fileDownloadStatus.value).toBe('')
   })
 
   it('names the file being prepared while the request is in flight', async () => {
@@ -341,5 +348,71 @@ describe('useScoreSetDownloads variant-details streaming', () => {
     expect(downloads.fileDownloadLabel.value).toBe('Variant details')
     await pending
     expect(downloads.fileDownloadLabel.value).toBeNull()
+  })
+})
+
+describe('useScoreSetDownloads when the server refuses', () => {
+  const show = vi.fn()
+
+  beforeEach(() => {
+    show.mockReset()
+    installRateLimitNotice({isSignedIn: () => false, show})
+  })
+
+  it('shows the same rate-limit message for a streamed download that gets a 429', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, {status: 429, headers: {'Retry-After': '300'}}))
+    vi.stubGlobal('fetch', fetchMock)
+    const {streamVariantDetails, fileDownloadInProgress} = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+    const error = await streamVariantDetails().catch((e: unknown) => e)
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(error).toBeInstanceOf(RateLimitError)
+    expect(isRateLimited(error)).toBe(true)
+    expect(show).toHaveBeenCalledWith(rateLimitMessage(300, false), NOTICE_LIFE_MS)
+    expect(fileDownloadInProgress.value).toBe(false)
+  })
+
+  it('treats an abort while waiting to retry as a cancellation, not a failure', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response(null, {status: 503, headers: {'Retry-After': '5'}}))
+      )
+      const {streamVariantDetails, abortStream} = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+      const pending = streamVariantDetails()
+      await vi.advanceTimersByTimeAsync(1000)
+      abortStream()
+      await vi.advanceTimersByTimeAsync(0)
+
+      await expect(pending).resolves.toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('says the server is busy in place of the file being prepared while a stream waits to retry', async () => {
+    vi.useFakeTimers()
+    try {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null, {status: 503, headers: {'Retry-After': '2'}}))
+        .mockResolvedValueOnce(new Response(null, {status: 500}))
+      vi.stubGlobal('fetch', fetchMock)
+      const {streamVariantDetails, fileDownloadStatus} = useScoreSetDownloads({scoreSet: SCORE_SET})
+
+      const pending = streamVariantDetails().catch((e: unknown) => e)
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(fileDownloadStatus.value).toBe(SERVER_BUSY_MESSAGE)
+
+      await vi.advanceTimersByTimeAsync(1500)
+      await pending
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fileDownloadStatus.value).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

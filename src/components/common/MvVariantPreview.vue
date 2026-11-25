@@ -37,7 +37,7 @@
         />
         <span v-if="fileDownloadInProgress" aria-live="polite" class="flex items-center gap-2 text-xs text-text-muted">
           <i class="pi pi-spin pi-spinner text-xs" />
-          Preparing {{ fileDownloadLabel }}…
+          {{ fileDownloadStatus }}
         </span>
         <slot name="actions" />
       </div>

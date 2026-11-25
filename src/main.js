@@ -14,7 +14,12 @@ import App from '@/App.vue'
 import config from '@/config'
 import {installAxiosMaintenanceInterceptor, startMaintenanceWatch} from '@/composables/use-maintenance'
 import {installAxiosAuthHeaderInterceptor, installAxiosUnauthorizedResponseInterceptor} from '@/lib/auth'
-import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/orcid'
+import {
+  initializeAuthentication as initializeOrcidAuthentication,
+  isAuthenticated as orcidIsAuthenticated
+} from '@/lib/orcid'
+import {installRateLimitNotice} from '@/lib/rate-limit'
+import {installAxiosRetryInterceptor} from '@/lib/request-retry'
 import router from '@/router'
 import store from '@/store'
 import {vKeyTerm} from '@/directives/key-term'
@@ -277,6 +282,13 @@ initRestClient({apiBaseUrl: config.apiBaseUrl})
 
 // Monkey-patch Axios so that all requests will have the user's credentials.
 installAxiosAuthHeaderInterceptor()
+// First of the response interceptors, so the others see only a request's last attempt.
+installAxiosRetryInterceptor()
+installRateLimitNotice({
+  isSignedIn: () => orcidIsAuthenticated.value,
+  show: (detail, life) =>
+    store.dispatch('toast/enqueueToast', {severity: 'warn', summary: 'Too many requests', detail, life})
+})
 installAxiosUnauthorizedResponseInterceptor()
 installAxiosMaintenanceInterceptor()
 

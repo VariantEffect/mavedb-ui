@@ -1,15 +1,19 @@
 import axios, {isAxiosError} from 'axios'
 
+import {describeRateLimit} from '@/lib/rate-limit'
+
 /**
  * Extract a message worth showing a user from a failed request.
  *
- * Prefers the server's own `detail`, which is where FastAPI puts the human-readable reason, and falls
+ * A rate limit gets the same message as the rate-limit notice. Otherwise, prefers the server's own `detail`, which is where FastAPI puts the human-readable reason, and falls
  * back through the raw response body to the exception message. Always returns something renderable, so
  * callers can drop it straight into a toast.
  *
  * For the status code rather than the message, see {@link getErrorResponse} below.
  */
 export function describeRequestError(error: unknown): string {
+  // A 429's body comes from the WAF, not the API, so it has no detail worth showing.
+  if (axios.isAxiosError(error) && error.response?.status === 429) return describeRateLimit(error)
   if (axios.isAxiosError(error) && error.response?.data) {
     const data = error.response.data
     if (typeof data === 'string') return data

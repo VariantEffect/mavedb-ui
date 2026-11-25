@@ -5,6 +5,8 @@ import type {CsvExtraOption} from '@/composables/use-csv-namespaces'
 import config from '@/config'
 import {authHeader} from '@/lib/auth'
 import {triggerDownload} from '@/lib/downloads'
+import {notifyRateLimited, parseRetryAfter} from '@/lib/rate-limit'
+import {fetchWithRetry, SERVER_BUSY_MESSAGE, serverBusy} from '@/lib/request-retry'
 import type {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
@@ -61,6 +63,15 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
   const fileDownloadProgress = ref<number | null>(null)
 
   const fileDownloadInProgress = computed(() => fileDownloadLabel.value !== null)
+
+  /** The indicator's text: what's being prepared, or that the server is busy while a request waits to retry. */
+  const fileDownloadStatus = computed(() =>
+    fileDownloadLabel.value === null
+      ? ''
+      : serverBusy.value
+        ? SERVER_BUSY_MESSAGE
+        : `Preparing ${fileDownloadLabel.value}…`
+  )
 
   /** Run *download* with the indicator showing, clearing it even if the request fails. */
   async function withIndicator<T>(label: string, download: () => Promise<T>): Promise<T | undefined> {
@@ -149,10 +160,11 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     streamController.value = new AbortController()
 
     try {
-      // fetch bypasses the axios interceptor that authenticates API calls, so send the credentials here.
+      // fetch bypasses the axios interceptors that authenticate and retry API calls, so send the credentials here
+      // and retry through fetchWithRetry.
       // The API splits X-Active-Roles on bare commas.
       const {Authorization, 'X-Active-Roles': activeRoles} = authHeader()
-      const response = await fetch(`${config.apiBaseUrl}/score-sets/${urn}/${subPath}`, {
+      const response = await fetchWithRetry(`${config.apiBaseUrl}/score-sets/${urn}/${subPath}`, {
         signal: streamController.value.signal,
         headers: {
           Accept: 'application/x-ndjson',
@@ -160,6 +172,9 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
         }
       })
 
+      if (response.status === 429) {
+        throw notifyRateLimited(parseRetryAfter(response.headers.get('Retry-After')))
+      }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
@@ -220,8 +235,8 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
 
       return {received: processedCount, errored: erroredCount}
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      if (message !== 'The user aborted a request.') {
+      // An abort can come from fetch itself or from the wait between retries; browsers word them differently.
+      if (!(error instanceof Error && error.name === 'AbortError')) {
         throw error
       }
     } finally {
@@ -235,6 +250,7 @@ export function useScoreSetDownloads({scoreSet}: UseScoreSetDownloadsOptions) {
     fileDownloadInProgress,
     fileDownloadLabel,
     fileDownloadProgress,
+    fileDownloadStatus,
 
     extraDownloadOptions,
 

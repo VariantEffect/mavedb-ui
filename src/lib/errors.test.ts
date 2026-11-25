@@ -1,5 +1,7 @@
 import {describe, expect, it, vi} from 'vitest'
 
+import {rateLimitMessage} from '@/lib/rate-limit'
+
 import {describeRequestError, getErrorResponse} from './errors'
 
 vi.mock('axios', () => {
@@ -7,11 +9,19 @@ vi.mock('axios', () => {
   return {default: {isAxiosError}, isAxiosError}
 })
 
+function rateLimitedError(): unknown {
+  return {isAxiosError: true, response: {status: 429, headers: {'retry-after': '300'}, data: {rateLimited: true}}}
+}
+
 function axiosError(data: unknown): unknown {
   return {isAxiosError: true, response: {status: 400, data}, message: 'Request failed'}
 }
 
 describe('describeRequestError', () => {
+  it("gives a 429 the rate-limit message rather than the WAF's body", () => {
+    expect(describeRequestError(rateLimitedError())).toBe(rateLimitMessage(300, false))
+  })
+
   it('prefers a string detail from the server', () => {
     expect(describeRequestError(axiosError({detail: 'Score set is private.'}))).toBe('Score set is private.')
   })
